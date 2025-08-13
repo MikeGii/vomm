@@ -6,7 +6,7 @@ import { QuickActions } from '../components/dashboard/QuickActions';
 import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
 import { useAuth } from '../contexts/AuthContext';
 import { PlayerStats } from '../types';
-import { initializePlayerStats, getPlayerStats, hireAsPoliceOfficer } from '../services/PlayerService';
+import { initializePlayerStats, getPlayerStats } from '../services/PlayerService';
 import '../styles/pages/Dashboard.css';
 
 function DashboardPage() {
@@ -36,19 +36,6 @@ function DashboardPage() {
 
         loadPlayerStats();
     }, [currentUser]);
-
-    const handleApplyForJob = async () => {
-        if (!currentUser) return;
-
-        try {
-            const updatedStats = await hireAsPoliceOfficer(currentUser.uid);
-            setPlayerStats(updatedStats);
-            alert('Õnnitleme! Oled nüüd Eesti Politsei liige!');
-        } catch (error: any) {
-            console.error('Viga tööle kandideerimisel:', error);
-            alert(error.message || 'Kandideerimine ebaõnnestus. Proovi uuesti!');
-        }
-    };
 
     const handleTutorialComplete = async () => {
         setShowTutorial(false);
