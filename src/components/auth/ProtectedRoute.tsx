@@ -10,5 +10,5 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     const { currentUser } = useAuth();
 
-    return currentUser ? <>{children}</> : <Navigate to="/login" />;
+    return currentUser ? <>{children}</> : <Navigate to="/" />;
 };
