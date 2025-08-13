@@ -129,3 +129,14 @@
     margin: 0;
     text-align: center;
 }
+
+.modal-content::after {
+    content: 'ESC sulgemiseks';
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: #666;
+    opacity: 0.7;
+}

@@ -1,8 +1,8 @@
 // src/components/auth/LoginModal.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../config/firebase';
-import '../../styles/Modal.css';
+import '../../styles/layout/Modal.css';
 
 interface LoginModalProps {
     isOpen: boolean;
@@ -15,6 +15,22 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const handleEscKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && isOpen) {
+                onClose();
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('keydown', handleEscKey);
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleEscKey);
+        };
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
@@ -36,14 +52,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
         }
     };
 
-    const handleBackdropClick = (e: React.MouseEvent) => {
-        if (e.target === e.currentTarget) {
-            onClose();
-        }
-    };
-
     return (
-        <div className="modal-backdrop" onClick={handleBackdropClick}>
+        <div className="modal-backdrop">
             <div className="modal-content">
                 <button className="modal-close" onClick={onClose}>×</button>
                 <h2 className="modal-title">Sisene mängu</h2>

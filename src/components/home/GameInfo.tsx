@@ -1,6 +1,6 @@
 // src/components/home/GameInfo.tsx
 import React from 'react';
-import '../../styles/GameInfo.css';
+import '../../styles/components/GameInfo.css';
 
 export const GameInfo: React.FC = () => {
     const stats = [

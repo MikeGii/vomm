@@ -1,10 +1,10 @@
 // src/components/auth/RegisterModal.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, firestore } from '../../config/firebase';
 import { User } from '../../types';
-import '../../styles/Modal.css';
+import '../../styles/layout/Modal.css';
 
 interface RegisterModalProps {
     isOpen: boolean;
@@ -18,6 +18,22 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
     const [username, setUsername] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const handleEscKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && isOpen) {
+                onClose();
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('keydown', handleEscKey);
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleEscKey);
+        };
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
@@ -55,14 +71,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
         }
     };
 
-    const handleBackdropClick = (e: React.MouseEvent) => {
-        if (e.target === e.currentTarget) {
-            onClose();
-        }
-    };
-
     return (
-        <div className="modal-backdrop" onClick={handleBackdropClick}>
+        <div className="modal-backdrop">
             <div className="modal-content">
                 <button className="modal-close" onClick={onClose}>×</button>
                 <h2 className="modal-title">Alusta karjääri</h2>
