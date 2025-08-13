@@ -1,5 +1,5 @@
 // src/pages/CoursesPage.tsx (simplified)
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { ActiveCourseProgress } from '../components/courses/ActiveCourseProgress';
@@ -48,7 +48,7 @@ const CoursesPage: React.FC = () => {
         }
     }, [playerStats?.activeCourse]);
 
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         if (!currentUser) return;
 
         try {
@@ -77,9 +77,9 @@ const CoursesPage: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentUser]);
 
-    const handleCourseCompletion = async () => {
+    const handleCourseCompletion = useCallback(async () => {
         if (!currentUser) return;
 
         try {
@@ -91,7 +91,27 @@ const CoursesPage: React.FC = () => {
         } catch (error) {
             console.error('Viga koolituse lõpetamisel:', error);
         }
-    };
+    }, [currentUser, loadData]);
+
+// Update useEffect hooks
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
+
+    useEffect(() => {
+        if (playerStats?.activeCourse?.status === 'in_progress') {
+            const interval = setInterval(() => {
+                const remaining = getRemainingTime(playerStats.activeCourse!);
+                setRemainingTime(remaining);
+
+                if (remaining === 0) {
+                    handleCourseCompletion();
+                }
+            }, 1000);
+
+            return () => clearInterval(interval);
+        }
+    }, [playerStats?.activeCourse, handleCourseCompletion]);
 
     const handleEnrollCourse = async (courseId: string) => {
         if (!currentUser || enrolling) return;

@@ -59,9 +59,18 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         } else if (!stats.tutorialProgress.isCompleted && currentStep > 0) {
             setIsVisible(true);
         }
-    }, []);
+    }, [stats.tutorialProgress.isCompleted, currentStep, userId]);
 
     useEffect(() => {
+        const highlightElement = (selector: string) => {
+            removeHighlight();
+            const element = document.querySelector(selector);
+            if (element) {
+                element.classList.add('tutorial-highlight');
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        };
+
         if (isVisible && currentStep > 0 && currentStep <= TUTORIAL_STEPS.length) {
             highlightElement(TUTORIAL_STEPS[currentStep - 1].targetElement);
         }

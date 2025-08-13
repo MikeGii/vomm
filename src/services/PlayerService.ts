@@ -1,7 +1,7 @@
 // src/services/PlayerService.ts
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
-import { PlayerStats, TutorialProgress } from '../types';
+import { PlayerStats } from '../types';
 
 // Estonian police ranks from lowest to highest
 const POLICE_RANKS = [
