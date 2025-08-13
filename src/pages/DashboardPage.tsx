@@ -3,15 +3,17 @@ import React, { useEffect, useState } from 'react';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { PlayerStatsCard } from '../components/dashboard/PlayerStatsCard';
 import { QuickActions } from '../components/dashboard/QuickActions';
+import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
 import { useAuth } from '../contexts/AuthContext';
 import { PlayerStats } from '../types';
-import { initializePlayerStats, hireAsPoliceOfficer } from '../services/PlayerService';
+import { initializePlayerStats, getPlayerStats, hireAsPoliceOfficer } from '../services/PlayerService';
 import '../styles/pages/Dashboard.css';
 
-const DashboardPage: React.FC = () => {
+function DashboardPage() {
     const { currentUser, userData } = useAuth();
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const [loading, setLoading] = useState(true);
+    const [showTutorial, setShowTutorial] = useState(false);
 
     useEffect(() => {
         const loadPlayerStats = async () => {
@@ -19,6 +21,11 @@ const DashboardPage: React.FC = () => {
                 try {
                     const stats = await initializePlayerStats(currentUser.uid);
                     setPlayerStats(stats);
+
+                    // Check if tutorial should be shown
+                    if (!stats.tutorialProgress.isCompleted) {
+                        setShowTutorial(true);
+                    }
                 } catch (error) {
                     console.error('Viga mängija andmete laadimisel:', error);
                 } finally {
@@ -37,9 +44,20 @@ const DashboardPage: React.FC = () => {
             const updatedStats = await hireAsPoliceOfficer(currentUser.uid);
             setPlayerStats(updatedStats);
             alert('Õnnitleme! Oled nüüd Eesti Politsei liige!');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Viga tööle kandideerimisel:', error);
-            alert('Kandideerimine ebaõnnestus. Proovi uuesti!');
+            alert(error.message || 'Kandideerimine ebaõnnestus. Proovi uuesti!');
+        }
+    };
+
+    const handleTutorialComplete = async () => {
+        setShowTutorial(false);
+        // Reload stats to reflect tutorial completion
+        if (currentUser) {
+            const updatedStats = await getPlayerStats(currentUser.uid);
+            if (updatedStats) {
+                setPlayerStats(updatedStats);
+            }
         }
     };
 
@@ -66,13 +84,20 @@ const DashboardPage: React.FC = () => {
                         />
                         <QuickActions
                             stats={playerStats}
-                            onApplyForJob={handleApplyForJob}
                         />
+
+                        {showTutorial && currentUser && (
+                            <TutorialOverlay
+                                stats={playerStats}
+                                userId={currentUser.uid}
+                                onTutorialComplete={handleTutorialComplete}
+                            />
+                        )}
                     </>
                 )}
             </main>
         </div>
     );
-};
+}
 
 export default DashboardPage;

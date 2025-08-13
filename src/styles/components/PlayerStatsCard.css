@@ -207,3 +207,24 @@
     color: #ff9800;
     font-weight: 600;
 }
+
+.stat-unavailable {
+    color: #666;
+    opacity: 0.7;
+}
+
+.stat-untrained {
+    color: #666;
+    opacity: 0.7;
+}
+
+.stats-badge .badge-number {
+    font-size: 1.2rem;
+    color: #4a90e2;
+    font-weight: bold;
+}
+
+.stats-badge .badge-number:not(:has-text) {
+    color: #666;
+    opacity: 0.7;
+}

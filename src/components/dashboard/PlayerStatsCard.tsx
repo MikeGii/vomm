@@ -17,12 +17,12 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
         <div className="stats-card">
             <div className="stats-header">
                 <h2 className="stats-username">{username}</h2>
-                {stats.badgeNumber && (
-                    <div className="stats-badge">
-                        <span className="badge-label">Märk</span>
-                        <span className="badge-number">#{stats.badgeNumber}</span>
-                    </div>
-                )}
+                <div className="stats-badge">
+                    <span className="badge-label">Ametitõend</span>
+                    <span className="badge-number">
+                        {stats.badgeNumber ? `#${stats.badgeNumber}` : '—'}
+                    </span>
+                </div>
             </div>
 
             <div className="stats-grid">
@@ -42,22 +42,28 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
 
                 <div className="stat-item">
                     <span className="stat-label">Staatus</span>
-                    <span className={`stat-value ${stats.isEmployed ? 'stat-employed' : 'stat-unemployed'}`}>
-                        {stats.isEmployed ? 'Politseinik' : 'Töötu'}
+                    <span className={`stat-value ${
+                        stats.hasCompletedTraining
+                            ? (stats.isEmployed ? 'stat-employed' : 'stat-unemployed')
+                            : 'stat-untrained'
+                    }`}>
+                        {stats.hasCompletedTraining
+                            ? (stats.isEmployed ? 'Politseinik' : 'Töötu')
+                            : '—'}
                     </span>
                 </div>
 
                 <div className="stat-item">
                     <span className="stat-label">Auaste</span>
-                    <span className="stat-value stat-rank">
-                        {stats.rank || 'Puudub'}
+                    <span className={`stat-value ${stats.rank ? 'stat-rank' : 'stat-unavailable'}`}>
+                        {stats.rank || '—'}
                     </span>
                 </div>
 
                 <div className="stat-item">
                     <span className="stat-label">Osakond</span>
-                    <span className="stat-value">
-                        {stats.department || 'Puudub'}
+                    <span className={`stat-value ${!stats.department && 'stat-unavailable'}`}>
+                        {stats.department || '—'}
                     </span>
                 </div>
 
@@ -80,10 +86,17 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                 </div>
             )}
 
-            {!stats.isEmployed && (
+            {!stats.hasCompletedTraining && (
                 <div className="unemployed-message">
-                    <p>Sa ei ole veel politseiteenistusse astunud.</p>
-                    <p>Kandideeri tööle, et alustada oma karjääri korrakaitsjana!</p>
+                    <p>Sa ei ole veel läbinud abipolitseiniku koolitust.</p>
+                    <p>Alusta koolitusega, et astuda politseiteenistusse!</p>
+                </div>
+            )}
+
+            {stats.hasCompletedTraining && !stats.isEmployed && (
+                <div className="unemployed-message">
+                    <p>Sa ei ole hetkel politseiteenistuses.</p>
+                    <p>Kandideeri tööle, et jätkata oma karjääri!</p>
                 </div>
             )}
         </div>

@@ -1,7 +1,7 @@
-// src/services/playerService.ts
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+// src/services/PlayerService.ts
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
-import { PlayerStats } from '../types';
+import { PlayerStats, TutorialProgress } from '../types';
 
 // Estonian police ranks from lowest to highest
 const POLICE_RANKS = [
@@ -30,17 +30,27 @@ export const initializePlayerStats = async (userId: string): Promise<PlayerStats
         return statsDoc.data() as PlayerStats;
     }
 
-    // Create initial stats for new player - starts unemployed
+    // Create initial stats for new player - starts unemployed and without training
     const initialStats: PlayerStats = {
         level: 1,
         experience: 0,
-        reputation: 0,  // No reputation when unemployed
-        rank: null,  // No rank when unemployed
-        department: null,  // No department when unemployed
-        badgeNumber: null,  // No badge when unemployed
+        reputation: 0,  // Starting with 0 reputation as requested
+        rank: null,  // No rank when untrained
+        department: null,  // No department when untrained
+        badgeNumber: null,  // No badge when untrained
         isEmployed: false,
+        hasCompletedTraining: false,  // No training completed initially
         casesCompleted: 0,
-        criminalsArrested: 0
+        criminalsArrested: 0,
+        tutorialProgress: {
+            isCompleted: false,
+            currentStep: 0,
+            totalSteps: 4,  // We have 4 tutorial steps
+            startedAt: null,
+            completedAt: null
+        },
+        activeCourse: null,
+        completedCourses: []
     };
 
     await setDoc(statsRef, initialStats);
@@ -58,8 +68,32 @@ export const getPlayerStats = async (userId: string): Promise<PlayerStats | null
     return null;
 };
 
-// Function to hire player as police officer
-export const hireAsPoliceOfficer = async (userId: string): Promise<PlayerStats> => {
+// Update tutorial progress
+export const updateTutorialProgress = async (
+    userId: string,
+    step: number,
+    isCompleted: boolean = false
+): Promise<void> => {
+    const statsRef = doc(firestore, 'playerStats', userId);
+
+    const updates: any = {
+        'tutorialProgress.currentStep': step
+    };
+
+    if (step === 1) {
+        updates['tutorialProgress.startedAt'] = new Date();
+    }
+
+    if (isCompleted) {
+        updates['tutorialProgress.isCompleted'] = true;
+        updates['tutorialProgress.completedAt'] = new Date();
+    }
+
+    await updateDoc(statsRef, updates);
+};
+
+// Complete basic training
+export const completeBasicTraining = async (userId: string): Promise<PlayerStats> => {
     const statsRef = doc(firestore, 'playerStats', userId);
     const currentStats = await getPlayerStats(userId);
 
@@ -69,13 +103,31 @@ export const hireAsPoliceOfficer = async (userId: string): Promise<PlayerStats> 
 
     const updatedStats: PlayerStats = {
         ...currentStats,
+        hasCompletedTraining: true,
         isEmployed: true,
         rank: POLICE_RANKS[0], // Start as Abipolitseinik
         department: 'Patrulltalitus',
         badgeNumber: Math.floor(10000 + Math.random() * 90000).toString(),
-        reputation: 100  // Starting reputation when joining force
+        reputation: 100,  // Starting reputation when joining force
+        experience: currentStats.experience + 50  // Bonus XP for completing training
     };
 
     await setDoc(statsRef, updatedStats);
     return updatedStats;
+};
+
+// Function to hire player as police officer (now requires training)
+export const hireAsPoliceOfficer = async (userId: string): Promise<PlayerStats> => {
+    const currentStats = await getPlayerStats(userId);
+
+    if (!currentStats) {
+        throw new Error('Mängija andmed puuduvad');
+    }
+
+    if (!currentStats.hasCompletedTraining) {
+        throw new Error('Pead esmalt läbima abipolitseiniku koolituse!');
+    }
+
+    // If training is completed, this function can be used for re-employment
+    return completeBasicTraining(userId);
 };

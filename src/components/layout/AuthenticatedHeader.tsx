@@ -55,6 +55,24 @@ export const AuthenticatedHeader: React.FC = () => {
                         </button>
                         {isMenuOpen && (
                             <div className="menu-dropdown">
+                                <button
+                                    onClick={() => {
+                                        navigate('/dashboard');
+                                        setIsMenuOpen(false);
+                                    }}
+                                    className="menu-item"
+                                >
+                                    Töölaud
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        navigate('/courses');
+                                        setIsMenuOpen(false);
+                                    }}
+                                    className="menu-item"
+                                >
+                                    Koolitused
+                                </button>
                                 <button onClick={handleLogout} className="menu-item">
                                     Logi välja
                                 </button>
