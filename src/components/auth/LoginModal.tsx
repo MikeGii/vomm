@@ -27,11 +27,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
             await signInWithEmailAndPassword(auth, email, password);
             onSuccess();
             onClose();
-            // Reset form
             setEmail('');
             setPassword('');
         } catch (error: any) {
-            setError(error.message);
+            setError('Vale e-post või parool');
         } finally {
             setLoading(false);
         }
@@ -47,11 +46,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
         <div className="modal-backdrop" onClick={handleBackdropClick}>
             <div className="modal-content">
                 <button className="modal-close" onClick={onClose}>×</button>
-                <h2 className="modal-title">Login</h2>
+                <h2 className="modal-title">Sisene mängu</h2>
                 <form onSubmit={handleLogin} className="modal-form">
                     <input
                         type="email"
-                        placeholder="Email"
+                        placeholder="E-posti aadress"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
@@ -60,7 +59,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
                     />
                     <input
                         type="password"
-                        placeholder="Password"
+                        placeholder="Parool"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
@@ -73,7 +72,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
                         className="modal-button"
                         disabled={loading}
                     >
-                        {loading ? 'Logging in...' : 'Login'}
+                        {loading ? 'Sisenen...' : 'Logi sisse'}
                     </button>
                 </form>
             </div>
