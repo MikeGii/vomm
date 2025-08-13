@@ -24,3 +24,16 @@ code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.page {
+    min-height: 100vh;
+    background-color: #0f0f0f;
+    color: #f0f0f0;
+}
+
+.page-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+}
