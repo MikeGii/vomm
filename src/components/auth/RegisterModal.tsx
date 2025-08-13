@@ -4,7 +4,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, firestore } from '../../config/firebase';
 import { User } from '../../types';
-import '../../styles/Modal.css';
+import '../../styles/layout/Modal.css';
 
 interface RegisterModalProps {
     isOpen: boolean;

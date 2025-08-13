@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../config/firebase';
-import '../../styles/Modal.css';
+import '../../styles/layout/Modal.css';
 
 interface LoginModalProps {
     isOpen: boolean;

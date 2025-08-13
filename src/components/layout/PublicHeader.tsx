@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LoginModal } from '../auth/LoginModal';
 import { RegisterModal } from '../auth/RegisterModal';
-import '../../styles/Header.css';
+import '../../styles/layout/Header.css';
 
 export const PublicHeader: React.FC = () => {
     const [showLoginModal, setShowLoginModal] = useState(false);

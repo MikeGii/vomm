@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../config/firebase';
-import '../../styles/Header.css';
+import '../../styles/layout/Header.css';
 
 export const AuthenticatedHeader: React.FC = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);

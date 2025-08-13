@@ -1,6 +1,6 @@
 // src/components/home/Features.tsx
 import React from 'react';
-import '../../styles/Features.css';
+import '../../styles/components/Features.css';
 
 export const Features: React.FC = () => {
     const features = [

@@ -1,0 +1,20 @@
+/* src/styles/pages/Dashboard.css */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.loading {
+    text-align: center;
+    color: #888;
+    font-size: 1.2rem;
+    padding: 3rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 1rem;
+    }
+}

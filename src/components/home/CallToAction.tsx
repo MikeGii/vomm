@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { RegisterModal } from '../auth/RegisterModal';
 import { useNavigate } from 'react-router-dom';
-import '../../styles/CallToAction.css';
+import '../../styles/components/CallToAction.css';
 
 export const CallToAction: React.FC = () => {
     const [showRegisterModal, setShowRegisterModal] = useState(false);
