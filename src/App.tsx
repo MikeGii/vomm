@@ -5,6 +5,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
+import CoursesPage from './pages/CoursesPage';
 
 function App() {
     return (
@@ -17,6 +18,51 @@ function App() {
                         element={
                             <ProtectedRoute>
                                 <DashboardPage />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/courses"
+                        element={
+                            <ProtectedRoute>
+                                <CoursesPage />
+                            </ProtectedRoute>
+                        }
+                    />
+                    {/* Placeholder routes for future pages */}
+                    <Route
+                        path="/training"
+                        element={
+                            <ProtectedRoute>
+                                <div className="page">
+                                    <div className="page-content">
+                                        <h1>Treening - Tulekul</h1>
+                                    </div>
+                                </div>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/patrol"
+                        element={
+                            <ProtectedRoute>
+                                <div className="page">
+                                    <div className="page-content">
+                                        <h1>Mine tööle - Tulekul</h1>
+                                    </div>
+                                </div>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/department"
+                        element={
+                            <ProtectedRoute>
+                                <div className="page">
+                                    <div className="page-content">
+                                        <h1>Osakond - Tulekul</h1>
+                                    </div>
+                                </div>
                             </ProtectedRoute>
                         }
                     />

@@ -1,0 +1,85 @@
+/* src/styles/components/courses/ActiveCourseProgress.css */
+.active-course-banner {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 2px solid #ffd700;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    animation: fadeIn 0.5s ease;
+}
+
+.active-course-banner h3 {
+    color: #ffd700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+
+.active-course-name {
+    color: #f0f0f0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.progress-container {
+    margin-bottom: 1rem;
+}
+
+.time-remaining {
+    color: #f0f0f0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 30px;
+    background-color: #1a1a1a;
+    border-radius: 15px;
+    overflow: hidden;
+    border: 1px solid #333;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ffd700, #ffed4e);
+    transition: width 1s linear;
+    border-radius: 15px;
+}
+
+.course-warning {
+    color: #ff9800;
+    font-size: 0.9rem;
+    margin: 0;
+    text-align: center;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .active-course-banner {
+        padding: 1rem;
+    }
+
+    .active-course-name {
+        font-size: 1.2rem;
+    }
+
+    .time-remaining {
+        font-size: 1rem;
+    }
+}
