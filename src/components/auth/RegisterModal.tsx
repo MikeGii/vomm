@@ -29,7 +29,6 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
         try {
             const { user } = await createUserWithEmailAndPassword(auth, email, password);
 
-            // Create simple user profile
             const userProfile: User = {
                 uid: user.uid,
                 email: user.email!,
@@ -40,12 +39,17 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
             await setDoc(doc(firestore, 'users', user.uid), userProfile);
             onSuccess();
             onClose();
-            // Reset form
             setEmail('');
             setPassword('');
             setUsername('');
         } catch (error: any) {
-            setError(error.message);
+            if (error.code === 'auth/email-already-in-use') {
+                setError('See e-posti aadress on juba kasutusel');
+            } else if (error.code === 'auth/weak-password') {
+                setError('Parool peab olema vähemalt 6 tähemärki pikk');
+            } else {
+                setError('Registreerimine ebaõnnestus. Proovi uuesti.');
+            }
         } finally {
             setLoading(false);
         }
@@ -61,11 +65,11 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
         <div className="modal-backdrop" onClick={handleBackdropClick}>
             <div className="modal-content">
                 <button className="modal-close" onClick={onClose}>×</button>
-                <h2 className="modal-title">Register</h2>
+                <h2 className="modal-title">Alusta karjääri</h2>
                 <form onSubmit={handleRegister} className="modal-form">
                     <input
                         type="text"
-                        placeholder="Username"
+                        placeholder="Kasutajanimi"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         required
@@ -74,7 +78,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                     />
                     <input
                         type="email"
-                        placeholder="Email"
+                        placeholder="E-posti aadress"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
@@ -83,7 +87,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                     />
                     <input
                         type="password"
-                        placeholder="Password (min 6 characters)"
+                        placeholder="Parool (vähemalt 6 tähemärki)"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
@@ -97,7 +101,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                         className="modal-button"
                         disabled={loading}
                     >
-                        {loading ? 'Creating account...' : 'Register'}
+                        {loading ? 'Registreerin...' : 'Loo konto'}
                     </button>
                 </form>
             </div>

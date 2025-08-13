@@ -31,13 +31,13 @@ export const PublicHeader: React.FC = () => {
                             className="header-btn"
                             onClick={() => setShowRegisterModal(true)}
                         >
-                            Register
+                            Registreeri
                         </button>
                         <button
                             className="header-btn header-btn-primary"
                             onClick={() => setShowLoginModal(true)}
                         >
-                            Login
+                            Logi sisse
                         </button>
                     </div>
                 </div>

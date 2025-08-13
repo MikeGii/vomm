@@ -14,7 +14,7 @@ export const AuthenticatedHeader: React.FC = () => {
             await signOut(auth);
             navigate('/');
         } catch (error) {
-            console.error('Logout error:', error);
+            console.error('Väljumine ebaõnnestus:', error);
         }
     };
 
@@ -38,7 +38,7 @@ export const AuthenticatedHeader: React.FC = () => {
                         {isMenuOpen && (
                             <div className="menu-dropdown">
                                 <button onClick={handleLogout} className="menu-item">
-                                    Logout
+                                    Logi välja
                                 </button>
                             </div>
                         )}

@@ -10,8 +10,8 @@ const DashboardPage: React.FC = () => {
         <div className="page">
             <AuthenticatedHeader />
             <main className="page-content">
-                <h2>Welcome, {userData?.username}!</h2>
-                <p>This is your dashboard. Game features coming soon!</p>
+                <h2>Tere tulemast, konstaabel {userData?.username}!</h2>
+                <p>Sinu politseiteenistus algab siit. Uued ülesanded tulekul!</p>
             </main>
         </div>
     );
