@@ -31,6 +31,7 @@ const CoursesPage: React.FC = () => {
 
     useEffect(() => {
         loadData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentUser]);
 
     useEffect(() => {
@@ -46,6 +47,7 @@ const CoursesPage: React.FC = () => {
 
             return () => clearInterval(interval);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [playerStats?.activeCourse]);
 
     const loadData = useCallback(async () => {

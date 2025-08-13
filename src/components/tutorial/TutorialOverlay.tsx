@@ -50,6 +50,22 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     const [currentStep, setCurrentStep] = useState(stats.tutorialProgress.currentStep || 0);
     const [isVisible, setIsVisible] = useState(false);
 
+    // Move these functions outside useEffect
+    const removeHighlight = () => {
+        document.querySelectorAll('.tutorial-highlight').forEach(el => {
+            el.classList.remove('tutorial-highlight');
+        });
+    };
+
+    const highlightElement = (selector: string) => {
+        removeHighlight();
+        const element = document.querySelector(selector);
+        if (element) {
+            element.classList.add('tutorial-highlight');
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    };
+
     useEffect(() => {
         // Start tutorial if not completed and step is 0
         if (!stats.tutorialProgress.isCompleted && currentStep === 0) {
@@ -62,15 +78,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }, [stats.tutorialProgress.isCompleted, currentStep, userId]);
 
     useEffect(() => {
-        const highlightElement = (selector: string) => {
-            removeHighlight();
-            const element = document.querySelector(selector);
-            if (element) {
-                element.classList.add('tutorial-highlight');
-                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        };
-
         if (isVisible && currentStep > 0 && currentStep <= TUTORIAL_STEPS.length) {
             highlightElement(TUTORIAL_STEPS[currentStep - 1].targetElement);
         }
@@ -78,23 +85,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         return () => {
             removeHighlight();
         };
-    }, [currentStep, isVisible]);
+    }, [currentStep, isVisible, highlightElement]);
 
-    const highlightElement = (selector: string) => {
-        removeHighlight();
-        const element = document.querySelector(selector);
-        if (element) {
-            element.classList.add('tutorial-highlight');
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    };
-
-    const removeHighlight = () => {
-        document.querySelectorAll('.tutorial-highlight').forEach(el => {
-            el.classList.remove('tutorial-highlight');
-        });
-    };
-
+    // Rest of the component remains the same...
     const handleNext = async () => {
         const nextStep = currentStep + 1;
 
@@ -126,6 +119,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         onTutorialComplete();
     };
 
+    // Rest of the component...
     if (!isVisible || currentStep === 0 || currentStep > TUTORIAL_STEPS.length) {
         return null;
     }
