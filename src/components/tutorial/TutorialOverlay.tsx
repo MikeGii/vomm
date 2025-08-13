@@ -1,5 +1,5 @@
 // src/components/tutorial/TutorialOverlay.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PlayerStats } from '../../types';
 import { updateTutorialProgress } from '../../services/PlayerService';
 import '../../styles/components/TutorialOverlay.css';
@@ -50,21 +50,20 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     const [currentStep, setCurrentStep] = useState(stats.tutorialProgress.currentStep || 0);
     const [isVisible, setIsVisible] = useState(false);
 
-    // Move these functions outside useEffect
-    const removeHighlight = () => {
+    const removeHighlight = useCallback(() => {
         document.querySelectorAll('.tutorial-highlight').forEach(el => {
             el.classList.remove('tutorial-highlight');
         });
-    };
+    }, []);
 
-    const highlightElement = (selector: string) => {
+    const highlightElement = useCallback((selector: string) => {
         removeHighlight();
         const element = document.querySelector(selector);
         if (element) {
             element.classList.add('tutorial-highlight');
             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-    };
+    }, [removeHighlight]);
 
     useEffect(() => {
         // Start tutorial if not completed and step is 0
@@ -85,9 +84,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         return () => {
             removeHighlight();
         };
-    }, [currentStep, isVisible, highlightElement]);
+    }, [currentStep, isVisible, highlightElement, removeHighlight]);
 
-    // Rest of the component remains the same...
     const handleNext = async () => {
         const nextStep = currentStep + 1;
 
@@ -119,7 +117,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         onTutorialComplete();
     };
 
-    // Rest of the component...
     if (!isVisible || currentStep === 0 || currentStep > TUTORIAL_STEPS.length) {
         return null;
     }
