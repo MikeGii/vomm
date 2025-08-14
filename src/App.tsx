@@ -6,6 +6,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
 import CoursesPage from './pages/CoursesPage';
+import TrainingPage from './pages/TrainingPage';
 
 function App() {
     return (
@@ -34,11 +35,7 @@ function App() {
                         path="/training"
                         element={
                             <ProtectedRoute>
-                                <div className="page">
-                                    <div className="page-content">
-                                        <h1>Treening - Tulekul</h1>
-                                    </div>
-                                </div>
+                                <TrainingPage />
                             </ProtectedRoute>
                         }
                     />

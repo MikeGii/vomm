@@ -6,7 +6,7 @@ export const BASIC_COURSES: Course[] = [
         id: 'basic_police_training',
         name: 'Abipolitseiniku baaskursus',
         description: 'Põhiline koolitus kõigile uutele liikmetele. Õpid seadusi, protseduure ja ohutustehnikaid.',
-        duration: 10, // 60 seconds for testing
+        duration: 20, // 60 seconds for testing
         requirements: {
             level: 1
         },

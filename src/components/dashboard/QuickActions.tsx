@@ -23,9 +23,15 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ stats }) => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
 
-    // Check if we're in tutorial mode and haven't reached courses yet
+    // Check if we're in tutorial mode and what step we're on
     const inTutorial = !stats.tutorialProgress?.isCompleted;
-    const shouldLockActions = inTutorial && stats.tutorialProgress?.currentStep < 3;
+    const tutorialStep = stats.tutorialProgress?.currentStep || 0;
+
+    // Determine what should be locked based on tutorial progress
+    const shouldLockActions = inTutorial && tutorialStep < 3;
+    const shouldLockTraining = inTutorial && tutorialStep < 9;  // Unlock at step 9
+    const shouldLockWork = true;  // Always locked in tutorial
+    const shouldLockDepartment = true;  // Always locked in tutorial
 
     // Check what features are available based on progress
     const canTrain = stats.hasCompletedTraining;
@@ -42,41 +48,56 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ stats }) => {
         navigate('/courses');
     };
 
+    const handleTrainingClick = async () => {
+        // Update tutorial progress when clicking training during tutorial
+        if (!stats.tutorialProgress?.isCompleted &&
+            stats.tutorialProgress?.currentStep === 10 &&
+            currentUser) {
+            // This is handled in TutorialOverlay, just navigate
+        }
+        navigate('/training');
+    };
+
     const actions: ActionItem[] = [
         {
             icon: '📚',
             label: 'Koolitused',
             disabled: false,
             action: handleCoursesClick,
-            highlighted: stats.tutorialProgress?.currentStep === 3,
+            highlighted: tutorialStep === 3,
             locked: false
         },
         {
-            icon: shouldLockActions ? '🔒' : '🎯',
+            icon: shouldLockTraining ? '🔒' : '🎯',
             label: 'Treening',
-            disabled: !canTrain || shouldLockActions,
-            locked: shouldLockActions,
-            action: () => navigate('/training')
+            disabled: shouldLockTraining || (!inTutorial && !canTrain),
+            locked: shouldLockTraining,
+            action: handleTrainingClick,
+            highlighted: tutorialStep === 10
         },
         {
-            icon: shouldLockActions ? '🔒' : '🚓',
+            icon: shouldLockWork ? '🔒' : '🚓',
             label: 'Mine tööle',
-            disabled: !canWork || shouldLockActions,
-            locked: shouldLockActions,
+            disabled: shouldLockWork || (!inTutorial && !canWork),
+            locked: shouldLockWork,
             action: () => navigate('/patrol')
         },
         {
-            icon: shouldLockActions ? '🔒' : '👥',
+            icon: shouldLockDepartment ? '🔒' : '👥',
             label: 'Osakond',
-            disabled: !canAccessDepartment || shouldLockActions,
-            locked: shouldLockActions,
+            disabled: shouldLockDepartment || (!inTutorial && !canAccessDepartment),
+            locked: shouldLockDepartment,
             action: () => navigate('/department')
         }
     ];
 
     // Determine info text based on player state
     let infoText: string;
-    if (shouldLockActions) {
+    if (tutorialStep === 10) {
+        infoText = 'Vajuta Treening nuppu, et jätkata õpetusega!';
+    } else if (tutorialStep === 3) {
+        infoText = 'Vajuta Koolitused nuppu, et jätkata õpetusega!';
+    } else if (shouldLockActions) {
         infoText = 'Järgi õpetust, et avada kõik funktsioonid!';
     } else if (!stats.hasCompletedTraining) {
         infoText = 'Alusta abipolitseiniku koolitusega!';

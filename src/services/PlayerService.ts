@@ -46,7 +46,7 @@ export const initializePlayerStats = async (userId: string): Promise<PlayerStats
         tutorialProgress: {
             isCompleted: false,
             currentStep: 0,
-            totalSteps: 9,
+            totalSteps: 10,
             startedAt: null,
             completedAt: null
         },
@@ -85,9 +85,11 @@ export const updateTutorialProgress = async (
         updates['tutorialProgress.startedAt'] = new Date();
     }
 
-    if (isCompleted) {
+    // Complete tutorial at step 11 or if explicitly marked as completed
+    if (step === 11 || isCompleted) {
         updates['tutorialProgress.isCompleted'] = true;
         updates['tutorialProgress.completedAt'] = new Date();
+        updates['tutorialProgress.currentStep'] = 10;
     }
 
     await updateDoc(statsRef, updates);
