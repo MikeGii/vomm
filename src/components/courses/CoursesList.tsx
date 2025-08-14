@@ -1,6 +1,6 @@
 // src/components/courses/CoursesList.tsx
 import React from 'react';
-import { Course } from '../../types';
+import {Course, PlayerStats} from '../../types';
 import { CourseCard } from './CourseCard';
 import '../../styles/components/courses/CoursesList.css';
 
@@ -12,6 +12,7 @@ interface CoursesListProps {
     hasActiveCourse?: boolean;
     activeCourseId?: string;
     remainingTime?: number;
+    playerStats?: PlayerStats;
 }
 
 export const CoursesList: React.FC<CoursesListProps> = ({
@@ -21,7 +22,8 @@ export const CoursesList: React.FC<CoursesListProps> = ({
                                                             isEnrolling = false,
                                                             hasActiveCourse = false,
                                                             activeCourseId,
-                                                            remainingTime = 0
+                                                            remainingTime = 0,
+                                                            playerStats
                                                         }) => {
     if (courses.length === 0) {
         return (
@@ -50,6 +52,7 @@ export const CoursesList: React.FC<CoursesListProps> = ({
                     hasActiveCourse={hasActiveCourse}
                     isActive={course.id === activeCourseId}
                     remainingTime={course.id === activeCourseId ? remainingTime : 0}
+                    playerStats={playerStats}
                 />
             ))}
         </div>

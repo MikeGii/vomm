@@ -1,6 +1,6 @@
 // src/components/courses/CourseCard.tsx
 import React from 'react';
-import { Course } from '../../types';
+import {Course, PlayerStats} from '../../types';
 import '../../styles/components/courses/CourseCard.css';
 
 interface CourseCardProps {
@@ -11,6 +11,7 @@ interface CourseCardProps {
     hasActiveCourse?: boolean;
     isActive?: boolean;
     remainingTime?: number;
+    playerStats?: PlayerStats;
 }
 
 export const CourseCard: React.FC<CourseCardProps> = ({
@@ -20,23 +21,56 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                                                           isEnrolling = false,
                                                           hasActiveCourse = false,
                                                           isActive = false,
-                                                          remainingTime = 0
+                                                          remainingTime = 0,
+                                                          playerStats
                                                       }) => {
+
+    // Add requirement checking
+    const meetsLevelRequirement = !course.requirements.level ||
+        (playerStats && playerStats.level >= course.requirements.level);
+
+    const meetsReputationRequirement = !course.requirements.reputation ||
+        (playerStats && playerStats.reputation >= course.requirements.reputation);
+
+    const meetsPrerequisiteRequirement = !course.requirements.completedCourses ||
+        (playerStats && course.requirements.completedCourses.every(
+            courseId => playerStats.completedCourses?.includes(courseId)
+        ));
+
+    const meetsAllRequirements = meetsLevelRequirement &&
+        meetsReputationRequirement &&
+        meetsPrerequisiteRequirement;
+
+    // formatDuration function
     const formatDuration = (seconds: number): string => {
         if (seconds < 60) return `${seconds} sekundit`;
-        const mins = Math.floor(seconds / 60);
-        return `${mins} ${mins === 1 ? 'minut' : 'minutit'}`;
+        if (seconds < 3600) {
+            const mins = Math.floor(seconds / 60);
+            return `${mins} ${mins === 1 ? 'minut' : 'minutit'}`;
+        }
+        const hours = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        if (mins === 0) {
+            return `${hours} ${hours === 1 ? 'tund' : 'tundi'}`;
+        }
+        return `${hours}t ${mins}min`;
     };
 
+    // formatTime function for active courses
     const formatTime = (seconds: number): string => {
-        const mins = Math.floor(seconds / 60);
+        const hours = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
         const secs = seconds % 60;
+
+        if (hours > 0) {
+            return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
     const getCategoryLabel = (category: string): string => {
         switch(category) {
-            case 'abipolitseinik' : return 'abipolitseinik';
+            case 'abipolitseinik': return 'Abipolitseinik';
             case 'basic': return 'Baaskoolitus';
             case 'advanced': return 'Edasijõudnud';
             case 'specialist': return 'Spetsialist';
@@ -71,7 +105,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
     }
 
     return (
-        <div className="course-card" id={course.id}>
+        <div className={`course-card ${!meetsAllRequirements ? 'requirements-not-met' : ''}`} id={course.id}>
             <div className="course-header">
                 <h2 className="course-name">{course.name}</h2>
                 <span className={`course-category category-${course.category}`}>
@@ -84,13 +118,24 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                 <h4>Nõuded:</h4>
                 <ul>
                     {course.requirements.level && (
-                        <li>Tase: {course.requirements.level}</li>
+                        <li className={meetsLevelRequirement ? 'requirement-met' : 'requirement-not-met'}>
+                            Tase: {course.requirements.level}
+                            {playerStats && !meetsLevelRequirement &&
+                                ` (Sul on: ${playerStats.level})`}
+                        </li>
                     )}
                     {course.requirements.reputation && (
-                        <li>Maine: {course.requirements.reputation}</li>
+                        <li className={meetsReputationRequirement ? 'requirement-met' : 'requirement-not-met'}>
+                            Maine: {course.requirements.reputation}
+                            {playerStats && !meetsReputationRequirement &&
+                                ` (Sul on: ${playerStats.reputation})`}
+                        </li>
                     )}
                     {course.requirements.completedCourses && (
-                        <li>Eelnevad koolitused läbitud</li>
+                        <li className={meetsPrerequisiteRequirement ? 'requirement-met' : 'requirement-not-met'}>
+                            Eelnevad koolitused läbitud
+                            {!meetsPrerequisiteRequirement && ' ❌'}
+                        </li>
                     )}
                 </ul>
             </div>
@@ -130,9 +175,10 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                             <button
                                 className="enroll-button"
                                 onClick={() => onEnroll(course.id)}
-                                disabled={isEnrolling || hasActiveCourse}
+                                disabled={isEnrolling || hasActiveCourse || !meetsAllRequirements}
                             >
-                                {hasActiveCourse ? 'Koolitus käib' : 'Alusta'}
+                                {!meetsAllRequirements ? 'Nõuded täitmata' :
+                                    hasActiveCourse ? 'Koolitus käib' : 'Alusta'}
                             </button>
                         )}
                     </>
