@@ -4,7 +4,7 @@ import { Course } from '../types';
 export const BASIC_COURSES: Course[] = [
     {
         id: 'basic_police_training',
-        name: 'Abipolitseiniku esmakoolitus',
+        name: 'Abipolitseiniku baaskursus',
         description: 'Põhiline koolitus kõigile uutele liikmetele. Õpid seadusi, protseduure ja ohutustehnikaid.',
         duration: 60, // 60 seconds for testing
         requirements: {
@@ -12,10 +12,10 @@ export const BASIC_COURSES: Course[] = [
         },
         rewards: {
             experience: 50,
-            reputation: 100,
+            reputation: 10,
             unlocksRank: 'Abipolitseinik'
         },
-        category: 'basic'
+        category: 'abipolitseinik'
     },
     {
         id: 'patrol_training',

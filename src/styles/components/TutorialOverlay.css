@@ -8,6 +8,12 @@
     background-color: rgba(0, 0, 0, 0.7);
     z-index: 9998;
     animation: fadeIn 0.3s ease;
+    pointer-events: auto;
+}
+
+/* Special backdrop that allows clicks on highlighted elements */
+.tutorial-backdrop-clickthrough {
+    pointer-events: none !important;
 }
 
 .tutorial-box {
@@ -20,6 +26,7 @@
     z-index: 10000;
     box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
     animation: slideIn 0.3s ease;
+    pointer-events: auto; /* Tutorial box is always clickable */
 }
 
 .tutorial-box.tutorial-top {
@@ -120,6 +127,29 @@
     animation: tutorialPulse 2s infinite;
 }
 
+/* Make clickable highlighted elements accessible */
+.tutorial-highlight.tutorial-clickable {
+    z-index: 10002 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Ensure buttons inside highlighted elements are clickable */
+.tutorial-highlight button,
+.tutorial-highlight .enroll-button,
+.tutorial-highlight.quick-action-button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 10002 !important;
+}
+
+/* Specific fix for nested buttons */
+.tutorial-highlight .enroll-button,
+.tutorial-highlight.quick-action-button {
+    position: relative;
+    z-index: 10003 !important;
+}
+
 @keyframes tutorialPulse {
     0% {
         box-shadow: 0 0 0 3px #ffd700, 0 0 30px rgba(255, 215, 0, 0.8);
@@ -152,6 +182,23 @@
     }
 }
 
+/* Animation for right and left positioned boxes */
+.tutorial-box.tutorial-left,
+.tutorial-box.tutorial-right {
+    animation: slideInSide 0.3s ease;
+}
+
+@keyframes slideInSide {
+    from {
+        opacity: 0;
+        transform: translateY(-50%) translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+    }
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
     .tutorial-box {
@@ -164,5 +211,29 @@
         left: 50%;
         right: auto;
         transform: translateX(-50%) translateY(-50%);
+    }
+
+    .tutorial-box.tutorial-top,
+    .tutorial-box.tutorial-bottom {
+        max-width: calc(100% - 2rem);
+    }
+}
+
+@media (max-width: 480px) {
+    .tutorial-box {
+        padding: 1.2rem;
+    }
+
+    .tutorial-title {
+        font-size: 1.1rem;
+    }
+
+    .tutorial-content {
+        font-size: 0.95rem;
+    }
+
+    .tutorial-btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
     }
 }

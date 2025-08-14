@@ -2,6 +2,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PlayerStats } from '../../types';
+import { updateTutorialProgress } from '../../services/PlayerService';
+import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/components/QuickActions.css';
 
 interface QuickActionsProps {
@@ -19,24 +21,35 @@ interface ActionItem {
 
 export const QuickActions: React.FC<QuickActionsProps> = ({ stats }) => {
     const navigate = useNavigate();
+    const { currentUser } = useAuth();
 
     // Check if we're in tutorial mode and haven't reached courses yet
     const inTutorial = !stats.tutorialProgress?.isCompleted;
     const shouldLockActions = inTutorial && stats.tutorialProgress?.currentStep < 3;
 
     // Check what features are available based on progress
-    const canTrain = stats.hasCompletedTraining; // Can do training after basic course
-    const canWork = stats.hasCompletedTraining && !stats.isEmployed; // Can go to work after training
-    const canAccessDepartment = stats.isEmployed; // Can access department when employed
+    const canTrain = stats.hasCompletedTraining;
+    const canWork = stats.hasCompletedTraining && !stats.isEmployed;
+    const canAccessDepartment = stats.isEmployed;
+
+    const handleCoursesClick = async () => {
+        // Update tutorial progress when clicking courses during tutorial
+        if (!stats.tutorialProgress?.isCompleted &&
+            stats.tutorialProgress?.currentStep === 3 &&
+            currentUser) {
+            await updateTutorialProgress(currentUser.uid, 4);
+        }
+        navigate('/courses');
+    };
 
     const actions: ActionItem[] = [
         {
             icon: '📚',
             label: 'Koolitused',
             disabled: false,
-            action: () => navigate('/courses'),
+            action: handleCoursesClick,
             highlighted: stats.tutorialProgress?.currentStep === 3,
-            locked: false  // Never locked
+            locked: false
         },
         {
             icon: shouldLockActions ? '🔒' : '🎯',

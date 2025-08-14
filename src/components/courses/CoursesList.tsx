@@ -10,6 +10,8 @@ interface CoursesListProps {
     onEnroll?: (courseId: string) => void;
     isEnrolling?: boolean;
     hasActiveCourse?: boolean;
+    activeCourseId?: string;
+    remainingTime?: number;
 }
 
 export const CoursesList: React.FC<CoursesListProps> = ({
@@ -17,7 +19,9 @@ export const CoursesList: React.FC<CoursesListProps> = ({
                                                             isCompleted = false,
                                                             onEnroll,
                                                             isEnrolling = false,
-                                                            hasActiveCourse = false
+                                                            hasActiveCourse = false,
+                                                            activeCourseId,
+                                                            remainingTime = 0
                                                         }) => {
     if (courses.length === 0) {
         return (
@@ -44,6 +48,8 @@ export const CoursesList: React.FC<CoursesListProps> = ({
                     onEnroll={onEnroll}
                     isEnrolling={isEnrolling}
                     hasActiveCourse={hasActiveCourse}
+                    isActive={course.id === activeCourseId}
+                    remainingTime={course.id === activeCourseId ? remainingTime : 0}
                 />
             ))}
         </div>
