@@ -34,9 +34,11 @@ const CoursesPage: React.FC = () => {
     const [remainingTime, setRemainingTime] = useState<number>(0);
     const [activeTab, setActiveTab] = useState<'available' | 'completed'>('available');
     const [showTutorial, setShowTutorial] = useState(false);
+    const [courseJustCompleted, setCourseJustCompleted] = useState(false);
+    const completionAlertShownRef = useRef<string | null>(null);
 
     // Process stats updates
-    const processStatsUpdate = useCallback((stats: PlayerStats) => {
+    const processStatsUpdate = useCallback(async (stats: PlayerStats) => {
         // Update courses
         const available = getAvailableCourses(stats);
         setAvailableCourses(available);
@@ -51,10 +53,27 @@ const CoursesPage: React.FC = () => {
             (!stats.activeCourse || stats.activeCourse.status !== 'in_progress')) {
 
             const completedCourse = getCourseById(lastActiveCourseRef.current);
-            if (completedCourse && stats.completedCourses?.includes(lastActiveCourseRef.current)) {
+            if (completedCourse &&
+                stats.completedCourses?.includes(lastActiveCourseRef.current) &&
+                completionAlertShownRef.current !== lastActiveCourseRef.current) {
+
+                // Mark this alert as shown
+                completionAlertShownRef.current = lastActiveCourseRef.current;
+
                 // Course was just completed
                 alert(`Õnnitleme! ${completedCourse.name} on edukalt läbitud!`);
                 setRemainingTime(0);
+
+                // Check if this was the basic training during tutorial
+                if (completedCourse.id === 'basic_police_training' &&
+                    !stats.tutorialProgress.isCompleted &&
+                    stats.tutorialProgress.currentStep === 6 &&
+                    currentUser) {
+                    setCourseJustCompleted(true);
+                    // Update tutorial progress to step 7
+                    await updateTutorialProgress(currentUser.uid, 7);
+                    setShowTutorial(true);
+                }
 
                 // Switch to completed tab
                 setTimeout(() => {
@@ -72,13 +91,14 @@ const CoursesPage: React.FC = () => {
             lastActiveCourseRef.current = null;
         }
 
-        // Check tutorial
-        if (!stats.tutorialProgress.isCompleted &&
-            stats.tutorialProgress.currentStep >= 3 &&
-            stats.tutorialProgress.currentStep < 7) {
-            setShowTutorial(true);
+        // Check tutorial - updated to handle new steps
+        if (!stats.tutorialProgress.isCompleted) {
+            if ((stats.tutorialProgress.currentStep >= 3 && stats.tutorialProgress.currentStep <= 6) ||
+                (stats.tutorialProgress.currentStep >= 7 && stats.tutorialProgress.currentStep <= 8)) {
+                setShowTutorial(true);
+            }
         }
-    }, []);
+    }, [currentUser]);
 
     // Set up real-time listener for player stats
     useEffect(() => {
@@ -142,12 +162,11 @@ const CoursesPage: React.FC = () => {
         };
     }, [playerStats?.activeCourse, currentUser]);
 
+    // Handle tutorial complete
     const handleTutorialComplete = useCallback(async () => {
         setShowTutorial(false);
-        if (currentUser && playerStats?.tutorialProgress.currentStep === 4) {
-            await updateTutorialProgress(currentUser.uid, 4);
-        }
-    }, [currentUser, playerStats]);
+        // Tutorial completion is handled in TutorialOverlay component
+    }, []);
 
     const handleEnrollCourse = async (courseId: string) => {
         if (!currentUser || enrolling) return;

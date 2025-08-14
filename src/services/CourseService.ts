@@ -132,11 +132,21 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
             updates.reputation = playerStats.reputation + course.rewards.reputation;
         }
 
-        if (course.rewards.unlocksRank) {
+        // Special handling for basic_police_training course
+        if (course.id === 'basic_police_training') {
+            // Mark as Abipolitseinik after basic training
+            updates.hasCompletedTraining = true;
+            updates.isEmployed = true;
+            updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
+            // Don't set prefecture yet - will be selected through modal
+            // Don't set rank - Abipolitseinik doesn't have ranks
+        } else if (course.rewards.unlocksRank) {
+            // For advanced courses that unlock actual police ranks
             updates.rank = course.rewards.unlocksRank;
             updates.isEmployed = true;
             updates.hasCompletedTraining = true;
 
+            // Set default department if becoming a real police officer
             if (!playerStats.department) {
                 updates.department = 'Patrulltalitus';
             }

@@ -44,13 +44,13 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                     <span className="stat-label">Staatus</span>
                     <span className={`stat-value ${
                         stats.hasCompletedTraining
-                            ? (stats.isEmployed ? 'stat-employed' : 'stat-unemployed')
+                            ? 'stat-employed'
                             : 'stat-untrained'
                     }`}>
-                        {stats.hasCompletedTraining
-                            ? (stats.isEmployed ? 'Politseinik' : 'Töötu')
-                            : '—'}
-                    </span>
+        {stats.hasCompletedTraining
+            ? 'Abipolitseinik'
+            : '—'}
+    </span>
                 </div>
 
                 <div className="stat-item">
@@ -61,10 +61,17 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                 </div>
 
                 <div className="stat-item">
+                    <span className="stat-label">Prefektuur</span>
+                    <span className={`stat-value ${!stats.prefecture && 'stat-unavailable'}`}>
+        {stats.prefecture || '—'}
+    </span>
+                </div>
+
+                <div className="stat-item">
                     <span className="stat-label">Osakond</span>
                     <span className={`stat-value ${!stats.department && 'stat-unavailable'}`}>
-                        {stats.department || '—'}
-                    </span>
+        {stats.department || '—'}
+    </span>
                 </div>
 
                 <div className="stat-item">
