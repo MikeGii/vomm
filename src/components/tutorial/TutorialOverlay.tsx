@@ -1,5 +1,5 @@
 // src/components/tutorial/TutorialOverlay.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { PlayerStats } from '../../types';
 import { updateTutorialProgress } from '../../services/PlayerService';
 import '../../styles/components/TutorialOverlay.css';
@@ -98,15 +98,16 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     const [isVisible, setIsVisible] = useState(false);
 
     // Determine which tutorial steps to use based on page and progress
-    let TUTORIAL_STEPS: TutorialStep[] = [];
-
-    if (page === 'dashboard' && currentStep <= 3) {
-        TUTORIAL_STEPS = DASHBOARD_TUTORIAL_STEPS;
-    } else if (page === 'courses' && currentStep >= 3 && currentStep <= 6) {
-        TUTORIAL_STEPS = COURSES_TUTORIAL_STEPS;
-    } else if (page === 'courses' && currentStep >= 7 && currentStep <= 8) {
-        TUTORIAL_STEPS = COURSES_COMPLETED_TUTORIAL_STEPS;
-    }
+    const TUTORIAL_STEPS = useMemo(() => {
+        if (page === 'dashboard' && currentStep <= 3) {
+            return DASHBOARD_TUTORIAL_STEPS;
+        } else if (page === 'courses' && currentStep >= 3 && currentStep <= 6) {
+            return COURSES_TUTORIAL_STEPS;
+        } else if (page === 'courses' && currentStep >= 7 && currentStep <= 8) {
+            return COURSES_COMPLETED_TUTORIAL_STEPS;
+        }
+        return [];
+    }, [page, currentStep]);
 
     const removeHighlight = useCallback(() => {
         document.querySelectorAll('.tutorial-highlight').forEach(el => {

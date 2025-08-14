@@ -34,7 +34,6 @@ const CoursesPage: React.FC = () => {
     const [remainingTime, setRemainingTime] = useState<number>(0);
     const [activeTab, setActiveTab] = useState<'available' | 'completed'>('available');
     const [showTutorial, setShowTutorial] = useState(false);
-    const [courseJustCompleted, setCourseJustCompleted] = useState(false);
     const completionAlertShownRef = useRef<string | null>(null);
 
     // Process stats updates
@@ -69,7 +68,6 @@ const CoursesPage: React.FC = () => {
                     !stats.tutorialProgress.isCompleted &&
                     stats.tutorialProgress.currentStep === 6 &&
                     currentUser) {
-                    setCourseJustCompleted(true);
                     // Update tutorial progress to step 7
                     await updateTutorialProgress(currentUser.uid, 7);
                     setShowTutorial(true);
