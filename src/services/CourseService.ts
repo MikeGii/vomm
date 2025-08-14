@@ -14,29 +14,22 @@ import { ALL_COURSES, getCourseById } from '../data/courses';
 // Get courses available for player
 export const getAvailableCourses = (playerStats: PlayerStats): Course[] => {
     return ALL_COURSES.filter(course => {
-        // Check level requirement
-        if (course.requirements.level && playerStats.level < course.requirements.level) {
-            return false;
-        }
-
-        // Check reputation requirement
-        if (course.requirements.reputation && playerStats.reputation < course.requirements.reputation) {
-            return false;
-        }
-
-        // Check prerequisite courses
-        if (course.requirements.completedCourses) {
-            const hasAllPrerequisites = course.requirements.completedCourses.every(
-                courseId => playerStats.completedCourses?.includes(courseId)
-            );
-            if (!hasAllPrerequisites) return false;
-        }
-
         // Don't show already completed courses
         if (playerStats.completedCourses?.includes(course.id)) {
             return false;
         }
 
+        // Check prerequisite courses - if prerequisites exist, they must be completed
+        if (course.requirements.completedCourses) {
+            const hasAllPrerequisites = course.requirements.completedCourses.every(
+                courseId => playerStats.completedCourses?.includes(courseId)
+            );
+            // If prerequisites aren't met, don't show the course
+            if (!hasAllPrerequisites) return false;
+        }
+
+        // Show the course even if other requirements (level, reputation) aren't met
+        // The CourseCard will display which requirements are missing
         return true;
     });
 };
@@ -110,13 +103,15 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
     if (playerStats.activeCourse.endsAt instanceof Timestamp) {
         endsAtMillis = playerStats.activeCourse.endsAt.toMillis();
     } else if (playerStats.activeCourse.endsAt && typeof playerStats.activeCourse.endsAt === 'object' && 'seconds' in playerStats.activeCourse.endsAt) {
-        // Handle Firestore timestamp object
         endsAtMillis = playerStats.activeCourse.endsAt.seconds * 1000;
     } else {
         endsAtMillis = new Date(playerStats.activeCourse.endsAt).getTime();
     }
 
-    if (now.toMillis() >= endsAtMillis) {
+    // Add a 1-second buffer to account for timing differences
+    const nowWithBuffer = now.toMillis() + 1000;
+
+    if (nowWithBuffer >= endsAtMillis) {
         // Course is complete
         const course = getCourseById(playerStats.activeCourse.courseId);
         if (!course) return false;
@@ -127,7 +122,7 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
 
         // Update player stats with rewards
         const updates: any = {
-            activeCourse: null,  // Clear the active course
+            activeCourse: null,
             completedCourses: [...(playerStats.completedCourses || []), course.id],
             experience: newExperience,
             level: newLevel
@@ -141,9 +136,11 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
             updates.rank = course.rewards.unlocksRank;
             updates.isEmployed = true;
             updates.hasCompletedTraining = true;
-            updates.department = 'Patrulltalitus';
 
-            // Generate badge number if first employment
+            if (!playerStats.department) {
+                updates.department = 'Patrulltalitus';
+            }
+
             if (!playerStats.badgeNumber) {
                 updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
             }

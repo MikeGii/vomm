@@ -105,7 +105,7 @@ export const completeBasicTraining = async (userId: string): Promise<PlayerStats
         ...currentStats,
         hasCompletedTraining: true,
         isEmployed: true,
-        rank: POLICE_RANKS[0], // Start as Abipolitseinik
+        rank: null, // Abipolitseinik doesn't have ranks
         department: 'Patrulltalitus',
         badgeNumber: Math.floor(10000 + Math.random() * 90000).toString(),
         reputation: 100,  // Starting reputation when joining force

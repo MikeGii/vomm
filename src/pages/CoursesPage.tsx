@@ -1,6 +1,7 @@
-// src/pages/CoursesPage.tsx (complete updated version)
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { firestore } from '../config/firebase';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { ActiveCourseProgress } from '../components/courses/ActiveCourseProgress';
 import { CourseTabs } from '../components/courses/CourseTabs';
@@ -8,7 +9,7 @@ import { CoursesList } from '../components/courses/CoursesList';
 import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
 import { useAuth } from '../contexts/AuthContext';
 import { PlayerStats, Course } from '../types';
-import { getPlayerStats, updateTutorialProgress } from '../services/PlayerService';
+import { updateTutorialProgress } from '../services/PlayerService';
 import {
     getAvailableCourses,
     enrollInCourse,
@@ -22,6 +23,9 @@ import '../styles/pages/Courses.css';
 const CoursesPage: React.FC = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const lastActiveCourseRef = useRef<string | null>(null);
+
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
     const [completedCourses, setCompletedCourses] = useState<Course[]>([]);
@@ -30,152 +34,120 @@ const CoursesPage: React.FC = () => {
     const [remainingTime, setRemainingTime] = useState<number>(0);
     const [activeTab, setActiveTab] = useState<'available' | 'completed'>('available');
     const [showTutorial, setShowTutorial] = useState(false);
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    const loadData = useCallback(async () => {
-        if (!currentUser) return;
+    // Process stats updates
+    const processStatsUpdate = useCallback((stats: PlayerStats) => {
+        // Update courses
+        const available = getAvailableCourses(stats);
+        setAvailableCourses(available);
 
-        try {
-            const stats = await getPlayerStats(currentUser.uid);
-            if (stats) {
-                setPlayerStats(stats);
-
-                // Check if we should show the courses tutorial
-                if (!stats.tutorialProgress.isCompleted &&
-                    stats.tutorialProgress.currentStep >= 3 &&
-                    stats.tutorialProgress.currentStep < 7) {
-                    setShowTutorial(true);
-
-                    if (stats.tutorialProgress.currentStep === 3) {
-                        await updateTutorialProgress(currentUser.uid, 4);
-                    }
-                }
-
-                const available = getAvailableCourses(stats);
-                setAvailableCourses(available);
-
-                if (stats.completedCourses && stats.completedCourses.length > 0) {
-                    const completed = getCompletedCoursesDetails(stats.completedCourses);
-                    setCompletedCourses(completed);
-                }
-
-                // Calculate remaining time if there's an active course
-                if (stats.activeCourse?.status === 'in_progress') {
-                    const remaining = getRemainingTime(stats.activeCourse);
-                    setRemainingTime(remaining);
-                    return true; // Return true if there's an active course
-                } else {
-                    setRemainingTime(0);
-                    return false; // Return false if no active course
-                }
-            }
-            return false;
-        } catch (error) {
-            console.error('Viga andmete laadimisel:', error);
-            return false;
-        } finally {
-            setLoading(false);
+        if (stats.completedCourses && stats.completedCourses.length > 0) {
+            const completed = getCompletedCoursesDetails(stats.completedCourses);
+            setCompletedCourses(completed);
         }
-    }, [currentUser]);
 
-    const handleCourseCompletion = useCallback(async () => {
-        if (!currentUser) return;
+        // Check for course completion
+        if (lastActiveCourseRef.current &&
+            (!stats.activeCourse || stats.activeCourse.status !== 'in_progress')) {
 
-        try {
-            // Clear the interval first
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-            }
-
-            const completedCourseId = playerStats?.activeCourse?.courseId;
-            const completedCourse = completedCourseId ? getCourseById(completedCourseId) : null;
-
-            // Check and complete the course
-            const completed = await checkCourseCompletion(currentUser.uid);
-
-            if (completed && completedCourse) {
-                // Show success message
+            const completedCourse = getCourseById(lastActiveCourseRef.current);
+            if (completedCourse && stats.completedCourses?.includes(lastActiveCourseRef.current)) {
+                // Course was just completed
                 alert(`Õnnitleme! ${completedCourse.name} on edukalt läbitud!`);
+                setRemainingTime(0);
 
-                // Reload all data
-                const hasActiveCourse = await loadData();
+                // Switch to completed tab
+                setTimeout(() => {
+                    setActiveTab('completed');
+                }, 500);
 
-                // If this was the first course, switch to completed tab
-                if (playerStats?.completedCourses.length === 0) {
-                    setTimeout(() => {
-                        setActiveTab('completed');
-                    }, 100);
-                }
-
-                // If no more active courses, ensure remaining time is 0
-                if (!hasActiveCourse) {
-                    setRemainingTime(0);
-                }
+                lastActiveCourseRef.current = null;
             }
-        } catch (error) {
-            console.error('Viga koolituse lõpetamisel:', error);
         }
-    }, [currentUser, playerStats, loadData]);
 
-    // Timer effect for active course
+        // Update active course reference
+        if (stats.activeCourse?.status === 'in_progress') {
+            lastActiveCourseRef.current = stats.activeCourse.courseId;
+        } else {
+            lastActiveCourseRef.current = null;
+        }
+
+        // Check tutorial
+        if (!stats.tutorialProgress.isCompleted &&
+            stats.tutorialProgress.currentStep >= 3 &&
+            stats.tutorialProgress.currentStep < 7) {
+            setShowTutorial(true);
+        }
+    }, []);
+
+    // Set up real-time listener for player stats
     useEffect(() => {
-        // Clear any existing interval
+        if (!currentUser) return;
+
+        const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+
+        const unsubscribe = onSnapshot(statsRef, (doc) => {
+            if (doc.exists()) {
+                const stats = doc.data() as PlayerStats;
+                setPlayerStats(stats);
+                processStatsUpdate(stats);
+                setLoading(false);
+            }
+        }, (error) => {
+            console.error('Error listening to player stats:', error);
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [currentUser, processStatsUpdate]);
+
+    // Timer for active course
+    useEffect(() => {
         if (intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
         }
 
         if (playerStats?.activeCourse?.status === 'in_progress') {
-            // Check immediately on mount
-            checkCourseCompletion(currentUser!.uid).then(completed => {
-                if (completed) {
-                    handleCourseCompletion();
-                    return;
-                }
-            });
+            const checkAndUpdate = async () => {
+                const remaining = getRemainingTime(playerStats.activeCourse);
+                setRemainingTime(remaining);
 
-            // Set initial remaining time
-            const initialRemaining = getRemainingTime(playerStats.activeCourse);
-            setRemainingTime(initialRemaining);
-
-            // Update every second
-            intervalRef.current = setInterval(async () => {
-                if (playerStats.activeCourse) {
-                    const remaining = getRemainingTime(playerStats.activeCourse);
-                    setRemainingTime(remaining);
-
-                    if (remaining <= 0) {
-                        // Course time is up, complete it
-                        await handleCourseCompletion();
+                if (remaining <= 0) {
+                    // Clear interval immediately
+                    if (intervalRef.current) {
+                        clearInterval(intervalRef.current);
+                        intervalRef.current = null;
                     }
+
+                    // Wait 1 second to ensure server time has passed
+                    setTimeout(async () => {
+                        await checkCourseCompletion(currentUser!.uid);
+                    }, 1100);
                 }
-            }, 1000);
+            };
+
+            // Check immediately
+            checkAndUpdate();
+
+            // Then check every second
+            intervalRef.current = setInterval(checkAndUpdate, 1000);
         }
 
-        // Cleanup function
         return () => {
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
                 intervalRef.current = null;
             }
         };
-    }, [playerStats?.activeCourse, currentUser, handleCourseCompletion]);
+    }, [playerStats?.activeCourse, currentUser]);
 
-    // Initial data load
-    useEffect(() => {
-        loadData();
-    }, [loadData]);
-
-    const handleTutorialComplete = async () => {
+    const handleTutorialComplete = useCallback(async () => {
         setShowTutorial(false);
-        if (currentUser) {
-            const updatedStats = await getPlayerStats(currentUser.uid);
-            if (updatedStats) {
-                setPlayerStats(updatedStats);
-            }
+        if (currentUser && playerStats?.tutorialProgress.currentStep === 4) {
+            await updateTutorialProgress(currentUser.uid, 4);
         }
-    };
+    }, [currentUser, playerStats]);
 
     const handleEnrollCourse = async (courseId: string) => {
         if (!currentUser || enrolling) return;
@@ -183,7 +155,6 @@ const CoursesPage: React.FC = () => {
         setEnrolling(true);
         try {
             await enrollInCourse(currentUser.uid, courseId);
-            await loadData();
         } catch (error: any) {
             alert(error.message || 'Koolitusele registreerimine ebaõnnestus');
         } finally {
@@ -241,11 +212,13 @@ const CoursesPage: React.FC = () => {
                         hasActiveCourse={!!activeCourse}
                         activeCourseId={playerStats?.activeCourse?.courseId}
                         remainingTime={remainingTime}
+                        playerStats={playerStats || undefined}
                     />
                 ) : (
                     <CoursesList
                         courses={completedCourses}
                         isCompleted={true}
+                        playerStats={playerStats || undefined}
                     />
                 )}
 

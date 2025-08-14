@@ -243,3 +243,28 @@
     border-color: #4a90e2;
     box-shadow: 0 0 20px rgba(74, 144, 226, 0.3);
 }
+
+.course-card.requirements-not-met {
+    opacity: 0.8;
+    border-color: #666;
+}
+
+.requirement-not-met {
+    color: #ff6b6b;
+}
+
+.requirement-met {
+    color: #4caf50;
+}
+
+.requirement-not-met:before {
+    content: '✗';
+    margin-right: 5px;
+    color: #ff6b6b;
+}
+
+.requirement-met:before {
+    content: '✓';
+    margin-right: 5px;
+    color: #4caf50;
+}

@@ -1,4 +1,4 @@
-// src/data/courses.ts (new file)
+// src/data/courses.ts
 import { Course } from '../types';
 
 export const BASIC_COURSES: Course[] = [
@@ -6,127 +6,67 @@ export const BASIC_COURSES: Course[] = [
         id: 'basic_police_training',
         name: 'Abipolitseiniku baaskursus',
         description: 'Põhiline koolitus kõigile uutele liikmetele. Õpid seadusi, protseduure ja ohutustehnikaid.',
-        duration: 60, // 60 seconds for testing
+        duration: 10, // 60 seconds for testing
         requirements: {
             level: 1
         },
         rewards: {
             experience: 50,
             reputation: 10,
-            unlocksRank: 'Abipolitseinik'
         },
         category: 'abipolitseinik'
     },
     {
-        id: 'patrol_training',
-        name: 'Patrullpolitseiniku koolitus',
-        description: 'Õpi patrullimise põhitõdesid ja taktikat linnatänavatel.',
-        duration: 120, // 2 minutes
-        requirements: {
-            level: 2,
-            completedCourses: ['basic_police_training']
-        },
-        rewards: {
-            experience: 100,
-            reputation: 50,
-            unlocksRank: 'Noorinspektor'
-        },
-        category: 'basic'
-    },
-    {
-        id: 'traffic_control',
-        name: 'Liikluskontrolli koolitus',
-        description: 'Omanda teadmised liiklusseadustest ja kontrolli läbiviimisest.',
-        duration: 90,
-        requirements: {
-            level: 2,
-            completedCourses: ['basic_police_training']
-        },
-        rewards: {
-            experience: 75,
-            reputation: 30
-        },
-        category: 'basic'
-    }
-];
-
-export const ADVANCED_COURSES: Course[] = [
-    {
-        id: 'detective_training',
-        name: 'Uurija baaskoolitus',
-        description: 'Õpi kuritegude uurimise põhialuseid, tõendite kogumist ja analüüsi.',
+        id: 'firearm_training',
+        name: 'Tulirelva koolitus',
+        description: 'Omanda tulirelva käsitsemise oskused ja ohutusnõuded. Õpid relva hooldust, laskmistehnikaid ja taktikalist relvakasutust.',
         duration: 300, // 5 minutes
         requirements: {
             level: 5,
-            reputation: 300,
-            completedCourses: ['basic_police_training', 'patrol_training']
+            completedCourses: ['basic_police_training']
         },
         rewards: {
-            experience: 200,
-            reputation: 150,
-            unlocksRank: 'Inspektor'
+            experience: 150,
+            reputation: 75
         },
-        category: 'advanced'
+        category: 'abipolitseinik'
     },
     {
-        id: 'forensics_basics',
-        name: 'Kohtuekspertiisi alused',
-        description: 'Sõrmejälgede võtmine, DNA tõendid ja kuriteopaiga analüüs.',
-        duration: 240,
+        id: 'speed_measurement',
+        name: 'Kiirusmõõtja pädevus',
+        description: 'Spetsialiseeritud koolitus liikluskiiruse mõõtmise seadmete kasutamiseks ja liiklusrikkumiste dokumenteerimiseks.',
+        duration: 1200, // 20 minutes
         requirements: {
-            level: 6,
-            completedCourses: ['detective_training']
-        },
-        rewards: {
-            experience: 180,
-            reputation: 100
-        },
-        category: 'advanced'
-    }
-];
-
-export const SPECIALIST_COURSES: Course[] = [
-    {
-        id: 'k9_unit',
-        name: 'Koerajuhi koolitus',
-        description: 'Spetsialiseeritud koolitus teenistuskoertega töötamiseks.',
-        duration: 480, // 8 minutes
-        requirements: {
-            level: 8,
-            reputation: 500,
-            completedCourses: ['patrol_training']
+            level: 10,
+            completedCourses: ['basic_police_training']
         },
         rewards: {
             experience: 300,
-            reputation: 200,
-            unlocksRank: 'Vaneminspektor'
+            reputation: 150
         },
-        category: 'specialist'
+        category: 'abipolitseinik'
     },
     {
-        id: 'swat_training',
-        name: 'K-komando baaskoolitus',
-        description: 'Eriüksuse taktika ja kõrge riskiga olukordade lahendamine.',
-        duration: 600, // 10 minutes
+        id: 'independent_competence',
+        name: 'Iseseisva pädevuse koolitus (IPAP)',
+        description: 'Põhjalik koolitus iseseisva tööülesannete täitmiseks. Omandad oskused iseseisvaks patrullimiseks ja otsuste tegemiseks.',
+        duration: 7200, // 2 hours
         requirements: {
-            level: 10,
-            reputation: 800,
-            completedCourses: ['patrol_training', 'detective_training']
+            level: 15,
+            completedCourses: ['basic_police_training', 'firearm_training']
         },
         rewards: {
-            experience: 500,
-            reputation: 300,
-            unlocksRank: 'Üleminspektor'
+            experience: 1000,
+            reputation: 500,
+            unlocksRank: 'Vaneminspektor'
         },
-        category: 'specialist'
+        category: 'abipolitseinik'
     }
 ];
 
 // Combine all courses
 export const ALL_COURSES: Course[] = [
-    ...BASIC_COURSES,
-    ...ADVANCED_COURSES,
-    ...SPECIALIST_COURSES
+    ...BASIC_COURSES
 ];
 
 // Helper function to get course by ID
@@ -135,6 +75,6 @@ export const getCourseById = (courseId: string): Course | undefined => {
 };
 
 // Helper function to get courses by category
-export const getCoursesByCategory = (category: 'basic' | 'advanced' | 'specialist'): Course[] => {
+export const getCoursesByCategory = (category: 'abipolitseinik' | 'basic' | 'advanced' | 'specialist'): Course[] => {
     return ALL_COURSES.filter(course => course.category === category);
 };
