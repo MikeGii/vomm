@@ -8,7 +8,7 @@ interface TutorialOverlayProps {
     stats: PlayerStats;
     userId: string;
     onTutorialComplete: () => void;
-    page?: 'dashboard' | 'courses';
+    page?: 'dashboard' | 'courses' | 'training';
 }
 
 interface TutorialStep {
@@ -106,6 +106,39 @@ const TRAINING_INTRODUCTION_STEPS: TutorialStep[] = [
     }
 ];
 
+const TRAINING_CENTER_TUTORIAL_STEPS: TutorialStep[] = [
+    {
+        step: 11,
+        targetElement: '.attributes-container',
+        title: 'Treeningkeskus',
+        content: 'Oled jõudnud treeningkeskusesse ja siin saad arendada oma mängija omadusi. Iga omadus mõjutab sinu võimekust erinevates olukordades.',
+        position: 'bottom'
+    },
+    {
+        step: 12,
+        targetElement: '.training-counter',
+        title: 'Treeningute limiit',
+        content: 'Kuna treenimine ei saa kesta lõputult siis iga tund on võimalik mängijal sooritada kuni 50 korda igat tegevust. Iga täistund saab uuesti sooritada 50 kordust, kuid mitte rohkem.',
+        position: 'bottom'
+    },
+    {
+        step: 13,
+        targetElement: '.activity-dropdown',
+        title: 'Vali treening',
+        content: 'Selleks, et alustada treeninguga palun vali siit menüüst, millist treeningut soovid alustada.',
+        position: 'top',
+        requiresAction: true
+    },
+    {
+        step: 14,
+        targetElement: '.train-button',
+        title: 'Soorita treening',
+        content: 'Nüüd oled valinud sobiva treeningu ja vajuta Treeni, et sooritada üks treeningu kordus.',
+        position: 'top',
+        requiresAction: true
+    }
+];
+
 export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                                                                     stats,
                                                                     userId,
@@ -125,6 +158,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             return COURSES_COMPLETED_TUTORIAL_STEPS;
         } else if (page === 'dashboard' && currentStep >= 9 && currentStep <= 10) {
             return TRAINING_INTRODUCTION_STEPS;
+        } else if (page === 'training' && currentStep >= 11 && currentStep <= 14) {
+            return TRAINING_CENTER_TUTORIAL_STEPS;
         }
         return [];
     }, [page, currentStep]);
@@ -217,6 +252,49 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         }
     }, [currentStep, stats.prefecture, TUTORIAL_STEPS]);
 
+    // Add handler for activity selection (step 13)
+    useEffect(() => {
+        if (currentStep === 13 && isVisible) {
+            const handleActivitySelect = async (e: Event) => {
+                const target = e.target as HTMLElement;
+                const dropdown = document.querySelector('.activity-dropdown') as HTMLSelectElement;
+                if (dropdown && target === dropdown && dropdown.value) {
+                    // Progress automatically happens in TrainingPage
+                    removeHighlight();
+                    setTimeout(() => {
+                        setCurrentStep(14);
+                        setIsVisible(true);
+                    }, 100);
+                }
+            };
+
+            document.addEventListener('change', handleActivitySelect, true);
+            return () => {
+                document.removeEventListener('change', handleActivitySelect, true);
+            };
+        }
+    }, [currentStep, isVisible, removeHighlight]);
+
+// Add handler for train button click (step 14)
+    useEffect(() => {
+        if (currentStep === 14 && isVisible) {
+            const handleTrainClick = async (e: Event) => {
+                const target = e.target as HTMLElement;
+                if (target.classList.contains('train-button')) {
+                    // Tutorial completion is handled in TrainingPage
+                    removeHighlight();
+                    setIsVisible(false);
+                    onTutorialComplete();
+                }
+            };
+
+            document.addEventListener('click', handleTrainClick, true);
+            return () => {
+                document.removeEventListener('click', handleTrainClick, true);
+            };
+        }
+    }, [currentStep, isVisible, removeHighlight, onTutorialComplete]);
+
     // Initialize tutorial visibility
     useEffect(() => {
         if (!stats.tutorialProgress.isCompleted) {
@@ -237,6 +315,15 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                         setCurrentStep(4);
                         updateTutorialProgress(userId, 4);
                     }
+                }
+            } else if (page === 'training') {
+                if (currentStep === 10) {
+                    // Coming from dashboard, move to step 11
+                    setCurrentStep(11);
+                    updateTutorialProgress(userId, 11);
+                    setIsVisible(true);
+                } else if (currentStep >= 11 && currentStep <= 14) {
+                    setIsVisible(true);
                 }
             }
         }
@@ -274,7 +361,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         const currentStepData = TUTORIAL_STEPS.find(s => s.step === currentStep);
 
         if (currentStepData?.requiresAction) {
-            return; // Don't do anything, wait for actual button click
+            return; // Don't do anything, wait for actual action
         }
 
         const nextStep = currentStep + 1;
@@ -291,6 +378,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         } else if (page === 'courses' && currentStep === 7) {
             setCurrentStep(8);
             await updateTutorialProgress(userId, 8);
+        } else if (page === 'training' && currentStep >= 11 && currentStep < 14) {
+            setCurrentStep(nextStep);
+            await updateTutorialProgress(userId, nextStep);
         } else {
             setCurrentStep(nextStep);
             await updateTutorialProgress(userId, nextStep);
@@ -317,9 +407,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     } else if (page === 'courses' && currentStep >= 7 && currentStep <= 8) {
         totalSteps = 2;
         displayStep = currentStep - 6;
-    } else if (page === 'dashboard' && currentStep >= 9 && currentStep <= 10) {  // Updated this
+    } else if (page === 'dashboard' && currentStep >= 9 && currentStep <= 10) {
         totalSteps = 2;
         displayStep = currentStep - 8;
+    } else if (page === 'training' && currentStep >= 11 && currentStep <= 14) {
+        totalSteps = 4;
+        displayStep = currentStep - 10;
     }
 
     return (

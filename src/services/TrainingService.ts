@@ -1,0 +1,189 @@
+// src/services/TrainingService.ts
+import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import { firestore } from '../config/firebase';
+import { PlayerStats, PlayerAttributes, AttributeData, TrainingData } from '../types';
+
+// Calculate experience needed for next attribute level
+export const calculateExpForNextLevel = (currentLevel: number): number => {
+    if (currentLevel === 0) return 100;
+    const baseExp = (currentLevel + 1) * 100;
+    const bonus = baseExp * 0.15;
+    return Math.floor(baseExp + bonus);
+};
+
+// Initialize attributes for new players
+export const initializeAttributes = (): PlayerAttributes => {
+    const createAttribute = (): AttributeData => ({
+        level: 0,
+        experience: 0,
+        experienceForNextLevel: 100
+    });
+
+    return {
+        strength: createAttribute(),
+        agility: createAttribute(),
+        dexterity: createAttribute(),
+        intelligence: createAttribute(),
+        endurance: createAttribute()
+    };
+};
+
+// Initialize training data
+export const initializeTrainingData = (): TrainingData => {
+    return {
+        remainingClicks: 50,
+        lastResetTime: Timestamp.now(),
+        totalTrainingsDone: 0
+    };
+};
+
+// Check if training clicks should reset (every full hour)
+export const checkAndResetTrainingClicks = async (userId: string): Promise<TrainingData> => {
+    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsDoc = await getDoc(statsRef);
+
+    if (!statsDoc.exists()) {
+        throw new Error('Player stats not found');
+    }
+
+    const stats = statsDoc.data() as PlayerStats;
+    let trainingData = stats.trainingData || initializeTrainingData();
+
+    // Get current time and last reset time
+    const now = new Date();
+    const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
+
+    let lastReset: Date;
+    if (trainingData.lastResetTime instanceof Timestamp) {
+        lastReset = trainingData.lastResetTime.toDate();
+    } else if (trainingData.lastResetTime && typeof trainingData.lastResetTime === 'object' && 'seconds' in trainingData.lastResetTime) {
+        lastReset = new Date(trainingData.lastResetTime.seconds * 1000);
+    } else {
+        lastReset = new Date(trainingData.lastResetTime);
+    }
+
+    const lastResetHour = new Date(lastReset.getFullYear(), lastReset.getMonth(), lastReset.getDate(), lastReset.getHours());
+
+    // If current hour is different from last reset hour, reset clicks
+    if (currentHour.getTime() > lastResetHour.getTime()) {
+        trainingData = {
+            remainingClicks: 50,
+            lastResetTime: Timestamp.now(),
+            totalTrainingsDone: trainingData.totalTrainingsDone
+        };
+
+        await updateDoc(statsRef, {
+            trainingData: trainingData
+        });
+    }
+
+    return trainingData;
+};
+
+// Perform training activity
+export const performTraining = async (
+    userId: string,
+    activityId: string,
+    rewards: {
+        strength?: number;
+        agility?: number;
+        dexterity?: number;
+        intelligence?: number;
+        endurance?: number;
+        playerExp: number;
+    }
+): Promise<PlayerStats> => {
+    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsDoc = await getDoc(statsRef);
+
+    if (!statsDoc.exists()) {
+        throw new Error('Player stats not found');
+    }
+
+    const stats = statsDoc.data() as PlayerStats;
+
+    // Check and reset training clicks if needed
+    const trainingData = await checkAndResetTrainingClicks(userId);
+
+    if (trainingData.remainingClicks <= 0) {
+        throw new Error('Treeningkordi pole enam järel! Oota järgmist täistundi.');
+    }
+
+    // Initialize attributes if they don't exist
+    const attributes = stats.attributes || initializeAttributes();
+
+    // Update attributes based on rewards
+    const updateAttribute = (attr: AttributeData, expGained: number): AttributeData => {
+        let newExp = attr.experience + expGained;
+        let newLevel = attr.level;
+        let expForNext = attr.experienceForNextLevel;
+
+        // Check for level up
+        while (newExp >= expForNext) {
+            newExp -= expForNext;
+            newLevel++;
+            expForNext = calculateExpForNextLevel(newLevel);
+        }
+
+        return {
+            level: newLevel,
+            experience: newExp,
+            experienceForNextLevel: expForNext
+        };
+    };
+
+    // Apply rewards to attributes
+    if (rewards.strength) {
+        attributes.strength = updateAttribute(attributes.strength, rewards.strength);
+    }
+    if (rewards.agility) {
+        attributes.agility = updateAttribute(attributes.agility, rewards.agility);
+    }
+    if (rewards.dexterity) {
+        attributes.dexterity = updateAttribute(attributes.dexterity, rewards.dexterity);
+    }
+    if (rewards.intelligence) {
+        attributes.intelligence = updateAttribute(attributes.intelligence, rewards.intelligence);
+    }
+    if (rewards.endurance) {
+        attributes.endurance = updateAttribute(attributes.endurance, rewards.endurance);
+    }
+
+    // Update player main experience and level
+    const newPlayerExp = stats.experience + rewards.playerExp;
+    const newPlayerLevel = Math.floor(newPlayerExp / 100) + 1;
+
+    // Update training data
+    const updatedTrainingData: TrainingData = {
+        remainingClicks: trainingData.remainingClicks - 1,
+        lastResetTime: trainingData.lastResetTime,
+        totalTrainingsDone: trainingData.totalTrainingsDone + 1
+    };
+
+    // Save to database
+    const updates = {
+        attributes: attributes,
+        trainingData: updatedTrainingData,
+        experience: newPlayerExp,
+        level: newPlayerLevel
+    };
+
+    await updateDoc(statsRef, updates);
+
+    return {
+        ...stats,
+        ...updates
+    };
+};
+
+// Get time until next reset
+export const getTimeUntilReset = (): string => {
+    const now = new Date();
+    const nextHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1);
+    const diff = nextHour.getTime() - now.getTime();
+
+    const minutes = Math.floor(diff / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
