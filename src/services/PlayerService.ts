@@ -4,23 +4,23 @@ import { firestore } from '../config/firebase';
 import { PlayerStats } from '../types';
 
 // Estonian police ranks from lowest to highest
-const POLICE_RANKS = [
-    'Abipolitseinik',
-    'Kadett',
-    'Noorinspektor',
-    'Inspektor',
-    'Vaneminspektor',
-    'Üleminspektor',
-    'Komissar',
-    'Vanemkomissar',
-    'Politseileitnant',
-    'Politseikapten',
-    'Politseimajor',
-    'Politseikolonelleitnant',
-    'Politseikolonel',
-    'Politseikindralinspektor',
-    'Politseikindral'
-];
+// const POLICE_RANKS = [
+//     'Abipolitseinik',
+//     'Kadett',
+//     'Noorinspektor',
+//     'Inspektor',
+//     'Vaneminspektor',
+//     'Üleminspektor',
+//     'Komissar',
+//     'Vanemkomissar',
+//     'Politseileitnant',
+//     'Politseikapten',
+//     'Politseimajor',
+//     'Politseikolonelleitnant',
+//     'Politseikolonel',
+//     'Politseikindralinspektor',
+//     'Politseikindral'
+// ];
 
 export const initializePlayerStats = async (userId: string): Promise<PlayerStats> => {
     const statsRef = doc(firestore, 'playerStats', userId);
