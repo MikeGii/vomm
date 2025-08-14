@@ -12,7 +12,7 @@ export interface User {
 export interface TutorialProgress {
     isCompleted: boolean;
     currentStep: number;
-    totalSteps: number;
+    totalSteps: number;  // Will be 10 total steps
     startedAt: Date | null;
     completedAt: Date | null;
 }
@@ -22,11 +22,12 @@ export interface PlayerStats {
     level: number;
     experience: number;
     reputation: number;
-    rank: string | null;  // null when unemployed
-    department: string | null;  // null when unemployed
-    badgeNumber: string | null;  // null when unemployed
+    rank: string | null;  // null when unemployed or abipolitseinik
+    department: string | null;  // Future police department
+    prefecture: string | null;  // Add prefecture (Põhja, Lääne, Lõuna, Ida)
+    badgeNumber: string | null;
     isEmployed: boolean;
-    hasCompletedTraining: boolean;  // Track if basic training is completed
+    hasCompletedTraining: boolean;
     casesCompleted: number;
     criminalsArrested: number;
     tutorialProgress: TutorialProgress;

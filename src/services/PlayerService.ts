@@ -4,23 +4,23 @@ import { firestore } from '../config/firebase';
 import { PlayerStats } from '../types';
 
 // Estonian police ranks from lowest to highest
-const POLICE_RANKS = [
-    'Abipolitseinik',
-    'Kadett',
-    'Noorinspektor',
-    'Inspektor',
-    'Vaneminspektor',
-    'Üleminspektor',
-    'Komissar',
-    'Vanemkomissar',
-    'Politseileitnant',
-    'Politseikapten',
-    'Politseimajor',
-    'Politseikolonelleitnant',
-    'Politseikolonel',
-    'Politseikindralinspektor',
-    'Politseikindral'
-];
+// const POLICE_RANKS = [
+//     'Abipolitseinik',
+//     'Kadett',
+//     'Noorinspektor',
+//     'Inspektor',
+//     'Vaneminspektor',
+//     'Üleminspektor',
+//     'Komissar',
+//     'Vanemkomissar',
+//     'Politseileitnant',
+//     'Politseikapten',
+//     'Politseimajor',
+//     'Politseikolonelleitnant',
+//     'Politseikolonel',
+//     'Politseikindralinspektor',
+//     'Politseikindral'
+// ];
 
 export const initializePlayerStats = async (userId: string): Promise<PlayerStats> => {
     const statsRef = doc(firestore, 'playerStats', userId);
@@ -37,6 +37,7 @@ export const initializePlayerStats = async (userId: string): Promise<PlayerStats
         reputation: 0,  // Starting with 0 reputation as requested
         rank: null,  // No rank when untrained
         department: null,  // No department when untrained
+        prefecture: null,  // No prefecture when untrained - ADD THIS LINE
         badgeNumber: null,  // No badge when untrained
         isEmployed: false,
         hasCompletedTraining: false,  // No training completed initially
@@ -45,7 +46,7 @@ export const initializePlayerStats = async (userId: string): Promise<PlayerStats
         tutorialProgress: {
             isCompleted: false,
             currentStep: 0,
-            totalSteps: 4,  // We have 4 tutorial steps
+            totalSteps: 9,
             startedAt: null,
             completedAt: null
         },
@@ -106,7 +107,8 @@ export const completeBasicTraining = async (userId: string): Promise<PlayerStats
         hasCompletedTraining: true,
         isEmployed: true,
         rank: null, // Abipolitseinik doesn't have ranks
-        department: 'Patrulltalitus',
+        department: null, // No department yet for Abipolitseinik
+        prefecture: null, // Prefecture will be selected via modal
         badgeNumber: Math.floor(10000 + Math.random() * 90000).toString(),
         reputation: 100,  // Starting reputation when joining force
         experience: currentStats.experience + 50  // Bonus XP for completing training

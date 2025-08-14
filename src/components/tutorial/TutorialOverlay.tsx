@@ -1,5 +1,5 @@
 // src/components/tutorial/TutorialOverlay.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { PlayerStats } from '../../types';
 import { updateTutorialProgress } from '../../services/PlayerService';
 import '../../styles/components/TutorialOverlay.css';
@@ -70,6 +70,24 @@ const COURSES_TUTORIAL_STEPS: TutorialStep[] = [
     }
 ];
 
+const COURSES_COMPLETED_TUTORIAL_STEPS: TutorialStep[] = [
+    {
+        step: 7,
+        targetElement: '.course-card.completed:first-child',
+        title: 'Läbitud koolitus',
+        content: 'Siin näed enda läbitud koolitusi ja hetkel oled edukalt läbinud abipolitseiniku baaskursuse.',
+        position: 'bottom'
+    },
+    {
+        step: 8,
+        targetElement: '.back-to-dashboard',
+        title: 'Tagasi töölauale',
+        content: 'Nüüd liigume tagasi töölauale, et jätkata järgmiste sammudega.',
+        position: 'bottom',
+        requiresAction: true
+    }
+];
+
 export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                                                                     stats,
                                                                     userId,
@@ -78,9 +96,18 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                                                                 }) => {
     const [currentStep, setCurrentStep] = useState(stats.tutorialProgress.currentStep || 0);
     const [isVisible, setIsVisible] = useState(false);
-    const [clickHandler, setClickHandler] = useState<(() => void) | null>(null);
 
-    const TUTORIAL_STEPS = page === 'dashboard' ? DASHBOARD_TUTORIAL_STEPS : COURSES_TUTORIAL_STEPS;
+    // Determine which tutorial steps to use based on page and progress
+    const TUTORIAL_STEPS = useMemo(() => {
+        if (page === 'dashboard' && currentStep <= 3) {
+            return DASHBOARD_TUTORIAL_STEPS;
+        } else if (page === 'courses' && currentStep >= 3 && currentStep <= 6) {
+            return COURSES_TUTORIAL_STEPS;
+        } else if (page === 'courses' && currentStep >= 7 && currentStep <= 8) {
+            return COURSES_COMPLETED_TUTORIAL_STEPS;
+        }
+        return [];
+    }, [page, currentStep]);
 
     const removeHighlight = useCallback(() => {
         document.querySelectorAll('.tutorial-highlight').forEach(el => {
@@ -101,58 +128,93 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         }
     }, [removeHighlight]);
 
-    // Handle button click for step 6
+    // Handle button clicks for step 6 (enroll in course)
     useEffect(() => {
         if (currentStep === 6 && isVisible) {
             const handleEnrollClick = async (e: Event) => {
                 const target = e.target as HTMLElement;
-                // Check if clicked element is the enroll button within the basic_police_training card
                 const card = document.querySelector('#basic_police_training');
                 if (card && card.contains(target) && target.classList.contains('enroll-button')) {
-                    // Complete tutorial
-                    await updateTutorialProgress(userId, 7, true);
+                    // Don't update progress here, let the course completion handle it
                     removeHighlight();
                     setIsVisible(false);
-                    onTutorialComplete();
                 }
             };
 
             document.addEventListener('click', handleEnrollClick, true);
-
             return () => {
                 document.removeEventListener('click', handleEnrollClick, true);
             };
         }
-    }, [currentStep, isVisible, userId, onTutorialComplete, removeHighlight]);
+    }, [currentStep, isVisible, userId, removeHighlight]);
 
+    // Handle button click for step 8 (back to dashboard)
     useEffect(() => {
-        if (page === 'dashboard') {
-            if (!stats.tutorialProgress.isCompleted && currentStep === 0) {
-                setCurrentStep(1);
-                setIsVisible(true);
-                updateTutorialProgress(userId, 1);
-            } else if (!stats.tutorialProgress.isCompleted && currentStep > 0 && currentStep < 4) {
-                setIsVisible(true);
-            }
-        } else if (page === 'courses') {
-            if (!stats.tutorialProgress.isCompleted && currentStep >= 3 && currentStep < 7) {
-                setIsVisible(true);
-                if (currentStep === 3) {
-                    setCurrentStep(4);
-                    updateTutorialProgress(userId, 4);
+        if (currentStep === 8 && isVisible) {
+            const handleBackClick = async (e: Event) => {
+                const target = e.target as HTMLElement;
+                if (target.classList.contains('back-to-dashboard') || target.closest('.back-to-dashboard')) {
+                    await updateTutorialProgress(userId, 9);
+                    removeHighlight();
+                    setIsVisible(false);
+                }
+            };
+
+            document.addEventListener('click', handleBackClick, true);
+            return () => {
+                document.removeEventListener('click', handleBackClick, true);
+            };
+        }
+    }, [currentStep, isVisible, userId, removeHighlight]);
+
+    // Initialize tutorial visibility
+    useEffect(() => {
+        if (!stats.tutorialProgress.isCompleted) {
+            if (page === 'dashboard') {
+                if (currentStep === 0) {
+                    setCurrentStep(1);
+                    setIsVisible(true);
+                    updateTutorialProgress(userId, 1);
+                } else if (currentStep > 0 && currentStep < 4) {
+                    setIsVisible(true);
+                } else if (currentStep === 9) {
+                    // Show prefecture selection tutorial
+                    setIsVisible(true);
+                }
+            } else if (page === 'courses') {
+                if (currentStep >= 3 && currentStep <= 8) {
+                    setIsVisible(true);
+                    if (currentStep === 3) {
+                        setCurrentStep(4);
+                        updateTutorialProgress(userId, 4);
+                    }
                 }
             }
         }
     }, [stats.tutorialProgress.isCompleted, currentStep, userId, page]);
 
+    // Check if course was just completed and update tutorial
+    useEffect(() => {
+        if (!stats.tutorialProgress.isCompleted &&
+            currentStep === 6 &&
+            stats.completedCourses?.includes('basic_police_training')) {
+            // Course was completed, move to step 7
+            setCurrentStep(7);
+            updateTutorialProgress(userId, 7);
+            setIsVisible(true);
+        }
+    }, [stats.completedCourses, currentStep, userId, stats.tutorialProgress.isCompleted]);
+
+    // Highlight elements when visible
     useEffect(() => {
         if (isVisible && currentStep > 0) {
             const stepData = TUTORIAL_STEPS.find(s => s.step === currentStep);
             if (stepData) {
-                // Small delay to ensure DOM is ready
+                // Add extra delay for step 7 to ensure completed tab has rendered
+                const delay = currentStep === 7 ? 600 : 100;
                 setTimeout(() => {
                     highlightElement(stepData.targetElement, stepData.requiresAction);
-                }, 100);
+                }, delay);
             }
         }
 
@@ -170,15 +232,15 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
         const nextStep = currentStep + 1;
 
-        if (page === 'dashboard' && nextStep > 3) {
+        // Handle step transitions
+        if (page === 'dashboard' && nextStep > 3 && nextStep < 9) {
             await updateTutorialProgress(userId, nextStep);
             removeHighlight();
             setIsVisible(false);
-        } else if (page === 'courses' && nextStep > 6) {
-            await updateTutorialProgress(userId, 7, true);
-            removeHighlight();
-            setIsVisible(false);
-            onTutorialComplete();
+        } else if (page === 'courses' && currentStep === 7) {
+            // Move to step 8
+            setCurrentStep(8);
+            await updateTutorialProgress(userId, 8);
         } else {
             setCurrentStep(nextStep);
             await updateTutorialProgress(userId, nextStep);
@@ -186,7 +248,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     };
 
     const handleSkip = async () => {
-        await updateTutorialProgress(userId, 7, true);
+        await updateTutorialProgress(userId, 10, true);
         removeHighlight();
         setIsVisible(false);
         onTutorialComplete();
@@ -199,8 +261,23 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     const currentTutorialStep = TUTORIAL_STEPS.find(s => s.step === currentStep);
     if (!currentTutorialStep) return null;
 
-    const totalSteps = page === 'dashboard' ? 3 : 3;
-    const displayStep = page === 'dashboard' ? currentStep : currentStep - 3;
+    // Calculate display step based on current page
+    let totalSteps = 0;
+    let displayStep = 0;
+
+    if (page === 'dashboard' && currentStep <= 3) {
+        totalSteps = 3;
+        displayStep = currentStep;
+    } else if (page === 'courses' && currentStep >= 4 && currentStep <= 6) {
+        totalSteps = 3;
+        displayStep = currentStep - 3;
+    } else if (page === 'courses' && currentStep >= 7 && currentStep <= 8) {
+        totalSteps = 2;
+        displayStep = currentStep - 6;
+    } else if (page === 'dashboard' && currentStep === 9) {
+        totalSteps = 1;
+        displayStep = 1;
+    }
 
     return (
         <>

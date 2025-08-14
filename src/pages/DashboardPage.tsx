@@ -7,6 +7,8 @@ import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
 import { useAuth } from '../contexts/AuthContext';
 import { PlayerStats } from '../types';
 import { initializePlayerStats, getPlayerStats } from '../services/PlayerService';
+import { PrefectureSelectionModal } from '../components/dashboard/PrefectureSelectionModal';
+
 import '../styles/pages/Dashboard.css';
 
 function DashboardPage() {
@@ -14,6 +16,7 @@ function DashboardPage() {
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [showTutorial, setShowTutorial] = useState(false);
+    const [showPrefectureSelection, setShowPrefectureSelection] = useState(false);
 
     useEffect(() => {
         const loadPlayerStats = async () => {
@@ -23,8 +26,13 @@ function DashboardPage() {
                     setPlayerStats(stats);
 
                     // Check if tutorial should be shown
-                    if (!stats.tutorialProgress.isCompleted) {
+                    if (!stats.tutorialProgress.isCompleted && stats.tutorialProgress.currentStep < 4) {
                         setShowTutorial(true);
+                    }
+
+                    // Check if prefecture selection is needed (after basic training)
+                    if (stats.hasCompletedTraining && !stats.prefecture) {
+                        setShowPrefectureSelection(true);
                     }
                 } catch (error) {
                     console.error('Viga mängija andmete laadimisel:', error);
@@ -36,6 +44,18 @@ function DashboardPage() {
 
         loadPlayerStats();
     }, [currentUser]);
+
+    // Add handler for prefecture selection complete
+    const handlePrefectureComplete = async () => {
+        setShowPrefectureSelection(false);
+        // Reload stats
+        if (currentUser) {
+            const updatedStats = await getPlayerStats(currentUser.uid);
+            if (updatedStats) {
+                setPlayerStats(updatedStats);
+            }
+        }
+    };
 
     const handleTutorialComplete = async () => {
         setShowTutorial(false);
@@ -78,6 +98,14 @@ function DashboardPage() {
                                 stats={playerStats}
                                 userId={currentUser.uid}
                                 onTutorialComplete={handleTutorialComplete}
+                            />
+                        )}
+
+                        {showPrefectureSelection && currentUser && (
+                            <PrefectureSelectionModal
+                                isOpen={showPrefectureSelection}
+                                userId={currentUser.uid}
+                                onComplete={handlePrefectureComplete}
                             />
                         )}
                     </>
