@@ -8,7 +8,7 @@ interface TutorialOverlayProps {
     stats: PlayerStats;
     userId: string;
     onTutorialComplete: () => void;
-    page?: 'dashboard' | 'courses';
+    page?: 'dashboard' | 'courses' | 'training';
 }
 
 interface TutorialStep {
@@ -64,7 +64,7 @@ const COURSES_TUTORIAL_STEPS: TutorialStep[] = [
         step: 6,
         targetElement: '#basic_police_training',
         title: 'Alusta koolitust',
-        content: 'Selleks, et alustada abipolitseiniku baaskursusega vajuta "Alusta" ning selle koolituse läbimiseks pead ootama 1 minuti.',
+        content: 'Selleks, et alustada abipolitseiniku baaskursusega vajuta "Alusta" ning selle koolituse läbimiseks pead ootama 20 sekundit.',
         position: 'bottom',
         requiresAction: true
     }
@@ -88,6 +88,57 @@ const COURSES_COMPLETED_TUTORIAL_STEPS: TutorialStep[] = [
     }
 ];
 
+const TRAINING_INTRODUCTION_STEPS: TutorialStep[] = [
+    {
+        step: 9,
+        targetElement: '.stats-card',
+        title: 'Õnnitleme!',
+        content: 'Vägev, oled edukalt nüüd abipolitseinik ja saad alustada oma tegevusi. Esmalt peaksid end väheke treenima, et tulevikus tänavatel paremini hakkama saada ja selleks on sul nüüd võimalik kasutada enda prefektuuri treeningu võimalusi',
+        position: 'bottom'
+    },
+    {
+        step: 10,
+        targetElement: '.quick-action-button:nth-child(2)',
+        title: 'Treeningu alustamine',
+        content: 'Jätkamiseks liigume treeningu lehele',
+        position: 'top',
+        requiresAction: true
+    }
+];
+
+const TRAINING_CENTER_TUTORIAL_STEPS: TutorialStep[] = [
+    {
+        step: 11,
+        targetElement: '.attributes-container',
+        title: 'Treeningkeskus',
+        content: 'Oled jõudnud treeningkeskusesse ja siin saad arendada oma mängija omadusi. Iga omadus mõjutab sinu võimekust erinevates olukordades.',
+        position: 'bottom'
+    },
+    {
+        step: 12,
+        targetElement: '.training-counter',
+        title: 'Treeningute limiit',
+        content: 'Kuna treenimine ei saa kesta lõputult siis iga tund on võimalik mängijal sooritada kuni 50 korda igat tegevust. Iga täistund saab uuesti sooritada 50 kordust, kuid mitte rohkem.',
+        position: 'bottom'
+    },
+    {
+        step: 13,
+        targetElement: '.activity-dropdown',
+        title: 'Vali treening',
+        content: 'Selleks, et alustada treeninguga palun vali siit menüüst, millist treeningut soovid alustada.',
+        position: 'top',
+        requiresAction: true
+    },
+    {
+        step: 14,
+        targetElement: '.train-button',
+        title: 'Soorita treening',
+        content: 'Nüüd oled valinud sobiva treeningu ja vajuta Treeni, et sooritada üks treeningu kordus.',
+        position: 'top',
+        requiresAction: true
+    }
+];
+
 export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                                                                     stats,
                                                                     userId,
@@ -105,6 +156,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             return COURSES_TUTORIAL_STEPS;
         } else if (page === 'courses' && currentStep >= 7 && currentStep <= 8) {
             return COURSES_COMPLETED_TUTORIAL_STEPS;
+        } else if (page === 'dashboard' && currentStep >= 9 && currentStep <= 10) {
+            return TRAINING_INTRODUCTION_STEPS;
+        } else if (page === 'training' && currentStep >= 11 && currentStep <= 14) {
+            return TRAINING_CENTER_TUTORIAL_STEPS;
         }
         return [];
     }, [page, currentStep]);
@@ -135,7 +190,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                 const target = e.target as HTMLElement;
                 const card = document.querySelector('#basic_police_training');
                 if (card && card.contains(target) && target.classList.contains('enroll-button')) {
-                    // Don't update progress here, let the course completion handle it
                     removeHighlight();
                     setIsVisible(false);
                 }
@@ -167,6 +221,80 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         }
     }, [currentStep, isVisible, userId, removeHighlight]);
 
+    // Handle button click for step 10 (training button)
+    useEffect(() => {
+        if (currentStep === 10 && isVisible) {
+            const handleTrainingClick = async (e: Event) => {
+                const target = e.target as HTMLElement;
+                const trainingButton = document.querySelector('.quick-action-button:nth-child(2)');
+                if (trainingButton && trainingButton.contains(target)) {
+                    await updateTutorialProgress(userId, 11, true); // Complete tutorial
+                    removeHighlight();
+                    setIsVisible(false);
+                    onTutorialComplete();
+                }
+            };
+
+            document.addEventListener('click', handleTrainingClick, true);
+            return () => {
+                document.removeEventListener('click', handleTrainingClick, true);
+            };
+        }
+    }, [currentStep, isVisible, userId, removeHighlight, onTutorialComplete]);
+
+    // Update the content for step 9 to include prefecture name
+    useEffect(() => {
+        if (currentStep === 9 && stats.prefecture) {
+            const step = TUTORIAL_STEPS.find(s => s.step === 9);
+            if (step) {
+                step.content = `Vägev, oled edukalt nüüd abipolitseinik ${stats.prefecture}s ja saad alustada oma tegevusi. Esmalt peaksid end väheke treenima, et tulevikus tänavatel paremini hakkama saada ja selleks on sul nüüd võimalik kasutada enda prefektuuri treeningu võimalusi`;
+            }
+        }
+    }, [currentStep, stats.prefecture, TUTORIAL_STEPS]);
+
+    // Add handler for activity selection (step 13)
+    useEffect(() => {
+        if (currentStep === 13 && isVisible) {
+            const handleActivitySelect = async (e: Event) => {
+                const target = e.target as HTMLElement;
+                const dropdown = document.querySelector('.activity-dropdown') as HTMLSelectElement;
+                if (dropdown && target === dropdown && dropdown.value) {
+                    // Progress automatically happens in TrainingPage
+                    removeHighlight();
+                    setTimeout(() => {
+                        setCurrentStep(14);
+                        setIsVisible(true);
+                    }, 100);
+                }
+            };
+
+            document.addEventListener('change', handleActivitySelect, true);
+            return () => {
+                document.removeEventListener('change', handleActivitySelect, true);
+            };
+        }
+    }, [currentStep, isVisible, removeHighlight]);
+
+// Add handler for train button click (step 14)
+    useEffect(() => {
+        if (currentStep === 14 && isVisible) {
+            const handleTrainClick = async (e: Event) => {
+                const target = e.target as HTMLElement;
+                if (target.classList.contains('train-button')) {
+                    // Tutorial completion is handled in TrainingPage
+                    removeHighlight();
+                    setIsVisible(false);
+                    onTutorialComplete();
+                }
+            };
+
+            document.addEventListener('click', handleTrainClick, true);
+            return () => {
+                document.removeEventListener('click', handleTrainClick, true);
+            };
+        }
+    }, [currentStep, isVisible, removeHighlight, onTutorialComplete]);
+
     // Initialize tutorial visibility
     useEffect(() => {
         if (!stats.tutorialProgress.isCompleted) {
@@ -177,8 +305,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                     updateTutorialProgress(userId, 1);
                 } else if (currentStep > 0 && currentStep < 4) {
                     setIsVisible(true);
-                } else if (currentStep === 9) {
-                    // Show prefecture selection tutorial
+                } else if (currentStep >= 9 && currentStep <= 10) {
                     setIsVisible(true);
                 }
             } else if (page === 'courses') {
@@ -189,6 +316,15 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                         updateTutorialProgress(userId, 4);
                     }
                 }
+            } else if (page === 'training') {
+                if (currentStep === 10) {
+                    // Coming from dashboard, move to step 11
+                    setCurrentStep(11);
+                    updateTutorialProgress(userId, 11);
+                    setIsVisible(true);
+                } else if (currentStep >= 11 && currentStep <= 14) {
+                    setIsVisible(true);
+                }
             }
         }
     }, [stats.tutorialProgress.isCompleted, currentStep, userId, page]);
@@ -198,7 +334,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         if (!stats.tutorialProgress.isCompleted &&
             currentStep === 6 &&
             stats.completedCourses?.includes('basic_police_training')) {
-            // Course was completed, move to step 7
             setCurrentStep(7);
             updateTutorialProgress(userId, 7);
             setIsVisible(true);
@@ -210,7 +345,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         if (isVisible && currentStep > 0) {
             const stepData = TUTORIAL_STEPS.find(s => s.step === currentStep);
             if (stepData) {
-                // Add extra delay for step 7 to ensure completed tab has rendered
                 const delay = currentStep === 7 ? 600 : 100;
                 setTimeout(() => {
                     highlightElement(stepData.targetElement, stepData.requiresAction);
@@ -227,7 +361,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         const currentStepData = TUTORIAL_STEPS.find(s => s.step === currentStep);
 
         if (currentStepData?.requiresAction) {
-            return; // Don't do anything, wait for actual button click
+            return; // Don't do anything, wait for actual action
         }
 
         const nextStep = currentStep + 1;
@@ -237,21 +371,20 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             await updateTutorialProgress(userId, nextStep);
             removeHighlight();
             setIsVisible(false);
+        } else if (page === 'dashboard' && currentStep === 9) {
+            // Move from step 9 to step 10
+            setCurrentStep(10);
+            await updateTutorialProgress(userId, 10);
         } else if (page === 'courses' && currentStep === 7) {
-            // Move to step 8
             setCurrentStep(8);
             await updateTutorialProgress(userId, 8);
+        } else if (page === 'training' && currentStep >= 11 && currentStep < 14) {
+            setCurrentStep(nextStep);
+            await updateTutorialProgress(userId, nextStep);
         } else {
             setCurrentStep(nextStep);
             await updateTutorialProgress(userId, nextStep);
         }
-    };
-
-    const handleSkip = async () => {
-        await updateTutorialProgress(userId, 10, true);
-        removeHighlight();
-        setIsVisible(false);
-        onTutorialComplete();
     };
 
     if (!isVisible) {
@@ -274,9 +407,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     } else if (page === 'courses' && currentStep >= 7 && currentStep <= 8) {
         totalSteps = 2;
         displayStep = currentStep - 6;
-    } else if (page === 'dashboard' && currentStep === 9) {
-        totalSteps = 1;
-        displayStep = 1;
+    } else if (page === 'dashboard' && currentStep >= 9 && currentStep <= 10) {
+        totalSteps = 2;
+        displayStep = currentStep - 8;
+    } else if (page === 'training' && currentStep >= 11 && currentStep <= 14) {
+        totalSteps = 4;
+        displayStep = currentStep - 10;
     }
 
     return (
@@ -291,12 +427,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                 </div>
                 <p className="tutorial-content">{currentTutorialStep.content}</p>
                 <div className="tutorial-actions">
-                    <button
-                        className="tutorial-btn tutorial-btn-skip"
-                        onClick={handleSkip}
-                    >
-                        Lõpeta õpetus
-                    </button>
                     {!currentTutorialStep.requiresAction && (
                         <button
                             className="tutorial-btn tutorial-btn-next"

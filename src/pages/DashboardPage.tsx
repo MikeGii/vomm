@@ -25,8 +25,10 @@ function DashboardPage() {
                     const stats = await initializePlayerStats(currentUser.uid);
                     setPlayerStats(stats);
 
-                    // Check if tutorial should be shown
-                    if (!stats.tutorialProgress.isCompleted && stats.tutorialProgress.currentStep < 4) {
+                    // Check if tutorial should be shown - update condition to include steps 9-10
+                    if (!stats.tutorialProgress.isCompleted &&
+                        (stats.tutorialProgress.currentStep < 4 ||
+                            (stats.tutorialProgress.currentStep >= 9 && stats.tutorialProgress.currentStep <= 10))) {
                         setShowTutorial(true);
                     }
 

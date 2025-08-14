@@ -2,6 +2,7 @@
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats } from '../types';
+import { initializeAttributes, initializeTrainingData } from './TrainingService';
 
 // Estonian police ranks from lowest to highest
 // const POLICE_RANKS = [
@@ -46,12 +47,14 @@ export const initializePlayerStats = async (userId: string): Promise<PlayerStats
         tutorialProgress: {
             isCompleted: false,
             currentStep: 0,
-            totalSteps: 9,
+            totalSteps: 14,
             startedAt: null,
             completedAt: null
         },
         activeCourse: null,
-        completedCourses: []
+        completedCourses: [],
+        attributes: initializeAttributes(),
+        trainingData: initializeTrainingData()
     };
 
     await setDoc(statsRef, initialStats);
@@ -85,9 +88,11 @@ export const updateTutorialProgress = async (
         updates['tutorialProgress.startedAt'] = new Date();
     }
 
-    if (isCompleted) {
+    // Complete tutorial at step 11 or if explicitly marked as completed
+    if (step === 15 || isCompleted) {
         updates['tutorialProgress.isCompleted'] = true;
         updates['tutorialProgress.completedAt'] = new Date();
+        updates['tutorialProgress.currentStep'] = 14;
     }
 
     await updateDoc(statsRef, updates);

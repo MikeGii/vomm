@@ -42,16 +42,9 @@ export const PrefectureSelectionModal: React.FC<PrefectureSelectionModalProps> =
                 prefecture: selectedPrefecture
             };
 
-            // Complete tutorial if we're on step 8 (after returning from courses)
+            // Move to step 9 instead of completing tutorial
             if (currentStats.tutorialProgress.currentStep === 8 && !currentStats.tutorialProgress.isCompleted) {
-                updates['tutorialProgress.currentStep'] = 9;
-                updates['tutorialProgress.isCompleted'] = true;
-                updates['tutorialProgress.completedAt'] = new Date();
-
-                // Show completion message after modal closes
-                setTimeout(() => {
-                    alert('Õnnitleme! Oled läbinud edukalt õpetuse ja oled nüüd valmis alustama oma karjääri!');
-                }, 500);
+                updates['tutorialProgress.currentStep'] = 9;  // Changed from completing to step 9
             }
 
             await updateDoc(statsRef, updates);

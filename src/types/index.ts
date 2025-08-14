@@ -12,9 +12,44 @@ export interface User {
 export interface TutorialProgress {
     isCompleted: boolean;
     currentStep: number;
-    totalSteps: number;  // Will be 10 total steps
+    totalSteps: number;
     startedAt: Date | null;
     completedAt: Date | null;
+}
+
+export interface AttributeData {
+    level: number;
+    experience: number;
+    experienceForNextLevel: number;
+}
+
+export interface PlayerAttributes {
+    strength: AttributeData;
+    agility: AttributeData;
+    dexterity: AttributeData;
+    intelligence: AttributeData;
+    endurance: AttributeData;
+}
+
+export interface TrainingActivity {
+    id: string;
+    name: string;
+    description?: string;
+    requiredLevel: number;
+    rewards: {
+        strength?: number;
+        agility?: number;
+        dexterity?: number;
+        intelligence?: number;
+        endurance?: number;
+        playerExp: number; // Always 5
+    };
+}
+
+export interface TrainingData {
+    remainingClicks: number;
+    lastResetTime: Date | any;
+    totalTrainingsDone: number;
 }
 
 // Player game stats
@@ -33,6 +68,8 @@ export interface PlayerStats {
     tutorialProgress: TutorialProgress;
     activeCourse: ActiveCourse | null;
     completedCourses: string[];
+    attributes?: PlayerAttributes;
+    trainingData?: TrainingData;
 }
 
 // Course definition
