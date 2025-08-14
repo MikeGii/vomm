@@ -9,6 +9,8 @@ interface CourseCardProps {
     isCompleted?: boolean;
     isEnrolling?: boolean;
     hasActiveCourse?: boolean;
+    isActive?: boolean;
+    remainingTime?: number;
 }
 
 export const CourseCard: React.FC<CourseCardProps> = ({
@@ -16,7 +18,9 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                                                           onEnroll,
                                                           isCompleted = false,
                                                           isEnrolling = false,
-                                                          hasActiveCourse = false
+                                                          hasActiveCourse = false,
+                                                          isActive = false,
+                                                          remainingTime = 0
                                                       }) => {
     const formatDuration = (seconds: number): string => {
         if (seconds < 60) return `${seconds} sekundit`;
@@ -24,14 +28,23 @@ export const CourseCard: React.FC<CourseCardProps> = ({
         return `${mins} ${mins === 1 ? 'minut' : 'minutit'}`;
     };
 
+    const formatTime = (seconds: number): string => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
     const getCategoryLabel = (category: string): string => {
         switch(category) {
+            case 'abipolitseinik' : return 'abipolitseinik';
             case 'basic': return 'Baaskoolitus';
             case 'advanced': return 'Edasijõudnud';
             case 'specialist': return 'Spetsialist';
             default: return category;
         }
     };
+
+    const progressPercentage = isActive ? ((course.duration - remainingTime) / course.duration) * 100 : 0;
 
     if (isCompleted) {
         return (
@@ -58,7 +71,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
     }
 
     return (
-        <div className="course-card">
+        <div className="course-card" id={course.id}>
             <div className="course-header">
                 <h2 className="course-name">{course.name}</h2>
                 <span className={`course-category category-${course.category}`}>
@@ -96,17 +109,33 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             </div>
 
             <div className="course-footer">
-                <span className="course-duration">
-                    ⏱️ {formatDuration(course.duration)}
-                </span>
-                {onEnroll && (
-                    <button
-                        className="enroll-button"
-                        onClick={() => onEnroll(course.id)}
-                        disabled={isEnrolling || hasActiveCourse}
-                    >
-                        {hasActiveCourse ? 'Koolitus käib' : 'Alusta'}
-                    </button>
+                {isActive ? (
+                    <div className="active-course-progress">
+                        <div className="time-remaining">
+                            Aega jäänud: {formatTime(remainingTime)}
+                        </div>
+                        <div className="progress-bar">
+                            <div
+                                className="progress-fill"
+                                style={{ width: `${progressPercentage}%` }}
+                            />
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        <span className="course-duration">
+                            ⏱️ {formatDuration(course.duration)}
+                        </span>
+                        {onEnroll && (
+                            <button
+                                className="enroll-button"
+                                onClick={() => onEnroll(course.id)}
+                                disabled={isEnrolling || hasActiveCourse}
+                            >
+                                {hasActiveCourse ? 'Koolitus käib' : 'Alusta'}
+                            </button>
+                        )}
+                    </>
                 )}
             </div>
         </div>

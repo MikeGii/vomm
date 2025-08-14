@@ -50,14 +50,14 @@ export interface Course {
         reputation?: number;
         unlocksRank?: string;
     };
-    category: 'basic' | 'advanced' | 'specialist';
+    category: 'abipolitseinik' |'basic' | 'advanced' | 'specialist';
 }
 
 // Active course enrollment
 export interface ActiveCourse {
     courseId: string;
     userId: string;
-    startedAt: Date;
-    endsAt: Date;
+    startedAt: Date | any;
+    endsAt: Date | any;
     status: 'in_progress' | 'completed' | 'cancelled';
 }
