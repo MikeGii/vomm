@@ -37,9 +37,13 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             courseId => playerStats.completedCourses?.includes(courseId)
         ));
 
+    const meetsWorkHoursRequirement = !course.requirements.totalWorkedHours ||
+        (playerStats && (playerStats.totalWorkedHours || 0) >= course.requirements.totalWorkedHours);
+
     const meetsAllRequirements = meetsLevelRequirement &&
         meetsReputationRequirement &&
-        meetsPrerequisiteRequirement;
+        meetsPrerequisiteRequirement &&
+        meetsWorkHoursRequirement;
 
     // formatDuration function
     const formatDuration = (seconds: number): string => {
@@ -71,6 +75,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
     const getCategoryLabel = (category: string): string => {
         switch(category) {
             case 'abipolitseinik': return 'Abipolitseinik';
+            case 'sisekaitseakadeemia': return 'Sisekaitseakadeemia';
             case 'basic': return 'Baaskoolitus';
             case 'advanced': return 'Edasijõudnud';
             case 'specialist': return 'Spetsialist';
@@ -97,6 +102,9 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                         )}
                         {course.rewards.unlocksRank && (
                             <li>Auaste: {course.rewards.unlocksRank}</li>
+                        )}
+                        {course.rewards.unlocksStatus && (
+                            <li>Staatus: {course.rewards.unlocksStatus}</li>
                         )}
                     </ul>
                 </div>
@@ -131,6 +139,13 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                                 ` (Sul on: ${playerStats.reputation})`}
                         </li>
                     )}
+                    {course.requirements.totalWorkedHours && (
+                        <li className={meetsWorkHoursRequirement ? 'requirement-met' : 'requirement-not-met'}>
+                            Töötunnid: {course.requirements.totalWorkedHours}h
+                            {playerStats && !meetsWorkHoursRequirement &&
+                                ` (Sul on: ${playerStats.totalWorkedHours || 0}h)`}
+                        </li>
+                    )}
                     {course.requirements.completedCourses && (
                         <li className={meetsPrerequisiteRequirement ? 'requirement-met' : 'requirement-not-met'}>
                             Eelnevad koolitused läbitud
@@ -148,7 +163,10 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                         <li>+{course.rewards.reputation} mainet</li>
                     )}
                     {course.rewards.unlocksRank && (
-                        <li>Avab: {course.rewards.unlocksRank}</li>
+                        <li>Avab auastme: {course.rewards.unlocksRank}</li>
+                    )}
+                    {course.rewards.unlocksStatus && (
+                        <li>Avab staatuse: {course.rewards.unlocksStatus}</li>
                     )}
                 </ul>
             </div>

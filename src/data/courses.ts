@@ -1,14 +1,16 @@
 // src/data/courses.ts
 import { Course } from '../types';
 
-export const BASIC_COURSES: Course[] = [
+export const ABIPOLITSEINIK_COURSES: Course[] = [
     {
         id: 'basic_police_training_abipolitseinik',
         name: 'Abipolitseiniku baaskursus',
         description: 'Põhiline koolitus kõigile uutele liikmetele. Õpid seadusi, protseduure ja ohutustehnikaid.',
         duration: 10, // 60 seconds for testing
         requirements: {
-            level: 1
+            level: 1,
+            totalWorkedHours: 0
+
         },
         rewards: {
             experience: 50,
@@ -24,10 +26,11 @@ export const BASIC_COURSES: Course[] = [
         requirements: {
             level: 5,
             completedCourses: ['basic_police_training_abipolitseinik'],
+            totalWorkedHours: 1
         },
         rewards: {
             experience: 150,
-            reputation: 75
+            reputation: 50
         },
         category: 'abipolitseinik'
     },
@@ -38,11 +41,12 @@ export const BASIC_COURSES: Course[] = [
         duration: 1200, // 20 minutes
         requirements: {
             level: 10,
-            completedCourses: ['basic_police_training_abipolitseinik']
+            completedCourses: ['basic_police_training_abipolitseinik'],
+            totalWorkedHours: 5
         },
         rewards: {
-            experience: 300,
-            reputation: 150
+            experience: 200,
+            reputation: 75
         },
         category: 'abipolitseinik'
     },
@@ -53,19 +57,42 @@ export const BASIC_COURSES: Course[] = [
         duration: 7200, // 2 hours
         requirements: {
             level: 15,
-            completedCourses: ['basic_police_training_abipolitseinik', 'firearm_training_abipolitseinik']
+            completedCourses: ['basic_police_training_abipolitseinik', 'firearm_training_abipolitseinik'],
+            totalWorkedHours: 10
         },
         rewards: {
-            experience: 1000,
-            reputation: 500,
+            experience: 500,
+            reputation: 200,
         },
         category: 'abipolitseinik'
     }
 ];
 
+export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
+    {
+        id: 'sisekaitseakadeemia_entrance',
+        name: 'Sisekaitseakadeemia sisseastumine',
+        description: 'Ettevalmistuskursus Sisekaitseakadeemiasse astumiseks. Tutvud Sisekaitseakadeemiaga avatud uste päeval ja uurid võimalusi Politseikolledži kohta.',
+        duration: 14400, // 4 hours in seconds
+        requirements: {
+            level: 20,
+            completedCourses: ['independent_competence_abipolitseinik'],
+            totalWorkedHours: 20
+        },
+        rewards: {
+            experience: 1000,
+            reputation: 300,
+            unlocksRank: 'Nooreminspektor',
+            unlocksStatus: 'Kadett'
+        },
+        category: 'sisekaitseakadeemia'
+    }
+];
+
 // Combine all courses
 export const ALL_COURSES: Course[] = [
-    ...BASIC_COURSES
+    ...ABIPOLITSEINIK_COURSES,
+    ...SISEKAITSEAKADEEMIA_COURSES,
 ];
 
 // Helper function to get course by ID

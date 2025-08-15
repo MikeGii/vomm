@@ -88,13 +88,15 @@ export interface Course {
         level?: number;
         reputation?: number;
         completedCourses?: string[]; // IDs of prerequisite courses
+        totalWorkedHours: number;
     };
     rewards: {
         experience: number;
         reputation?: number;
         unlocksRank?: string;
+        unlocksStatus?: string;
     };
-    category: 'abipolitseinik' |'basic' | 'advanced' | 'specialist';
+    category: 'abipolitseinik' | 'sisekaitseakadeemia' | 'basic' | 'advanced' | 'specialist';
 }
 
 // Active course enrollment
@@ -162,6 +164,7 @@ export interface LeaderboardEntry {
     badgeNumber: string | null;
     isEmployed: boolean;
     hasCompletedTraining: boolean;
+    completedCourses?: string[];
     attributes?: PlayerAttributes;
     casesCompleted: number;
     criminalsArrested: number;

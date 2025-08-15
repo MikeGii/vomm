@@ -53,23 +53,23 @@ export const getExpProgress = (totalExp: number): { current: number; needed: num
 };
 
 // Estonian police ranks from lowest to highest
-// const POLICE_RANKS = [
-//     'Abipolitseinik',
-//     'Kadett',
-//     'Noorinspektor',
-//     'Inspektor',
-//     'Vaneminspektor',
-//     'Üleminspektor',
-//     'Komissar',
-//     'Vanemkomissar',
-//     'Politseileitnant',
-//     'Politseikapten',
-//     'Politseimajor',
-//     'Politseikolonelleitnant',
-//     'Politseikolonel',
-//     'Politseikindralinspektor',
-//     'Politseikindral'
-// ];
+const POLICE_RANKS = [
+    'Abipolitseinik',
+    'Kadett',
+    'Nooreminspektor',
+    'Inspektor',
+    'Vaneminspektor',
+    'Üleminspektor',
+    'Komissar',
+    'Vanemkomissar',
+    'Politseileitnant',
+    'Politseikapten',
+    'Politseimajor',
+    'Politseikolonelleitnant',
+    'Politseikolonel',
+    'Politseikindralinspektor',
+    'Politseikindral'
+];
 
 // Calculate player health based on attributes
 export const calculatePlayerHealth = (strengthLevel: number, enduranceLevel: number): PlayerHealth => {
