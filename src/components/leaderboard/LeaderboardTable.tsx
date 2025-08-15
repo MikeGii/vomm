@@ -15,8 +15,22 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                                                                       sortBy
                                                                   }) => {
     const getStatusText = (entry: LeaderboardEntry): string => {
-        if (entry.rank) return entry.rank;
-        if (entry.hasCompletedTraining) return 'Abipolitseinik';
+        // Check if player has completed Sisekaitseakadeemia entrance (is a Kadett)
+        // This takes priority even if they have a rank
+        if (entry.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
+            // TODO: Add check for graduation course when implemented
+            // For now, all who completed entrance are Kadett
+            return 'Kadett';
+        }
+        // Check if player has a rank AND is not a Kadett (is a Politseiametnik)
+        // This will be for future courses that graduate from the academy
+        if (entry.rank && !entry.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
+            return 'Politseiametnik';
+        }
+        // Check if player has completed training (is an Abipolitseinik)
+        if (entry.hasCompletedTraining) {
+            return 'Abipolitseinik';
+        }
         return '—';
     };
 

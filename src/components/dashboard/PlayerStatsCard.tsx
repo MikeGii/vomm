@@ -48,9 +48,11 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                             ? 'stat-employed'
                             : 'stat-untrained'
                     }`}>
-        {stats.hasCompletedTraining
-            ? 'Abipolitseinik'
-            : '—'}
+        {stats.completedCourses?.includes('sisekaitseakadeemia_entrance')
+            ? 'Kadett'
+            : stats.hasCompletedTraining
+                ? 'Abipolitseinik'
+                : '—'}
     </span>
                 </div>
 

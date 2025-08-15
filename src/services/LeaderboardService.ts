@@ -59,6 +59,7 @@ export const getLeaderboard = async (
                 badgeNumber: playerData.badgeNumber || null,
                 isEmployed: playerData.isEmployed || false,
                 hasCompletedTraining: playerData.hasCompletedTraining || false,
+                completedCourses: playerData.completedCourses || [],
                 attributes: playerData.attributes,
                 casesCompleted: playerData.casesCompleted || 0,
                 criminalsArrested: playerData.criminalsArrested || 0,

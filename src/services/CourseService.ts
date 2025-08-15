@@ -143,12 +143,25 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
             updates.reputation = playerStats.reputation + course.rewards.reputation;
         }
 
-        // Special handling for basic_police_training course
+// Special handling for courses
         if (course.id === 'basic_police_training_abipolitseinik') {
             // Mark as Abipolitseinik after basic training
             updates.hasCompletedTraining = true;
             updates.isEmployed = true;
             updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
+        } else if (course.id === 'sisekaitseakadeemia_entrance') {
+            // Special handling for Sisekaitseakadeemia entrance
+            updates.rank = course.rewards.unlocksRank || 'Nooreminspektor';
+            updates.isEmployed = true;
+            updates.hasCompletedTraining = true;
+
+            // Set prefecture to Sisekaitseakadeemia and department to Politsei- ja Piirivalvekolledž
+            updates.prefecture = 'Sisekaitseakadeemia';
+            updates.department = 'Politsei- ja Piirivalvekolledž';
+
+            if (!playerStats.badgeNumber) {
+                updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
+            }
         } else if (course.rewards.unlocksRank) {
             updates.rank = course.rewards.unlocksRank;
             updates.isEmployed = true;
