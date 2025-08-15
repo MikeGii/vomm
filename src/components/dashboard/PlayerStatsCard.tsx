@@ -2,6 +2,7 @@
 import React from 'react';
 import { PlayerStats } from '../../types';
 import '../../styles/components/PlayerStatsCard.css';
+import {getExpProgress} from "../../services/PlayerService";
 
 interface PlayerStatsCardProps {
     stats: PlayerStats;
@@ -10,8 +11,8 @@ interface PlayerStatsCardProps {
 
 export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, username }) => {
     // Calculate progress to next level (simple formula for now)
-    const expForNextLevel = stats.level * 100;
-    const expProgress = (stats.experience / expForNextLevel) * 100;
+    const expProgress = getExpProgress(stats.experience);
+    const expPercentage = expProgress.percentage;
 
     return (
         <div className="stats-card">
@@ -32,12 +33,12 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                     <div className="exp-bar">
                         <div
                             className="exp-progress"
-                            style={{ width: `${expProgress}%` }}
+                            style={{ width: `${expPercentage}%` }}
                         />
                     </div>
                     <span className="exp-text">
-                        {stats.experience} / {expForNextLevel} XP
-                    </span>
+    {expProgress.current} / {expProgress.needed} XP
+</span>
                 </div>
 
                 <div className="stat-item">

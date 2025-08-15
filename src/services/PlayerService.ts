@@ -4,6 +4,54 @@ import { firestore } from '../config/firebase';
 import { PlayerStats, PlayerHealth } from '../types';
 import { initializeAttributes, initializeTrainingData } from './TrainingService';
 
+// Calculate experience needed for a specific level
+export const calculateExpForLevel = (level: number): number => {
+    if (level <= 1) return 0;
+
+    // Base formula: 100 XP for level 2, then increases by 20% per level
+    const baseExp = 100;
+    const growthRate = 0.12; // 20% increase per level
+
+    let totalExp = 0;
+    for (let i = 2; i <= level; i++) {
+        totalExp += Math.floor(baseExp * Math.pow(1 + growthRate, i - 2));
+    }
+
+    return totalExp;
+};
+
+// Calculate experience needed for next level (the gap between current and next level)
+export const calculateExpForNextLevel = (currentLevel: number): number => {
+    const currentTotal = calculateExpForLevel(currentLevel);
+    const nextTotal = calculateExpForLevel(currentLevel + 1);
+    return nextTotal - currentTotal;
+};
+
+// Calculate level from total experience
+export const calculateLevelFromExp = (totalExp: number): number => {
+    let level = 1;
+    while (calculateExpForLevel(level + 1) <= totalExp) {
+        level++;
+    }
+    return level;
+};
+
+// Get experience progress for current level
+export const getExpProgress = (totalExp: number): { current: number; needed: number; percentage: number } => {
+    const level = calculateLevelFromExp(totalExp);
+    const currentLevelExp = calculateExpForLevel(level);
+    const nextLevelExp = calculateExpForLevel(level + 1);
+    const current = totalExp - currentLevelExp;
+    const needed = nextLevelExp - currentLevelExp;
+    const percentage = (current / needed) * 100;
+
+    return {
+        current,
+        needed,
+        percentage
+    };
+};
+
 // Estonian police ranks from lowest to highest
 // const POLICE_RANKS = [
 //     'Abipolitseinik',

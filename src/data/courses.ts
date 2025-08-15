@@ -58,7 +58,6 @@ export const BASIC_COURSES: Course[] = [
         rewards: {
             experience: 1000,
             reputation: 500,
-            unlocksRank: 'Vaneminspektor'
         },
         category: 'abipolitseinik'
     }

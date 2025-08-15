@@ -10,6 +10,7 @@ import {
 import { firestore } from '../config/firebase';
 import { Course, ActiveCourse, PlayerStats } from '../types';
 import { ALL_COURSES, getCourseById } from '../data/courses';
+import {calculateLevelFromExp} from "./PlayerService";
 
 // Get courses available for player
 export const getAvailableCourses = (playerStats: PlayerStats): Course[] => {
@@ -118,7 +119,7 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
 
         // Calculate new level if experience increases
         const newExperience = playerStats.experience + course.rewards.experience;
-        const newLevel = Math.floor(newExperience / 100) + 1;
+        const newLevel = calculateLevelFromExp(newExperience);
 
         // Update player stats with rewards
         const updates: any = {
@@ -138,10 +139,7 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
             updates.hasCompletedTraining = true;
             updates.isEmployed = true;
             updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
-            // Don't set prefecture yet - will be selected through modal
-            // Don't set rank - Abipolitseinik doesn't have ranks
         } else if (course.rewards.unlocksRank) {
-            // For advanced courses that unlock actual police ranks
             updates.rank = course.rewards.unlocksRank;
             updates.isEmployed = true;
             updates.hasCompletedTraining = true;

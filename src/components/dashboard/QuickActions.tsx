@@ -35,7 +35,6 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ stats }) => {
 
     // Check what features are available based on progress
     const canTrain = stats.hasCompletedTraining;
-    const canWork = stats.hasCompletedTraining && !stats.isEmployed;
     const canAccessDepartment = stats.isEmployed;
 
     const handleCoursesClick = async () => {
