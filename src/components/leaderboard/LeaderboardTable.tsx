@@ -57,6 +57,8 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
         switch(sortBy) {
             case 'reputation':
                 return entry.reputation;
+            case 'money':
+                return `${entry.money} €`;
             case 'cases':
                 return entry.casesCompleted;
             case 'arrests':
@@ -78,6 +80,8 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
         switch(sortBy) {
             case 'reputation':
                 return 'Reputatsioon';
+            case 'money':
+                return 'Raha';
             case 'strength':
                 return 'Jõud';
             case 'agility':
@@ -120,7 +124,8 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                     <th className="status-column">Staatus</th>
                     <th className="level-column">Tase</th>
                     <th className="reputation-column">Reputatsioon</th>
-                    {showExtraColumn && (
+                    <th className="money-column">Raha</th>
+                    {showExtraColumn && sortBy !== 'money' && (
                         <th className="value-column">
                             {getExtraColumnHeader()}
                         </th>
@@ -138,17 +143,18 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                         </td>
                         <td className="name-column">{entry.username}</td>
                         <td className="status-column">
-                                <span className="status-badge">
-                                    {getStatusText(entry)}
-                                </span>
+                <span className="status-badge">
+                    {getStatusText(entry)}
+                </span>
                         </td>
                         <td className="level-column">{entry.level}</td>
                         <td className="reputation-column">{entry.reputation}</td>
-                        {showExtraColumn && (
+                        <td className="money-column">{entry.money} €</td>
+                        {showExtraColumn && sortBy !== 'money' && (
                             <td className="value-column">
-                                    <span className="sorted-value">
-                                        {getSortedValue(entry)}
-                                    </span>
+                    <span className="sorted-value">
+                        {getSortedValue(entry)}
+                    </span>
                             </td>
                         )}
                     </tr>

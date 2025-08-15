@@ -94,6 +94,11 @@ export const initializePlayerStats = async (userId: string): Promise<PlayerStats
     if (statsDoc.exists()) {
         const stats = statsDoc.data() as PlayerStats;
 
+        // Initialize money if not present
+        if (stats.money === undefined) {
+            stats.money = 0;
+        }
+
         // Calculate health if not present
         if (!stats.health && stats.attributes) {
             stats.health = calculatePlayerHealth(
@@ -114,13 +119,14 @@ export const initializePlayerStats = async (userId: string): Promise<PlayerStats
     const initialStats: PlayerStats = {
         level: 1,
         experience: 0,
-        reputation: 0,  // Starting with 0 reputation as requested
-        rank: null,  // No rank when untrained
-        department: null,  // No department when untrained
-        prefecture: null,  // No prefecture when untrained - ADD THIS LINE
-        badgeNumber: null,  // No badge when untrained
+        reputation: 0,
+        money: 0,
+        rank: null,
+        department: null,
+        prefecture: null,
+        badgeNumber: null,
         isEmployed: false,
-        hasCompletedTraining: false,  // No training completed initially
+        hasCompletedTraining: false,
         casesCompleted: 0,
         criminalsArrested: 0,
         totalWorkedHours: 0,

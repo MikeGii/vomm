@@ -11,11 +11,11 @@ export interface Ability {
     icon: string;
     requiredCourse: string;
     trainingBonuses: TrainingBonus[];
+    replacedBy?: string;
 }
 
 
 export const ABILITIES: Ability[] = [
-
     {
         id: 'firearm_carry_abipolitseinik',
         name: 'Tulirelva kandmine - Abipolitseinik',
@@ -25,6 +25,18 @@ export const ABILITIES: Ability[] = [
         trainingBonuses: [
             { attribute: 'dexterity', percentage: 0.05 },
             { attribute: 'agility', percentage: 0.05 }
+        ],
+        replacedBy: 'firearm_carry_enhanced'  // ADD THIS
+    },
+    {
+        id: 'firearm_carry_enhanced',
+        name: 'Tulirelva kandmine',
+        description: 'Täiustatud tulirelva käsitsemise oskused Glock teenistusrelvaga',
+        icon: '🔫',
+        requiredCourse: 'firearm_handling_glock',
+        trainingBonuses: [
+            { attribute: 'dexterity', percentage: 0.10 },
+            { attribute: 'agility', percentage: 0.10 }
         ]
     },
     {
@@ -39,25 +51,40 @@ export const ABILITIES: Ability[] = [
     }
 ];
 
-export const getAbilitiesByCompletedCourses = (completedCourses: string[]): Ability[] => {
-    return ABILITIES.filter(ability =>
+// Universal function to get active abilities (handles replacements automatically)
+export const getActiveAbilities = (completedCourses: string[]): Ability[] => {
+    // Get all abilities that the player has earned through courses
+    const earnedAbilities = ABILITIES.filter(ability =>
         completedCourses.includes(ability.requiredCourse)
     );
+
+    // Filter out abilities that have been replaced
+    const activeAbilities = earnedAbilities.filter(ability => {
+        // Check if this ability has been replaced
+        if (ability.replacedBy) {
+            // Check if the player has the replacement ability
+            return !earnedAbilities.some(a => a.id === ability.replacedBy);
+        }
+        return true;
+    });
+
+    return activeAbilities;
 };
 
-export const getAbilityById = (abilityId: string): Ability | undefined => {
-    return ABILITIES.find(ability => ability.id === abilityId);
+// Keep the old function for backward compatibility but use the new logic
+export const getAbilitiesByCompletedCourses = (completedCourses: string[]): Ability[] => {
+    return getActiveAbilities(completedCourses);
 };
 
-// NEW FUNCTION: Calculate total training bonuses for an attribute
+// Get training bonus considering ability replacements
 export const getTrainingBonusForAttribute = (
     completedCourses: string[],
     attribute: 'strength' | 'agility' | 'dexterity' | 'intelligence' | 'endurance'
 ): number => {
-    const abilities = getAbilitiesByCompletedCourses(completedCourses);
+    const activeAbilities = getActiveAbilities(completedCourses);
     let totalBonus = 0;
 
-    abilities.forEach(ability => {
+    activeAbilities.forEach(ability => {
         if (ability.trainingBonuses) {
             const bonus = ability.trainingBonuses.find(b => b.attribute === attribute);
             if (bonus) {

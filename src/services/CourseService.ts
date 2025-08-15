@@ -30,7 +30,7 @@ export const getAvailableCourses = (playerStats: PlayerStats): Course[] => {
             if (!hasAllPrerequisites) return false;
         }
 
-        // Show the course even if other requirements (level, reputation) aren't met
+        // Show the course even if other requirements (level, reputation, attributes) aren't met
         // The CourseCard will display which requirements are missing
         return true;
     });
@@ -100,7 +100,7 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
 
     const now = Timestamp.now();
 
-    // Handle endsAt as either a Timestamp or a Date
+    // Handle endsAt timestamp (same as before)
     let endsAtMillis: number;
     if (playerStats.activeCourse.endsAt instanceof Timestamp) {
         endsAtMillis = playerStats.activeCourse.endsAt.toMillis();
@@ -110,19 +110,17 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
         endsAtMillis = new Date(playerStats.activeCourse.endsAt).getTime();
     }
 
-    // Add a 1-second buffer to account for timing differences
     const nowWithBuffer = now.toMillis() + 1000;
 
     if (nowWithBuffer >= endsAtMillis) {
-        // Course is complete
         const course = getCourseById(playerStats.activeCourse.courseId);
         if (!course) return false;
 
-        // Calculate new level if experience increases
+        // Calculate new level
         const newExperience = playerStats.experience + course.rewards.experience;
         const newLevel = calculateLevelFromExp(newExperience);
 
-        // Update player stats with rewards
+        // Build updates object
         const updates: any = {
             activeCourse: null,
             completedCourses: [...(playerStats.completedCourses || []), course.id],
@@ -130,35 +128,66 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
             level: newLevel
         };
 
-        // Track abilities
-        const newAbilities = ABILITIES
-            .filter(ability => [...(playerStats.completedCourses || []), course.id].includes(ability.requiredCourse))
-            .map(ability => ability.id);
-
-        if (newAbilities.length > 0) {
-            updates.abilities = newAbilities;
+        // Handle money reward
+        if (course.rewards.money) {
+            updates.money = (playerStats.money || 0) + course.rewards.money;
         }
 
+        // Handle reputation
         if (course.rewards.reputation) {
             updates.reputation = playerStats.reputation + course.rewards.reputation;
         }
 
-// Special handling for courses
+        // UNIVERSAL ABILITY HANDLING
+        let currentAbilities = playerStats.abilities || [];
+
+        // If course grants a new ability
+        if (course.rewards.grantsAbility) {
+            // Add the new ability if not already present
+            if (!currentAbilities.includes(course.rewards.grantsAbility)) {
+                currentAbilities.push(course.rewards.grantsAbility);
+            }
+
+            // If this ability replaces another one, remove the old one
+            if (course.rewards.replacesAbility) {
+                currentAbilities = currentAbilities.filter(
+                    abilityId => abilityId !== course.rewards.replacesAbility
+                );
+            }
+        }
+
+        // Also check for abilities from newly completed courses (backward compatibility)
+        const allCompletedCourses = [...(playerStats.completedCourses || []), course.id];
+        const courseBasedAbilities = ABILITIES
+            .filter(ability => allCompletedCourses.includes(ability.requiredCourse))
+            .map(ability => ability.id);
+
+        // Merge abilities from both systems
+        let mergedAbilities = Array.from(new Set([...currentAbilities, ...courseBasedAbilities]));
+
+        // Apply replacements based on ability definitions
+        const finalAbilities = mergedAbilities.filter(abilityId => {
+            const ability = ABILITIES.find(a => a.id === abilityId);
+            if (ability?.replacedBy) {
+                // Keep this ability only if its replacement is not in the list
+                return !mergedAbilities.includes(ability.replacedBy);
+            }
+            return true;
+        });
+
+        updates.abilities = finalAbilities;
+
+        // Handle special course completions (same as before)
         if (course.id === 'basic_police_training_abipolitseinik') {
-            // Mark as Abipolitseinik after basic training
             updates.hasCompletedTraining = true;
             updates.isEmployed = true;
             updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
         } else if (course.id === 'sisekaitseakadeemia_entrance') {
-            // Special handling for Sisekaitseakadeemia entrance
             updates.rank = course.rewards.unlocksRank || 'Nooreminspektor';
             updates.isEmployed = true;
             updates.hasCompletedTraining = true;
-
-            // Set prefecture to Sisekaitseakadeemia and department to Politsei- ja Piirivalvekolledž
             updates.prefecture = 'Sisekaitseakadeemia';
             updates.department = 'Politsei- ja Piirivalvekolledž';
-
             if (!playerStats.badgeNumber) {
                 updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
             }
@@ -166,12 +195,9 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
             updates.rank = course.rewards.unlocksRank;
             updates.isEmployed = true;
             updates.hasCompletedTraining = true;
-
-            // Set default department if becoming a real police officer
             if (!playerStats.department) {
                 updates.department = 'Patrulltalitus';
             }
-
             if (!playerStats.badgeNumber) {
                 updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
             }

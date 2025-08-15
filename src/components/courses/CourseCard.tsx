@@ -1,6 +1,6 @@
 // src/components/courses/CourseCard.tsx
 import React from 'react';
-import {Course, PlayerStats} from '../../types';
+import {Course, PlayerAttributes, PlayerStats} from '../../types';
 import '../../styles/components/courses/CourseCard.css';
 
 interface CourseCardProps {
@@ -25,6 +25,18 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                                                           playerStats
                                                       }) => {
 
+    // Helper function for attribute names
+    const getAttributeName = (attr: string): string => {
+        const names: { [key: string]: string } = {
+            strength: 'Jõud',
+            agility: 'Kiirus',
+            dexterity: 'Osavus',
+            intelligence: 'Intelligentsus',
+            endurance: 'Vastupidavus'
+        };
+        return names[attr] || attr;
+    };
+
     // Add requirement checking
     const meetsLevelRequirement = !course.requirements.level ||
         (playerStats && playerStats.level >= course.requirements.level);
@@ -40,10 +52,19 @@ export const CourseCard: React.FC<CourseCardProps> = ({
     const meetsWorkHoursRequirement = !course.requirements.totalWorkedHours ||
         (playerStats && (playerStats.totalWorkedHours || 0) >= course.requirements.totalWorkedHours);
 
+    const meetsAttributeRequirements = !course.requirements.attributes ||
+        (playerStats && Object.entries(course.requirements.attributes).every(([attr, requiredLevel]) => {
+            if (!playerStats.attributes) return false;
+
+            const playerAttribute = playerStats.attributes[attr as keyof PlayerAttributes];
+            return playerAttribute && playerAttribute.level >= requiredLevel;
+        }));
+
     const meetsAllRequirements = meetsLevelRequirement &&
         meetsReputationRequirement &&
         meetsPrerequisiteRequirement &&
-        meetsWorkHoursRequirement;
+        meetsWorkHoursRequirement &&
+        meetsAttributeRequirements;
 
     // formatDuration function
     const formatDuration = (seconds: number): string => {
@@ -100,6 +121,12 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                         {course.rewards.reputation && (
                             <li>{course.rewards.reputation} mainet</li>
                         )}
+                        {course.rewards.money && (
+                            <li>{course.rewards.money} €</li>
+                        )}
+                        {course.rewards.grantsAbility && (
+                            <li>Omandatud oskus</li>
+                        )}
                         {course.rewards.unlocksRank && (
                             <li>Auaste: {course.rewards.unlocksRank}</li>
                         )}
@@ -152,6 +179,17 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                             {!meetsPrerequisiteRequirement && ' ❌'}
                         </li>
                     )}
+                    {course.requirements.attributes && Object.entries(course.requirements.attributes).map(([attr, requiredLevel]) => {
+                        const playerLevel = playerStats?.attributes?.[attr as keyof PlayerAttributes]?.level || 0;
+                        const meetsReq = playerLevel >= requiredLevel;
+
+                        return (
+                            <li key={attr} className={meetsReq ? 'requirement-met' : 'requirement-not-met'}>
+                                {getAttributeName(attr)}: {requiredLevel}
+                                {playerStats && !meetsReq && ` (Sul on: ${playerLevel})`}
+                            </li>
+                        );
+                    })}
                 </ul>
             </div>
 
@@ -161,6 +199,16 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                     <li>+{course.rewards.experience} XP</li>
                     {course.rewards.reputation && (
                         <li>+{course.rewards.reputation} mainet</li>
+                    )}
+                    {course.rewards.money && (
+                        <li>+{course.rewards.money} €</li>
+                    )}
+                    {course.rewards.grantsAbility && (
+                        <li>
+                            {course.rewards.replacesAbility
+                                ? 'Täiustab oskust: Tulirelva kandmine'
+                                : 'Annab uue oskuse'}
+                        </li>
                     )}
                     {course.rewards.unlocksRank && (
                         <li>Avab auastme: {course.rewards.unlocksRank}</li>
