@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { PlayerStats } from '../types';
 import { initializePlayerStats, getPlayerStats } from '../services/PlayerService';
 import { PrefectureSelectionModal } from '../components/dashboard/PrefectureSelectionModal';
+import { Leaderboard} from "../components/leaderboard/Leaderboard";
 
 import '../styles/pages/Dashboard.css';
 import {PlayerAbilities} from "../components/dashboard/PlayerAbilities";
@@ -98,6 +99,10 @@ function DashboardPage() {
                         />
                         <PlayerAbilities
                             stats={playerStats}
+                        />
+
+                        <Leaderboard
+                            currentUserId={currentUser?.uid}
                         />
 
                         {showTutorial && currentUser && (
