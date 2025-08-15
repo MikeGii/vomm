@@ -19,7 +19,6 @@ import {
     getWorkHistory
 } from '../services/WorkService';
 import { getAvailableWorkActivities } from '../data/workActivities';
-import { getDepartmentsByPrefecture } from '../data/prefectures';
 import { updateTutorialProgress } from '../services/PlayerService';
 import '../styles/pages/Patrol.css';
 
@@ -252,7 +251,7 @@ const PatrolPage: React.FC = () => {
                     />
                 )}
 
-                {/* Work setup section */}
+                {/* Work setup section - only show when not working and can work */}
                 {!playerStats.activeWork && canWork && (
                     <div className="work-setup">
                         <DepartmentSelector
@@ -277,8 +276,8 @@ const PatrolPage: React.FC = () => {
                     </div>
                 )}
 
-                {/* Messages for when work is not available */}
-                {!canWork && (
+                {/* Messages for when new work cannot be started */}
+                {!playerStats.activeWork && !canWork && (
                     <div className="work-unavailable">
                         {!playerStats.hasCompletedTraining && (
                             <p>Pead esmalt läbima abipolitseiniku koolituse!</p>
@@ -287,8 +286,15 @@ const PatrolPage: React.FC = () => {
                             <p>Su tervis on liiga madal töötamiseks! Minimaalne tervis on 50.</p>
                         )}
                         {playerStats.activeCourse && (
-                            <p>Sa ei saa töötada koolituse ajal!</p>
+                            <p>Sa ei saa alustada uut tööd koolituse ajal!</p>
                         )}
+                    </div>
+                )}
+
+                {/* Show message if already working but allow viewing the page */}
+                {playerStats.activeWork && !remainingTime && (
+                    <div className="work-unavailable">
+                        <p>Töö on lõppenud, andmeid uuendatakse...</p>
                     </div>
                 )}
 

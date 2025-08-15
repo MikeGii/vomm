@@ -49,7 +49,7 @@ export const CoursesList: React.FC<CoursesListProps> = ({
                     isCompleted={isCompleted}
                     onEnroll={onEnroll}
                     isEnrolling={isEnrolling}
-                    hasActiveCourse={hasActiveCourse}
+                    hasActiveCourse={hasActiveCourse || Boolean(playerStats?.activeWork)}  // Fixed line
                     isActive={course.id === activeCourseId}
                     remainingTime={course.id === activeCourseId ? remainingTime : 0}
                     playerStats={playerStats}

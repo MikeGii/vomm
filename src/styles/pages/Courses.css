@@ -64,3 +64,19 @@
         font-size: 1.7rem;
     }
 }
+
+.work-in-progress-notice {
+    background-color: #3a2a1a;
+    border: 1px solid #ff9800;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.work-in-progress-notice p {
+    color: #ff9800;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 500;
+}

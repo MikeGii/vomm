@@ -58,15 +58,6 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ stats }) => {
         navigate('/training');
     };
 
-    const handlePatrolClick = async () => {
-        if (!stats.tutorialProgress?.isCompleted &&
-            stats.tutorialProgress?.currentStep === 16 &&
-            currentUser) {
-            await updateTutorialProgress(currentUser.uid, 17);
-        }
-        navigate('/patrol');
-    };
-
     const actions: ActionItem[] = [
         {
             icon: '📚',
@@ -87,7 +78,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ stats }) => {
         {
             icon: shouldLockWork ? '🔒' : '🚓',
             label: 'Mine tööle',
-            disabled: shouldLockWork || (!inTutorial && !stats.hasCompletedTraining) || !!stats.activeWork,
+            disabled: shouldLockWork || (!inTutorial && !stats.hasCompletedTraining),
             locked: shouldLockWork,
             action: () => navigate('/patrol'),
             highlighted: tutorialStep === 16 // Highlight during patrol tutorial
