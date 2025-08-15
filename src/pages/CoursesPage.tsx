@@ -210,6 +210,13 @@ const CoursesPage: React.FC = () => {
                     />
                 )}
 
+                {/* Add this new section */}
+                {playerStats?.activeWork && (
+                    <div className="work-in-progress-notice">
+                        <p>⚠️ Sa ei saa võtta uut koolitust, kuni töö on lõppenud.</p>
+                    </div>
+                )}
+
                 <CourseTabs
                     activeTab={activeTab}
                     onTabChange={setActiveTab}

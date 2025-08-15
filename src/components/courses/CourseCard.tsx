@@ -175,10 +175,11 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                             <button
                                 className="enroll-button"
                                 onClick={() => onEnroll(course.id)}
-                                disabled={isEnrolling || hasActiveCourse || !meetsAllRequirements}
+                                disabled={isEnrolling || hasActiveCourse || !meetsAllRequirements || !!playerStats?.activeWork}
                             >
                                 {!meetsAllRequirements ? 'Nõuded täitmata' :
-                                    hasActiveCourse ? 'Koolitus käib' : 'Alusta'}
+                                    playerStats?.activeWork ? 'Töö käib' :
+                                        hasActiveCourse ? 'Koolitus käib' : 'Alusta'}
                             </button>
                         )}
                     </>
