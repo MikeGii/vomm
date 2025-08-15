@@ -64,18 +64,27 @@ const PatrolPage: React.FC = () => {
 
             if (remaining <= 0 && !completionAlertShownRef.current) {
                 completionAlertShownRef.current = true;
+
+                // Store activeWork before it gets cleared by checkWorkCompletion
+                const wasTrainingWork = stats.activeWork?.isTutorial || false;
+
                 const completed = await checkWorkCompletion(currentUser!.uid);
                 if (completed) {
                     alert('Töö on edukalt lõpetatud!');
-                    await loadWorkHistory();
-                    completionAlertShownRef.current = false;
 
-                    // Check if this was tutorial work
-                    if (stats.activeWork.isTutorial &&
-                        stats.tutorialProgress.currentStep === 22) {
-                        // Complete tutorial
-                        await updateTutorialProgress(currentUser!.uid, 22, true);
-                    }
+                    setTimeout(async () => {
+                        await loadWorkHistory();
+
+                        // Check if this was tutorial work and progress to step 23
+                        if (wasTrainingWork &&
+                            stats.tutorialProgress.currentStep === 22) {
+                            // Progress to step 23 to show work history
+                            await updateTutorialProgress(currentUser!.uid, 23);
+                            setShowTutorial(true);
+                        }
+                    }, 1500);
+
+                    completionAlertShownRef.current = false;
                 }
             }
         } else {
@@ -86,7 +95,7 @@ const PatrolPage: React.FC = () => {
         // Check tutorial
         if (!stats.tutorialProgress.isCompleted &&
             stats.tutorialProgress.currentStep >= 17 &&
-            stats.tutorialProgress.currentStep <= 22) {
+            stats.tutorialProgress.currentStep <= 24) {
             setShowTutorial(true);
         }
     }, [currentUser, loadWorkHistory]);
