@@ -90,10 +90,10 @@ const TrainingPage: React.FC = () => {
         try {
             await performTraining(currentUser.uid, selectedActivity, activity.rewards);
 
-            // If this is during tutorial step 14, mark tutorial as complete
+            // If this is during tutorial step 14, progress to step 15
             if (playerStats.tutorialProgress.currentStep === 14) {
                 const { updateTutorialProgress } = await import('../services/PlayerService');
-                await updateTutorialProgress(currentUser.uid, 15, true);
+                await updateTutorialProgress(currentUser.uid, 15);
             }
         } catch (error: any) {
             alert(error.message || 'Treenimine ebaõnnestus');

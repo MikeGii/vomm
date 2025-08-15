@@ -30,7 +30,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ stats }) => {
     // Determine what should be locked based on tutorial progress
     const shouldLockActions = inTutorial && tutorialStep < 3;
     const shouldLockTraining = inTutorial && tutorialStep < 9;  // Unlock at step 9
-    const shouldLockWork = true;  // Always locked in tutorial
+    const shouldLockWork = inTutorial && tutorialStep < 15; // Changed from true to check step 15
     const shouldLockDepartment = true;  // Always locked in tutorial
 
     // Check what features are available based on progress
@@ -58,6 +58,15 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ stats }) => {
         navigate('/training');
     };
 
+    const handlePatrolClick = async () => {
+        if (!stats.tutorialProgress?.isCompleted &&
+            stats.tutorialProgress?.currentStep === 16 &&
+            currentUser) {
+            await updateTutorialProgress(currentUser.uid, 17);
+        }
+        navigate('/patrol');
+    };
+
     const actions: ActionItem[] = [
         {
             icon: '📚',
@@ -78,9 +87,10 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ stats }) => {
         {
             icon: shouldLockWork ? '🔒' : '🚓',
             label: 'Mine tööle',
-            disabled: shouldLockWork || (!inTutorial && !canWork),
+            disabled: shouldLockWork || (!inTutorial && !stats.hasCompletedTraining) || !!stats.activeWork,
             locked: shouldLockWork,
-            action: () => navigate('/patrol')
+            action: () => navigate('/patrol'),
+            highlighted: tutorialStep === 16 // Highlight during patrol tutorial
         },
         {
             icon: shouldLockDepartment ? '🔒' : '👥',
@@ -93,7 +103,9 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ stats }) => {
 
     // Determine info text based on player state
     let infoText: string;
-    if (tutorialStep === 10) {
+    if (tutorialStep === 16) {
+        infoText = 'Vajuta "Mine tööle" nuppu, et alustada oma esimest patrulli!';
+    } else if (tutorialStep === 10) {
         infoText = 'Vajuta Treening nuppu, et jätkata õpetusega!';
     } else if (tutorialStep === 3) {
         infoText = 'Vajuta Koolitused nuppu, et jätkata õpetusega!';
@@ -101,6 +113,8 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ stats }) => {
         infoText = 'Järgi õpetust, et avada kõik funktsioonid!';
     } else if (!stats.hasCompletedTraining) {
         infoText = 'Alusta abipolitseiniku koolitusega!';
+    } else if (stats.activeWork) {
+        infoText = 'Sa juba töötad! Oota kuni praegune töö lõppeb.';
     } else if (!stats.isEmployed) {
         infoText = 'Koolitus läbitud! Nüüd saad minna tööle.';
     } else {

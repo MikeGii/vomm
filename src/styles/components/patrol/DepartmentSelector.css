@@ -1,0 +1,61 @@
+/* src/styles/components/patrol/DepartmentSelector.css */
+.department-selector {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.department-selector h3 {
+    color: #f0f0f0;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+.selector-info {
+    color: #b0b0b0;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.department-dropdown {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #f0f0f0;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.department-dropdown:hover:not(:disabled) {
+    border-color: #4a90e2;
+}
+
+.department-dropdown:focus {
+    outline: none;
+    border-color: #4a90e2;
+}
+
+.department-locked {
+    padding: 1rem;
+    background-color: #2a2a2a;
+    border-radius: 4px;
+}
+
+.department-locked p {
+    margin: 0.5rem 0;
+    color: #f0f0f0;
+}
+
+.department-locked strong {
+    color: #4a90e2;
+}
+
+.info-text {
+    color: #888;
+    font-size: 0.9rem;
+    font-style: italic;
+}

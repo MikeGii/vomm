@@ -1,7 +1,7 @@
 // src/services/PlayerService.ts
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
-import { PlayerStats } from '../types';
+import { PlayerStats, PlayerHealth } from '../types';
 import { initializeAttributes, initializeTrainingData } from './TrainingService';
 
 // Estonian police ranks from lowest to highest
@@ -23,12 +23,38 @@ import { initializeAttributes, initializeTrainingData } from './TrainingService'
 //     'Politseikindral'
 // ];
 
+// Calculate player health based on attributes
+export const calculatePlayerHealth = (strengthLevel: number, enduranceLevel: number): PlayerHealth => {
+    const baseHealth = 100;
+    const strengthBonus = strengthLevel * 1;
+    const enduranceBonus = enduranceLevel * 1;
+    const maxHealth = baseHealth + strengthBonus + enduranceBonus;
+
+    return {
+        current: maxHealth, // Start at full health
+        max: maxHealth,
+        baseHealth: baseHealth,
+        strengthBonus: strengthBonus,
+        enduranceBonus: enduranceBonus
+    };
+};
+
 export const initializePlayerStats = async (userId: string): Promise<PlayerStats> => {
     const statsRef = doc(firestore, 'playerStats', userId);
     const statsDoc = await getDoc(statsRef);
 
     if (statsDoc.exists()) {
-        return statsDoc.data() as PlayerStats;
+        const stats = statsDoc.data() as PlayerStats;
+
+        // Calculate health if not present
+        if (!stats.health && stats.attributes) {
+            stats.health = calculatePlayerHealth(
+                stats.attributes.strength.level,
+                stats.attributes.endurance.level
+            );
+        }
+
+        return stats;
     }
 
     // Create initial stats for new player - starts unemployed and without training
@@ -47,14 +73,17 @@ export const initializePlayerStats = async (userId: string): Promise<PlayerStats
         tutorialProgress: {
             isCompleted: false,
             currentStep: 0,
-            totalSteps: 14,
+            totalSteps: 22,
             startedAt: null,
             completedAt: null
         },
         activeCourse: null,
         completedCourses: [],
         attributes: initializeAttributes(),
-        trainingData: initializeTrainingData()
+        trainingData: initializeTrainingData(),
+        activeWork: null,
+        workHistory: [],
+        health: calculatePlayerHealth(0, 0)
     };
 
     await setDoc(statsRef, initialStats);
@@ -70,6 +99,27 @@ export const getPlayerStats = async (userId: string): Promise<PlayerStats | null
     }
 
     return null;
+};
+
+// Update player health when attributes change
+export const updatePlayerHealth = async (userId: string): Promise<void> => {
+    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsDoc = await getDoc(statsRef);
+
+    if (statsDoc.exists()) {
+        const stats = statsDoc.data() as PlayerStats;
+
+        if (stats.attributes) {
+            const newHealth = calculatePlayerHealth(
+                stats.attributes.strength.level,
+                stats.attributes.endurance.level
+            );
+
+            await updateDoc(statsRef, {
+                health: newHealth
+            });
+        }
+    }
 };
 
 // Update tutorial progress

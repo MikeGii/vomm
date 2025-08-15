@@ -1,0 +1,210 @@
+/* src/styles/components/patrol/WorkActivitySelector.css */
+.work-activity-selector {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.work-activity-selector h3 {
+    color: #f0f0f0;
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+}
+
+.activity-selection {
+    margin-bottom: 1.5rem;
+}
+
+.activity-selection label {
+    display: block;
+    color: #888;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.activity-dropdown {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #f0f0f0;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.activity-dropdown:hover:not(:disabled) {
+    border-color: #4a90e2;
+}
+
+.activity-details {
+    background-color: #2a2a2a;
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    animation: fadeIn 0.3s ease;
+}
+
+.activity-description {
+    color: #b0b0b0;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.activity-requirements,
+.rewards-preview {
+    margin-bottom: 1.5rem;
+}
+
+.activity-requirements h4,
+.rewards-preview h4 {
+    color: #f0f0f0;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.activity-requirements ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.activity-requirements li {
+    color: #888;
+    padding: 0.25rem 0;
+    padding-left: 1.2rem;
+    position: relative;
+}
+
+.activity-requirements li:before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: #4a90e2;
+}
+
+.hours-selection {
+    margin-bottom: 1.5rem;
+}
+
+.hours-selection label {
+    display: block;
+    color: #888;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.tutorial-hours {
+    padding: 1rem;
+    background-color: #333;
+    border-radius: 4px;
+    border: 1px solid #ffd700;
+}
+
+.tutorial-hours p {
+    color: #ffd700;
+    margin: 0;
+}
+
+.hours-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.hours-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 8px;
+    background: #333;
+    border-radius: 4px;
+    outline: none;
+}
+
+.hours-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #4a90e2;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.hours-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #4a90e2;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.hours-display {
+    color: #f0f0f0;
+    font-weight: bold;
+    min-width: 60px;
+}
+
+.reward-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    background-color: #333;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.reward-label {
+    color: #888;
+}
+
+.reward-value {
+    color: #4caf50;
+    font-weight: bold;
+}
+
+.reward-note {
+    color: #666;
+    font-size: 0.85rem;
+    font-style: italic;
+    margin: 0.5rem 0;
+}
+
+.start-work-button {
+    width: 100%;
+    padding: 1rem;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.start-work-button:hover:not(:disabled) {
+    background-color: #357abd;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+}
+
+.start-work-button:disabled {
+    background-color: #333;
+    color: #666;
+    cursor: not-allowed;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

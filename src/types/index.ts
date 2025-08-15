@@ -50,6 +50,7 @@ export interface TrainingData {
     remainingClicks: number;
     lastResetTime: Date | any;
     totalTrainingsDone: number;
+    isWorking?: boolean;
 }
 
 // Player game stats
@@ -70,6 +71,9 @@ export interface PlayerStats {
     completedCourses: string[];
     attributes?: PlayerAttributes;
     trainingData?: TrainingData;
+    activeWork: ActiveWork | null;
+    workHistory?: string[];
+    health?: PlayerHealth;
 }
 
 // Course definition
@@ -98,4 +102,50 @@ export interface ActiveCourse {
     startedAt: Date | any;
     endsAt: Date | any;
     status: 'in_progress' | 'completed' | 'cancelled';
+}
+
+export interface WorkActivity {
+    id: string;
+    name: string;
+    description: string;
+    minLevel: number;
+    requiredCourses?: string[];
+    baseExpPerHour: number;
+    expGrowthRate: number; // percentage as decimal (0.15 for 15%)
+    maxHours: number;
+}
+
+export interface ActiveWork {
+    workId: string;
+    userId: string;
+    prefecture: string;
+    department: string;
+    startedAt: Date | any;
+    endsAt: Date | any;
+    totalHours: number;
+    expectedExp: number;
+    expectedMoney?: number; // For future use
+    status: 'in_progress' | 'completed';
+    isTutorial?: boolean; // For 20-second tutorial work
+}
+
+export interface WorkHistoryEntry {
+    id?: string;
+    userId: string;
+    workId: string;
+    workName: string;
+    prefecture: string;
+    department: string;
+    hoursWorked: number;
+    expEarned: number;
+    moneyEarned?: number;
+    completedAt: Date;
+}
+
+export interface PlayerHealth {
+    current: number;
+    max: number;
+    baseHealth: number;
+    strengthBonus: number;
+    enduranceBonus: number;
 }

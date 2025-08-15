@@ -1,0 +1,77 @@
+/* src/styles/components/patrol/WorkHistory.css */
+.work-history {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.work-history h3 {
+    color: #f0f0f0;
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+}
+
+.no-history {
+    color: #888;
+    text-align: center;
+    padding: 2rem;
+}
+
+.history-table {
+    overflow-x: auto;
+}
+
+.history-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.history-table th,
+.history-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #333;
+}
+
+.history-table th {
+    background-color: #2a2a2a;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.history-table td {
+    color: #f0f0f0;
+    font-size: 0.95rem;
+}
+
+.history-table tbody tr:hover {
+    background-color: rgba(74, 144, 226, 0.1);
+}
+
+.exp-earned {
+    color: #4caf50;
+    font-weight: bold;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .history-table {
+        font-size: 0.85rem;
+    }
+
+    .history-table th,
+    .history-table td {
+        padding: 0.5rem;
+    }
+
+    /* Hide some columns on mobile */
+    .history-table th:nth-child(2),
+    .history-table td:nth-child(2) {
+        display: none;
+    }
+}

@@ -8,7 +8,7 @@ interface TutorialOverlayProps {
     stats: PlayerStats;
     userId: string;
     onTutorialComplete: () => void;
-    page?: 'dashboard' | 'courses' | 'training';
+    page?: 'dashboard' | 'courses' | 'training' | 'patrol';
 }
 
 interface TutorialStep {
@@ -139,6 +139,75 @@ const TRAINING_CENTER_TUTORIAL_STEPS: TutorialStep[] = [
     }
 ];
 
+const PATROL_INTRODUCTION_STEPS: TutorialStep[] = [
+    {
+        step: 15,
+        targetElement: '.back-to-dashboard',
+        title: 'Tagasi töölauale',
+        content: 'Suurepärane! Oled omandanud põhilised oskused. Nüüd liigume tagasi töölauale, et alustada oma esimese patrulliga.',
+        position: 'bottom',
+        requiresAction: true
+    }
+];
+
+const PATROL_DASHBOARD_STEPS: TutorialStep[] = [
+    {
+        step: 16,
+        targetElement: '.quick-action-button:nth-child(3)',
+        title: 'Esimene patrull',
+        content: 'Nüüd oled valmis minema oma esimesele patrullile! Abipolitseinikuna saad osaleda patrullides ja saada väärtuslikke kogemusi.',
+        position: 'top',
+        requiresAction: true
+    }
+];
+
+const PATROL_PAGE_STEPS: TutorialStep[] = [
+    {
+        step: 17,
+        targetElement: '.patrol-container',
+        title: 'Patrullteenistus',
+        content: 'Tere tulemast patrullteenistusse! Siin saad valida tööülesandeid ja teenida kogemuspunkte.',
+        position: 'top'
+    },
+    {
+        step: 18,
+        targetElement: '.health-display',
+        title: 'Tervise näitaja',
+        content: 'See on sinu tervis, mis sõltub jõu ja vastupidavuse omadustest. Töötamiseks peab tervis olema vähemalt 50.',
+        position: 'bottom'
+    },
+    {
+        step: 19,
+        targetElement: '.patrol-container',
+        title: 'Töötamise piirangud',
+        content: 'Pea meeles: töötamise ajal ei saa võtta koolitusi, kuid saad treenida piiratud mahus (10 korda tunnis).',
+        position: 'top'
+    },
+    {
+        step: 20,
+        targetElement: '.department-selector',
+        title: 'Vali piirkond',
+        content: 'Abipolitseinikuna saad valida, millises piirkonnas soovid patrullida. Vali endale sobiv piirkond.',
+        position: 'bottom',
+        requiresAction: true
+    },
+    {
+        step: 21,
+        targetElement: '.work-activity-selector',
+        title: 'Vali tööülesanne',
+        content: 'Vali tööülesanne ja määra, mitu tundi soovid töötada. Õpetuse jaoks valime 1 tunni, mis kestab vaid 20 sekundit.',
+        position: 'top',
+        requiresAction: true
+    },
+    {
+        step: 22,
+        targetElement: '.active-work-banner',
+        title: 'Töö käib',
+        content: 'Suurepärane! Sa töötad nüüd. Oota, kuni töö lõppeb. Õpetuse režiimis kestab see vaid 20 sekundit.',
+        position: 'bottom'
+    }
+];
+
 export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                                                                     stats,
                                                                     userId,
@@ -160,6 +229,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             return TRAINING_INTRODUCTION_STEPS;
         } else if (page === 'training' && currentStep >= 11 && currentStep <= 14) {
             return TRAINING_CENTER_TUTORIAL_STEPS;
+        } else if (page === 'training' && currentStep === 15) {
+            return PATROL_INTRODUCTION_STEPS;
+        } else if (page === 'dashboard' && currentStep === 16) {
+            return PATROL_DASHBOARD_STEPS;
+        } else if (page === 'patrol' && currentStep >= 17 && currentStep <= 22) {
+            return PATROL_PAGE_STEPS;
         }
         return [];
     }, [page, currentStep]);
@@ -283,7 +358,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                     // Tutorial completion is handled in TrainingPage
                     removeHighlight();
                     setIsVisible(false);
-                    onTutorialComplete();
                 }
             };
 
@@ -292,7 +366,99 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                 document.removeEventListener('click', handleTrainClick, true);
             };
         }
-    }, [currentStep, isVisible, removeHighlight, onTutorialComplete]);
+    }, [currentStep, isVisible, removeHighlight]);
+
+    useEffect(() => {
+        if (currentStep === 15 && isVisible) {
+            const handleBackClick = async (e: Event) => {
+                const target = e.target as HTMLElement;
+                if (target.classList.contains('back-to-dashboard') || target.closest('.back-to-dashboard')) {
+                    await updateTutorialProgress(userId, 16);
+                    removeHighlight();
+                    setIsVisible(false);
+                }
+            };
+
+            document.addEventListener('click', handleBackClick, true);
+            return () => {
+                document.removeEventListener('click', handleBackClick, true);
+            };
+        }
+    }, [currentStep, isVisible, userId, removeHighlight]);
+
+    // Add handler for step 16 (patrol button click)
+    useEffect(() => {
+        if (currentStep === 16 && isVisible) {
+            const handlePatrolClick = async (e: Event) => {
+                const target = e.target as HTMLElement;
+                const patrolButton = document.querySelector('.quick-action-button:nth-child(3)');
+                if (patrolButton && patrolButton.contains(target)) {
+                    await updateTutorialProgress(userId, 17);
+                    removeHighlight();
+                    setIsVisible(false);
+                }
+            };
+
+            document.addEventListener('click', handlePatrolClick, true);
+            return () => {
+                document.removeEventListener('click', handlePatrolClick, true);
+            };
+        }
+    }, [currentStep, isVisible, userId, removeHighlight]);
+
+    // Add handler for step 20 (department selection)
+    useEffect(() => {
+        if (currentStep === 20 && isVisible) {
+            const handleDepartmentSelect = async (e: Event) => {
+                const target = e.target as HTMLElement;
+                const dropdown = document.querySelector('.department-dropdown') as HTMLSelectElement;
+                if (dropdown && target === dropdown && dropdown.value) {
+                    await updateTutorialProgress(userId, 21);
+                    removeHighlight();
+                    setTimeout(() => {
+                        setCurrentStep(21);
+                        setIsVisible(true);
+                    }, 100);
+                }
+            };
+
+            document.addEventListener('change', handleDepartmentSelect, true);
+            return () => {
+                document.removeEventListener('change', handleDepartmentSelect, true);
+            };
+        }
+    }, [currentStep, isVisible, userId, removeHighlight]);
+
+    // Add handler for step 21 (start work button)
+    useEffect(() => {
+        if (currentStep === 21 && isVisible) {
+            const handleStartWork = async (e: Event) => {
+                const target = e.target as HTMLElement;
+                if (target.classList.contains('start-work-button')) {
+                    // Progress is handled in PatrolPage
+                    removeHighlight();
+                    setTimeout(() => {
+                        setCurrentStep(22);
+                        setIsVisible(true);
+                    }, 500);
+                }
+            };
+
+            document.addEventListener('click', handleStartWork, true);
+            return () => {
+                document.removeEventListener('click', handleStartWork, true);
+            };
+        }
+    }, [currentStep, isVisible, removeHighlight]);
+
+    // Handle tutorial completion after work is done
+    useEffect(() => {
+        if (currentStep === 22 && !stats.activeWork && stats.tutorialProgress.isCompleted) {
+            removeHighlight();
+            setIsVisible(false);
+            onTutorialComplete();
+        }
+    }, [currentStep, stats.activeWork, stats.tutorialProgress.isCompleted, removeHighlight, onTutorialComplete]);
 
     // Initialize tutorial visibility
     useEffect(() => {
@@ -306,6 +472,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                     setIsVisible(true);
                 } else if (currentStep >= 9 && currentStep <= 10) {
                     setIsVisible(true);
+                } else if (currentStep === 16) {
+                    setIsVisible(true);
                 }
             } else if (page === 'courses') {
                 if (currentStep >= 3 && currentStep <= 8) {
@@ -317,11 +485,18 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                 }
             } else if (page === 'training') {
                 if (currentStep === 10) {
-                    // Coming from dashboard, move to step 11
                     setCurrentStep(11);
                     updateTutorialProgress(userId, 11);
                     setIsVisible(true);
-                } else if (currentStep >= 11 && currentStep <= 14) {
+                } else if (currentStep >= 11 && currentStep <= 15) {
+                    setIsVisible(true);
+                }
+            } else if (page === 'patrol') {
+                if (currentStep === 16) {
+                    setCurrentStep(17);
+                    updateTutorialProgress(userId, 17);
+                    setIsVisible(true);
+                } else if (currentStep >= 17 && currentStep <= 22) {
                     setIsVisible(true);
                 }
             }
@@ -365,24 +540,52 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
         const nextStep = currentStep + 1;
 
-        // Handle step transitions
-        if (page === 'dashboard' && nextStep > 3 && nextStep < 9) {
-            await updateTutorialProgress(userId, nextStep);
-            removeHighlight();
-            setIsVisible(false);
-        } else if (page === 'dashboard' && currentStep === 9) {
-            // Move from step 9 to step 10
-            setCurrentStep(10);
-            await updateTutorialProgress(userId, 10);
-        } else if (page === 'courses' && currentStep === 7) {
-            setCurrentStep(8);
-            await updateTutorialProgress(userId, 8);
-        } else if (page === 'training' && currentStep >= 11 && currentStep < 14) {
-            setCurrentStep(nextStep);
-            await updateTutorialProgress(userId, nextStep);
-        } else {
-            setCurrentStep(nextStep);
-            await updateTutorialProgress(userId, nextStep);
+        // Handle step transitions based on page and current step
+        if (page === 'dashboard') {
+            if (currentStep >= 1 && currentStep <= 2) {
+                // Steps 1-2: Continue on dashboard
+                setCurrentStep(nextStep);
+                await updateTutorialProgress(userId, nextStep);
+            } else if (currentStep === 9) {
+                // Step 9 -> 10: Continue on dashboard (training introduction)
+                setCurrentStep(10);
+                await updateTutorialProgress(userId, 10);
+            }
+        } else if (page === 'courses') {
+            if (currentStep === 4 || currentStep === 5) {
+                // Steps 4-5: Continue on courses page
+                setCurrentStep(nextStep);
+                await updateTutorialProgress(userId, nextStep);
+            } else if (currentStep === 7) {
+                // Step 7 -> 8: Continue on courses page (completed courses)
+                setCurrentStep(8);
+                await updateTutorialProgress(userId, 8);
+            }
+        } else if (page === 'training') {
+            if (currentStep >= 11 && currentStep <= 13) {
+                // Steps 11-13: Continue on training page
+                setCurrentStep(nextStep);
+                await updateTutorialProgress(userId, nextStep);
+            } else if (currentStep === 14) {
+                // Step 14 -> 15: Move to patrol introduction
+                setCurrentStep(15);
+                await updateTutorialProgress(userId, 15);
+            }
+        } else if (page === 'patrol') {
+            if (currentStep === 17 || currentStep === 18) {
+                // Steps 17-18: Continue on patrol page
+                setCurrentStep(nextStep);
+                await updateTutorialProgress(userId, nextStep);
+            } else if (currentStep === 19) {
+                // Step 19 -> 20: Continue to department selection
+                setCurrentStep(20);
+                await updateTutorialProgress(userId, 20);
+            } else if (currentStep === 22) {
+                // Step 22: Tutorial complete (work finished)
+                // This is handled elsewhere when work completes
+                removeHighlight();
+                setIsVisible(false);
+            }
         }
     };
 
@@ -412,6 +615,15 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     } else if (page === 'training' && currentStep >= 11 && currentStep <= 14) {
         totalSteps = 4;
         displayStep = currentStep - 10;
+    } else if (page === 'training' && currentStep === 15) {
+        totalSteps = 1;
+        displayStep = 1;
+    } else if (page === 'dashboard' && currentStep === 16) {
+        totalSteps = 1;
+        displayStep = 1;
+    } else if (page === 'patrol' && currentStep >= 17 && currentStep <= 22) {
+        totalSteps = 6;
+        displayStep = currentStep - 16;
     }
 
     return (
