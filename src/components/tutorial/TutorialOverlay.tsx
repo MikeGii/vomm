@@ -228,10 +228,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                 const target = e.target as HTMLElement;
                 const trainingButton = document.querySelector('.quick-action-button:nth-child(2)');
                 if (trainingButton && trainingButton.contains(target)) {
-                    await updateTutorialProgress(userId, 11, true); // Complete tutorial
+                    await updateTutorialProgress(userId, 11); // Complete tutorial
                     removeHighlight();
                     setIsVisible(false);
-                    onTutorialComplete();
                 }
             };
 
@@ -240,7 +239,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                 document.removeEventListener('click', handleTrainingClick, true);
             };
         }
-    }, [currentStep, isVisible, userId, removeHighlight, onTutorialComplete]);
+    }, [currentStep, isVisible, userId, removeHighlight]);
 
     // Update the content for step 9 to include prefecture name
     useEffect(() => {

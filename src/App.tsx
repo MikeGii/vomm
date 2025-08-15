@@ -7,11 +7,13 @@ import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
 import CoursesPage from './pages/CoursesPage';
 import TrainingPage from './pages/TrainingPage';
+import { DebugMenu} from "./components/dev/DebugMenu";
 
 function App() {
     return (
         <Router>
             <AuthProvider>
+                <DebugMenu />
                 <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route
