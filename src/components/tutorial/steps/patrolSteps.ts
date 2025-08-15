@@ -4,10 +4,10 @@ import { TutorialStep } from '../types/tutorial.types';
 export const PATROL_PAGE_STEPS: TutorialStep[] = [
     {
         step: 17,
-        targetElement: '.patrol-container',
+        targetElement: '.patrol-title', // Changed from '.patrol-container'
         title: 'Patrullteenistus',
         content: 'Tere tulemast patrullteenistusse! Siin saad valida tööülesandeid ja teenida kogemuspunkte.',
-        position: 'top'
+        position: 'bottom'
     },
     {
         step: 18,
@@ -18,7 +18,7 @@ export const PATROL_PAGE_STEPS: TutorialStep[] = [
     },
     {
         step: 19,
-        targetElement: '.patrol-container',
+        targetElement: '.work-setup', // Changed to target work setup area
         title: 'Töötamise piirangud',
         content: 'Pea meeles: töötamise ajal ei saa võtta koolitusi, kuid saad treenida piiratud mahus (10 korda tunnis).',
         position: 'top'
@@ -33,7 +33,7 @@ export const PATROL_PAGE_STEPS: TutorialStep[] = [
     },
     {
         step: 21,
-        targetElement: '.work-activity-selector',
+        targetElement: '.work-setup',
         title: 'Vali tööülesanne',
         content: 'Vali tööülesanne ja määra, mitu tundi soovid töötada. Õpetuse jaoks valime 1 tunni, mis kestab vaid 20 sekundit.',
         position: 'top',
@@ -50,12 +50,12 @@ export const PATROL_PAGE_STEPS: TutorialStep[] = [
         step: 23,
         targetElement: '.work-history',
         title: 'Tööajalugu',
-        content: 'Siin näed oma kõiki tehtud töid. Iga töö kohta on näha kuupäev, piirkond, tegevus, töötatud tunnid ja teenitud kogemuspunktid. Õnnitleme! Oled edukalt läbinud õpetuse!',
+        content: 'Siin näed oma kõiki tehtud töid. Iga töö kohta on näha kuupäev, piirkond, tegevus, töötatud tunnid ja teenitud kogemuspunktid.',
         position: 'top'
     },
     {
         step: 24,
-        targetElement: '.patrol-container',
+        targetElement: '.work-history', // Changed from '.patrol-container'
         title: 'Õpetus läbitud!',
         content: 'Õnnitleme! Nüüd tead peamisi tegevusi ja oled edukalt lõpetanud õpetuse. Head mängu!',
         position: 'top'

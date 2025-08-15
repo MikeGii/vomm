@@ -14,9 +14,8 @@ import {
     getDocs
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
-import { PlayerStats, ActiveWork, WorkHistoryEntry, WorkActivity } from '../types';
+import {PlayerStats, ActiveWork, WorkHistoryEntry, TrainingData} from '../types';
 import { getWorkActivityById, calculateWorkRewards } from '../data/workActivities';
-import { calculatePlayerHealth } from './PlayerService';
 
 // Start a work session
 export const startWork = async (
@@ -140,19 +139,23 @@ export const checkWorkCompletion = async (userId: string): Promise<boolean> => {
         const newExperience = stats.experience + stats.activeWork.expectedExp;
         const newLevel = Math.floor(newExperience / 100) + 1;
 
-        // Restore training clicks to normal if not in another limiting activity
+        // Since minimum work is 1 hour, training clicks should reset to full 50
         const normalTrainingClicks = 50;
+
+        // Reset training data with new timestamp for the new hour
+        const updatedTrainingData: TrainingData = {
+            remainingClicks: normalTrainingClicks,
+            lastResetTime: Timestamp.now(),
+            totalTrainingsDone: stats.trainingData?.totalTrainingsDone || 0,
+            isWorking: false
+        };
 
         await updateDoc(statsRef, {
             activeWork: null,
             experience: newExperience,
             level: newLevel,
             workHistory: [...(stats.workHistory || []), historyRef.id],
-            'trainingData.isWorking': false,
-            'trainingData.remainingClicks': Math.min(
-                stats.trainingData?.remainingClicks || normalTrainingClicks,
-                normalTrainingClicks
-            )
+            trainingData: updatedTrainingData
         });
 
         return true;
@@ -178,8 +181,7 @@ export const getRemainingWorkTime = (activeWork: ActiveWork | any): number => {
         endsAtMillis = new Date(activeWork.endsAt).getTime();
     }
 
-    const remaining = Math.max(0, Math.floor((endsAtMillis - now) / 1000));
-    return remaining;
+    return Math.max(0, Math.floor((endsAtMillis - now) / 1000));
 };
 
 // Get work history for a player

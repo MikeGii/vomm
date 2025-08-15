@@ -1,11 +1,15 @@
 // src/components/tutorial/TutorialOverlay.tsx
 import React, { useState, useEffect } from 'react';
-import { TutorialOverlayProps, TutorialStep } from './types/tutorial.types';
+import { TutorialOverlayProps } from './types/tutorial.types';
 import { useTutorialSteps } from './hooks/useTutorialSteps';
 import { useTutorialHighlight } from './hooks/useTutorialHighlight';
 import { useTutorialHandlers } from './hooks/useTutorialHandlers';
+import { useSmartPosition } from './hooks/useSmartPosition';
 import { calculateDisplayStep, getHighlightDelay } from './utils/stepCalculations';
 import { updateTutorialProgress } from '../../services/PlayerService';
+import { TutorialWaitingIndicator } from './TutorialWaitingIndicator';
+import { getRemainingTime } from '../../services/CourseService';
+import { getRemainingWorkTime } from '../../services/WorkService';
 import '../../styles/components/TutorialOverlay.css';
 
 export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
@@ -16,9 +20,20 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                                                                 }) => {
     const [currentStep, setCurrentStep] = useState(stats.tutorialProgress.currentStep || 0);
     const [isVisible, setIsVisible] = useState(false);
+    const [isWaiting, setIsWaiting] = useState(false);
+    const [waitingMessage, setWaitingMessage] = useState('');
+    const [waitingTime, setWaitingTime] = useState(0);
 
     // Get tutorial steps for current page and step
     const TUTORIAL_STEPS = useTutorialSteps(page, currentStep);
+    const currentTutorialStep = TUTORIAL_STEPS.find(s => s.step === currentStep);
+
+    // Use smart positioning for tutorial box
+    const { position, arrowPosition } = useSmartPosition(
+        currentTutorialStep?.targetElement || '',
+        currentTutorialStep?.position || 'bottom',
+        isVisible && !isWaiting
+    );
 
     // Get highlight functions
     const { removeHighlight, highlightElement } = useTutorialHighlight();
@@ -36,6 +51,76 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         onTutorialComplete
     });
 
+    // Handle waiting states for course and work completion
+    useEffect(() => {
+        // Course completion waiting (step 6)
+        if (currentStep === 6 && stats.activeCourse?.status === 'in_progress') {
+            const remaining = getRemainingTime(stats.activeCourse);
+            if (remaining > 0) {
+                setIsWaiting(true);
+                setWaitingMessage('Oota koolituse lõppemist...');
+                setWaitingTime(remaining);
+                setIsVisible(false); // Hide main tutorial box
+            }
+        }
+        // Work completion waiting (step 22)
+        else if (currentStep === 22 && stats.activeWork?.status === 'in_progress') {
+            const remaining = getRemainingWorkTime(stats.activeWork);
+            if (remaining > 0) {
+                setIsWaiting(true);
+                setWaitingMessage('Oota töö lõppemist...');
+                setWaitingTime(remaining);
+                setIsVisible(false); // Hide main tutorial box
+            }
+        } else {
+            setIsWaiting(false);
+        }
+    }, [currentStep, stats.activeCourse, stats.activeWork]);
+
+    // Also add a periodic update for the waiting time
+    useEffect(() => {
+        if (!isWaiting) return;
+
+        const updateWaitingTime = () => {
+            if (currentStep === 6 && stats.activeCourse?.status === 'in_progress') {
+                const remaining = getRemainingTime(stats.activeCourse);
+                setWaitingTime(remaining);
+                if (remaining <= 0) {
+                    handleWaitingComplete();
+                }
+            } else if (currentStep === 22 && stats.activeWork?.status === 'in_progress') {
+                const remaining = getRemainingWorkTime(stats.activeWork);
+                setWaitingTime(remaining);
+                if (remaining <= 0) {
+                    handleWaitingComplete();
+                }
+            }
+        };
+
+        const interval = setInterval(updateWaitingTime, 1000);
+        return () => clearInterval(interval);
+    }, [isWaiting, currentStep, stats.activeCourse, stats.activeWork]);
+
+    // Handle waiting completion
+    const handleWaitingComplete = () => {
+        setIsWaiting(false);
+
+        // Progress to next step based on context
+        if (currentStep === 6) {
+            // Course completed, move to step 7
+            setCurrentStep(7);
+            updateTutorialProgress(userId, 7);
+            setIsVisible(true);
+        } else if (currentStep === 22) {
+            // Work completed, move to step 23
+            setTimeout(async () => {
+                await updateTutorialProgress(userId, 23);
+                setCurrentStep(23);
+                setIsVisible(true);
+            }, 1500); // Small delay to let work completion process
+        }
+    };
+
     // Update step 9 content with prefecture name
     useEffect(() => {
         if (currentStep === 9 && stats.prefecture) {
@@ -48,7 +133,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
     // Initialize tutorial visibility
     useEffect(() => {
-        if (!stats.tutorialProgress.isCompleted) {
+        if (!stats.tutorialProgress.isCompleted && !isWaiting) {
             const dbStep = stats.tutorialProgress.currentStep;
 
             if (page === 'dashboard') {
@@ -103,22 +188,33 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             }
         }
     }, [stats.tutorialProgress.isCompleted, stats.tutorialProgress.currentStep,
-        userId, page]);
+        userId, page, isWaiting]);
 
-    // Check if course was completed
+    // Check if course was completed during waiting
     useEffect(() => {
         if (!stats.tutorialProgress.isCompleted &&
             currentStep === 6 &&
-            stats.completedCourses?.includes('basic_police_training')) {
-            setCurrentStep(7);
-            updateTutorialProgress(userId, 7);
-            setIsVisible(true);
+            stats.completedCourses?.includes('basic_police_training') &&
+            !stats.activeCourse) {
+            // Course completed, trigger waiting complete
+            handleWaitingComplete();
         }
-    }, [stats.completedCourses, currentStep, userId, stats.tutorialProgress.isCompleted]);
+    }, [stats.completedCourses, currentStep, stats.activeCourse, stats.tutorialProgress.isCompleted]);
+
+    // Check if work was completed during waiting
+    useEffect(() => {
+        if (!stats.tutorialProgress.isCompleted &&
+            currentStep === 22 &&
+            !stats.activeWork &&
+            isWaiting) {
+            // Work completed, trigger waiting complete
+            handleWaitingComplete();
+        }
+    }, [currentStep, stats.activeWork, isWaiting, stats.tutorialProgress.isCompleted]);
 
     // Highlight elements when visible
     useEffect(() => {
-        if (isVisible && currentStep > 0) {
+        if (isVisible && !isWaiting && currentStep > 0) {
             const stepData = TUTORIAL_STEPS.find(s => s.step === currentStep);
             if (stepData) {
                 const delay = getHighlightDelay(currentStep);
@@ -131,7 +227,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         return () => {
             removeHighlight();
         };
-    }, [currentStep, isVisible, highlightElement, removeHighlight, TUTORIAL_STEPS]);
+    }, [currentStep, isVisible, isWaiting, highlightElement, removeHighlight, TUTORIAL_STEPS]);
 
     const handleNext = async () => {
         const currentStepData = TUTORIAL_STEPS.find(s => s.step === currentStep);
@@ -192,19 +288,59 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         }
     };
 
+    const handleSkip = async () => {
+        // Optional: Add confirmation before skipping
+        if (window.confirm('Kas oled kindel, et soovid õpetuse vahele jätta? Saad selle hiljem uuesti lubada seadetest.')) {
+            await updateTutorialProgress(userId, 24, true);
+            removeHighlight();
+            setIsVisible(false);
+            setIsWaiting(false);
+            onTutorialComplete();
+        }
+    };
+
+    // Show waiting indicator if in waiting state
+    if (isWaiting && waitingTime > 0) {
+        // Determine what to highlight during waiting
+        let highlightSelector = '';
+        if (currentStep === 6) {
+            highlightSelector = '.active-course-banner'; // Highlight active course progress
+        } else if (currentStep === 22) {
+            highlightSelector = '.active-work-banner'; // Highlight active work progress
+        }
+
+        return (
+            <>
+                <div className="tutorial-backdrop" />
+                <TutorialWaitingIndicator
+                    message={waitingMessage}
+                    totalTime={waitingTime}
+                    onComplete={handleWaitingComplete}
+                    onSkip={handleSkip}
+                    highlightElement={highlightSelector}
+                />
+            </>
+        );
+    }
+
     if (!isVisible) {
         return null;
     }
 
-    const currentTutorialStep = TUTORIAL_STEPS.find(s => s.step === currentStep);
     if (!currentTutorialStep) return null;
 
     const { totalSteps, displayStep } = calculateDisplayStep(page, currentStep);
 
+    // Determine if we should show skip button (after step 5)
+    const showSkipButton = currentStep > 5;
+
     return (
         <>
             <div className={`tutorial-backdrop ${currentTutorialStep.requiresAction ? 'tutorial-backdrop-clickthrough' : ''}`} />
-            <div className={`tutorial-box tutorial-${currentTutorialStep.position}`}>
+            <div
+                className={`tutorial-box ${arrowPosition}`}
+                style={position}
+            >
                 <div className="tutorial-header">
                     <h3 className="tutorial-title">{currentTutorialStep.title}</h3>
                     <span className="tutorial-step-indicator">
@@ -213,6 +349,14 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                 </div>
                 <p className="tutorial-content">{currentTutorialStep.content}</p>
                 <div className="tutorial-actions">
+                    {showSkipButton && (
+                        <button
+                            className="tutorial-btn tutorial-btn-skip"
+                            onClick={handleSkip}
+                        >
+                            Jäta vahele
+                        </button>
+                    )}
                     {!currentTutorialStep.requiresAction && (
                         <button
                             className="tutorial-btn tutorial-btn-next"

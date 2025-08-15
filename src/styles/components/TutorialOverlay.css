@@ -16,45 +16,77 @@
     pointer-events: none !important;
 }
 
+/* Base tutorial box with smart positioning */
 .tutorial-box {
     position: fixed;
     background-color: #2a2a2a;
     border: 2px solid #ffd700;
     border-radius: 8px;
     padding: 1.5rem;
+    width: 90%;
     max-width: 400px;
     z-index: 10000;
     box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
     animation: fadeIn 0.5s ease;
     pointer-events: auto;
-    opacity: 0; /* Start invisible */
-    animation-fill-mode: forwards; /* Keep final state after animation */
+    animation-fill-mode: forwards;
 }
 
-.tutorial-box.tutorial-top {
-    top: 20%;
+/* Arrow styles for pointing to highlighted elements */
+.tutorial-box::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+}
+
+/* Top arrow (pointing up to element above) */
+.tutorial-box.top-arrow::before {
+    top: -10px;
     left: 50%;
     transform: translateX(-50%);
+    border-width: 0 10px 10px 10px;
+    border-color: transparent transparent #ffd700 transparent;
 }
 
-.tutorial-box.tutorial-bottom {
-    bottom: 20%;
+/* Bottom arrow (pointing down to element below) */
+.tutorial-box.bottom-arrow::before {
+    bottom: -10px;
     left: 50%;
     transform: translateX(-50%);
+    border-width: 10px 10px 0 10px;
+    border-color: #ffd700 transparent transparent transparent;
 }
 
-.tutorial-box.tutorial-left {
+/* Left arrow (pointing left) */
+.tutorial-box.left-arrow::before {
+    left: -10px;
     top: 50%;
-    left: 20%;
     transform: translateY(-50%);
+    border-width: 10px 10px 10px 0;
+    border-color: transparent #ffd700 transparent transparent;
 }
 
-.tutorial-box.tutorial-right {
+/* Right arrow (pointing right) */
+.tutorial-box.right-arrow::before {
+    right: -10px;
     top: 50%;
-    right: 20%;
     transform: translateY(-50%);
+    border-width: 10px 0 10px 10px;
+    border-color: transparent transparent transparent #ffd700;
 }
 
+/* Mobile-specific arrow positioning */
+.tutorial-box.bottom-arrow-left::before {
+    left: 25%;
+}
+
+.tutorial-box.bottom-arrow-right::before {
+    left: 75%;
+}
+
+/* Header section */
 .tutorial-header {
     display: flex;
     justify-content: space-between;
@@ -69,24 +101,51 @@
     font-size: 1.2rem;
     margin: 0;
     font-weight: 600;
+    flex: 1;
+    padding-right: 1rem;
 }
 
 .tutorial-step-indicator {
     color: #888;
     font-size: 0.9rem;
+    white-space: nowrap;
 }
 
+/* Content section */
 .tutorial-content {
     color: #f0f0f0;
     line-height: 1.6;
     margin-bottom: 1.5rem;
     font-size: 1rem;
+    max-height: 40vh;
+    overflow-y: auto;
 }
 
+/* Scrollbar styling for content */
+.tutorial-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tutorial-content::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 3px;
+}
+
+.tutorial-content::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 3px;
+}
+
+.tutorial-content::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Actions section */
 .tutorial-actions {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .tutorial-btn {
@@ -97,34 +156,109 @@
     cursor: pointer;
     transition: all 0.3s ease;
     font-weight: 500;
+    min-width: 100px;
 }
 
 .tutorial-btn-skip {
     background-color: transparent;
     color: #888;
     border: 1px solid #444;
+    flex: 0 1 auto;
 }
 
 .tutorial-btn-skip:hover {
     background-color: #333;
     color: #f0f0f0;
+    border-color: #666;
 }
 
 .tutorial-btn-next {
     background-color: #ffd700;
     color: #1a1a1a;
+    flex: 0 1 auto;
+    font-weight: 600;
 }
 
 .tutorial-btn-next:hover {
     background-color: #ffed4e;
     transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+/* Waiting indicator styles */
+.tutorial-waiting-indicator {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #2a2a2a;
+    border: 2px solid #ffd700;
+    border-radius: 8px;
+    padding: 1.5rem;
+    width: 90%;
+    max-width: 350px;
+    z-index: 10000;
+    animation: slideUp 0.5s ease;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+}
+
+.waiting-content {
+    text-align: center;
+}
+
+.waiting-message {
+    color: #f0f0f0;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.waiting-progress-bar {
+    width: 100%;
+    height: 24px;
+    background-color: #1a1a1a;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #333;
+    margin-bottom: 0.75rem;
+}
+
+.waiting-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ffd700, #ffed4e);
+    transition: width 1s linear;
+    border-radius: 12px;
+}
+
+.waiting-time {
+    color: #888;
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.waiting-skip-btn {
+    padding: 0.5rem 1rem;
+    background-color: transparent;
+    color: #888;
+    border: 1px solid #444;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.waiting-skip-btn:hover {
+    background-color: #333;
+    color: #f0f0f0;
+    border-color: #666;
 }
 
 /* Highlight effect for tutorial elements */
 .tutorial-highlight {
-    position: relative;
-    z-index: 9999;
-    box-shadow: 0 0 0 3px #ffd700, 0 0 30px rgba(255, 215, 0, 0.8);
+    position: relative !important;
+    z-index: 9999 !important;
+    box-shadow: 0 0 0 3px #ffd700, 0 0 30px rgba(255, 215, 0, 0.8) !important;
     border-radius: 8px;
     animation: tutorialPulse 2s infinite;
 }
@@ -152,6 +286,7 @@
     z-index: 10003 !important;
 }
 
+/* Animations */
 @keyframes tutorialPulse {
     0% {
         box-shadow: 0 0 0 3px #ffd700, 0 0 30px rgba(255, 215, 0, 0.8);
@@ -167,35 +302,38 @@
 @keyframes fadeIn {
     from {
         opacity: 0;
+        transform: scale(0.95);
     }
     to {
         opacity: 1;
+        transform: scale(1);
     }
 }
 
-/* Mobile responsiveness */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* Mobile responsiveness - Tablet */
 @media (max-width: 768px) {
     .tutorial-box {
-        max-width: 90%;
+        width: calc(100% - 2rem);
+        max-width: none;
         margin: 0 1rem;
-    }
-
-    .tutorial-box.tutorial-left,
-    .tutorial-box.tutorial-right {
-        left: 50%;
-        right: auto;
-        transform: translateX(-50%) translateY(-50%);
-    }
-
-    .tutorial-box.tutorial-top,
-    .tutorial-box.tutorial-bottom {
-        max-width: calc(100% - 2rem);
-    }
-}
-
-@media (max-width: 480px) {
-    .tutorial-box {
         padding: 1.2rem;
+        font-size: 0.95rem;
+    }
+
+    .tutorial-header {
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
     }
 
     .tutorial-title {
@@ -204,10 +342,138 @@
 
     .tutorial-content {
         font-size: 0.95rem;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+        max-height: 35vh;
     }
 
     .tutorial-btn {
-        padding: 0.6rem 1.2rem;
+        padding: 0.65rem 1.2rem;
         font-size: 0.9rem;
+        min-width: 90px;
+    }
+
+    .tutorial-waiting-indicator {
+        width: calc(100% - 2rem);
+        padding: 1.2rem;
+    }
+
+    .waiting-message {
+        font-size: 0.95rem;
+    }
+
+    .waiting-progress-bar {
+        height: 20px;
+    }
+}
+
+/* Mobile responsiveness - Phone */
+@media (max-width: 480px) {
+    .tutorial-box {
+        padding: 1rem;
+        /* Always position at bottom on small mobile */
+        bottom: 10px !important;
+        top: auto !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+    }
+
+    /* Hide arrows on mobile as box is always at bottom */
+    .tutorial-box::before {
+        display: none;
+    }
+
+    .tutorial-header {
+        flex-direction: row;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .tutorial-title {
+        font-size: 1rem;
+        padding-right: 0.5rem;
+    }
+
+    .tutorial-step-indicator {
+        font-size: 0.8rem;
+    }
+
+    .tutorial-content {
+        font-size: 0.9rem;
+        line-height: 1.4;
+        max-height: 30vh;
+    }
+
+    .tutorial-actions {
+        justify-content: center;
+        gap: 0.75rem;
+    }
+
+    .tutorial-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+        min-width: 80px;
+        flex: 1 1 45%;
+    }
+
+    .tutorial-waiting-indicator {
+        bottom: 10px;
+        padding: 1rem;
+    }
+
+    .waiting-message {
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .waiting-progress-bar {
+        height: 18px;
+        margin-bottom: 0.5rem;
+    }
+
+    .waiting-time {
+        font-size: 0.85rem;
+        margin-bottom: 0.75rem;
+    }
+}
+
+/* Landscape mobile adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+    .tutorial-box {
+        max-height: 90vh;
+        padding: 0.75rem;
+    }
+
+    .tutorial-content {
+        max-height: 25vh;
+        margin-bottom: 0.75rem;
+    }
+
+    .tutorial-header {
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .tutorial-btn {
+        padding: 0.5rem 1rem;
+    }
+}
+
+/* Ensure highlighted elements are visible even when scrolled */
+.tutorial-highlight {
+    scroll-margin-top: 100px;
+    scroll-margin-bottom: 100px;
+}
+
+/* Dark mode adjustments for better visibility */
+@media (prefers-color-scheme: dark) {
+    .tutorial-box {
+        background-color: #1a1a1a;
+        border-color: #ffd700;
+    }
+
+    .tutorial-backdrop {
+        background-color: rgba(0, 0, 0, 0.8);
     }
 }

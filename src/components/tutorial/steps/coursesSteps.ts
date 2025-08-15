@@ -20,7 +20,7 @@ export const COURSES_TUTORIAL_STEPS: TutorialStep[] = [
         step: 6,
         targetElement: '#basic_police_training',
         title: 'Alusta koolitust',
-        content: 'Selleks, et alustada abipolitseiniku baaskursusega vajuta "Alusta" ning selle koolituse läbimiseks pead ootama 20 sekundit.',
+        content: 'Selleks, et alustada abipolitseiniku baaskursusega vajuta "Alusta" ning selle koolituse läbimiseks pead ootama 10 sekundit.',
         position: 'bottom',
         requiresAction: true
     }
@@ -29,7 +29,7 @@ export const COURSES_TUTORIAL_STEPS: TutorialStep[] = [
 export const COURSES_COMPLETED_TUTORIAL_STEPS: TutorialStep[] = [
     {
         step: 7,
-        targetElement: '.course-card.completed:first-child',
+        targetElement: '.course-card.completed',
         title: 'Läbitud koolitus',
         content: 'Siin näed enda läbitud koolitusi ja hetkel oled edukalt läbinud abipolitseiniku baaskursuse.',
         position: 'bottom'

@@ -20,7 +20,7 @@ export const calculateDisplayStep = (
     } else if (page === 'dashboard' && currentStep === 16) {
         return { totalSteps: 1, displayStep: 1 };
     } else if (page === 'patrol' && currentStep >= 17 && currentStep <= 24) {
-        return { totalSteps: 7, displayStep: currentStep - 16 };
+        return { totalSteps: 8, displayStep: currentStep - 16 };
     }
 
     return { totalSteps: 0, displayStep: 0 };
@@ -28,6 +28,7 @@ export const calculateDisplayStep = (
 
 export const getHighlightDelay = (currentStep: number): number => {
     if (currentStep === 7) return 600;
-    if (currentStep === 23) return 2000;
+    if (currentStep === 23) return 500; // Reduced from 2000
+    if (currentStep === 17 || currentStep === 19 || currentStep === 24) return 300; // Quick for patrol page steps
     return 100;
 };

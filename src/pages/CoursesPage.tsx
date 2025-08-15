@@ -59,10 +59,6 @@ const CoursesPage: React.FC = () => {
                 // Mark this alert as shown
                 completionAlertShownRef.current = lastActiveCourseRef.current;
 
-                // Course was just completed
-                alert(`Õnnitleme! ${completedCourse.name} on edukalt läbitud!`);
-                setRemainingTime(0);
-
                 // Check if this was the basic training during tutorial
                 if (completedCourse.id === 'basic_police_training' &&
                     !stats.tutorialProgress.isCompleted &&
