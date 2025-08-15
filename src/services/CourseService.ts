@@ -11,6 +11,7 @@ import { firestore } from '../config/firebase';
 import { Course, ActiveCourse, PlayerStats } from '../types';
 import { ALL_COURSES, getCourseById } from '../data/courses';
 import {calculateLevelFromExp} from "./PlayerService";
+import { ABILITIES} from "../data/abilities";
 
 // Get courses available for player
 export const getAvailableCourses = (playerStats: PlayerStats): Course[] => {
@@ -129,12 +130,21 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
             level: newLevel
         };
 
+        // Track abilities
+        const newAbilities = ABILITIES
+            .filter(ability => [...(playerStats.completedCourses || []), course.id].includes(ability.requiredCourse))
+            .map(ability => ability.id);
+
+        if (newAbilities.length > 0) {
+            updates.abilities = newAbilities;
+        }
+
         if (course.rewards.reputation) {
             updates.reputation = playerStats.reputation + course.rewards.reputation;
         }
 
         // Special handling for basic_police_training course
-        if (course.id === 'basic_police_training') {
+        if (course.id === 'basic_police_training_abipolitseinik') {
             // Mark as Abipolitseinik after basic training
             updates.hasCompletedTraining = true;
             updates.isEmployed = true;

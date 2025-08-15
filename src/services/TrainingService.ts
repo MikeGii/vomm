@@ -3,6 +3,7 @@ import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats, PlayerAttributes, AttributeData, TrainingData } from '../types';
 import {calculateLevelFromExp, calculatePlayerHealth} from "./PlayerService";
+import { getTrainingBonusForAttribute} from "../data/abilities";
 
 // Calculate experience needed for next attribute level
 export const calculateExpForNextLevel = (currentLevel: number): number => {
@@ -137,21 +138,31 @@ export const performTraining = async (
         };
     };
 
-    // Apply rewards to attributes
+// Apply rewards to attributes WITH BONUSES
+    const applyBonusToReward = (baseReward: number, attribute: 'strength' | 'agility' | 'dexterity' | 'intelligence' | 'endurance'): number => {
+        const bonus = getTrainingBonusForAttribute(stats.completedCourses || [], attribute);
+        return Math.floor(baseReward * (1 + bonus));
+    };
+
     if (rewards.strength) {
-        attributes.strength = updateAttribute(attributes.strength, rewards.strength);
+        const bonusedReward = applyBonusToReward(rewards.strength, 'strength');
+        attributes.strength = updateAttribute(attributes.strength, bonusedReward);
     }
     if (rewards.agility) {
-        attributes.agility = updateAttribute(attributes.agility, rewards.agility);
+        const bonusedReward = applyBonusToReward(rewards.agility, 'agility');
+        attributes.agility = updateAttribute(attributes.agility, bonusedReward);
     }
     if (rewards.dexterity) {
-        attributes.dexterity = updateAttribute(attributes.dexterity, rewards.dexterity);
+        const bonusedReward = applyBonusToReward(rewards.dexterity, 'dexterity');
+        attributes.dexterity = updateAttribute(attributes.dexterity, bonusedReward);
     }
     if (rewards.intelligence) {
-        attributes.intelligence = updateAttribute(attributes.intelligence, rewards.intelligence);
+        const bonusedReward = applyBonusToReward(rewards.intelligence, 'intelligence');
+        attributes.intelligence = updateAttribute(attributes.intelligence, bonusedReward);
     }
     if (rewards.endurance) {
-        attributes.endurance = updateAttribute(attributes.endurance, rewards.endurance);
+        const bonusedReward = applyBonusToReward(rewards.endurance, 'endurance');
+        attributes.endurance = updateAttribute(attributes.endurance, bonusedReward);
     }
 
     // Recalculate health if strength or endurance changed

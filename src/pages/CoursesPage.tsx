@@ -60,7 +60,7 @@ const CoursesPage: React.FC = () => {
                 completionAlertShownRef.current = lastActiveCourseRef.current;
 
                 // Check if this was the basic training during tutorial
-                if (completedCourse.id === 'basic_police_training' &&
+                if (completedCourse.id === 'basic_police_training_abipolitseinik' &&
                     !stats.tutorialProgress.isCompleted &&
                     stats.tutorialProgress.currentStep === 6 &&
                     currentUser) {

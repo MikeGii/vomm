@@ -43,7 +43,7 @@ export const useTutorialHandlers = ({
         if (currentStep === 6 && isVisible) {
             const handleEnrollClick = async (e: Event) => {
                 const target = e.target as HTMLElement;
-                const card = document.querySelector('#basic_police_training');
+                const card = document.querySelector('#basic_police_training_abipolitseinik');
                 if (card && card.contains(target) && target.classList.contains('enroll-button')) {
                     removeHighlight();
                     setIsVisible(false);

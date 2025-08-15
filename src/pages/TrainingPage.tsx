@@ -172,6 +172,7 @@ const TrainingPage: React.FC = () => {
                     onTrain={handleTrain}
                     isTraining={isTraining}
                     canTrain={(playerStats.trainingData?.remainingClicks || 0) > 0}
+                    playerStats={playerStats}
                 />
 
                 {/* Tutorial overlay */}

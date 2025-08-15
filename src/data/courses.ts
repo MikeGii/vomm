@@ -3,7 +3,7 @@ import { Course } from '../types';
 
 export const BASIC_COURSES: Course[] = [
     {
-        id: 'basic_police_training',
+        id: 'basic_police_training_abipolitseinik',
         name: 'Abipolitseiniku baaskursus',
         description: 'Põhiline koolitus kõigile uutele liikmetele. Õpid seadusi, protseduure ja ohutustehnikaid.',
         duration: 10, // 60 seconds for testing
@@ -17,13 +17,13 @@ export const BASIC_COURSES: Course[] = [
         category: 'abipolitseinik'
     },
     {
-        id: 'firearm_training',
+        id: 'firearm_training_abipolitseinik',
         name: 'Tulirelva koolitus',
         description: 'Omanda tulirelva käsitsemise oskused ja ohutusnõuded. Õpid relva hooldust, laskmistehnikaid ja taktikalist relvakasutust.',
         duration: 300, // 5 minutes
         requirements: {
             level: 5,
-            completedCourses: ['basic_police_training']
+            completedCourses: ['basic_police_training_abipolitseinik'],
         },
         rewards: {
             experience: 150,
@@ -32,13 +32,13 @@ export const BASIC_COURSES: Course[] = [
         category: 'abipolitseinik'
     },
     {
-        id: 'speed_measurement',
+        id: 'speed_measurement_abipolitseinik',
         name: 'Kiirusmõõtja pädevus',
         description: 'Spetsialiseeritud koolitus liikluskiiruse mõõtmise seadmete kasutamiseks ja liiklusrikkumiste dokumenteerimiseks.',
         duration: 1200, // 20 minutes
         requirements: {
             level: 10,
-            completedCourses: ['basic_police_training']
+            completedCourses: ['basic_police_training_abipolitseinik']
         },
         rewards: {
             experience: 300,
@@ -47,13 +47,13 @@ export const BASIC_COURSES: Course[] = [
         category: 'abipolitseinik'
     },
     {
-        id: 'independent_competence',
+        id: 'independent_competence_abipolitseinik',
         name: 'Iseseisva pädevuse koolitus (IPAP)',
         description: 'Põhjalik koolitus iseseisva tööülesannete täitmiseks. Omandad oskused iseseisvaks patrullimiseks ja otsuste tegemiseks.',
         duration: 7200, // 2 hours
         requirements: {
             level: 15,
-            completedCourses: ['basic_police_training', 'firearm_training']
+            completedCourses: ['basic_police_training_abipolitseinik', 'firearm_training_abipolitseinik']
         },
         rewards: {
             experience: 1000,

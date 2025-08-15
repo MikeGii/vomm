@@ -1,7 +1,8 @@
 // src/components/training/ActivitySelector.tsx
 import React from 'react';
-import { TrainingActivity } from '../../types';
+import { TrainingActivity, PlayerStats } from '../../types';
 import '../../styles/components/training/ActivitySelector.css';
+import { getTrainingBonusForAttribute } from "../../data/abilities";
 
 interface ActivitySelectorProps {
     activities: TrainingActivity[];
@@ -10,6 +11,7 @@ interface ActivitySelectorProps {
     onTrain: () => void;
     isTraining: boolean;
     canTrain: boolean;
+    playerStats: PlayerStats | null;
 }
 
 export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
@@ -18,7 +20,8 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                                                                       onActivitySelect,
                                                                       onTrain,
                                                                       isTraining,
-                                                                      canTrain
+                                                                      canTrain,
+                                                                      playerStats
                                                                   }) => {
     const selectedActivityData = activities.find(a => a.id === selectedActivity);
 
@@ -47,19 +50,54 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                         <h4>Tasu:</h4>
                         <ul>
                             {selectedActivityData.rewards.strength && (
-                                <li>💪 Jõud: +{selectedActivityData.rewards.strength} XP</li>
+                                <li>
+                                    💪 Jõud: +{selectedActivityData.rewards.strength} XP
+                                    {playerStats && getTrainingBonusForAttribute(playerStats.completedCourses || [], 'strength') > 0 && (
+                                        <span className="bonus-indicator">
+                                            {' '}(+{(getTrainingBonusForAttribute(playerStats.completedCourses || [], 'strength') * 100).toFixed(0)}% boonus)
+                                        </span>
+                                    )}
+                                </li>
                             )}
                             {selectedActivityData.rewards.agility && (
-                                <li>🏃 Kiirus: +{selectedActivityData.rewards.agility} XP</li>
+                                <li>
+                                    🏃 Kiirus: +{selectedActivityData.rewards.agility} XP
+                                    {playerStats && getTrainingBonusForAttribute(playerStats.completedCourses || [], 'agility') > 0 && (
+                                        <span className="bonus-indicator">
+                                            {' '}(+{(getTrainingBonusForAttribute(playerStats.completedCourses || [], 'agility') * 100).toFixed(0)}% boonus)
+                                        </span>
+                                    )}
+                                </li>
                             )}
                             {selectedActivityData.rewards.dexterity && (
-                                <li>🎯 Osavus: +{selectedActivityData.rewards.dexterity} XP</li>
+                                <li>
+                                    🎯 Osavus: +{selectedActivityData.rewards.dexterity} XP
+                                    {playerStats && getTrainingBonusForAttribute(playerStats.completedCourses || [], 'dexterity') > 0 && (
+                                        <span className="bonus-indicator">
+                                            {' '}(+{(getTrainingBonusForAttribute(playerStats.completedCourses || [], 'dexterity') * 100).toFixed(0)}% boonus)
+                                        </span>
+                                    )}
+                                </li>
                             )}
                             {selectedActivityData.rewards.intelligence && (
-                                <li>🧠 Intelligentsus: +{selectedActivityData.rewards.intelligence} XP</li>
+                                <li>
+                                    🧠 Intelligentsus: +{selectedActivityData.rewards.intelligence} XP
+                                    {playerStats && getTrainingBonusForAttribute(playerStats.completedCourses || [], 'intelligence') > 0 && (
+                                        <span className="bonus-indicator">
+                                            {' '}(+{(getTrainingBonusForAttribute(playerStats.completedCourses || [], 'intelligence') * 100).toFixed(0)}% boonus)
+                                        </span>
+                                    )}
+                                </li>
                             )}
                             {selectedActivityData.rewards.endurance && (
-                                <li>❤️ Vastupidavus: +{selectedActivityData.rewards.endurance} XP</li>
+                                <li>
+                                    ❤️ Vastupidavus: +{selectedActivityData.rewards.endurance} XP
+                                    {playerStats && getTrainingBonusForAttribute(playerStats.completedCourses || [], 'endurance') > 0 && (
+                                        <span className="bonus-indicator">
+                                            {' '}(+{(getTrainingBonusForAttribute(playerStats.completedCourses || [], 'endurance') * 100).toFixed(0)}% boonus)
+                                        </span>
+                                    )}
+                                </li>
                             )}
                             <li>⭐ Kogemus: +{selectedActivityData.rewards.playerExp} XP</li>
                         </ul>
