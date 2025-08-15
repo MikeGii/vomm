@@ -11,14 +11,14 @@ export const COURSES_TUTORIAL_STEPS: TutorialStep[] = [
     },
     {
         step: 5,
-        targetElement: '#basic_police_training',
+        targetElement: '#basic_police_training_abipolitseinik',
         title: 'Abipolitseiniku baaskoolitus',
         content: 'Praegu on sul võimalik läbida abipolitseiniku baaskursus ning läbi selle alustada oma teekonda politsei rindel. Samuti on näha koolituskaardil, mis on vajalikud nõuded koolituse läbimiseks ja ka mis on tulemus, mida koolituse läbimisel saad.',
         position: 'bottom'
     },
     {
         step: 6,
-        targetElement: '#basic_police_training',
+        targetElement: '#basic_police_training_abipolitseinik',
         title: 'Alusta koolitust',
         content: 'Selleks, et alustada abipolitseiniku baaskursusega vajuta "Alusta" ning selle koolituse läbimiseks pead ootama 10 sekundit.',
         position: 'bottom',

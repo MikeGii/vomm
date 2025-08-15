@@ -194,7 +194,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     useEffect(() => {
         if (!stats.tutorialProgress.isCompleted &&
             currentStep === 6 &&
-            stats.completedCourses?.includes('basic_police_training') &&
+            stats.completedCourses?.includes('basic_police_training_abipolitseinik') &&
             !stats.activeCourse) {
             // Course completed, trigger waiting complete
             handleWaitingComplete();

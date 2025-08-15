@@ -7,7 +7,7 @@ export const WORK_ACTIVITIES: WorkActivity[] = [
         name: 'Alusta patrulli kolmanda liikmena',
         description: 'Abipolitseinikuna saad alustada patrulli kolmanda liikmena. Õpid kogenud kolleegidelt ja saad esimesi kogemusi tänaval.',
         minLevel: 1,
-        requiredCourses: ['basic_police_training'],
+        requiredCourses: ['basic_police_training_abipolitseinik'],
         baseExpPerHour: 50,
         expGrowthRate: 0.15,
         maxHours: 12
@@ -17,7 +17,7 @@ export const WORK_ACTIVITIES: WorkActivity[] = [
         name: 'Alusta patrulli teise liikmena',
         description: 'Kogenud abipolitseinikuna saad olla patrulli teine liige. Vastutad rohkem ja saad paremaid kogemusi.',
         minLevel: 10,
-        requiredCourses: ['basic_police_training', 'firearm_training'],
+        requiredCourses: ['basic_police_training_abipolitseinik', 'firearm_training_abipolitseinik'],
         baseExpPerHour: 150,
         expGrowthRate: 0.10,
         maxHours: 12

@@ -12,8 +12,23 @@ export const PlayerAbilities: React.FC<PlayerAbilitiesProps> = ({ stats }) => {
     const abilities = getAbilitiesByCompletedCourses(stats.completedCourses || []);
 
     if (!stats.hasCompletedTraining) {
-        return null; // Don't show abilities section if not trained
+        return null;
     }
+
+    const formatBonus = (percentage: number): string => {
+        return `+${(percentage * 100).toFixed(0)}%`;
+    };
+
+    const getAttributeEstonian = (attr: string): string => {
+        const translations: { [key: string]: string } = {
+            'strength': 'Jõud',
+            'agility': 'Kiirus',
+            'dexterity': 'Osavus',
+            'intelligence': 'Intelligentsus',
+            'endurance': 'Vastupidavus'
+        };
+        return translations[attr] || attr;
+    };
 
     return (
         <div className="abilities-container">
@@ -32,6 +47,15 @@ export const PlayerAbilities: React.FC<PlayerAbilitiesProps> = ({ stats }) => {
                             <div className="ability-info">
                                 <h4 className="ability-name">{ability.name}</h4>
                                 <p className="ability-description">{ability.description}</p>
+                                {ability.trainingBonuses && ability.trainingBonuses.length > 0 && (
+                                    <div className="ability-bonuses">
+                                        {ability.trainingBonuses.map((bonus, index) => (
+                                            <span key={index} className="bonus-tag">
+                                                {getAttributeEstonian(bonus.attribute)} {formatBonus(bonus.percentage)}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}
