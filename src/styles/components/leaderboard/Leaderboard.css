@@ -1,0 +1,50 @@
+/* src/styles/components/leaderboard/Leaderboard.css */
+.leaderboard-container {
+    margin-top: 2rem;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+    animation: fadeIn 0.5s ease;
+}
+
+.leaderboard-title {
+    color: #f0f0f0;
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.leaderboard-loading,
+.leaderboard-error {
+    text-align: center;
+    padding: 2rem;
+    color: #888;
+}
+
+.leaderboard-error button {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.leaderboard-error button:hover {
+    background-color: #357abd;
+}
+
+@media (max-width: 768px) {
+    .leaderboard-container {
+        margin-top: 1.5rem;
+        padding: 1rem;
+    }
+
+    .leaderboard-title {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+}

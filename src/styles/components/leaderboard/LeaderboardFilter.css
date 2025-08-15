@@ -1,0 +1,52 @@
+/* src/styles/components/leaderboard/LeaderboardFilter.css */
+.leaderboard-filter {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: #2a2a2a;
+    border-radius: 6px;
+}
+
+.filter-label {
+    color: #888;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.filter-select {
+    flex: 1;
+    max-width: 250px;
+    padding: 0.5rem;
+    background-color: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #f0f0f0;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-select:hover {
+    border-color: #4a90e2;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+@media (max-width: 768px) {
+    .leaderboard-filter {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .filter-select {
+        max-width: 100%;
+    }
+}

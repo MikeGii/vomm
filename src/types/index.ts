@@ -150,3 +150,20 @@ export interface PlayerHealth {
     strengthBonus: number;
     enduranceBonus: number;
 }
+
+export interface LeaderboardEntry {
+    userId: string;
+    username: string;
+    level: number;
+    experience: number;
+    reputation: number;
+    rank: string | null;
+    badgeNumber: string | null;
+    isEmployed: boolean;
+    hasCompletedTraining: boolean;
+    attributes?: PlayerAttributes;
+    casesCompleted: number;
+    criminalsArrested: number;
+}
+
+export type LeaderboardSortBy = 'level' | 'reputation' | 'strength' | 'agility' | 'dexterity' | 'intelligence' | 'endurance' | 'cases' | 'arrests';

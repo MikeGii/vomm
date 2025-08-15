@@ -1,0 +1,180 @@
+/* src/styles/components/leaderboard/LeaderboardTable.css */
+.leaderboard-table-container {
+    overflow-x: auto;
+    border-radius: 6px;
+    border: 1px solid #333;
+}
+
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #2a2a2a;
+}
+
+.leaderboard-table thead {
+    background-color: #333;
+}
+
+.leaderboard-table th {
+    padding: 1rem;
+    text-align: left;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #444;
+}
+
+.leaderboard-table td {
+    padding: 0.75rem 1rem;
+    color: #f0f0f0;
+    border-bottom: 1px solid #333;
+}
+
+.leaderboard-table tbody tr {
+    transition: background-color 0.3s ease;
+}
+
+.leaderboard-table tbody tr:hover {
+    background-color: rgba(74, 144, 226, 0.1);
+}
+
+.leaderboard-table tbody tr.current-user {
+    background-color: rgba(255, 215, 0, 0.1);
+    border-left: 3px solid #ffd700;
+}
+
+.rank-column {
+    width: 60px;
+    text-align: center !important;
+}
+
+.rank-number {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    background-color: #333;
+    border-radius: 50%;
+    font-weight: bold;
+}
+
+.leaderboard-table tbody tr:nth-child(1) .rank-number {
+    background-color: #ffd700;
+    color: #1a1a1a;
+}
+
+.leaderboard-table tbody tr:nth-child(2) .rank-number {
+    background-color: #c0c0c0;
+    color: #1a1a1a;
+}
+
+.leaderboard-table tbody tr:nth-child(3) .rank-number {
+    background-color: #cd7f32;
+    color: #1a1a1a;
+}
+
+.name-column {
+    font-weight: 600;
+    min-width: 120px;
+}
+
+.status-column {
+    min-width: 130px;
+}
+
+.status-column .status-badge {
+    padding: 0.25rem 0.5rem;
+    background-color: rgba(74, 144, 226, 0.2);
+    border: 1px solid #4a90e2;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+
+.level-column,
+.reputation-column,
+.value-column {
+    text-align: center !important;
+    min-width: 80px;
+}
+
+.reputation-column {
+    min-width: 120px;
+}
+
+.sorted-value {
+    color: #4a90e2;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.leaderboard-empty {
+    text-align: center;
+    padding: 3rem;
+    color: #888;
+}
+
+/* Highlight the sorted column */
+.value-column .sorted-value {
+    background-color: rgba(74, 144, 226, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .leaderboard-table {
+        font-size: 0.85rem;
+    }
+
+    .leaderboard-table th,
+    .leaderboard-table td {
+        padding: 0.5rem;
+    }
+
+    .rank-number {
+        width: 25px;
+        height: 25px;
+        line-height: 25px;
+        font-size: 0.8rem;
+    }
+
+    /* Hide status column on mobile */
+    .status-column {
+        display: none;
+    }
+
+    .leaderboard-table th.status-column {
+        display: none;
+    }
+
+    /* Adjust column widths for mobile */
+    .name-column {
+        min-width: 80px;
+    }
+
+    .level-column,
+    .reputation-column,
+    .value-column {
+        min-width: 50px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* On very small screens, hide reputation if not sorting by it */
+    .reputation-column:not(.sorted-column) {
+        display: none;
+    }
+
+    .leaderboard-table th.reputation-column:not(.sorted-column) {
+        display: none;
+    }
+
+    .sorted-value {
+        font-size: 1rem;
+    }
+}
