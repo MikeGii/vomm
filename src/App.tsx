@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage';
 import CoursesPage from './pages/CoursesPage';
 import TrainingPage from './pages/TrainingPage';
 import { DebugMenu} from "./components/dev/DebugMenu";
+import PatrolPage from "./pages/PatrolPage";
 
 function App() {
     return (
@@ -45,11 +46,7 @@ function App() {
                         path="/patrol"
                         element={
                             <ProtectedRoute>
-                                <div className="page">
-                                    <div className="page-content">
-                                        <h1>Mine tööle - Tulekul</h1>
-                                    </div>
-                                </div>
+                                <PatrolPage />
                             </ProtectedRoute>
                         }
                     />

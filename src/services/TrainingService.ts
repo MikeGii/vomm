@@ -2,6 +2,7 @@
 import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats, PlayerAttributes, AttributeData, TrainingData } from '../types';
+import { calculatePlayerHealth } from "./PlayerService";
 
 // Calculate experience needed for next attribute level
 export const calculateExpForNextLevel = (currentLevel: number): number => {
@@ -37,7 +38,7 @@ export const initializeTrainingData = (): TrainingData => {
     };
 };
 
-// Check if training clicks should reset (every full hour)
+// Check if training clicks should reset (every full hour) - KEEP ONLY THIS ONE
 export const checkAndResetTrainingClicks = async (userId: string): Promise<TrainingData> => {
     const statsRef = doc(firestore, 'playerStats', userId);
     const statsDoc = await getDoc(statsRef);
@@ -48,6 +49,9 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
 
     const stats = statsDoc.data() as PlayerStats;
     let trainingData = stats.trainingData || initializeTrainingData();
+
+    // Determine max clicks based on work status
+    const maxClicks = stats.activeWork ? 10 : 50;
 
     // Get current time and last reset time
     const now = new Date();
@@ -67,9 +71,10 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
     // If current hour is different from last reset hour, reset clicks
     if (currentHour.getTime() > lastResetHour.getTime()) {
         trainingData = {
-            remainingClicks: 50,
+            remainingClicks: maxClicks,
             lastResetTime: Timestamp.now(),
-            totalTrainingsDone: trainingData.totalTrainingsDone
+            totalTrainingsDone: trainingData.totalTrainingsDone,
+            isWorking: !!stats.activeWork
         };
 
         await updateDoc(statsRef, {
@@ -149,6 +154,15 @@ export const performTraining = async (
         attributes.endurance = updateAttribute(attributes.endurance, rewards.endurance);
     }
 
+    // Recalculate health if strength or endurance changed
+    let updatedHealth = stats.health;
+    if (rewards.strength || rewards.endurance) {
+        updatedHealth = calculatePlayerHealth(
+            attributes.strength.level,
+            attributes.endurance.level
+        );
+    }
+
     // Update player main experience and level
     const newPlayerExp = stats.experience + rewards.playerExp;
     const newPlayerLevel = Math.floor(newPlayerExp / 100) + 1;
@@ -157,7 +171,8 @@ export const performTraining = async (
     const updatedTrainingData: TrainingData = {
         remainingClicks: trainingData.remainingClicks - 1,
         lastResetTime: trainingData.lastResetTime,
-        totalTrainingsDone: trainingData.totalTrainingsDone + 1
+        totalTrainingsDone: trainingData.totalTrainingsDone + 1,
+        isWorking: !!stats.activeWork
     };
 
     // Save to database
@@ -165,7 +180,8 @@ export const performTraining = async (
         attributes: attributes,
         trainingData: updatedTrainingData,
         experience: newPlayerExp,
-        level: newPlayerLevel
+        level: newPlayerLevel,
+        health: updatedHealth
     };
 
     await updateDoc(statsRef, updates);

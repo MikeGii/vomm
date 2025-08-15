@@ -1,143 +1,16 @@
 // src/components/tutorial/TutorialOverlay.tsx
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { PlayerStats } from '../../types';
+import React, { useState, useEffect } from 'react';
+import { TutorialOverlayProps } from './types/tutorial.types';
+import { useTutorialSteps } from './hooks/useTutorialSteps';
+import { useTutorialHighlight } from './hooks/useTutorialHighlight';
+import { useTutorialHandlers } from './hooks/useTutorialHandlers';
+import { useSmartPosition } from './hooks/useSmartPosition';
+import { calculateDisplayStep, getHighlightDelay } from './utils/stepCalculations';
 import { updateTutorialProgress } from '../../services/PlayerService';
+import { TutorialWaitingIndicator } from './TutorialWaitingIndicator';
+import { getRemainingTime } from '../../services/CourseService';
+import { getRemainingWorkTime } from '../../services/WorkService';
 import '../../styles/components/TutorialOverlay.css';
-
-interface TutorialOverlayProps {
-    stats: PlayerStats;
-    userId: string;
-    onTutorialComplete: () => void;
-    page?: 'dashboard' | 'courses' | 'training';
-}
-
-interface TutorialStep {
-    step: number;
-    targetElement: string;
-    title: string;
-    content: string;
-    position: 'top' | 'bottom' | 'left' | 'right';
-    requiresAction?: boolean;
-}
-
-const DASHBOARD_TUTORIAL_STEPS: TutorialStep[] = [
-    {
-        step: 1,
-        targetElement: '.stats-card',
-        title: 'Sinu karakteri andmed',
-        content: 'Siin näed oma karakteri peamisi andmeid nagu tase, ametikoht, auaste, töökoha osakond ja reputatsioon. Samuti näed lahendatud juhtumite statistikat ja ka kokku tabatud kurjategijaid.',
-        position: 'bottom'
-    },
-    {
-        step: 2,
-        targetElement: '.quick-actions-container',
-        title: 'Kiirmenüü',
-        content: 'Siin on sinu kiirmenüü tegevuste jaoks. Kuna hetkel oled töötu ja ei oma mingit politseilist väljaõpet, pead esmalt läbima abipolitseiniku koolituse, et alustada oma karjääri politsei ridades.',
-        position: 'top'
-    },
-    {
-        step: 3,
-        targetElement: '.quick-action-button:first-child',
-        title: 'Alusta koolitusega',
-        content: 'Selleks, et esitada avaldus abipolitseiniku koolitusele vajuta koolitused nuppu.',
-        position: 'top',
-        requiresAction: true
-    }
-];
-
-const COURSES_TUTORIAL_STEPS: TutorialStep[] = [
-    {
-        step: 4,
-        targetElement: '.courses-container',
-        title: 'Koolituste lehekülg',
-        content: 'Siin leheküljel näed koolitusi, mida on sul võimalik läbida ja ka neid koolitusi, mis on sul juba läbitud.',
-        position: 'top'
-    },
-    {
-        step: 5,
-        targetElement: '#basic_police_training',
-        title: 'Abipolitseiniku baaskoolitus',
-        content: 'Praegu on sul võimalik läbida abipolitseiniku baaskursus ning läbi selle alustada oma teekonda politsei rindel. Samuti on näha koolituskaardil, mis on vajalikud nõuded koolituse läbimiseks ja ka mis on tulemus, mida koolituse läbimisel saad.',
-        position: 'bottom'
-    },
-    {
-        step: 6,
-        targetElement: '#basic_police_training',
-        title: 'Alusta koolitust',
-        content: 'Selleks, et alustada abipolitseiniku baaskursusega vajuta "Alusta" ning selle koolituse läbimiseks pead ootama 20 sekundit.',
-        position: 'bottom',
-        requiresAction: true
-    }
-];
-
-const COURSES_COMPLETED_TUTORIAL_STEPS: TutorialStep[] = [
-    {
-        step: 7,
-        targetElement: '.course-card.completed:first-child',
-        title: 'Läbitud koolitus',
-        content: 'Siin näed enda läbitud koolitusi ja hetkel oled edukalt läbinud abipolitseiniku baaskursuse.',
-        position: 'bottom'
-    },
-    {
-        step: 8,
-        targetElement: '.back-to-dashboard',
-        title: 'Tagasi töölauale',
-        content: 'Nüüd liigume tagasi töölauale, et jätkata järgmiste sammudega.',
-        position: 'bottom',
-        requiresAction: true
-    }
-];
-
-const TRAINING_INTRODUCTION_STEPS: TutorialStep[] = [
-    {
-        step: 9,
-        targetElement: '.stats-card',
-        title: 'Õnnitleme!',
-        content: 'Vägev, oled edukalt nüüd abipolitseinik ja saad alustada oma tegevusi. Esmalt peaksid end väheke treenima, et tulevikus tänavatel paremini hakkama saada ja selleks on sul nüüd võimalik kasutada enda prefektuuri treeningu võimalusi',
-        position: 'bottom'
-    },
-    {
-        step: 10,
-        targetElement: '.quick-action-button:nth-child(2)',
-        title: 'Treeningu alustamine',
-        content: 'Jätkamiseks liigume treeningu lehele',
-        position: 'top',
-        requiresAction: true
-    }
-];
-
-const TRAINING_CENTER_TUTORIAL_STEPS: TutorialStep[] = [
-    {
-        step: 11,
-        targetElement: '.attributes-container',
-        title: 'Treeningkeskus',
-        content: 'Oled jõudnud treeningkeskusesse ja siin saad arendada oma mängija omadusi. Iga omadus mõjutab sinu võimekust erinevates olukordades.',
-        position: 'bottom'
-    },
-    {
-        step: 12,
-        targetElement: '.training-counter',
-        title: 'Treeningute limiit',
-        content: 'Kuna treenimine ei saa kesta lõputult siis iga tund on võimalik mängijal sooritada kuni 50 korda igat tegevust. Iga täistund saab uuesti sooritada 50 kordust, kuid mitte rohkem.',
-        position: 'bottom'
-    },
-    {
-        step: 13,
-        targetElement: '.activity-dropdown',
-        title: 'Vali treening',
-        content: 'Selleks, et alustada treeninguga palun vali siit menüüst, millist treeningut soovid alustada.',
-        position: 'top',
-        requiresAction: true
-    },
-    {
-        step: 14,
-        targetElement: '.train-button',
-        title: 'Soorita treening',
-        content: 'Nüüd oled valinud sobiva treeningu ja vajuta Treeni, et sooritada üks treeningu kordus.',
-        position: 'top',
-        requiresAction: true
-    }
-];
 
 export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                                                                     stats,
@@ -147,101 +20,108 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                                                                 }) => {
     const [currentStep, setCurrentStep] = useState(stats.tutorialProgress.currentStep || 0);
     const [isVisible, setIsVisible] = useState(false);
+    const [isWaiting, setIsWaiting] = useState(false);
+    const [waitingMessage, setWaitingMessage] = useState('');
+    const [waitingTime, setWaitingTime] = useState(0);
 
-    // Determine which tutorial steps to use based on page and progress
-    const TUTORIAL_STEPS = useMemo(() => {
-        if (page === 'dashboard' && currentStep <= 3) {
-            return DASHBOARD_TUTORIAL_STEPS;
-        } else if (page === 'courses' && currentStep >= 3 && currentStep <= 6) {
-            return COURSES_TUTORIAL_STEPS;
-        } else if (page === 'courses' && currentStep >= 7 && currentStep <= 8) {
-            return COURSES_COMPLETED_TUTORIAL_STEPS;
-        } else if (page === 'dashboard' && currentStep >= 9 && currentStep <= 10) {
-            return TRAINING_INTRODUCTION_STEPS;
-        } else if (page === 'training' && currentStep >= 11 && currentStep <= 14) {
-            return TRAINING_CENTER_TUTORIAL_STEPS;
-        }
-        return [];
-    }, [page, currentStep]);
+    // Get tutorial steps for current page and step
+    const TUTORIAL_STEPS = useTutorialSteps(page, currentStep);
+    const currentTutorialStep = TUTORIAL_STEPS.find(s => s.step === currentStep);
 
-    const removeHighlight = useCallback(() => {
-        document.querySelectorAll('.tutorial-highlight').forEach(el => {
-            el.classList.remove('tutorial-highlight');
-            el.classList.remove('tutorial-clickable');
-        });
-    }, []);
+    // Use smart positioning for tutorial box
+    const { position, arrowPosition } = useSmartPosition(
+        currentTutorialStep?.targetElement || '',
+        currentTutorialStep?.position || 'bottom',
+        isVisible && !isWaiting
+    );
 
-    const highlightElement = useCallback((selector: string, makeClickable: boolean = false) => {
-        removeHighlight();
-        const element = document.querySelector(selector);
-        if (element) {
-            element.classList.add('tutorial-highlight');
-            if (makeClickable) {
-                element.classList.add('tutorial-clickable');
+    // Get highlight functions
+    const { removeHighlight, highlightElement } = useTutorialHighlight();
+
+    // Setup all event handlers
+    useTutorialHandlers({
+        page,
+        currentStep,
+        isVisible,
+        userId,
+        stats,
+        setCurrentStep,
+        setIsVisible,
+        removeHighlight,
+        onTutorialComplete
+    });
+
+    // Handle waiting states for course and work completion
+    useEffect(() => {
+        // Course completion waiting (step 6)
+        if (currentStep === 6 && stats.activeCourse?.status === 'in_progress') {
+            const remaining = getRemainingTime(stats.activeCourse);
+            if (remaining > 0) {
+                setIsWaiting(true);
+                setWaitingMessage('Oota koolituse lõppemist...');
+                setWaitingTime(remaining);
+                setIsVisible(false); // Hide main tutorial box
             }
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-    }, [removeHighlight]);
+        // Work completion waiting (step 22)
+        else if (currentStep === 22 && stats.activeWork?.status === 'in_progress') {
+            const remaining = getRemainingWorkTime(stats.activeWork);
+            if (remaining > 0) {
+                setIsWaiting(true);
+                setWaitingMessage('Oota töö lõppemist...');
+                setWaitingTime(remaining);
+                setIsVisible(false); // Hide main tutorial box
+            }
+        } else {
+            setIsWaiting(false);
+        }
+    }, [currentStep, stats.activeCourse, stats.activeWork]);
 
-    // Handle button clicks for step 6 (enroll in course)
+    // Also add a periodic update for the waiting time
     useEffect(() => {
-        if (currentStep === 6 && isVisible) {
-            const handleEnrollClick = async (e: Event) => {
-                const target = e.target as HTMLElement;
-                const card = document.querySelector('#basic_police_training');
-                if (card && card.contains(target) && target.classList.contains('enroll-button')) {
-                    removeHighlight();
-                    setIsVisible(false);
+        if (!isWaiting) return;
+
+        const updateWaitingTime = () => {
+            if (currentStep === 6 && stats.activeCourse?.status === 'in_progress') {
+                const remaining = getRemainingTime(stats.activeCourse);
+                setWaitingTime(remaining);
+                if (remaining <= 0) {
+                    handleWaitingComplete();
                 }
-            };
-
-            document.addEventListener('click', handleEnrollClick, true);
-            return () => {
-                document.removeEventListener('click', handleEnrollClick, true);
-            };
-        }
-    }, [currentStep, isVisible, userId, removeHighlight]);
-
-    // Handle button click for step 8 (back to dashboard)
-    useEffect(() => {
-        if (currentStep === 8 && isVisible) {
-            const handleBackClick = async (e: Event) => {
-                const target = e.target as HTMLElement;
-                if (target.classList.contains('back-to-dashboard') || target.closest('.back-to-dashboard')) {
-                    await updateTutorialProgress(userId, 9);
-                    removeHighlight();
-                    setIsVisible(false);
+            } else if (currentStep === 22 && stats.activeWork?.status === 'in_progress') {
+                const remaining = getRemainingWorkTime(stats.activeWork);
+                setWaitingTime(remaining);
+                if (remaining <= 0) {
+                    handleWaitingComplete();
                 }
-            };
+            }
+        };
 
-            document.addEventListener('click', handleBackClick, true);
-            return () => {
-                document.removeEventListener('click', handleBackClick, true);
-            };
+        const interval = setInterval(updateWaitingTime, 1000);
+        return () => clearInterval(interval);
+    }, [isWaiting, currentStep, stats.activeCourse, stats.activeWork]);
+
+    // Handle waiting completion
+    const handleWaitingComplete = () => {
+        setIsWaiting(false);
+
+        // Progress to next step based on context
+        if (currentStep === 6) {
+            // Course completed, move to step 7
+            setCurrentStep(7);
+            updateTutorialProgress(userId, 7);
+            setIsVisible(true);
+        } else if (currentStep === 22) {
+            // Work completed, move to step 23
+            setTimeout(async () => {
+                await updateTutorialProgress(userId, 23);
+                setCurrentStep(23);
+                setIsVisible(true);
+            }, 1500); // Small delay to let work completion process
         }
-    }, [currentStep, isVisible, userId, removeHighlight]);
+    };
 
-    // Handle button click for step 10 (training button)
-    useEffect(() => {
-        if (currentStep === 10 && isVisible) {
-            const handleTrainingClick = async (e: Event) => {
-                const target = e.target as HTMLElement;
-                const trainingButton = document.querySelector('.quick-action-button:nth-child(2)');
-                if (trainingButton && trainingButton.contains(target)) {
-                    await updateTutorialProgress(userId, 11); // Complete tutorial
-                    removeHighlight();
-                    setIsVisible(false);
-                }
-            };
-
-            document.addEventListener('click', handleTrainingClick, true);
-            return () => {
-                document.removeEventListener('click', handleTrainingClick, true);
-            };
-        }
-    }, [currentStep, isVisible, userId, removeHighlight]);
-
-    // Update the content for step 9 to include prefecture name
+    // Update step 9 content with prefecture name
     useEffect(() => {
         if (currentStep === 9 && stats.prefecture) {
             const step = TUTORIAL_STEPS.find(s => s.step === 9);
@@ -251,60 +131,27 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         }
     }, [currentStep, stats.prefecture, TUTORIAL_STEPS]);
 
-    // Add handler for activity selection (step 13)
-    useEffect(() => {
-        if (currentStep === 13 && isVisible) {
-            const handleActivitySelect = async (e: Event) => {
-                const target = e.target as HTMLElement;
-                const dropdown = document.querySelector('.activity-dropdown') as HTMLSelectElement;
-                if (dropdown && target === dropdown && dropdown.value) {
-                    // Progress automatically happens in TrainingPage
-                    removeHighlight();
-                    setTimeout(() => {
-                        setCurrentStep(14);
-                        setIsVisible(true);
-                    }, 100);
-                }
-            };
-
-            document.addEventListener('change', handleActivitySelect, true);
-            return () => {
-                document.removeEventListener('change', handleActivitySelect, true);
-            };
-        }
-    }, [currentStep, isVisible, removeHighlight]);
-
-// Add handler for train button click (step 14)
-    useEffect(() => {
-        if (currentStep === 14 && isVisible) {
-            const handleTrainClick = async (e: Event) => {
-                const target = e.target as HTMLElement;
-                if (target.classList.contains('train-button')) {
-                    // Tutorial completion is handled in TrainingPage
-                    removeHighlight();
-                    setIsVisible(false);
-                    onTutorialComplete();
-                }
-            };
-
-            document.addEventListener('click', handleTrainClick, true);
-            return () => {
-                document.removeEventListener('click', handleTrainClick, true);
-            };
-        }
-    }, [currentStep, isVisible, removeHighlight, onTutorialComplete]);
-
     // Initialize tutorial visibility
     useEffect(() => {
-        if (!stats.tutorialProgress.isCompleted) {
+        if (!stats.tutorialProgress.isCompleted && !isWaiting) {
+            const dbStep = stats.tutorialProgress.currentStep;
+
             if (page === 'dashboard') {
-                if (currentStep === 0) {
+                // Fix: Check for step 0 and initialize to step 1
+                if (dbStep === 0 && currentStep === 0) {
+                    console.log('Initializing tutorial to step 1');
                     setCurrentStep(1);
                     setIsVisible(true);
                     updateTutorialProgress(userId, 1);
-                } else if (currentStep > 0 && currentStep < 4) {
+                } else if (dbStep === 1 || currentStep === 1) {
+                    setCurrentStep(1);
                     setIsVisible(true);
-                } else if (currentStep >= 9 && currentStep <= 10) {
+                } else if ((dbStep > 1 && dbStep < 4) || (currentStep > 1 && currentStep < 4)) {
+                    setIsVisible(true);
+                } else if ((dbStep >= 9 && dbStep <= 10) || (currentStep >= 9 && currentStep <= 10)) {
+                    setIsVisible(true);
+                } else if (dbStep === 16 || currentStep === 16) {
+                    setCurrentStep(16);
                     setIsVisible(true);
                 }
             } else if (page === 'courses') {
@@ -317,34 +164,60 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                 }
             } else if (page === 'training') {
                 if (currentStep === 10) {
-                    // Coming from dashboard, move to step 11
                     setCurrentStep(11);
                     updateTutorialProgress(userId, 11);
                     setIsVisible(true);
-                } else if (currentStep >= 11 && currentStep <= 14) {
+                } else if (currentStep >= 11 && currentStep <= 15) {
+                    setIsVisible(true);
+                }
+            } else if (page === 'patrol') {
+                if (currentStep === 16) {
+                    setCurrentStep(17);
+                    updateTutorialProgress(userId, 17);
+                    setIsVisible(true);
+                } else if (currentStep === 22 && !stats.activeWork) {
+                    console.log('Page loaded at step 22 with completed work, moving to step 23');
+                    setTimeout(async () => {
+                        await updateTutorialProgress(userId, 23);
+                        setCurrentStep(23);
+                        setIsVisible(true);
+                    }, 1000);
+                } else if (currentStep >= 17 && currentStep <= 24) {
                     setIsVisible(true);
                 }
             }
         }
-    }, [stats.tutorialProgress.isCompleted, currentStep, userId, page]);
+    }, [stats.tutorialProgress.isCompleted, stats.tutorialProgress.currentStep,
+        userId, page, isWaiting]);
 
-    // Check if course was just completed and update tutorial
+    // Check if course was completed during waiting
     useEffect(() => {
         if (!stats.tutorialProgress.isCompleted &&
             currentStep === 6 &&
-            stats.completedCourses?.includes('basic_police_training')) {
-            setCurrentStep(7);
-            updateTutorialProgress(userId, 7);
-            setIsVisible(true);
+            stats.completedCourses?.includes('basic_police_training') &&
+            !stats.activeCourse) {
+            // Course completed, trigger waiting complete
+            handleWaitingComplete();
         }
-    }, [stats.completedCourses, currentStep, userId, stats.tutorialProgress.isCompleted]);
+    }, [stats.completedCourses, currentStep, stats.activeCourse, stats.tutorialProgress.isCompleted]);
+
+    // Check if work was completed during waiting
+    useEffect(() => {
+        if (!stats.tutorialProgress.isCompleted &&
+            currentStep === 22 &&
+            !stats.activeWork &&
+            isWaiting) {
+            // Work completed, trigger waiting complete
+            handleWaitingComplete();
+        }
+    }, [currentStep, stats.activeWork, isWaiting, stats.tutorialProgress.isCompleted]);
 
     // Highlight elements when visible
     useEffect(() => {
-        if (isVisible && currentStep > 0) {
+        if (isVisible && !isWaiting && currentStep > 0) {
             const stepData = TUTORIAL_STEPS.find(s => s.step === currentStep);
             if (stepData) {
-                const delay = currentStep === 7 ? 600 : 100;
+                const delay = getHighlightDelay(currentStep);
                 setTimeout(() => {
                     highlightElement(stepData.targetElement, stepData.requiresAction);
                 }, delay);
@@ -354,70 +227,120 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         return () => {
             removeHighlight();
         };
-    }, [currentStep, isVisible, highlightElement, removeHighlight, TUTORIAL_STEPS]);
+    }, [currentStep, isVisible, isWaiting, highlightElement, removeHighlight, TUTORIAL_STEPS]);
 
     const handleNext = async () => {
         const currentStepData = TUTORIAL_STEPS.find(s => s.step === currentStep);
 
         if (currentStepData?.requiresAction) {
-            return; // Don't do anything, wait for actual action
+            return;
         }
 
         const nextStep = currentStep + 1;
 
-        // Handle step transitions
-        if (page === 'dashboard' && nextStep > 3 && nextStep < 9) {
-            await updateTutorialProgress(userId, nextStep);
-            removeHighlight();
-            setIsVisible(false);
-        } else if (page === 'dashboard' && currentStep === 9) {
-            // Move from step 9 to step 10
-            setCurrentStep(10);
-            await updateTutorialProgress(userId, 10);
-        } else if (page === 'courses' && currentStep === 7) {
-            setCurrentStep(8);
-            await updateTutorialProgress(userId, 8);
-        } else if (page === 'training' && currentStep >= 11 && currentStep < 14) {
-            setCurrentStep(nextStep);
-            await updateTutorialProgress(userId, nextStep);
-        } else {
-            setCurrentStep(nextStep);
-            await updateTutorialProgress(userId, nextStep);
+        if (page === 'dashboard') {
+            if (currentStep >= 1 && currentStep <= 2) {
+                setCurrentStep(nextStep);
+                await updateTutorialProgress(userId, nextStep);
+            } else if (currentStep === 9) {
+                setCurrentStep(10);
+                await updateTutorialProgress(userId, 10);
+            }
+        } else if (page === 'courses') {
+            if (currentStep === 4 || currentStep === 5) {
+                setCurrentStep(nextStep);
+                await updateTutorialProgress(userId, nextStep);
+            } else if (currentStep === 7) {
+                setCurrentStep(8);
+                await updateTutorialProgress(userId, 8);
+            }
+        } else if (page === 'training') {
+            if (currentStep >= 11 && currentStep <= 13) {
+                setCurrentStep(nextStep);
+                await updateTutorialProgress(userId, nextStep);
+            } else if (currentStep === 14) {
+                setCurrentStep(15);
+                await updateTutorialProgress(userId, 15);
+            }
+        } else if (page === 'patrol') {
+            if (currentStep === 17 || currentStep === 18) {
+                setCurrentStep(nextStep);
+                await updateTutorialProgress(userId, nextStep);
+            } else if (currentStep === 19) {
+                setCurrentStep(20);
+                await updateTutorialProgress(userId, 20);
+            } else if (currentStep === 22) {
+                // Just hide for step 22
+                removeHighlight();
+                setIsVisible(false);
+            } else if (currentStep === 23) {
+                // Move to final step 24
+                setCurrentStep(24);
+                await updateTutorialProgress(userId, 24);
+            } else if (currentStep === 24) {
+                // Complete tutorial on step 24
+                console.log('Completing tutorial at step 24...');
+                await updateTutorialProgress(userId, 24, true);
+                removeHighlight();
+                setIsVisible(false);
+                onTutorialComplete();
+            }
         }
     };
+
+    const handleSkip = async () => {
+        // Optional: Add confirmation before skipping
+        if (window.confirm('Kas oled kindel, et soovid õpetuse vahele jätta? Saad selle hiljem uuesti lubada seadetest.')) {
+            await updateTutorialProgress(userId, 24, true);
+            removeHighlight();
+            setIsVisible(false);
+            setIsWaiting(false);
+            onTutorialComplete();
+        }
+    };
+
+    // Show waiting indicator if in waiting state
+    if (isWaiting && waitingTime > 0) {
+        // Determine what to highlight during waiting
+        let highlightSelector = '';
+        if (currentStep === 6) {
+            highlightSelector = '.active-course-banner'; // Highlight active course progress
+        } else if (currentStep === 22) {
+            highlightSelector = '.active-work-banner'; // Highlight active work progress
+        }
+
+        return (
+            <>
+                <div className="tutorial-backdrop" />
+                <TutorialWaitingIndicator
+                    message={waitingMessage}
+                    totalTime={waitingTime}
+                    onComplete={handleWaitingComplete}
+                    onSkip={handleSkip}
+                    highlightElement={highlightSelector}
+                />
+            </>
+        );
+    }
 
     if (!isVisible) {
         return null;
     }
 
-    const currentTutorialStep = TUTORIAL_STEPS.find(s => s.step === currentStep);
     if (!currentTutorialStep) return null;
 
-    // Calculate display step based on current page
-    let totalSteps = 0;
-    let displayStep = 0;
+    const { totalSteps, displayStep } = calculateDisplayStep(page, currentStep);
 
-    if (page === 'dashboard' && currentStep <= 3) {
-        totalSteps = 3;
-        displayStep = currentStep;
-    } else if (page === 'courses' && currentStep >= 4 && currentStep <= 6) {
-        totalSteps = 3;
-        displayStep = currentStep - 3;
-    } else if (page === 'courses' && currentStep >= 7 && currentStep <= 8) {
-        totalSteps = 2;
-        displayStep = currentStep - 6;
-    } else if (page === 'dashboard' && currentStep >= 9 && currentStep <= 10) {
-        totalSteps = 2;
-        displayStep = currentStep - 8;
-    } else if (page === 'training' && currentStep >= 11 && currentStep <= 14) {
-        totalSteps = 4;
-        displayStep = currentStep - 10;
-    }
+    // Determine if we should show skip button (after step 5)
+    const showSkipButton = currentStep > 5;
 
     return (
         <>
             <div className={`tutorial-backdrop ${currentTutorialStep.requiresAction ? 'tutorial-backdrop-clickthrough' : ''}`} />
-            <div className={`tutorial-box tutorial-${currentTutorialStep.position}`}>
+            <div
+                className={`tutorial-box ${arrowPosition}`}
+                style={position}
+            >
                 <div className="tutorial-header">
                     <h3 className="tutorial-title">{currentTutorialStep.title}</h3>
                     <span className="tutorial-step-indicator">
@@ -426,12 +349,20 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                 </div>
                 <p className="tutorial-content">{currentTutorialStep.content}</p>
                 <div className="tutorial-actions">
+                    {showSkipButton && (
+                        <button
+                            className="tutorial-btn tutorial-btn-skip"
+                            onClick={handleSkip}
+                        >
+                            Jäta vahele
+                        </button>
+                    )}
                     {!currentTutorialStep.requiresAction && (
                         <button
                             className="tutorial-btn tutorial-btn-next"
                             onClick={handleNext}
                         >
-                            Jätka
+                            {currentStep === 24 ? 'Lõpeta õpetus' : 'Jätka'}
                         </button>
                     )}
                 </div>

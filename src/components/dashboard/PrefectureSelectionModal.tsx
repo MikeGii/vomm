@@ -11,10 +11,10 @@ interface PrefectureSelectionModalProps {
 }
 
 const PREFECTURES = [
-    { id: 'pohja', name: 'Põhja prefektuur', description: 'Lääne- ja Ida-Harju' },
-    { id: 'laane', name: 'Lääne prefektuur', description: 'Pärnu, Haapsalu, Kuressaare, Kesk-Eesti, Hiiumaa' },
-    { id: 'louna', name: 'Lõuna prefektuur', description: 'Tartu, Põlva, Valga, Viljandi' },
-    { id: 'ida', name: 'Ida prefektuur', description: 'Jõhvi, Narva, Rakvere' }
+    { id: 'pohja', name: 'Põhja prefektuur', description: 'Lääne-Harju, Ida-Harju' },
+    { id: 'laane', name: 'Lääne prefektuur', description: 'Haapsalu, Kuressaare, Kärdla, Kesk-Eesti, Pärnu' },
+    { id: 'louna', name: 'Lõuna prefektuur', description: 'Tartu, Kagu, Viljandi' },
+    { id: 'ida', name: 'Ida prefektuur', description: 'Rakvere, Narva, Jõhvi' }
 ];
 
 export const PrefectureSelectionModal: React.FC<PrefectureSelectionModalProps> = ({
