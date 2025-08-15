@@ -74,7 +74,7 @@ const PatrolPage: React.FC = () => {
                     if (stats.activeWork.isTutorial &&
                         stats.tutorialProgress.currentStep === 22) {
                         // Complete tutorial
-                        await updateTutorialProgress(currentUser!.uid, 23, true);
+                        await updateTutorialProgress(currentUser!.uid, 22, true);
                     }
                 }
             }

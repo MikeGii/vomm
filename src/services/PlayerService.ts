@@ -138,11 +138,10 @@ export const updateTutorialProgress = async (
         updates['tutorialProgress.startedAt'] = new Date();
     }
 
-    // Complete tutorial at step 11 or if explicitly marked as completed
-    if (step === 15 || isCompleted) {
+    if (step === 22 || isCompleted) {
         updates['tutorialProgress.isCompleted'] = true;
         updates['tutorialProgress.completedAt'] = new Date();
-        updates['tutorialProgress.currentStep'] = 14;
+        updates['tutorialProgress.currentStep'] = 22;
     }
 
     await updateDoc(statsRef, updates);
