@@ -64,6 +64,7 @@ export interface PlayerStats {
     badgeNumber: string | null;
     isEmployed: boolean;
     hasCompletedTraining: boolean;
+    abilities?: string[];
     casesCompleted: number;
     criminalsArrested: number;
     tutorialProgress: TutorialProgress;

@@ -10,6 +10,7 @@ import { initializePlayerStats, getPlayerStats } from '../services/PlayerService
 import { PrefectureSelectionModal } from '../components/dashboard/PrefectureSelectionModal';
 
 import '../styles/pages/Dashboard.css';
+import {PlayerAbilities} from "../components/dashboard/PlayerAbilities";
 
 function DashboardPage() {
     const { currentUser, userData } = useAuth();
@@ -93,6 +94,9 @@ function DashboardPage() {
                             username={userData.username}
                         />
                         <QuickActions
+                            stats={playerStats}
+                        />
+                        <PlayerAbilities
                             stats={playerStats}
                         />
 

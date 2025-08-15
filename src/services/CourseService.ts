@@ -139,10 +139,7 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
             updates.hasCompletedTraining = true;
             updates.isEmployed = true;
             updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
-            // Don't set prefecture yet - will be selected through modal
-            // Don't set rank - Abipolitseinik doesn't have ranks
         } else if (course.rewards.unlocksRank) {
-            // For advanced courses that unlock actual police ranks
             updates.rank = course.rewards.unlocksRank;
             updates.isEmployed = true;
             updates.hasCompletedTraining = true;
