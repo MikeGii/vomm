@@ -58,6 +58,7 @@ export interface PlayerStats {
     level: number;
     experience: number;
     reputation: number;
+    money: number;
     rank: string | null;  // null when unemployed or abipolitseinik
     department: string | null;  // Future police department
     prefecture: string | null;  // Add prefecture (Põhja, Lääne, Lõuna, Ida)
@@ -83,18 +84,28 @@ export interface Course {
     id: string;
     name: string;
     description: string;
-    duration: number; // in seconds
+    duration: number;
     requirements: {
         level?: number;
         reputation?: number;
-        completedCourses?: string[]; // IDs of prerequisite courses
+        completedCourses?: string[];
         totalWorkedHours: number;
+        attributes?: {
+            strength?: number;
+            agility?: number;
+            dexterity?: number;
+            intelligence?: number;
+            endurance?: number;
+        };
     };
     rewards: {
         experience: number;
         reputation?: number;
+        money?: number;
         unlocksRank?: string;
         unlocksStatus?: string;
+        grantsAbility?: string;
+        replacesAbility?: string;
     };
     category: 'abipolitseinik' | 'sisekaitseakadeemia' | 'basic' | 'advanced' | 'specialist';
 }
@@ -160,6 +171,7 @@ export interface LeaderboardEntry {
     level: number;
     experience: number;
     reputation: number;
+    money: number;
     rank: string | null;
     badgeNumber: string | null;
     isEmployed: boolean;
@@ -171,4 +183,4 @@ export interface LeaderboardEntry {
     totalWorkedHours: number;
 }
 
-export type LeaderboardSortBy = 'level' | 'reputation' | 'strength' | 'agility' | 'dexterity' | 'intelligence' | 'endurance' | 'cases' | 'arrests' | 'totalWorkedHours';
+export type LeaderboardSortBy = 'level' | 'reputation' | 'money' | 'strength' | 'agility' | 'dexterity' | 'intelligence' | 'endurance' | 'cases' | 'arrests' | 'totalWorkedHours';

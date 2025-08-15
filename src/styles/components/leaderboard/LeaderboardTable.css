@@ -178,3 +178,21 @@
         font-size: 1rem;
     }
 }
+
+.money-column {
+    text-align: center !important;
+    min-width: 100px;
+    color: #4caf50;  /* Green color for money */
+    font-weight: 600;
+}
+
+/* Mobile responsiveness - hide money on very small screens if needed */
+@media (max-width: 480px) {
+    .money-column:not(.sorted-column) {
+        display: none;
+    }
+
+    .leaderboard-table th.money-column:not(.sorted-column) {
+        display: none;
+    }
+}

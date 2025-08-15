@@ -16,29 +16,21 @@ export const getLeaderboard = async (
     limitCount: number = 50
 ): Promise<LeaderboardEntry[]> => {
     try {
-        // First, let's get all player stats without complex ordering
-        // We'll sort in memory to avoid Firestore index issues
         const statsQuery = query(
             collection(firestore, 'playerStats'),
             limit(limitCount)
         );
 
         const querySnapshot = await getDocs(statsQuery);
-        console.log('Found players:', querySnapshot.size); // Debug log
-
         const leaderboard: LeaderboardEntry[] = [];
 
-        // Process each player
         for (const statsDoc of querySnapshot.docs) {
             const playerData = statsDoc.data();
-            console.log('Processing player:', statsDoc.id, playerData); // Debug log
 
-            // Only include players who have completed training
             if (!playerData.hasCompletedTraining) {
                 continue;
             }
 
-            // Get username from users collection
             let username = 'Tundmatu';
             try {
                 const userDoc = await getDoc(doc(firestore, 'users', statsDoc.id));
@@ -55,6 +47,7 @@ export const getLeaderboard = async (
                 level: playerData.level || 1,
                 experience: playerData.experience || 0,
                 reputation: playerData.reputation || 0,
+                money: playerData.money || 0,  // ADD THIS
                 rank: playerData.rank || null,
                 badgeNumber: playerData.badgeNumber || null,
                 isEmployed: playerData.isEmployed || false,
@@ -71,16 +64,20 @@ export const getLeaderboard = async (
         leaderboard.sort((a, b) => {
             switch (sortBy) {
                 case 'level':
-                    // Sort by level first, then by reputation
                     if (b.level !== a.level) {
                         return b.level - a.level;
                     }
                     return b.reputation - a.reputation;
 
                 case 'reputation':
-                    // Sort by reputation first, then by level
                     if (b.reputation !== a.reputation) {
                         return b.reputation - a.reputation;
+                    }
+                    return b.level - a.level;
+
+                case 'money':  // ADD THIS CASE
+                    if (b.money !== a.money) {
+                        return b.money - a.money;
                     }
                     return b.level - a.level;
 
@@ -113,7 +110,6 @@ export const getLeaderboard = async (
             }
         });
 
-        console.log('Final leaderboard:', leaderboard); // Debug log
         return leaderboard;
     } catch (error) {
         console.error('Error fetching leaderboard:', error);
@@ -155,14 +151,16 @@ export const getAllPlayersLeaderboard = async (
                 level: playerData.level || 1,
                 experience: playerData.experience || 0,
                 reputation: playerData.reputation || 0,
+                money: playerData.money || 0,
                 rank: playerData.rank || null,
                 badgeNumber: playerData.badgeNumber || null,
                 isEmployed: playerData.isEmployed || false,
                 hasCompletedTraining: playerData.hasCompletedTraining || false,
+                completedCourses: playerData.completedCourses || [],
                 attributes: playerData.attributes,
                 casesCompleted: playerData.casesCompleted || 0,
                 criminalsArrested: playerData.criminalsArrested || 0,
-                totalWorkedHours: playerData.totalWorkedHours || 0,
+                totalWorkedHours: playerData.totalWorkedHours || 0
             });
         }
 

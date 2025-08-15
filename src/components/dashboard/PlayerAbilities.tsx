@@ -1,7 +1,6 @@
-// src/components/dashboard/PlayerAbilities.tsx
 import React from 'react';
 import { PlayerStats } from '../../types';
-import { getAbilitiesByCompletedCourses } from '../../data/abilities';
+import { getActiveAbilities } from '../../data/abilities';
 import '../../styles/components/PlayerAbilities.css';
 
 interface PlayerAbilitiesProps {
@@ -9,7 +8,8 @@ interface PlayerAbilitiesProps {
 }
 
 export const PlayerAbilities: React.FC<PlayerAbilitiesProps> = ({ stats }) => {
-    const abilities = getAbilitiesByCompletedCourses(stats.completedCourses || []);
+    // Use the new getActiveAbilities function instead
+    const abilities = getActiveAbilities(stats.completedCourses || []);
 
     if (!stats.hasCompletedTraining) {
         return null;

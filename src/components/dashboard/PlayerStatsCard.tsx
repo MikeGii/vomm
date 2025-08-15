@@ -81,6 +81,11 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                     <span className="stat-label">Maine</span>
                     <span className="stat-value">{stats.reputation}</span>
                 </div>
+
+                <div className="stat-item">
+                    <span className="stat-label">Raha</span>
+                    <span className="stat-value">{stats.money || 0} €</span>
+                </div>
             </div>
 
             {stats.isEmployed && (

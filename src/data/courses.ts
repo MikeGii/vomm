@@ -86,6 +86,67 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
             unlocksStatus: 'Kadett'
         },
         category: 'sisekaitseakadeemia'
+    },
+    {
+        id: 'law_studies_curriculum',
+        name: 'Õigusteaduste õppekava',
+        description: 'Põhjalik õigusteaduse kursus, mis hõlmab kriminaalõigust, karistusseadustikku ja menetlusõigust.',
+        duration: 7200, // 2 hours
+        requirements: {
+            completedCourses: ['sisekaitseakadeemia_entrance'],
+            totalWorkedHours: 20,
+            attributes: {
+                intelligence: 10
+            }
+        },
+        rewards: {
+            experience: 300,
+            reputation: 50,
+            money: 250
+        },
+        category: 'sisekaitseakadeemia'
+    },
+    {
+        id: 'physical_preparation',
+        name: 'Füüsilised ettevalmistused',
+        description: 'Intensiivne füüsilise ettevalmistuse programm, mis arendab jõudu, vastupidavust ja taktilist valmisolekut.',
+        duration: 7200, // 2 hours
+        requirements: {
+            completedCourses: ['sisekaitseakadeemia_entrance'],
+            totalWorkedHours: 20,
+            attributes: {
+                strength: 10,
+                endurance: 5
+            }
+        },
+        rewards: {
+            experience: 400,
+            reputation: 50,
+            money: 250
+        },
+        category: 'sisekaitseakadeemia'
+    },
+    {
+        id: 'firearm_handling_glock',
+        name: 'Tulirelva käsitsemine - Glock',
+        description: 'Spetsialiseeritud koolitus Glock teenistusrelva käsitsemiseks. Täiustab lasketehnikat ja taktilist relvakasutust.',
+        duration: 7200, // 2 hours
+        requirements: {
+            completedCourses: ['sisekaitseakadeemia_entrance'],
+            totalWorkedHours: 20,
+            attributes: {
+                dexterity: 5,
+                agility: 5
+            }
+        },
+        rewards: {
+            experience: 300,
+            reputation: 50,
+            money: 250,
+            grantsAbility: 'firearm_carry_enhanced',
+            replacesAbility: 'firearm_carry_abipolitseinik'
+        },
+        category: 'sisekaitseakadeemia'
     }
 ];
 
