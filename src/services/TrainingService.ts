@@ -2,7 +2,7 @@
 import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats, PlayerAttributes, AttributeData, TrainingData } from '../types';
-import { calculatePlayerHealth } from "./PlayerService";
+import {calculateLevelFromExp, calculatePlayerHealth} from "./PlayerService";
 
 // Calculate experience needed for next attribute level
 export const calculateExpForNextLevel = (currentLevel: number): number => {
@@ -165,7 +165,7 @@ export const performTraining = async (
 
     // Update player main experience and level
     const newPlayerExp = stats.experience + rewards.playerExp;
-    const newPlayerLevel = Math.floor(newPlayerExp / 100) + 1;
+    const newPlayerLevel = calculateLevelFromExp(newPlayerExp);
 
     // Update training data
     const updatedTrainingData: TrainingData = {

@@ -10,6 +10,7 @@ import {
 import { firestore } from '../config/firebase';
 import { Course, ActiveCourse, PlayerStats } from '../types';
 import { ALL_COURSES, getCourseById } from '../data/courses';
+import {calculateLevelFromExp} from "./PlayerService";
 
 // Get courses available for player
 export const getAvailableCourses = (playerStats: PlayerStats): Course[] => {
@@ -118,7 +119,7 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
 
         // Calculate new level if experience increases
         const newExperience = playerStats.experience + course.rewards.experience;
-        const newLevel = Math.floor(newExperience / 100) + 1;
+        const newLevel = calculateLevelFromExp(newExperience);
 
         // Update player stats with rewards
         const updates: any = {

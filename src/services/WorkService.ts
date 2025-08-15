@@ -16,6 +16,7 @@ import {
 import { firestore } from '../config/firebase';
 import {PlayerStats, ActiveWork, WorkHistoryEntry, TrainingData} from '../types';
 import { getWorkActivityById, calculateWorkRewards } from '../data/workActivities';
+import {calculateLevelFromExp} from "./PlayerService";
 
 // Start a work session
 export const startWork = async (
@@ -137,7 +138,7 @@ export const checkWorkCompletion = async (userId: string): Promise<boolean> => {
 
         // Update player stats
         const newExperience = stats.experience + stats.activeWork.expectedExp;
-        const newLevel = Math.floor(newExperience / 100) + 1;
+        const newLevel = calculateLevelFromExp(newExperience);
 
         // Since minimum work is 1 hour, training clicks should reset to full 50
         const normalTrainingClicks = 50;
