@@ -57,10 +57,10 @@ const TrainingPage: React.FC = () => {
                 const activities = getAvailableActivities(stats.level);
                 setAvailableActivities(activities);
 
-                // Check if tutorial should be shown (steps 11-14)
+                // Check if tutorial should be shown (steps 11-15)
                 if (!stats.tutorialProgress.isCompleted &&
                     stats.tutorialProgress.currentStep >= 11 &&
-                    stats.tutorialProgress.currentStep <= 14) {
+                    stats.tutorialProgress.currentStep <= 15) {
                     setShowTutorial(true);
                 }
 

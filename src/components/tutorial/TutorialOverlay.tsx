@@ -355,9 +355,16 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             const handleTrainClick = async (e: Event) => {
                 const target = e.target as HTMLElement;
                 if (target.classList.contains('train-button')) {
-                    // Tutorial completion is handled in TrainingPage
+                    // Wait for tutorial progress update
+                    await updateTutorialProgress(userId, 15);
                     removeHighlight();
                     setIsVisible(false);
+
+                    // Set visibility for step 15 after a delay
+                    setTimeout(() => {
+                        setCurrentStep(15);
+                        setIsVisible(true);
+                    }, 100);
                 }
             };
 
@@ -366,16 +373,18 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                 document.removeEventListener('click', handleTrainClick, true);
             };
         }
-    }, [currentStep, isVisible, removeHighlight]);
+    }, [currentStep, isVisible, userId, removeHighlight]);
 
     useEffect(() => {
         if (currentStep === 15 && isVisible) {
             const handleBackClick = async (e: Event) => {
                 const target = e.target as HTMLElement;
                 if (target.classList.contains('back-to-dashboard') || target.closest('.back-to-dashboard')) {
+                    // Update to step 16 when clicking back to dashboard
                     await updateTutorialProgress(userId, 16);
                     removeHighlight();
                     setIsVisible(false);
+                    // The dashboard will show step 16 when it loads
                 }
             };
 
@@ -463,17 +472,20 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     // Initialize tutorial visibility
     useEffect(() => {
         if (!stats.tutorialProgress.isCompleted) {
+            const dbStep = stats.tutorialProgress.currentStep;
+
             if (page === 'dashboard') {
-                if (currentStep === 0) {
+                if (dbStep === 0 || currentStep === 0) {
                     setCurrentStep(1);
                     setIsVisible(true);
                     updateTutorialProgress(userId, 1);
-                } else if (currentStep > 0 && currentStep < 4) {
+                } else if ((dbStep > 0 && dbStep < 4) || (currentStep > 0 && currentStep < 4)) {
                     setIsVisible(true);
-                } else if (currentStep >= 9 && currentStep <= 10) {
+                } else if ((dbStep >= 9 && dbStep <= 10) || (currentStep >= 9 && currentStep <= 10)) {
                     setIsVisible(true);
-                } else if (currentStep === 16) {
-                    setIsVisible(true);
+                } else if (dbStep === 16 || currentStep === 16) {
+                    setCurrentStep(16);
+                    setIsVisible(true);  // Show immediately
                 }
             } else if (page === 'courses') {
                 if (currentStep >= 3 && currentStep <= 8) {
@@ -501,7 +513,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                 }
             }
         }
-    }, [stats.tutorialProgress.isCompleted, currentStep, userId, page]);
+    }, [stats.tutorialProgress.isCompleted, stats.tutorialProgress.currentStep, userId, page, currentStep]);
 
     // Check if course was just completed and update tutorial
     useEffect(() => {

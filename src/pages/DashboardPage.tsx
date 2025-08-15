@@ -28,7 +28,8 @@ function DashboardPage() {
                     // Check if tutorial should be shown - update condition to include steps 9-10
                     if (!stats.tutorialProgress.isCompleted &&
                         (stats.tutorialProgress.currentStep < 4 ||
-                            (stats.tutorialProgress.currentStep >= 9 && stats.tutorialProgress.currentStep <= 10))) {
+                            (stats.tutorialProgress.currentStep >= 9 && stats.tutorialProgress.currentStep <= 10) ||
+                            stats.tutorialProgress.currentStep === 16)) {  // Add this condition
                         setShowTutorial(true);
                     }
 
