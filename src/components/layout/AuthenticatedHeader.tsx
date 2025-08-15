@@ -2,13 +2,32 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { auth } from '../../config/firebase';
+import { auth, firestore } from '../../config/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { useAuth } from '../../contexts/AuthContext';
+import { PlayerStats } from '../../types';
 import '../../styles/layout/Header.css';
 
 export const AuthenticatedHeader: React.FC = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const navigate = useNavigate();
     const menuRef = useRef<HTMLDivElement>(null);
+    const { currentUser } = useAuth();
+
+    // Listen to player stats to determine what menu items to show
+    useEffect(() => {
+        if (!currentUser) return;
+
+        const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+        const unsubscribe = onSnapshot(statsRef, (doc) => {
+            if (doc.exists()) {
+                setPlayerStats(doc.data() as PlayerStats);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [currentUser]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -35,6 +54,12 @@ export const AuthenticatedHeader: React.FC = () => {
             console.error('Väljumine ebaõnnestus:', error);
         }
     };
+
+    // Determine if training should be shown in menu
+    const showTraining = playerStats && (
+        playerStats.tutorialProgress.isCompleted ||
+        playerStats.tutorialProgress.currentStep >= 10
+    );
 
     return (
         <header className="header">
@@ -73,6 +98,17 @@ export const AuthenticatedHeader: React.FC = () => {
                                 >
                                     Koolitused
                                 </button>
+                                {showTraining && (
+                                    <button
+                                        onClick={() => {
+                                            navigate('/training');
+                                            setIsMenuOpen(false);
+                                        }}
+                                        className="menu-item"
+                                    >
+                                        Treening
+                                    </button>
+                                )}
                                 <button onClick={handleLogout} className="menu-item">
                                     Logi välja
                                 </button>
