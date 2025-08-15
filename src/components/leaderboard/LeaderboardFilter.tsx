@@ -21,7 +21,8 @@ export const LeaderboardFilter: React.FC<LeaderboardFilterProps> = ({
         { value: 'intelligence', label: 'Intelligentsus' },
         { value: 'endurance', label: 'Vastupidavus' },
         { value: 'cases', label: 'Lahendatud juhtumid' },
-        { value: 'arrests', label: 'Vahistamised' }
+        { value: 'arrests', label: 'Vahistamised' },
+        { value: 'totalWorkedHours', label: 'Töötunnid' }
     ];
 
     return (

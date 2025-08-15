@@ -61,7 +61,8 @@ export const getLeaderboard = async (
                 hasCompletedTraining: playerData.hasCompletedTraining || false,
                 attributes: playerData.attributes,
                 casesCompleted: playerData.casesCompleted || 0,
-                criminalsArrested: playerData.criminalsArrested || 0
+                criminalsArrested: playerData.criminalsArrested || 0,
+                totalWorkedHours: playerData.totalWorkedHours || 0
             });
         }
 
@@ -102,6 +103,9 @@ export const getLeaderboard = async (
 
                 case 'arrests':
                     return b.criminalsArrested - a.criminalsArrested;
+
+                case 'totalWorkedHours':
+                    return b.totalWorkedHours - a.totalWorkedHours;
 
                 default:
                     return b.level - a.level;
@@ -156,7 +160,8 @@ export const getAllPlayersLeaderboard = async (
                 hasCompletedTraining: playerData.hasCompletedTraining || false,
                 attributes: playerData.attributes,
                 casesCompleted: playerData.casesCompleted || 0,
-                criminalsArrested: playerData.criminalsArrested || 0
+                criminalsArrested: playerData.criminalsArrested || 0,
+                totalWorkedHours: playerData.totalWorkedHours || 0,
             });
         }
 

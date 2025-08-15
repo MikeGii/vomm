@@ -20,6 +20,7 @@ import {
 } from '../services/WorkService';
 import { getAvailableWorkActivities } from '../data/workActivities';
 import { updateTutorialProgress } from '../services/PlayerService';
+import { WorkedHoursDisplay} from "../components/patrol/WorkedHoursDisplay";
 import '../styles/pages/Patrol.css';
 
 const PatrolPage: React.FC = () => {
@@ -242,6 +243,9 @@ const PatrolPage: React.FC = () => {
 
                 {/* Health display */}
                 <HealthDisplay health={playerStats.health} />
+
+                {/* Worked hours display */}
+                <WorkedHoursDisplay totalHours={playerStats.totalWorkedHours || 0} />
 
                 {/* Active work progress */}
                 {playerStats.activeWork && remainingTime > 0 && (
