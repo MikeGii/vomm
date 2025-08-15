@@ -47,6 +47,8 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                 return entry.casesCompleted;
             case 'arrests':
                 return entry.criminalsArrested;
+            case 'totalWorkedHours':
+                return entry.totalWorkedHours;
             case 'strength':
             case 'agility':
             case 'dexterity':
@@ -76,6 +78,8 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                 return 'Juhtumid';
             case 'arrests':
                 return 'Vahistamised';
+            case 'totalWorkedHours':
+                return 'Töötunnid';
             default:
                 return '';
         }

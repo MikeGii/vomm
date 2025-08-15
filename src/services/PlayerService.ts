@@ -102,6 +102,11 @@ export const initializePlayerStats = async (userId: string): Promise<PlayerStats
             );
         }
 
+        // Initialize totalWorkedHours if not present
+        if (stats.totalWorkedHours === undefined) {
+            stats.totalWorkedHours = 0;
+        }
+
         return stats;
     }
 
@@ -118,6 +123,7 @@ export const initializePlayerStats = async (userId: string): Promise<PlayerStats
         hasCompletedTraining: false,  // No training completed initially
         casesCompleted: 0,
         criminalsArrested: 0,
+        totalWorkedHours: 0,
         tutorialProgress: {
             isCompleted: false,
             currentStep: 0,

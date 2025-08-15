@@ -140,6 +140,9 @@ export const checkWorkCompletion = async (userId: string): Promise<boolean> => {
         const newExperience = stats.experience + stats.activeWork.expectedExp;
         const newLevel = calculateLevelFromExp(newExperience);
 
+        // Calculate new total worked hours
+        const newTotalWorkedHours = (stats.totalWorkedHours || 0) + stats.activeWork.totalHours;
+
         // Since minimum work is 1 hour, training clicks should reset to full 50
         const normalTrainingClicks = 50;
 
@@ -155,6 +158,7 @@ export const checkWorkCompletion = async (userId: string): Promise<boolean> => {
             activeWork: null,
             experience: newExperience,
             level: newLevel,
+            totalWorkedHours: newTotalWorkedHours,
             workHistory: [...(stats.workHistory || []), historyRef.id],
             trainingData: updatedTrainingData
         });

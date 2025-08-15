@@ -67,6 +67,7 @@ export interface PlayerStats {
     abilities?: string[];
     casesCompleted: number;
     criminalsArrested: number;
+    totalWorkedHours: number;
     tutorialProgress: TutorialProgress;
     activeCourse: ActiveCourse | null;
     completedCourses: string[];
@@ -164,6 +165,7 @@ export interface LeaderboardEntry {
     attributes?: PlayerAttributes;
     casesCompleted: number;
     criminalsArrested: number;
+    totalWorkedHours: number;
 }
 
-export type LeaderboardSortBy = 'level' | 'reputation' | 'strength' | 'agility' | 'dexterity' | 'intelligence' | 'endurance' | 'cases' | 'arrests';
+export type LeaderboardSortBy = 'level' | 'reputation' | 'strength' | 'agility' | 'dexterity' | 'intelligence' | 'endurance' | 'cases' | 'arrests' | 'totalWorkedHours';
