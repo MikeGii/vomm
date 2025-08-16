@@ -13,6 +13,7 @@ interface WorkActivitySelectorProps {
     onStartWork: () => void;
     isStarting: boolean;
     isTutorial?: boolean;
+    isKadett?: boolean;
 }
 
 export const WorkActivitySelector: React.FC<WorkActivitySelectorProps> = ({
@@ -23,7 +24,8 @@ export const WorkActivitySelector: React.FC<WorkActivitySelectorProps> = ({
                                                                               onHoursSelect,
                                                                               onStartWork,
                                                                               isStarting,
-                                                                              isTutorial = false
+                                                                              isTutorial = false,
+                                                                              isKadett = false
                                                                           }) => {
     const selectedActivityData = activities.find(a => a.id === selectedActivity);
     const expectedRewards = selectedActivityData
@@ -105,7 +107,7 @@ export const WorkActivitySelector: React.FC<WorkActivitySelectorProps> = ({
                         onClick={onStartWork}
                         disabled={isStarting || !selectedActivity}
                     >
-                        {isStarting ? 'Alustan...' : 'Alusta tööd'}
+                        {isStarting ? 'Alustan...' : isKadett ? 'Alusta tööampsu' : 'Alusta tööd'}
                     </button>
                 </div>
             )}
