@@ -79,7 +79,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
     const getExtraColumnHeader = (): string => {
         switch(sortBy) {
             case 'reputation':
-                return 'Reputatsioon';
+                return 'Maine';
             case 'money':
                 return 'Raha';
             case 'strength':
@@ -123,7 +123,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                     <th className="name-column">Nimi</th>
                     <th className="status-column">Staatus</th>
                     <th className="level-column">Tase</th>
-                    <th className="reputation-column">Reputatsioon</th>
+                    <th className="reputation-column">Maine</th>
                     <th className="money-column">Raha</th>
                     {showExtraColumn && sortBy !== 'money' && (
                         <th className="value-column">

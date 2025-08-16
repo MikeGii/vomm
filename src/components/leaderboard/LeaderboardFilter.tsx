@@ -13,8 +13,8 @@ export const LeaderboardFilter: React.FC<LeaderboardFilterProps> = ({
                                                                         onSortChange
                                                                     }) => {
     const sortOptions: { value: LeaderboardSortBy; label: string }[] = [
-        { value: 'level', label: 'Tase & Reputatsioon' },
-        { value: 'reputation', label: 'Reputatsioon' },
+        { value: 'level', label: 'Tase & Maine' },
+        { value: 'reputation', label: 'Maine' },
         { value: 'money', label: 'Raha' },  // ADD THIS
         { value: 'strength', label: 'Jõud' },
         { value: 'agility', label: 'Kiirus' },
