@@ -13,6 +13,30 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
     const expProgress = getExpProgress(stats.experience);
     const expPercentage = expProgress.percentage;
 
+    // Check if player is a Kadett (in academy)
+    const isKadett = stats.completedCourses?.includes('sisekaitseakadeemia_entrance');
+    // TODO: In future, check if graduated (when graduation course is implemented)
+    // const hasGraduated = stats.completedCourses?.includes('sisekaitseakadeemia_graduation');
+
+    // Determine what to show for location
+    const getLocationInfo = () => {
+        if (isKadett) {
+            // Kadett in academy
+            return {
+                icon: '🎓',
+                title: 'Akadeemia',
+                value: 'Sisekaitseakadeemia'
+            };
+        } else {
+            // Regular officer or abipolitseinik
+            return {
+                icon: '🏛️',
+                title: 'Prefektuur',
+                value: stats.prefecture || 'Määramata'
+            };
+        }
+    };
+
     const getHealthStatus = () => {
         if (!stats.health) return { text: '—', color: '' };
         const percentage = (stats.health.current / stats.health.max) * 100;
@@ -24,6 +48,7 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
     };
 
     const healthStatus = getHealthStatus();
+    const locationInfo = getLocationInfo();
 
     return (
         <div className="player-stats-card">
@@ -64,11 +89,11 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
 
             {/* Main Stats Grid */}
             <div className="stats-main-grid">
-                <div className="stat-card">
-                    <span className="stat-icon">🏛️</span>
+                <div className={`stat-card ${isKadett ? 'academy-highlight' : ''}`}>
+                    <span className="stat-icon">{locationInfo.icon}</span>
                     <div className="stat-content">
-                        <span className="stat-title">Prefektuur</span>
-                        <span className="stat-value">{stats.prefecture || 'Määramata'}</span>
+                        <span className="stat-title">{locationInfo.title}</span>
+                        <span className="stat-value">{locationInfo.value}</span>
                     </div>
                 </div>
 
@@ -76,7 +101,9 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                     <span className="stat-icon">🏢</span>
                     <div className="stat-content">
                         <span className="stat-title">Osakond</span>
-                        <span className="stat-value">{stats.department || 'Määramata'}</span>
+                        <span className="stat-value">
+                            {isKadett ? 'Politsei- ja Piirivalvekolledž' : (stats.department || 'Määramata')}
+                        </span>
                     </div>
                 </div>
 
@@ -127,6 +154,16 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                     <div>
                         <p className="status-title">Alusta karjääri</p>
                         <p className="status-text">Läbi abipolitseiniku baaskoolitus, et astuda politseiteenistusse!</p>
+                    </div>
+                </div>
+            )}
+
+            {isKadett && (
+                <div className="status-message academy">
+                    <span className="status-icon">🎓</span>
+                    <div>
+                        <p className="status-title">Sisekaitseakadeemia kadett</p>
+                        <p className="status-text">Õpid Sisekaitseakadeemias, et saada politseiametnikuks.</p>
                     </div>
                 </div>
             )}

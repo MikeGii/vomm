@@ -309,3 +309,13 @@
         transform: translateY(0);
     }
 }
+
+.stat-card.academy-highlight {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a2a3a 100%);
+    border-color: #4a90e2;
+}
+
+.status-message.academy {
+    background-color: rgba(33, 150, 243, 0.1);
+    border: 1px solid #2196f3;
+}
