@@ -122,3 +122,57 @@
 .menu-item:hover {
     background-color: #3a3a3a;
 }
+
+.header-stats {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.header-stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.header-stat-label {
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.header-stat-value {
+    font-size: 1rem;
+    color: #f0f0f0;
+    font-weight: 600;
+}
+
+.header-stat-value.money {
+    color: #4caf50;
+}
+
+/* Mobile responsiveness for header stats */
+@media (max-width: 1024px) {
+    .header-stats {
+        gap: 1rem;
+    }
+
+    .header-stat-item {
+        gap: 0.2rem;
+    }
+
+    .header-stat-label {
+        font-size: 0.7rem;
+    }
+
+    .header-stat-value {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-stats {
+        display: none; /* Hide on mobile to save space */
+    }
+}

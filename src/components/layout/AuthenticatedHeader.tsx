@@ -61,10 +61,38 @@ export const AuthenticatedHeader: React.FC = () => {
         playerStats.tutorialProgress.currentStep >= 10
     );
 
+    const getStatusText = (): string => {
+        if (!playerStats) return '—';
+        if (playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
+            return 'Kadett';
+        }
+        if (playerStats.hasCompletedTraining) {
+            return 'Abipolitseinik';
+        }
+        return 'Töötu';
+    };
+
     return (
         <header className="header">
             <div className="header-container">
-                <div className="header-left"></div>
+                <div className="header-left">
+                    {playerStats && (
+                        <div className="header-stats">
+                            <div className="header-stat-item">
+                                <span className="header-stat-label">Staatus</span>
+                                <span className="header-stat-value">{getStatusText()}</span>
+                            </div>
+                            <div className="header-stat-item">
+                                <span className="header-stat-label">Maine</span>
+                                <span className="header-stat-value">{playerStats.reputation}</span>
+                            </div>
+                            <div className="header-stat-item">
+                                <span className="header-stat-label">Raha</span>
+                                <span className="header-stat-value money">{playerStats.money || 0} €</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
                 <div className="header-center">
                     <h1 className="game-title">Võmm</h1>
                 </div>
