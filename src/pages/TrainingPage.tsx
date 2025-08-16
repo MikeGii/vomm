@@ -7,6 +7,7 @@ import { AttributesDisplay } from '../components/training/AttributesDisplay';
 import { TrainingCounter } from '../components/training/TrainingCounter';
 import { ActivitySelector } from '../components/training/ActivitySelector';
 import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
+import { TrainingMilestones} from "../components/training/TrainingMilestones";
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { PlayerStats, TrainingActivity } from '../types';
@@ -162,6 +163,11 @@ const TrainingPage: React.FC = () => {
                 {/* Attributes display */}
                 <AttributesDisplay
                     attributes={playerStats.attributes || initializeAttributes()}
+                />
+
+                {/* Training milestones - ADD THIS */}
+                <TrainingMilestones
+                    currentLevel={playerStats.level}
                 />
 
                 {/* Activity selector */}
