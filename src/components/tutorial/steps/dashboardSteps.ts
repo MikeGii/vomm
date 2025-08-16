@@ -4,7 +4,7 @@ import { TutorialStep } from '../types/tutorial.types';
 export const DASHBOARD_MAIN_STEPS: TutorialStep[] = [
     {
         step: 1,
-        targetElement: '.stats-card',
+        targetElement: '.player-stats-card',
         title: 'Sinu karakteri andmed',
         content: 'Siin näed oma karakteri peamisi andmeid nagu tase, ametikoht, auaste, töökoha osakond ja reputatsioon. Samuti näed lahendatud juhtumite statistikat ja ka kokku tabatud kurjategijaid.',
         position: 'bottom'
@@ -29,7 +29,7 @@ export const DASHBOARD_MAIN_STEPS: TutorialStep[] = [
 export const TRAINING_INTRODUCTION_STEPS: TutorialStep[] = [
     {
         step: 9,
-        targetElement: '.stats-card',
+        targetElement: '.player-stats-card',
         title: 'Õnnitleme!',
         content: 'Vägev, oled edukalt nüüd abipolitseinik ja saad alustada oma tegevusi. Esmalt peaksid end väheke treenima, et tulevikus tänavatel paremini hakkama saada ja selleks on sul nüüd võimalik kasutada enda prefektuuri treeningu võimalusi',
         position: 'bottom'
