@@ -1,7 +1,8 @@
 // src/data/workActivities.ts
 import { WorkActivity } from '../types';
 
-export const WORK_ACTIVITIES: WorkActivity[] = [
+// Regular patrol activities for Abipolitseinik and graduated officers
+const PATROL_ACTIVITIES: WorkActivity[] = [
     {
         id: 'patrol_third_member',
         name: 'Alusta patrulli kolmanda liikmena',
@@ -10,7 +11,8 @@ export const WORK_ACTIVITIES: WorkActivity[] = [
         requiredCourses: ['basic_police_training_abipolitseinik'],
         baseExpPerHour: 50,
         expGrowthRate: 0.15,
-        maxHours: 12
+        maxHours: 12,
+        allowedFor: ['abipolitseinik']
     },
     {
         id: 'patrol_second_member',
@@ -20,15 +22,85 @@ export const WORK_ACTIVITIES: WorkActivity[] = [
         requiredCourses: ['basic_police_training_abipolitseinik', 'firearm_training_abipolitseinik'],
         baseExpPerHour: 150,
         expGrowthRate: 0.10,
-        maxHours: 12
+        maxHours: 12,
+        allowedFor: ['abipolitseinik', 'politseiametnik']
     }
 ];
 
-// Helper functions
+// Academy student work activities
+const ACADEMY_ACTIVITIES: WorkActivity[] = [
+    {
+        id: 'academy_guard_duty',
+        name: 'Tööamps kolledži valvelauas',
+        description: 'Täidad valvuri kohustusi Sisekaitseakadeemia valvelauas. Õpid turvalisuse põhitõdesid ja suhtlemist külastajatega.',
+        minLevel: 20,
+        requiredCourses: ['sisekaitseakadeemia_entrance'],
+        baseExpPerHour: 200,
+        expGrowthRate: 0.1,
+        maxHours: 8,
+        allowedFor: ['kadett']
+    },
+    {
+        id: 'academy_police_practice',
+        name: 'Praktika politseiteenistuses',
+        description: 'Läbid praktikat päris politseijaoskonnas kogenud ametnike juhendamisel. Saad väärtuslikke kogemusi reaalsetest olukordadest.',
+        minLevel: 25,
+        requiredCourses: ['sisekaitseakadeemia_entrance'],
+        baseExpPerHour: 250,
+        expGrowthRate: 0.1,
+        maxHours: 12,
+        allowedFor: ['kadett']
+    }
+];
+
+// Export combined work activities
+export const WORK_ACTIVITIES: WorkActivity[] = [
+    ...PATROL_ACTIVITIES,
+    ...ACADEMY_ACTIVITIES
+];
+
+// Helper function to determine player status
+type PlayerStatus = 'kadett' | 'abipolitseinik' | 'politseiametnik' | 'unknown';
+
+const getPlayerStatus = (
+    completedCourses: string[],
+    rank: string | null
+): PlayerStatus => {
+    // Check if player is a Kadett (in academy but not graduated)
+    if (completedCourses.includes('sisekaitseakadeemia_entrance')) {
+        // TODO: When graduation course is implemented, check for it here
+        // if (completedCourses.includes('sisekaitseakadeemia_graduation')) {
+        //     return 'politseiametnik';
+        // }
+        return 'kadett';
+    }
+
+    // Check if player is an Abipolitseinik
+    if (completedCourses.includes('basic_police_training_abipolitseinik') && !rank) {
+        return 'abipolitseinik';
+    }
+
+    // Check if player has a rank (graduated officer)
+    if (rank) {
+        return 'politseiametnik';
+    }
+
+    return 'unknown';
+};
+
+// Updated helper function to get available work activities
 export const getAvailableWorkActivities = (
     playerLevel: number,
-    completedCourses: string[]
+    completedCourses: string[],
+    rank: string | null = null
 ): WorkActivity[] => {
+    const playerStatus = getPlayerStatus(completedCourses, rank);
+
+    // If player status is unknown, return empty array
+    if (playerStatus === 'unknown') {
+        return [];
+    }
+
     return WORK_ACTIVITIES.filter(activity => {
         // Check level requirement
         if (activity.minLevel > playerLevel) return false;
@@ -39,6 +111,14 @@ export const getAvailableWorkActivities = (
                 courseId => completedCourses.includes(courseId)
             );
             if (!hasAllCourses) return false;
+        }
+
+        // Check if player status allows this activity
+        if (activity.allowedFor) {
+            // Cast to exclude 'unknown' since we handled it above
+            if (!activity.allowedFor.includes(playerStatus as Exclude<PlayerStatus, 'unknown'>)) {
+                return false;
+            }
         }
 
         return true;

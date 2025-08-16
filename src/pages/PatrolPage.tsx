@@ -39,6 +39,9 @@ const PatrolPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [showTutorial, setShowTutorial] = useState(false);
     const completionAlertShownRef = useRef<boolean>(false);
+    const isKadett = playerStats?.completedCourses?.includes('sisekaitseakadeemia_entrance') || false;
+
+
 
     // Load work history
     const loadWorkHistory = useCallback(async () => {
@@ -48,12 +51,31 @@ const PatrolPage: React.FC = () => {
         }
     }, [currentUser]);
 
+    const getPageTitle = (): string => {
+        if (!playerStats) return 'Patrullteenistus';
+
+        if (playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
+            return 'Praktika ja tööamps';
+        }
+        return 'Patrullteenistus';
+    };
+
+    const getWorkAreaLabel = (): string => {
+        if (!playerStats) return 'tööpiirkond';
+
+        if (playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
+            return 'praktikakoht';
+        }
+        return 'tööpiirkond';
+    };
+
     // Process stats update
     const processStatsUpdate = useCallback(async (stats: PlayerStats) => {
         // Get available work activities
         const activities = getAvailableWorkActivities(
             stats.level,
-            stats.completedCourses || []
+            stats.completedCourses || [],
+            stats.rank
         );
         setAvailableActivities(activities);
 
@@ -224,7 +246,7 @@ const PatrolPage: React.FC = () => {
         );
     }
 
-    const canWork = playerStats.health && playerStats.health.current >= 50 &&
+    const canWork = playerStats && playerStats.health && playerStats.health.current >= 50 &&
         !playerStats.activeCourse &&
         playerStats.hasCompletedTraining;
 
@@ -239,7 +261,7 @@ const PatrolPage: React.FC = () => {
                     ← Tagasi töölauale
                 </button>
 
-                <h1 className="patrol-title">Patrullteenistus</h1>
+                <h1 className="patrol-title">{getPageTitle()}</h1>
 
                 {/* Health display */}
                 <HealthDisplay health={playerStats.health} />
@@ -264,6 +286,7 @@ const PatrolPage: React.FC = () => {
                             currentDepartment={playerStats.department}
                             selectedDepartment={selectedDepartment}
                             onDepartmentSelect={setSelectedDepartment}
+                            isKadett={isKadett}
                         />
 
                         <WorkActivitySelector
@@ -276,6 +299,7 @@ const PatrolPage: React.FC = () => {
                             isStarting={isStartingWork}
                             isTutorial={!playerStats.tutorialProgress.isCompleted &&
                                 playerStats.tutorialProgress.currentStep === 21}
+                            isKadett={isKadett}
                         />
                     </div>
                 )}
