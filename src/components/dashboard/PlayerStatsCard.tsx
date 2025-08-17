@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { PlayerStats } from '../../types';
 import { getExpProgress } from '../../services/PlayerService';
 import { Timestamp } from 'firebase/firestore';
+import {calculateEquipmentBonuses} from "../../services/EquipmentBonusService";
 import '../../styles/components/PlayerStatsCard.css';
 
 interface PlayerStatsCardProps {
@@ -82,6 +83,9 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
             };
         }
     };
+
+    const equipmentBonuses = stats.equipment ? calculateEquipmentBonuses(stats.equipment) : null;
+    const hasEquipmentBonuses = equipmentBonuses && Object.values(equipmentBonuses).some(v => v > 0);
 
     const getHealthStatus = () => {
         if (!stats.health) return { text: '—', color: '', showRecovery: false };
@@ -194,6 +198,65 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                         <div className="achievement-stat">
                             <span className="achievement-number">{stats.completedCourses?.length || 0}</span>
                             <span className="achievement-label">Läbitud koolitust</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Attributes Section with Equipment Bonuses */}
+            {stats.attributes && (
+                <div className="attributes-section">
+                    <h3 className="section-title">Omadused</h3>
+                    <div className="attributes-compact-grid">
+                        <div className="attribute-compact">
+                            <span className="attribute-emoji">💪</span>
+                            <span className="attribute-name">Jõud</span>
+                            <span className="attribute-value">
+                    {stats.attributes.strength.level}
+                                {equipmentBonuses?.strength ? (
+                                    <span className="equipment-bonus"> +{equipmentBonuses.strength}</span>
+                                ) : null}
+                </span>
+                        </div>
+                        <div className="attribute-compact">
+                            <span className="attribute-emoji">🏃</span>
+                            <span className="attribute-name">Kiirus</span>
+                            <span className="attribute-value">
+                    {stats.attributes.agility.level}
+                                {equipmentBonuses?.agility ? (
+                                    <span className="equipment-bonus"> +{equipmentBonuses.agility}</span>
+                                ) : null}
+                </span>
+                        </div>
+                        <div className="attribute-compact">
+                            <span className="attribute-emoji">🎯</span>
+                            <span className="attribute-name">Osavus</span>
+                            <span className="attribute-value">
+                    {stats.attributes.dexterity.level}
+                                {equipmentBonuses?.dexterity ? (
+                                    <span className="equipment-bonus"> +{equipmentBonuses.dexterity}</span>
+                                ) : null}
+                </span>
+                        </div>
+                        <div className="attribute-compact">
+                            <span className="attribute-emoji">🧠</span>
+                            <span className="attribute-name">Intel.</span>
+                            <span className="attribute-value">
+                    {stats.attributes.intelligence.level}
+                                {equipmentBonuses?.intelligence ? (
+                                    <span className="equipment-bonus"> +{equipmentBonuses.intelligence}</span>
+                                ) : null}
+                </span>
+                        </div>
+                        <div className="attribute-compact">
+                            <span className="attribute-emoji">🛡️</span>
+                            <span className="attribute-name">Vastup.</span>
+                            <span className="attribute-value">
+                    {stats.attributes.endurance.level}
+                                {equipmentBonuses?.endurance ? (
+                                    <span className="equipment-bonus"> +{equipmentBonuses.endurance}</span>
+                                ) : null}
+                </span>
                         </div>
                     </div>
                 </div>

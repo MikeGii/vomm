@@ -1,13 +1,17 @@
 // src/data/equipment.ts
 import { EquipmentItem } from '../types/equipment';
 
-// Abipolitseiniku uniform set - simplified without icons
+// Abipolitseiniku uniform set - basic starter equipment
 export const ABIPOLITSEINIK_UNIFORM: EquipmentItem[] = [
     {
         id: 'abipolitseinik_cap',
         name: 'Abipolitseiniku müts',
         description: 'Ametlik abipolitseiniku müts märgiga',
         slot: 'head',
+        shopPrice: 50,
+        stats: {
+            intelligence: 1
+        },
         rarity: 'common',
         equipped: false
     },
@@ -16,6 +20,10 @@ export const ABIPOLITSEINIK_UNIFORM: EquipmentItem[] = [
         name: 'Abipolitseiniku jope',
         description: 'Sinine abipolitseiniku vormijope helkuritega',
         slot: 'upperBody',
+        shopPrice: 150,
+        stats: {
+            strength: 1
+        },
         rarity: 'common',
         equipped: false
     },
@@ -24,6 +32,10 @@ export const ABIPOLITSEINIK_UNIFORM: EquipmentItem[] = [
         name: 'Abipolitseiniku püksid',
         description: 'Tumedad vormipüksid taskutega',
         slot: 'lowerBody',
+        shopPrice: 100,
+        stats: {
+            agility: 1
+        },
         rarity: 'common',
         equipped: false
     },
@@ -32,6 +44,10 @@ export const ABIPOLITSEINIK_UNIFORM: EquipmentItem[] = [
         name: 'Abipolitseiniku kindad',
         description: 'Mustad taktikalised kindad',
         slot: 'hands',
+        shopPrice: 40,
+        stats: {
+            dexterity: 1
+        },
         rarity: 'common',
         equipped: false
     },
@@ -40,6 +56,10 @@ export const ABIPOLITSEINIK_UNIFORM: EquipmentItem[] = [
         name: 'Abipolitseiniku vöö 2 salvetaskuga',
         description: 'Taktiline vöö kahe salvetaskuga ja lisavarustuse hoidikutega',
         slot: 'belt',
+        shopPrice: 80,
+        stats: {
+            dexterity: 1
+        },
         rarity: 'common',
         equipped: false
     },
@@ -48,6 +68,11 @@ export const ABIPOLITSEINIK_UNIFORM: EquipmentItem[] = [
         name: 'Tavaline relvakabuur',
         description: 'Standardne politsei relvakabuur',
         slot: 'weaponHolster',
+        shopPrice: 60,
+        stats: {
+            dexterity: 1,
+            agility: 1
+        },
         rarity: 'common',
         equipped: false
     },
@@ -56,18 +81,26 @@ export const ABIPOLITSEINIK_UNIFORM: EquipmentItem[] = [
         name: 'Abipolitseiniku saapad',
         description: 'Mustad taktikalised saapad',
         slot: 'shoes',
+        shopPrice: 90,
+        stats: {
+            agility: 2
+        },
         rarity: 'common',
         equipped: false
     }
 ];
 
-// Kadett (Sisekaitseakadeemia) uniform set
+// Kadett (Sisekaitseakadeemia) uniform set - better equipment
 export const POLITSEI_UNIFORM: EquipmentItem[] = [
     {
         id: 'kadett_cap',
         name: 'Politseivormi müts',
         description: 'Tumesinine politseivormi müts',
         slot: 'head',
+        shopPrice: 120,
+        stats: {
+            intelligence: 2
+        },
         rarity: 'uncommon',
         equipped: false
     },
@@ -76,6 +109,10 @@ export const POLITSEI_UNIFORM: EquipmentItem[] = [
         name: 'Politseivormi jope',
         description: 'Tumesinine Sisekaitseakadeemia vormipintsak',
         slot: 'upperBody',
+        shopPrice: 300,
+        stats: {
+            strength: 2
+        },
         rarity: 'uncommon',
         equipped: false
     },
@@ -84,6 +121,10 @@ export const POLITSEI_UNIFORM: EquipmentItem[] = [
         name: 'Politseivormi püksid',
         description: 'Tumesinised politsei vormipüksid',
         slot: 'lowerBody',
+        shopPrice: 200,
+        stats: {
+            agility: 2
+        },
         rarity: 'uncommon',
         equipped: false
     },
@@ -92,6 +133,10 @@ export const POLITSEI_UNIFORM: EquipmentItem[] = [
         name: 'Taktikalised kindad',
         description: 'Taktikalised torkekindlad kindad',
         slot: 'hands',
+        shopPrice: 80,
+        stats: {
+            dexterity: 2
+        },
         rarity: 'uncommon',
         equipped: false
     },
@@ -100,6 +145,10 @@ export const POLITSEI_UNIFORM: EquipmentItem[] = [
         name: 'Taktikaline vöö 2 salvetaskuga',
         description: 'Must kiirkinnitusega vöö',
         slot: 'belt',
+        shopPrice: 150,
+        stats: {
+            dexterity: 2
+        },
         rarity: 'uncommon',
         equipped: false
     },
@@ -108,6 +157,11 @@ export const POLITSEI_UNIFORM: EquipmentItem[] = [
         name: 'Glocki relvakabuur',
         description: 'Õppevahendite kabuur',
         slot: 'weaponHolster',
+        shopPrice: 120,
+        stats: {
+            dexterity: 2,
+            agility: 2
+        },
         rarity: 'uncommon',
         equipped: false
     },
@@ -116,6 +170,11 @@ export const POLITSEI_UNIFORM: EquipmentItem[] = [
         name: 'Politseivormi saapad',
         description: 'Mustad läikivad vormisaapad',
         slot: 'shoes',
+        shopPrice: 180,
+        stats: {
+            agility: 2,
+            endurance: 1
+        },
         rarity: 'uncommon',
         equipped: false
     }
@@ -135,6 +194,5 @@ export const getEquipmentSet = (setId: string): EquipmentItem[] => {
 // All available equipment items
 export const ALL_EQUIPMENT: EquipmentItem[] = [
     ...ABIPOLITSEINIK_UNIFORM,
-    ...POLITSEI_UNIFORM,
-    // Future equipment sets will be added here
+    ...POLITSEI_UNIFORM
 ];

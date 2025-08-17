@@ -71,3 +71,53 @@
     font-size: 0.75rem;
     color: #888;
 }
+
+.base-level {
+    color: #f0f0f0;
+    font-weight: 600;
+}
+
+.equipment-bonus {
+    color: #4a9e4a;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-left: 0.25rem;
+    text-shadow: 0 0 10px rgba(74, 158, 74, 0.5);
+}
+
+.total-level {
+    color: #4a90e2;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-left: 0.25rem;
+}
+
+.equipment-summary {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #1a1a1a;
+    border: 2px solid #4a9e4a;
+    border-radius: 8px;
+}
+
+.equipment-summary h3 {
+    color: #4a9e4a;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+}
+
+.bonus-summary {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.bonus-pill {
+    background: #2a3a2a;
+    border: 1px solid #4a9e4a;
+    color: #4a9e4a;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}

@@ -9,6 +9,7 @@ import { checkCourseCompletion } from '../../services/CourseService';
 import { checkWorkCompletion } from '../../services/WorkService';
 import { Timestamp } from 'firebase/firestore';
 import { createActiveEvent, getPendingEvent } from '../../services/EventService';
+import { migrateUserEquipment, migrateAllUsers } from '../../services/EquipmentMigration';
 import { ALL_EVENTS } from '../../data/events';
 import '../../styles/components/dev/DebugMenu.css';
 
@@ -486,6 +487,53 @@ export const DebugMenu: React.FC = () => {
         }
     };
 
+    const migrateEquipment = async () => {
+        if (!currentUser) return;
+
+        const choice = window.confirm(
+            'Choose migration type:\n\n' +
+            'OK = Migrate only your account\n' +
+            'Cancel = Migrate ALL users (admin only)'
+        );
+
+        setIsProcessing(true);
+        try {
+            if (choice) {
+                // Migrate current user only
+                const result = await migrateUserEquipment(currentUser.uid);
+                if (result.success) {
+                    alert(`✅ ${result.message}`);
+                    if (!result.alreadyMigrated) {
+                        window.location.reload();
+                    }
+                } else {
+                    alert(`❌ Migration failed: ${result.message}`);
+                }
+            } else {
+                // Migrate all users
+                if (!window.confirm('⚠️ This will migrate ALL users in the database. Continue?')) {
+                    setIsProcessing(false);
+                    return;
+                }
+
+                const results = await migrateAllUsers();
+                alert(`Migration complete!\n\n` +
+                    `Total users: ${results.total}\n` +
+                    `Successfully migrated: ${results.migrated}\n` +
+                    `Already migrated: ${results.alreadyMigrated}\n` +
+                    `Failed: ${results.failed}\n\n` +
+                    `Check console for details.`
+                );
+                console.log('Migration results:', results);
+            }
+        } catch (error) {
+            console.error('Migration error:', error);
+            alert('Migration failed! Check console for details.');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     return (
         <>
             {/* Floating debug button */}
@@ -616,6 +664,21 @@ export const DebugMenu: React.FC = () => {
                             >
                                 ⏱️ Töö lõppeb 20s pärast
                             </button>
+                        </div>
+
+                        <div className="debug-section">
+                            <h4>Equipment Migration</h4>
+                            <button
+                                className="debug-btn"
+                                onClick={migrateEquipment}
+                                disabled={isProcessing}
+                                title="Add stats to existing equipment"
+                            >
+                                🔧 Migrate Equipment Stats
+                            </button>
+                            <small style={{ display: 'block', marginTop: '5px', color: '#888' }}>
+                                Adds missing stats, prices, and grants missing equipment from completed courses
+                            </small>
                         </div>
 
                         <div className="debug-section">

@@ -1,6 +1,7 @@
 // src/components/courses/CourseCard.tsx
 import React from 'react';
 import { Course, PlayerAttributes, PlayerStats } from '../../types';
+import { calculateEquipmentBonuses} from "../../services/EquipmentBonusService";
 import '../../styles/components/courses/CourseCard.css';
 import {getCourseById} from "../../data/courses";
 
@@ -58,6 +59,8 @@ export const CourseCard: React.FC<CourseCardProps> = ({
     };
 
     const prerequisiteDetails = getPrerequisiteDetails();
+    const equipmentBonuses = playerStats?.equipment ? calculateEquipmentBonuses(playerStats.equipment) : null;
+
 
     // Add requirement checking
     const meetsLevelRequirement = !course.requirements.level ||
@@ -79,7 +82,11 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             if (!playerStats.attributes) return false;
 
             const playerAttribute = playerStats.attributes[attr as keyof PlayerAttributes];
-            return playerAttribute && playerAttribute.level >= requiredLevel;
+            const baseLevel = playerAttribute ? playerAttribute.level : 0;
+            const equipmentBonus = equipmentBonuses ? equipmentBonuses[attr as keyof typeof equipmentBonuses] || 0 : 0;
+            const effectiveLevel = baseLevel + equipmentBonus;
+
+            return effectiveLevel >= requiredLevel;
         }));
 
     const meetsAllRequirements = meetsLevelRequirement &&
@@ -236,12 +243,16 @@ export const CourseCard: React.FC<CourseCardProps> = ({
 
                         {course.requirements.attributes && Object.entries(course.requirements.attributes).map(([attr, requiredLevel]) => {
                             const playerLevel = playerStats?.attributes?.[attr as keyof PlayerAttributes]?.level || 0;
-                            const meetsReq = playerLevel >= requiredLevel;
+                            const equipmentBonus = equipmentBonuses ? equipmentBonuses[attr as keyof typeof equipmentBonuses] || 0 : 0;
+                            const effectiveLevel = playerLevel + equipmentBonus;
+                            const meetsReq = effectiveLevel >= requiredLevel;
 
                             return (
                                 <li key={attr} className={meetsReq ? 'requirement-met' : 'requirement-not-met'}>
                                     {getAttributeName(attr)}: {requiredLevel}
-                                    {playerStats && !meetsReq && ` (Sul on: ${playerLevel})`}
+                                    {playerStats && !meetsReq && (
+                                        ` (Sul on: ${playerLevel}${equipmentBonus > 0 ? `+${equipmentBonus}` : ''})`
+                                    )}
                                 </li>
                             );
                         })}
@@ -349,12 +360,16 @@ export const CourseCard: React.FC<CourseCardProps> = ({
 
                     {course.requirements.attributes && Object.entries(course.requirements.attributes).map(([attr, requiredLevel]) => {
                         const playerLevel = playerStats?.attributes?.[attr as keyof PlayerAttributes]?.level || 0;
-                        const meetsReq = playerLevel >= requiredLevel;
+                        const equipmentBonus = equipmentBonuses ? equipmentBonuses[attr as keyof typeof equipmentBonuses] || 0 : 0;
+                        const effectiveLevel = playerLevel + equipmentBonus;
+                        const meetsReq = effectiveLevel >= requiredLevel;
 
                         return (
                             <li key={attr} className={meetsReq ? 'requirement-met' : 'requirement-not-met'}>
                                 {getAttributeName(attr)}: {requiredLevel}
-                                {playerStats && !meetsReq && ` (Sul on: ${playerLevel})`}
+                                {playerStats && !meetsReq && (
+                                    ` (Sul on: ${playerLevel}${equipmentBonus > 0 ? `+${equipmentBonus}` : ''})`
+                                )}
                             </li>
                         );
                     })}

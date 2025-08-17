@@ -27,9 +27,17 @@ export const equipItem = async (
             name: item.name,
             description: item.description,
             slot: slot,
+            shopPrice: item.shopPrice,
+            stats: item.stats,
             rarity: item.rarity,
             equipped: true
         };
+
+        // Only add marketPrice if the item has one (player-listed price)
+        if (item.marketPrice !== undefined) {
+            equipmentItem.marketPrice = item.marketPrice;
+        }
+
 
         // Update inventory - mark item as equipped
         let updatedInventory = currentInventory.map((invItem: InventoryItem) =>
@@ -87,10 +95,18 @@ export const unequipItem = async (
                 description: item.description,
                 category: 'equipment',
                 quantity: 1,
+                shopPrice: item.shopPrice,
+                stats: item.stats,
                 rarity: item.rarity,
                 equipped: false,
                 equipmentSlot: slot
             };
+
+            // Only add marketPrice if it exists
+            if (item.marketPrice !== undefined) {
+                inventoryItem.marketPrice = item.marketPrice;
+            }
+
             updatedInventory.push(inventoryItem);
         }
 
