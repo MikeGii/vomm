@@ -29,59 +29,68 @@ export const ProfileInventory: React.FC<ProfileInventoryProps> = ({ items }) => 
         return names[category] || category;
     };
 
+    const getRarityName = (rarity: string): string => {
+        const names: { [key: string]: string } = {
+            common: 'Tavaline',
+            uncommon: 'Ebatavaline',
+            rare: 'Haruldane',
+            epic: 'Eepiline',
+            legendary: 'Legendaarne'
+        };
+        return names[rarity] || rarity;
+    };
+
     if (!items || items.length === 0) {
         return (
-            <div className="profile-inventory">
-                <h2 className="inventory-title">Inventaar</h2>
+            <div className="profile-inventory-simple">
+                <h2 className="inventory-title">Inventar</h2>
                 <p className="no-items">Inventar on tühi. Koguge esemeid poe, ülesannete ja koolituste kaudu!</p>
             </div>
         );
     }
 
     return (
-        <div className="profile-inventory">
-            <h2 className="inventory-title">Inventaar</h2>
-            <div className="inventory-categories">
-                {Object.entries(groupedItems).map(([category, categoryItems]) => (
-                    <div key={category} className="inventory-category">
-                        <h3 className="category-title">{getCategoryName(category)}</h3>
-                        <div className="items-grid">
-                            {categoryItems.map(item => (
-                                <div key={item.id} className="inventory-item">
-                                    {item.icon && (
-                                        <div className="item-icon">
-                                            {React.createElement(item.icon as any, { size: 32 })}
-                                        </div>
-                                    )}
-                                    <div className="item-info">
-                                        <div className="item-name">{item.name}</div>
-                                        {item.quantity > 1 && (
-                                            <div className="item-quantity">x{item.quantity}</div>
-                                        )}
-                                        <div className="item-description">{item.description}</div>
-                                        {item.rarity && (
-                                            <div className={`item-rarity rarity-${item.rarity}`}>
+        <div className="profile-inventory-simple">
+            <h2 className="inventory-title">Inventar</h2>
+            {Object.entries(groupedItems).map(([category, categoryItems]) => (
+                <div key={category} className="category-section">
+                    <h3 className="category-header">{getCategoryName(category)}</h3>
+                    <table className="inventory-table">
+                        <thead>
+                        <tr>
+                            <th>Ese</th>
+                            <th>Kirjeldus</th>
+                            <th>Kogus</th>
+                            <th>Haruldus</th>
+                            <th>Staatus</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {categoryItems.map(item => (
+                            <tr key={item.id} className="inventory-row">
+                                <td className="item-name">{item.name}</td>
+                                <td className="item-description">{item.description}</td>
+                                <td className="item-quantity">{item.quantity}</td>
+                                <td className="item-rarity">
+                                    {item.rarity && (
+                                        <span className={`rarity-badge rarity-${item.rarity}`}>
                                                 {getRarityName(item.rarity)}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                ))}
-            </div>
+                                            </span>
+                                    )}
+                                </td>
+                                <td className="item-status">
+                                    {item.equipped ? (
+                                        <span className="status-equipped">Varustatud</span>
+                                    ) : (
+                                        <span className="status-available">Saadaval</span>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                </div>
+            ))}
         </div>
     );
-};
-
-const getRarityName = (rarity: string): string => {
-    const names: { [key: string]: string } = {
-        common: 'Tavaline',
-        uncommon: 'Ebatavaline',
-        rare: 'Haruldane',
-        epic: 'Eepiline',
-        legendary: 'Legendaarne'
-    };
-    return names[rarity] || rarity;
 };

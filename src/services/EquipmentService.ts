@@ -1,5 +1,5 @@
 // src/services/EquipmentService.ts
-import { doc, updateDoc, arrayRemove, arrayUnion, deleteField, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, deleteField } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { EquipmentSlot, EquipmentItem } from '../types/equipment';
 import { InventoryItem } from '../types/inventory';
@@ -12,10 +12,14 @@ export const equipItem = async (
     try {
         const playerStatsRef = doc(firestore, 'playerStats', userId);
 
-        // Get current player stats to manipulate inventory
+        // Get current player stats
         const playerDoc = await getDoc(playerStatsRef);
         const playerData = playerDoc.data();
         const currentInventory = playerData?.inventory || [];
+        const currentEquipment = playerData?.equipment || {};
+
+        // Check if there's already an item in this slot
+        const existingItem = currentEquipment[slot];
 
         // Create equipment item from inventory item
         const equipmentItem: EquipmentItem = {
@@ -23,17 +27,25 @@ export const equipItem = async (
             name: item.name,
             description: item.description,
             slot: slot,
-            icon: item.icon,
             rarity: item.rarity,
             equipped: true
         };
 
-        // Filter out the item from inventory and mark it as equipped
-        const updatedInventory = currentInventory.map((invItem: InventoryItem) =>
+        // Update inventory - mark item as equipped
+        let updatedInventory = currentInventory.map((invItem: InventoryItem) =>
             invItem.id === item.id
                 ? { ...invItem, equipped: true }
                 : invItem
         );
+
+        // If there was an existing item in the slot, unequip it first
+        if (existingItem) {
+            updatedInventory = updatedInventory.map((invItem: InventoryItem) =>
+                invItem.id === existingItem.id
+                    ? { ...invItem, equipped: false }
+                    : invItem
+            );
+        }
 
         // Update both equipment and inventory
         await updateDoc(playerStatsRef, {
@@ -59,14 +71,14 @@ export const unequipItem = async (
         const playerData = playerDoc.data();
         const currentInventory = playerData?.inventory || [];
 
-        // Find the item in inventory and mark it as not equipped
+        // Update inventory - mark item as not equipped
         const updatedInventory = currentInventory.map((invItem: InventoryItem) =>
             invItem.id === item.id
                 ? { ...invItem, equipped: false }
                 : invItem
         );
 
-        // If item is not in inventory, add it back
+        // If item is not in inventory (shouldn't happen but just in case), add it back
         const itemExists = currentInventory.some((invItem: InventoryItem) => invItem.id === item.id);
         if (!itemExists) {
             const inventoryItem: InventoryItem = {
@@ -82,7 +94,7 @@ export const unequipItem = async (
             updatedInventory.push(inventoryItem);
         }
 
-        // Remove from equipment and update inventory
+        // Remove from equipment slot and update inventory
         await updateDoc(playerStatsRef, {
             [`equipment.${slot}`]: deleteField(),
             inventory: updatedInventory
