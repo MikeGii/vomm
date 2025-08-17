@@ -68,7 +68,8 @@ export const startWork = async (
     const endsAt = Timestamp.fromMillis(endsAtMillis);
 
     // Generate work session ID
-    const workSessionId = `${userId}_${Date.now()}`;
+    const timestamp = Date.now();
+    const workSessionId = `${userId}_${timestamp}`;
 
     const activeWork: ActiveWork = {
         workId: workId,
@@ -85,14 +86,14 @@ export const startWork = async (
     };
 
     // Update player stats
-    await updateDoc(statsRef, {
+    await updateDoc(doc(firestore, 'playerStats', userId), {
         activeWork: activeWork,
         'trainingData.isWorking': true,
         'trainingData.remainingClicks': Math.min(stats.trainingData?.remainingClicks || 10, 10)
     });
 
     // Store in activeWork collection
-    await setDoc(doc(firestore, 'activeWork', `${userId}_${Date.now()}`), activeWork);
+    await setDoc(doc(firestore, 'activeWork', workSessionId), activeWork);
 
     // Create event for this work session (70% chance, handled in service)
     if (!isTutorial) { // Don't create events for tutorial work
@@ -169,6 +170,11 @@ const completeWork = async (userId: string, stats: PlayerStats): Promise<void> =
     const workActivity = getWorkActivityById(stats.activeWork.workId);
     if (!workActivity) return;
 
+    if (stats.activeWork.userId && stats.activeWork.userId !== userId) {
+        console.error('Work session does not belong to this user!');
+        return;
+    }
+
     // Add to work history
     const historyEntry: WorkHistoryEntry = {
         userId: userId,
@@ -201,7 +207,11 @@ const completeWork = async (userId: string, stats: PlayerStats): Promise<void> =
 
     // Clean up active work from collection
     if (stats.activeWork.workSessionId) {
-        await deleteDoc(doc(firestore, 'activeWork', stats.activeWork.workSessionId));
+        try {
+            await deleteDoc(doc(firestore, 'activeWork', stats.activeWork.workSessionId));
+        } catch (error) {
+            console.error('Error deleting active work document:', error);
+        }
     }
 
     // Update player stats
