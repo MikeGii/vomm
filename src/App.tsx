@@ -11,6 +11,7 @@ import { DebugMenu } from "./components/dev/DebugMenu";
 import PatrolPage from "./pages/PatrolPage";
 import { ToastProvider } from './contexts/ToastContext';
 import ProfilePage from './pages/ProfilePage';
+import ShopPage from './pages/ShopPage';
 
 function App() {
     return (
@@ -58,6 +59,13 @@ function App() {
                                 <ProfilePage />
                             </ProtectedRoute>
                         } />
+
+                        <Route path="/shop" element={
+                            <ProtectedRoute>
+                                <ShopPage />
+                            </ProtectedRoute>
+                        } />
+
                         <Route
                             path="/department"
                             element={

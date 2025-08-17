@@ -32,7 +32,7 @@ export const ProfileInventory: React.FC<ProfileInventoryProps> = ({ items }) => 
     if (!items || items.length === 0) {
         return (
             <div className="profile-inventory">
-                <h2 className="inventory-title">Inventar</h2>
+                <h2 className="inventory-title">Inventaar</h2>
                 <p className="no-items">Inventar on tühi. Koguge esemeid poe, ülesannete ja koolituste kaudu!</p>
             </div>
         );
@@ -40,7 +40,7 @@ export const ProfileInventory: React.FC<ProfileInventoryProps> = ({ items }) => 
 
     return (
         <div className="profile-inventory">
-            <h2 className="inventory-title">Inventar</h2>
+            <h2 className="inventory-title">Inventaar</h2>
             <div className="inventory-categories">
                 {Object.entries(groupedItems).map(([category, categoryItems]) => (
                     <div key={category} className="inventory-category">
