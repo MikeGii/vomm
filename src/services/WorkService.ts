@@ -95,11 +95,6 @@ export const startWork = async (
     // Store in activeWork collection
     await setDoc(doc(firestore, 'activeWork', workSessionId), activeWork);
 
-    // Create event for this work session (70% chance, handled in service)
-    if (!isTutorial) { // Don't create events for tutorial work
-        await createActiveEvent(userId, workSessionId, workId, stats.level);
-    }
-
     return activeWork;
 };
 
@@ -132,11 +127,30 @@ export const checkWorkCompletion = async (userId: string): Promise<{
     }
 
     if (now.toMillis() >= endsAtMillis) {
-        // Work time is complete, check for pending event
-        const pendingEvent = await getPendingEvent(userId);
+        // Work time is complete, check for pending event first
+        let pendingEvent = await getPendingEvent(userId);
+
+        // If no pending event exists yet, create one now (70% chance)
+        if (!pendingEvent && !stats.activeWork.isTutorial) {
+            const workSessionId = stats.activeWork.workSessionId || `${userId}_${Date.now()}`;
+            const eventCreated = await createActiveEvent(
+                userId,
+                workSessionId,
+                stats.activeWork.workId,
+                stats.level
+            );
+
+            if (eventCreated) {
+                // Event was created, check again for pending event
+                pendingEvent = await getPendingEvent(userId);
+            }
+        }
 
         if (pendingEvent) {
-            // Has pending event, don't complete work yet
+            // Has pending event, mark work as pending
+            await updateDoc(statsRef, {
+                'activeWork.status': 'pending'
+            });
             return { completed: false, hasPendingEvent: true };
         }
 

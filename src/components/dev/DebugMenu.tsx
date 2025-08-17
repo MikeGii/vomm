@@ -322,29 +322,25 @@ export const DebugMenu: React.FC = () => {
             return;
         }
 
-        if (!window.confirm('Complete work and trigger an event?')) return;
+        if (!window.confirm('Complete work immediately and potentially trigger an event?')) return;
 
         setIsProcessing(true);
         try {
             const statsRef = doc(firestore, 'playerStats', currentUser.uid);
 
-            // First create an event
-            const workSessionId = playerStats.activeWork.workSessionId || `${currentUser.uid}_${Date.now()}`;
-            await createActiveEvent(
-                currentUser.uid,
-                workSessionId,
-                playerStats.activeWork.workId,
-                playerStats.level
-            );
-
-            // Then complete the work
+            // Set work to end now
             await updateDoc(statsRef, {
                 'activeWork.endsAt': Timestamp.now()
             });
 
-            // Wait and trigger completion
-            setTimeout(() => {
-                alert('Work completed with event! Refresh to see the event.');
+            // Trigger completion check which will create event if needed
+            setTimeout(async () => {
+                const result = await checkWorkCompletion(currentUser.uid);
+                if (result.hasPendingEvent) {
+                    alert('Work completed with event! Refresh to see the event.');
+                } else if (result.completed) {
+                    alert('Work completed without event!');
+                }
                 window.location.reload();
             }, 100);
         } catch (error) {

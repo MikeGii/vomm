@@ -148,7 +148,7 @@ export interface ActiveWork {
     totalHours: number;
     expectedExp: number;
     expectedMoney?: number; // For future use
-    status: 'in_progress' | 'completed';
+    status: 'in_progress' | 'pending' | 'completed';
     isTutorial?: boolean; // For 20-second tutorial work
     workSessionId?: string;
 }
