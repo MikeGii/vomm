@@ -108,6 +108,7 @@ export const AuthenticatedHeader: React.FC = () => {
                         <button
                             className="menu-burger"
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            aria-label="Menüü"
                         >
                             <span></span>
                             <span></span>
@@ -115,38 +116,76 @@ export const AuthenticatedHeader: React.FC = () => {
                         </button>
                         {isMenuOpen && (
                             <div className="menu-dropdown">
-                                <button
-                                    onClick={() => {
-                                        navigate('/dashboard');
-                                        setIsMenuOpen(false);
-                                    }}
-                                    className="menu-item"
-                                >
-                                    Töölaud
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        navigate('/courses');
-                                        setIsMenuOpen(false);
-                                    }}
-                                    className="menu-item"
-                                >
-                                    Koolitused
-                                </button>
-                                {showTraining && (
+                                <div className="menu-section">
                                     <button
                                         onClick={() => {
-                                            navigate('/training');
+                                            navigate('/dashboard');
+                                            setIsMenuOpen(false);
+                                        }}
+                                        className="menu-item menu-item-primary"
+                                    >
+                                        <span className="menu-icon">🏠</span>
+                                        <span>Töölaud</span>
+                                    </button>
+                                </div>
+
+                                <button
+                                    onClick={() => {
+                                        navigate('/profile');
+                                        setIsMenuOpen(false);
+                                    }}
+                                    className="menu-item"
+                                >
+                                    <span className="menu-icon">👤</span>
+                                    <span>Minu profiil</span>
+                                </button>
+
+                                <div className="menu-divider"></div>
+
+                                <div className="menu-section">
+                                    <div className="menu-section-title">Tegevused</div>
+                                    <button
+                                        onClick={() => {
+                                            navigate('/courses');
                                             setIsMenuOpen(false);
                                         }}
                                         className="menu-item"
                                     >
-                                        Treening
+                                        <span className="menu-icon">📚</span>
+                                        <span>Koolitused</span>
                                     </button>
-                                )}
-                                <button onClick={handleLogout} className="menu-item">
-                                    Logi välja
-                                </button>
+                                    {showTraining && (
+                                        <button
+                                            onClick={() => {
+                                                navigate('/training');
+                                                setIsMenuOpen(false);
+                                            }}
+                                            className="menu-item"
+                                        >
+                                            <span className="menu-icon">💪</span>
+                                            <span>Treening</span>
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => {
+                                            navigate('/patrol');
+                                            setIsMenuOpen(false);
+                                        }}
+                                        className="menu-item"
+                                    >
+                                        <span className="menu-icon">👮</span>
+                                        <span>Mine tööle</span>
+                                    </button>
+                                </div>
+
+                                <div className="menu-divider"></div>
+
+                                <div className="menu-section">
+                                    <button onClick={handleLogout} className="menu-item menu-item-danger">
+                                        <span className="menu-icon">🚪</span>
+                                        <span>Logi välja</span>
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>

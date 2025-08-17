@@ -10,6 +10,7 @@ import TrainingPage from './pages/TrainingPage';
 import { DebugMenu } from "./components/dev/DebugMenu";
 import PatrolPage from "./pages/PatrolPage";
 import { ToastProvider } from './contexts/ToastContext';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
     return (
@@ -51,6 +52,12 @@ function App() {
                                 </ProtectedRoute>
                             }
                         />
+
+                        <Route path="/profile" element={
+                            <ProtectedRoute>
+                                <ProfilePage />
+                            </ProtectedRoute>
+                        } />
                         <Route
                             path="/department"
                             element={

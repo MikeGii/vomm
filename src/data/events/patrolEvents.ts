@@ -3,12 +3,12 @@ import { WorkEvent } from '../../types/events.types';
 export const PATROL_EVENTS: WorkEvent[] = [
     {
         id: 'youth_drinking',
-        title: 'Noorte joomine',
+        title: 'Noorte alkoholi tarbimine',
         description: 'Patrulli ajal kohtasid gruppi noori, kes jõid alkoholi mahajäetud majas. Kui nad sind nägid, hakkasid nad eri suundades jooksma.',
         choices: [
             {
                 id: 'chase_fall',
-                text: 'Üritasid neid jälitada, kuid kukkusid trepil',
+                text: 'Üritasid neid jälitada, kuid kukkusid trepil.',
                 consequences: {
                     health: -70,
                     money: 1000
@@ -22,7 +22,7 @@ export const PATROL_EVENTS: WorkEvent[] = [
                     money: 100,
                     reputation: -10
                 },
-                resultText: 'Võtsid leitud raha endale. Teenisid 100€, kuid kaotasid maine.'
+                resultText: 'Võtsid leitud raha endale. Teenisid 100€, kuid kaotasid maine, sest selline käitumine pole lubatud.'
             },
             {
                 id: 'call_backup',
@@ -36,7 +36,7 @@ export const PATROL_EVENTS: WorkEvent[] = [
     {
         id: 'traffic_stop',
         title: 'Liikluskontroll',
-        description: 'Peatasid sõiduki liikluskontrolliks. Juht tundub närviline ja auto lõhnab kahtlaselt.',
+        description: 'Peatasid sõiduki liikluskontrolliks. Juht tundub närviline ja autos lõhnab kahtlaselt.',
         choices: [
             {
                 id: 'thorough_search',
@@ -91,9 +91,7 @@ export const PATROL_EVENTS: WorkEvent[] = [
             {
                 id: 'wait_backup',
                 text: 'Ootad lisajõude',
-                consequences: {
-                    experience: -10
-                },
+                consequences: {},
                 resultText: 'Kuni ootasid, rahunes olukord iseenesest. Kaotasid asjatult aega.'
             }
         ],

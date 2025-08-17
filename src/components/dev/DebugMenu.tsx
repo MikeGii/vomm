@@ -83,12 +83,26 @@ export const DebugMenu: React.FC = () => {
             return;
         }
 
+        // Additional safety check
+        if (playerStats.activeCourse.status !== 'in_progress') {
+            alert('Koolitus ei ole aktiivne!');
+            return;
+        }
+
         if (!window.confirm('Lõpeta praegune koolitus kohe?')) return;
 
         setIsProcessing(true);
         try {
-            // Set course end time to now
+            // Only update the current user's document
             const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+
+            // Verify the document exists and belongs to current user
+            const statsDoc = await getDoc(statsRef);
+            if (!statsDoc.exists()) {
+                throw new Error('Kasutaja andmed puuduvad');
+            }
+
+            // Set course end time to now
             await updateDoc(statsRef, {
                 'activeCourse.endsAt': Timestamp.now()
             });
@@ -99,14 +113,14 @@ export const DebugMenu: React.FC = () => {
                 alert('Koolitus lõpetatud!');
 
                 // Reload stats
-                const statsDoc = await getDoc(statsRef);
-                if (statsDoc.exists()) {
-                    setPlayerStats(statsDoc.data() as PlayerStats);
+                const updatedDoc = await getDoc(statsRef);
+                if (updatedDoc.exists()) {
+                    setPlayerStats(updatedDoc.data() as PlayerStats);
                 }
             }, 100);
         } catch (error) {
             console.error('Error completing course:', error);
-            alert('Failed to complete course');
+            alert('Koolituse lõpetamine ebaõnnestus');
         } finally {
             setIsProcessing(false);
         }
