@@ -99,6 +99,15 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.train-button.no-clicks {
+    background-color: #d32f2f;
 }
 
 .train-button:hover:not(:disabled) {
@@ -312,5 +321,103 @@ select option:disabled {
 
     .warning-icon {
         align-self: center;
+    }
+}
+
+.clicks-badge {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    min-width: 28px;
+    text-align: center;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* When no clicks left */
+.train-button.no-clicks .clicks-badge {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Hide the desktop training counter on mobile when showing badge */
+@media (max-width: 768px) {
+    .training-counter {
+        display: none;
+    }
+
+    .train-button {
+        padding: 0.9rem;
+        font-size: 1rem;
+    }
+
+    .clicks-badge {
+        font-size: 0.85rem;
+        padding: 0.2rem 0.4rem;
+        animation: pulse 2s infinite;
+    }
+}
+
+/* Pulse animation for the badge */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    }
+}
+
+/* Show both desktop counter and no badge on larger screens */
+@media (min-width: 769px) {
+    .clicks-badge {
+        display: none;
+    }
+
+    .training-counter {
+        display: block;
+    }
+}
+
+/* Alternative style: Inline counter for all screen sizes */
+.train-button-with-counter {
+    position: relative;
+}
+
+.train-button-with-counter .clicks-indicator {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #ff4444;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    border: 2px solid #1a1a1a;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Special styling when clicks are low */
+.clicks-badge[data-low="true"] {
+    background-color: #ff9800;
+    animation: pulse-warning 1s infinite;
+}
+
+@keyframes pulse-warning {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
     }
 }

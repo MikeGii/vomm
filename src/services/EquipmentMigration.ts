@@ -141,16 +141,21 @@ export const migrateUserEquipment = async (userId: string): Promise<any> => {
 
         // Check for missing equipment from completed courses
         const COURSE_EQUIPMENT_REWARDS: { [key: string]: string[] } = {
-            'abipolitseinik_basic_training': [
+            'basic_police_training_abipolitseinik': [
                 'abipolitseinik_cap',
                 'abipolitseinik_jacket',
                 'abipolitseinik_pants',
+                'abipolitseinik_gloves',
+                'abipolitseinik_belt',
+                'basic_weapon_holster',
                 'abipolitseinik_boots'
             ],
             'sisekaitseakadeemia_entrance': [
                 'kadett_cap',
                 'police_jacket',
                 'police_pants',
+                'police_belt',
+                'police_weapon_holster',
                 'police_boots',
                 'police_gloves'
             ]

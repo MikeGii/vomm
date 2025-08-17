@@ -33,6 +33,9 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
     // Get player's actual level (not attribute levels)
     const playerLevel = playerStats?.level || 1;
 
+    // Get remaining training clicks
+    const remainingClicks = playerStats?.trainingData?.remainingClicks || 0;
+
     // Check if player can train this activity based on their main level
     const canTrainActivity = (activity: TrainingActivity): boolean => {
         if (!playerStats) return false;
@@ -156,13 +159,18 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                     </div>
 
                     <button
-                        className="train-button"
+                        className={`train-button ${remainingClicks === 0 ? 'no-clicks' : ''}`}
                         onClick={onTrain}
-                        disabled={!canTrain || isTraining || !canTrainActivity(selectedActivityData)}
+                        disabled={!canTrain || isTraining || !canTrainActivity(selectedActivityData) || remainingClicks === 0}
                     >
                         {isTraining ? 'Treenid...' :
                             !canTrainActivity(selectedActivityData) ? `Nõutav tase ${selectedActivityData.requiredLevel}` :
-                                'Treeni'}
+                                remainingClicks === 0 ? 'Treeningud otsas' :
+                                    <>
+                                        <span className="button-text">Treeni</span>
+                                        <span className="clicks-badge">{remainingClicks}</span>
+                                    </>
+                        }
                     </button>
                 </div>
             )}
