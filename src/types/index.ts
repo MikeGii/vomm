@@ -185,3 +185,11 @@ export interface LeaderboardEntry {
 }
 
 export type LeaderboardSortBy = 'level' | 'reputation' | 'money' | 'strength' | 'agility' | 'dexterity' | 'intelligence' | 'endurance' | 'cases' | 'arrests' | 'totalWorkedHours';
+
+export interface GameUpdate {
+    id: string;
+    title: string;
+    description: string;
+    date: string;
+    isNew?: boolean;
+}
