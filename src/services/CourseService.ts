@@ -12,7 +12,7 @@ import { Course, ActiveCourse, PlayerStats } from '../types';
 import { ALL_COURSES, getCourseById } from '../data/courses';
 import {calculateLevelFromExp} from "./PlayerService";
 import { ABILITIES} from "../data/abilities";
-import { ABIPOLITSEINIK_UNIFORM } from '../data/equipment';
+import { ABIPOLITSEINIK_UNIFORM, POLITSEI_UNIFORM } from '../data/equipment';
 
 // Get courses available for player
 export const getAvailableCourses = (playerStats: PlayerStats): Course[] => {
@@ -201,14 +201,31 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
             updates.inventory = [...(playerStats.inventory || []), ...uniformItems];
 
         } else if (course.id === 'sisekaitseakadeemia_entrance') {
-            updates.rank = course.rewards.unlocksRank || 'Nooreminspektor';
-            updates.isEmployed = true;
-            updates.hasCompletedTraining = true;
-            updates.prefecture = 'Sisekaitseakadeemia';
-            updates.department = 'Politsei- ja Piirivalvekolledž';
-            if (!playerStats.badgeNumber) {
-                updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
-            }
+                updates.rank = course.rewards.unlocksRank || 'Nooreminspektor';
+                updates.isEmployed = true;
+                updates.hasCompletedTraining = true;
+                updates.prefecture = 'Sisekaitseakadeemia';
+                updates.department = 'Politsei- ja Piirivalvekolledž';
+                if (!playerStats.badgeNumber) {
+                    updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
+                }
+
+                // Grant Police uniform items to inventory
+                const policeUniformItems = POLITSEI_UNIFORM.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    description: item.description,
+                    category: 'equipment' as const,
+                    quantity: 1,
+                    rarity: item.rarity,
+                    equipped: false,
+                    equipmentSlot: item.slot,
+                    source: 'training' as const
+                }));
+
+                // Add police uniform items to existing inventory
+                updates.inventory = [...(playerStats.inventory || []), ...policeUniformItems];
+
         } else if (course.rewards.unlocksRank) {
             updates.rank = course.rewards.unlocksRank;
             updates.isEmployed = true;
