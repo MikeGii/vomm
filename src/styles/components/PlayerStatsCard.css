@@ -319,3 +319,30 @@
     background-color: rgba(33, 150, 243, 0.1);
     border: 1px solid #2196f3;
 }
+
+.health-recovery-timer {
+    display: block;
+    font-size: 0.75rem;
+    color: #4caf50;
+    margin-top: 0.25rem;
+    font-weight: normal;
+}
+
+.stat-value.health-low + .health-recovery-timer {
+    color: #ff9800;
+}
+
+.stat-value.health-critical + .health-recovery-timer {
+    color: #ff6b6b;
+}
+
+/* Add animation for the timer */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.health-recovery-timer {
+    animation: pulse 2s infinite;
+}

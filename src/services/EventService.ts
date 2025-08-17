@@ -142,6 +142,11 @@ export const processEventChoice = async (
         // Apply consequences
         const updates = applyConsequences(currentStats, choice.consequences);
 
+        // Set lastHealthUpdate when health changes
+        if (choice.consequences.health !== undefined) {
+            updates.lastHealthUpdate = Timestamp.now();
+        }
+
         // Update player stats
         await updateDoc(statsRef, updates);
 
