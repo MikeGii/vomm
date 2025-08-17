@@ -167,11 +167,33 @@ export const performTraining = async (
 
     // Recalculate health if strength or endurance changed
     let updatedHealth = stats.health;
+    let healthUpdates: any = {};
+
     if (rewards.strength || rewards.endurance) {
-        updatedHealth = calculatePlayerHealth(
+        const oldMaxHealth = stats.health?.max || 100;
+        const oldCurrentHealth = stats.health?.current || 100;
+
+        // Calculate new max health
+        const newHealthData = calculatePlayerHealth(
             attributes.strength.level,
             attributes.endurance.level
         );
+
+        // When max health increases, increase current health by the same amount (not to full)
+        const healthIncrease = newHealthData.max - oldMaxHealth;
+
+        updatedHealth = {
+            ...newHealthData,  // This includes max, baseHealth, strengthBonus, enduranceBonus
+            current: oldCurrentHealth + healthIncrease  // Add the increase to current, don't set to max
+        };
+
+        // Make sure current doesn't exceed max
+        updatedHealth.current = Math.min(updatedHealth.current, updatedHealth.max);
+
+        // If now at max health, clear recovery timer
+        if (updatedHealth.current >= updatedHealth.max) {
+            healthUpdates.lastHealthUpdate = null;
+        }
     }
 
     // Update player main experience and level
@@ -192,7 +214,8 @@ export const performTraining = async (
         trainingData: updatedTrainingData,
         experience: newPlayerExp,
         level: newPlayerLevel,
-        health: updatedHealth
+        health: updatedHealth,
+        ...healthUpdates  // Include lastHealthUpdate if it needs to be cleared
     };
 
     await updateDoc(statsRef, updates);
