@@ -1,9 +1,24 @@
-/* src/styles/components/courses/CourseTabs.css */
+/* src/styles/components/courses/CourseTabs.css - Updated version */
 .course-tabs {
     display: flex;
     gap: 1rem;
     margin-bottom: 2rem;
     border-bottom: 2px solid #333;
+    scrollbar-width: thin;
+    scrollbar-color: #4a90e2 #1a1a1a;
+}
+
+.course-tabs::-webkit-scrollbar {
+    height: 6px;
+}
+
+.course-tabs::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.course-tabs::-webkit-scrollbar-thumb {
+    background-color: #4a90e2;
+    border-radius: 3px;
 }
 
 .tab-button {
@@ -18,6 +33,8 @@
     position: relative;
     border-bottom: 3px solid transparent;
     margin-bottom: -2px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .tab-button:hover {
@@ -40,6 +57,17 @@
     animation: slideIn 0.3s ease;
 }
 
+/* Status-specific tab colors */
+.tab-button.tab-abipolitseinik.active {
+    color: #2196F3;
+    border-bottom-color: #2196F3;
+}
+
+.tab-button.tab-sisekaitseakadeemia.active {
+    color: #FF6B35;
+    border-bottom-color: #FF6B35;
+}
+
 @keyframes slideIn {
     from {
         width: 0;
@@ -54,7 +82,8 @@
 /* Mobile responsiveness */
 @media (max-width: 768px) {
     .course-tabs {
-        justify-content: center;
+        gap: 0.5rem;
+        padding-bottom: 0.5rem;
     }
 
     .tab-button {

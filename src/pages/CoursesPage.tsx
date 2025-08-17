@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+// src/pages/CoursesPage.tsx
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
@@ -9,6 +10,7 @@ import { CoursesList } from '../components/courses/CoursesList';
 import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
 import { useAuth } from '../contexts/AuthContext';
 import { PlayerStats, Course } from '../types';
+import { TabType } from '../types/courseTabs.types';
 import { updateTutorialProgress } from '../services/PlayerService';
 import {
     getAvailableCourses,
@@ -17,7 +19,7 @@ import {
     getRemainingTime,
     getCompletedCoursesDetails
 } from '../services/CourseService';
-import { getCourseById } from '../data/courses';
+import { ALL_COURSES, getCourseById } from '../data/courses';
 import '../styles/pages/Courses.css';
 
 const CoursesPage: React.FC = () => {
@@ -32,9 +34,56 @@ const CoursesPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [enrolling, setEnrolling] = useState(false);
     const [remainingTime, setRemainingTime] = useState<number>(0);
-    const [activeTab, setActiveTab] = useState<'available' | 'completed'>('available');
+    const [activeTab, setActiveTab] = useState<TabType>('available');
     const [showTutorial, setShowTutorial] = useState(false);
     const completionAlertShownRef = useRef<string | null>(null);
+
+    // Calculate courses for each tab
+    const coursesForTab = useMemo(() => {
+        if (!playerStats) {
+            return {
+                available: [],
+                completed: [],
+                abipolitseinik: [],
+                sisekaitseakadeemia: [],
+                advanced: [],
+                specialist: []
+            };
+        }
+
+        // Get status-specific courses
+        const abipolitseinikCourses = ALL_COURSES.filter(c => c.category === 'abipolitseinik');
+        const sisekaitseakadeemiaCourses = ALL_COURSES.filter(c => c.category === 'sisekaitseakadeemia');
+
+        return {
+            available: availableCourses,
+            completed: completedCourses,
+            abipolitseinik: abipolitseinikCourses,
+            sisekaitseakadeemia: sisekaitseakadeemiaCourses,
+            advanced: ALL_COURSES.filter(c => c.category === 'advanced'),
+            specialist: ALL_COURSES.filter(c => c.category === 'specialist')
+        };
+    }, [availableCourses, completedCourses, playerStats]);
+
+    // Calculate course counts for tabs
+    const courseCounts = useMemo(() => {
+        return {
+            available: coursesForTab.available.length,
+            completed: coursesForTab.completed.length,
+            abipolitseinik: coursesForTab.abipolitseinik.length,
+            sisekaitseakadeemia: coursesForTab.sisekaitseakadeemia.length,
+            advanced: coursesForTab.advanced.length,
+            specialist: coursesForTab.specialist.length
+        };
+    }, [coursesForTab]);
+
+    // Get currently displayed courses based on active tab
+    const displayedCourses = useMemo(() => {
+        return coursesForTab[activeTab] || [];
+    }, [coursesForTab, activeTab]);
+
+    // Check if current tab is a status tab
+    const isStatusTab = activeTab !== 'available' && activeTab !== 'completed';
 
     // Process stats updates
     const processStatsUpdate = useCallback(async (stats: PlayerStats) => {
@@ -210,7 +259,6 @@ const CoursesPage: React.FC = () => {
                     />
                 )}
 
-                {/* Add this new section */}
                 {playerStats?.activeWork && (
                     <div className="work-in-progress-notice">
                         <p>⚠️ Sa ei saa võtta uut koolitust, kuni töö on lõppenud.</p>
@@ -220,27 +268,22 @@ const CoursesPage: React.FC = () => {
                 <CourseTabs
                     activeTab={activeTab}
                     onTabChange={setActiveTab}
-                    availableCount={availableCourses.length}
-                    completedCount={completedCourses.length}
+                    playerStats={playerStats}
+                    courseCounts={courseCounts}
                 />
 
-                {activeTab === 'available' ? (
-                    <CoursesList
-                        courses={availableCourses}
-                        onEnroll={handleEnrollCourse}
-                        isEnrolling={enrolling}
-                        hasActiveCourse={!!activeCourse}
-                        activeCourseId={playerStats?.activeCourse?.courseId}
-                        remainingTime={remainingTime}
-                        playerStats={playerStats || undefined}
-                    />
-                ) : (
-                    <CoursesList
-                        courses={completedCourses}
-                        isCompleted={true}
-                        playerStats={playerStats || undefined}
-                    />
-                )}
+                <CoursesList
+                    courses={displayedCourses}
+                    isCompleted={activeTab === 'completed'}
+                    isStatusTab={isStatusTab}
+                    statusCategory={isStatusTab ? activeTab : undefined}
+                    onEnroll={handleEnrollCourse}
+                    isEnrolling={enrolling}
+                    hasActiveCourse={!!activeCourse}
+                    activeCourseId={playerStats?.activeCourse?.courseId}
+                    remainingTime={remainingTime}
+                    playerStats={playerStats || undefined}
+                />
 
                 {showTutorial && playerStats && currentUser && (
                     <TutorialOverlay

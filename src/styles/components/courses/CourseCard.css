@@ -273,3 +273,103 @@
     background-color: #2196f3;
     color: white;
 }
+
+/* Status tab course styles */
+.course-card.status-completed {
+    border: 2px solid #4caf50;  /* Green border for completed */
+    background-color: #1a1a1a;
+    opacity: 0.95;
+}
+
+.course-card.status-available {
+    border: 2px solid #666;  /* Gray border for not completed */
+    background-color: #1a1a1a;
+}
+
+.course-card.status-completed:hover {
+    box-shadow: 0 5px 20px rgba(76, 175, 80, 0.3);
+    transform: translateY(-2px);
+}
+
+.course-card.status-available:hover {
+    border-color: #888;
+    box-shadow: 0 5px 20px rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.status-not-completed {
+    color: #888;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Update category badges for better visibility */
+.category-abipolitseinik {
+    background-color: #2196F3;
+    color: white;
+}
+
+.category-sisekaitseakadeemia {
+    background-color: #FF6B35;
+    color: white;
+}
+
+/* Mobile responsive updates */
+@media (max-width: 768px) {
+    .course-tabs {
+        overflow-x: auto;
+        gap: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .tab-button {
+        white-space: nowrap;
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+    }
+}
+
+.prerequisite-courses {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.prerequisite-header {
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+}
+
+.prerequisite-list {
+    list-style: none !important;
+    padding-left: 1.5rem !important;
+    margin: 0.3rem 0 0 0 !important;
+}
+
+.prerequisite-list li {
+    padding: 0.2rem 0 !important;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.prerequisite-list li:before {
+    display: none !important;
+}
+
+.prereq-completed {
+    color: #4caf50;
+}
+
+.prereq-not-completed {
+    color: #ff6b6b;
+}
+
+.requirement-not-met .prerequisite-header {
+    color: #ff6b6b;
+}
+
+.requirement-met .prerequisite-header {
+    color: #4caf50;
+}
