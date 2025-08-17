@@ -60,15 +60,6 @@ const PatrolPage: React.FC = () => {
         return 'Patrullteenistus';
     };
 
-    const getWorkAreaLabel = (): string => {
-        if (!playerStats) return 'tööpiirkond';
-
-        if (playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
-            return 'praktikakoht';
-        }
-        return 'tööpiirkond';
-    };
-
     // Process stats update
     const processStatsUpdate = useCallback(async (stats: PlayerStats) => {
         // Get available work activities

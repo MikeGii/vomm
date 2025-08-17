@@ -36,7 +36,7 @@ export const useTutorialHandlers = ({
             console.log('Syncing currentStep from stats:', dbStep);
             setCurrentStep(dbStep);
         }
-    }, [stats.tutorialProgress.currentStep]);
+    }, [stats.tutorialProgress.currentStep, currentStep, setCurrentStep]);
 
     // Handle step 6 - Course enrollment
     useEffect(() => {
