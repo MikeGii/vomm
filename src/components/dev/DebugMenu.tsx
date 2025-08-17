@@ -416,6 +416,66 @@ export const DebugMenu: React.FC = () => {
         }
     };
 
+    const setWorkToLast20Seconds = async () => {
+        if (!currentUser || !playerStats?.activeWork) {
+            alert('Aktiivne töö puudub! Alusta tööd esmalt.');
+            return;
+        }
+
+        // Extra validation to ensure we're only affecting current user
+        if (playerStats.activeWork.userId && playerStats.activeWork.userId !== currentUser.uid) {
+            alert('VIGA: Töö ei kuulu sellele kasutajale!');
+            return;
+        }
+
+        if (!window.confirm('Määra töö lõppema 20 sekundi pärast?\n(Mõjutab ainult sinu tööd)')) return;
+
+        setIsProcessing(true);
+        try {
+            // ONLY update the current user's document
+            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+            const newEndsAt = Timestamp.fromMillis(Date.now() + 20000);
+
+            // Update playerStats for THIS user only
+            await updateDoc(statsRef, {
+                'activeWork.endsAt': newEndsAt
+            });
+
+            // Also update the activeWork collection if needed
+            if (playerStats.activeWork.workSessionId) {
+                // Ensure the workSessionId includes the userId
+                if (!playerStats.activeWork.workSessionId.startsWith(currentUser.uid)) {
+                    console.error('WorkSessionId does not match current user!');
+                    alert('VIGA: Töö sessioon ei vasta kasutajale!');
+                    return;
+                }
+
+                try {
+                    const activeWorkRef = doc(firestore, 'activeWork', playerStats.activeWork.workSessionId);
+                    await updateDoc(activeWorkRef, {
+                        endsAt: newEndsAt,
+                        userId: currentUser.uid  // Ensure userId is set
+                    });
+                } catch (error) {
+                    console.log('ActiveWork document update failed (this is OK):', error);
+                }
+            }
+
+            alert(`Töö lõppeb 20 sekundi pärast!\nAinult kasutaja: ${currentUser.email}`);
+
+            // Reload only THIS user's stats
+            const statsDoc = await getDoc(statsRef);
+            if (statsDoc.exists()) {
+                setPlayerStats(statsDoc.data() as PlayerStats);
+            }
+        } catch (error) {
+            console.error('Error setting work countdown:', error);
+            alert('Viga töö aja muutmisel');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     return (
         <>
             {/* Floating debug button */}
@@ -533,6 +593,18 @@ export const DebugMenu: React.FC = () => {
                                 title="Check if there are pending events"
                             >
                                 🔍 Check Pending Events
+                            </button>
+                        </div>
+
+                        <div className="debug-section">
+                            <h4>Work Timer Testing</h4>
+                            <button
+                                className="debug-btn"
+                                onClick={setWorkToLast20Seconds}
+                                disabled={isProcessing || !playerStats?.activeWork}
+                                title="Set work to complete in 20 seconds"
+                            >
+                                ⏱️ Töö lõppeb 20s pärast
                             </button>
                         </div>
 
