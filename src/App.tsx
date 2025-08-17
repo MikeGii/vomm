@@ -9,11 +9,13 @@ import CoursesPage from './pages/CoursesPage';
 import TrainingPage from './pages/TrainingPage';
 import { DebugMenu} from "./components/dev/DebugMenu";
 import PatrolPage from "./pages/PatrolPage";
+import { ToastProvider } from './contexts/ToastContext';
 
 function App() {
     return (
         <Router>
             <AuthProvider>
+                <ToastProvider>
                 <DebugMenu />
                 <Routes>
                     <Route path="/" element={<HomePage />} />
@@ -65,6 +67,7 @@ function App() {
                     {/* Redirect any unknown routes to home */}
                     <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
+                </ToastProvider>
             </AuthProvider>
         </Router>
     );

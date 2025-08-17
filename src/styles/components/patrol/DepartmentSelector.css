@@ -59,3 +59,11 @@
     font-size: 0.9rem;
     font-style: italic;
 }
+.kadett-department {
+    background-color: #2a3f2a;
+    border-color: #4a7c4a;
+}
+
+.kadett-department strong {
+    color: #7fc77f;
+}

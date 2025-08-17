@@ -3,6 +3,7 @@ import { IconType } from 'react-icons';
 import { GiPistolGun, GiElectric, GiPoliceCar } from 'react-icons/gi';
 import { MdSpeed } from 'react-icons/md';
 import { FaTabletAlt } from 'react-icons/fa';
+import { GoLaw } from 'react-icons/go';
 
 export interface TrainingBonus {
     attribute: 'strength' | 'agility' | 'dexterity' | 'intelligence' | 'endurance';
@@ -83,6 +84,16 @@ export const ABILITIES: Ability[] = [
         requiredCourse: 'police_car_training_abipolitseinik',
         trainingBonuses: [
             { attribute: 'dexterity', percentage: 0.05 }
+        ]
+    },
+    {
+        id: 'law_fundamentals_police',
+        name: 'Süüteomenetluse algteadmised',
+        description: 'Oled omandanud süüteomenetluses peamised baasteadmised ja oskad orienteeruda seadustes',
+        icon: GoLaw,
+        requiredCourse: 'law_studies_curriculum',
+        trainingBonuses: [
+            { attribute: 'intelligence', percentage: 0.10 }
         ]
     }
 ];

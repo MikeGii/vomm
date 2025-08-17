@@ -1,5 +1,5 @@
 // src/components/tutorial/TutorialOverlay.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { TutorialOverlayProps } from './types/tutorial.types';
 import { useTutorialSteps } from './hooks/useTutorialSteps';
 import { useTutorialHighlight } from './hooks/useTutorialHighlight';
@@ -24,9 +24,14 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     const [waitingMessage, setWaitingMessage] = useState('');
     const [waitingTime, setWaitingTime] = useState(0);
 
+    // Track last page to detect page changes
+    const lastPageRef = useRef(page);
+    const isInitializedRef = useRef(false);
+
     // Get tutorial steps for current page and step
     const TUTORIAL_STEPS = useTutorialSteps(page, currentStep);
     const currentTutorialStep = TUTORIAL_STEPS.find(s => s.step === currentStep);
+    const lastProcessedDbStep = useRef(stats.tutorialProgress.currentStep);
 
     // Use smart positioning for tutorial box
     const { position, arrowPosition } = useSmartPosition(
@@ -135,45 +140,62 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     useEffect(() => {
         if (!stats.tutorialProgress.isCompleted && !isWaiting) {
             const dbStep = stats.tutorialProgress.currentStep;
+            const pageChanged = lastPageRef.current !== page;
 
+            // Update page ref
+            if (pageChanged) {
+                lastPageRef.current = page;
+            }
+
+            // Initialize only once when we first load with step 0
+            if (dbStep === 0 && currentStep === 0 && page === 'dashboard' && !isInitializedRef.current) {
+                console.log('Initializing tutorial to step 1');
+                setCurrentStep(1);
+                setIsVisible(true);
+                isInitializedRef.current = true;
+                updateTutorialProgress(userId, 1).catch(console.error);
+                return;
+            }
+
+            // Sync step from database if different (but only once per page load)
+            if (dbStep !== currentStep && dbStep > 0 && pageChanged) {
+                setCurrentStep(dbStep);
+            }
+
+            // Rest of the page-specific logic
             if (page === 'dashboard') {
-                // Fix: Check for step 0 and initialize to step 1
-                if (dbStep === 0 && currentStep === 0) {
-                    console.log('Initializing tutorial to step 1');
-                    setCurrentStep(1);
-                    setIsVisible(true);
-                    updateTutorialProgress(userId, 1);
-                } else if (dbStep === 1 || currentStep === 1) {
-                    setCurrentStep(1);
+                if (dbStep === 1 || currentStep === 1) {
                     setIsVisible(true);
                 } else if ((dbStep > 1 && dbStep < 4) || (currentStep > 1 && currentStep < 4)) {
                     setIsVisible(true);
                 } else if ((dbStep >= 9 && dbStep <= 10) || (currentStep >= 9 && currentStep <= 10)) {
                     setIsVisible(true);
                 } else if (dbStep === 16 || currentStep === 16) {
-                    setCurrentStep(16);
                     setIsVisible(true);
                 }
             } else if (page === 'courses') {
+                // Always process courses page navigation
                 if (currentStep >= 3 && currentStep <= 8) {
                     setIsVisible(true);
-                    if (currentStep === 3) {
+                    if (currentStep === 3 && pageChanged) {
                         setCurrentStep(4);
-                        updateTutorialProgress(userId, 4);
+                        updateTutorialProgress(userId, 4).catch(console.error);
                     }
                 }
             } else if (page === 'training') {
-                if (currentStep === 10) {
+                // Always process training page navigation
+                if (currentStep === 10 && pageChanged) {
                     setCurrentStep(11);
-                    updateTutorialProgress(userId, 11);
+                    updateTutorialProgress(userId, 11).catch(console.error);
                     setIsVisible(true);
                 } else if (currentStep >= 11 && currentStep <= 15) {
                     setIsVisible(true);
                 }
             } else if (page === 'patrol') {
-                if (currentStep === 16) {
+                // Always process patrol page navigation
+                if (currentStep === 16 && pageChanged) {
                     setCurrentStep(17);
-                    updateTutorialProgress(userId, 17);
+                    updateTutorialProgress(userId, 17).catch(console.error);
                     setIsVisible(true);
                 } else if (currentStep === 22 && !stats.activeWork) {
                     console.log('Page loaded at step 22 with completed work, moving to step 23');

@@ -1,5 +1,6 @@
 // src/pages/DashboardPage.tsx
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { PlayerStatsCard } from '../components/dashboard/PlayerStatsCard';
 import { QuickActions } from '../components/dashboard/QuickActions';
@@ -9,12 +10,14 @@ import { PlayerStats } from '../types';
 import { initializePlayerStats, getPlayerStats } from '../services/PlayerService';
 import { PrefectureSelectionModal } from '../components/dashboard/PrefectureSelectionModal';
 import { Leaderboard} from "../components/leaderboard/Leaderboard";
+import { checkForPendingEvent } from '../services/EventService';
 
 import '../styles/pages/Dashboard.css';
 import {PlayerAbilities} from "../components/dashboard/PlayerAbilities";
 
 function DashboardPage() {
     const { currentUser, userData } = useAuth();
+    const navigate = useNavigate();
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [showTutorial, setShowTutorial] = useState(false);
@@ -27,11 +30,19 @@ function DashboardPage() {
                     const stats = await initializePlayerStats(currentUser.uid);
                     setPlayerStats(stats);
 
+                    // Check for pending events (work completed while offline)
+                    const hasPendingEvent = await checkForPendingEvent(currentUser.uid);
+                    if (hasPendingEvent) {
+                        // Redirect to patrol page to handle event
+                        navigate('/patrol');
+                        return;
+                    }
+
                     // Check if tutorial should be shown - update condition to include steps 9-10
                     if (!stats.tutorialProgress.isCompleted &&
                         (stats.tutorialProgress.currentStep < 4 ||
                             (stats.tutorialProgress.currentStep >= 9 && stats.tutorialProgress.currentStep <= 10) ||
-                            stats.tutorialProgress.currentStep === 16)) {  // Add this condition
+                            stats.tutorialProgress.currentStep === 16)) {
                         setShowTutorial(true);
                     }
 
@@ -48,7 +59,7 @@ function DashboardPage() {
         };
 
         loadPlayerStats();
-    }, [currentUser]);
+    }, [currentUser, navigate]);
 
     // Add handler for prefecture selection complete
     const handlePrefectureComplete = async () => {

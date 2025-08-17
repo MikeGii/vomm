@@ -20,37 +20,33 @@ export const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
                                                                           onDepartmentSelect,
                                                                           isKadett = false
                                                                       }) => {
-    // For academy students, use different departments
+    // For Kadett students, automatically select Sisekaitseakadeemia
+    React.useEffect(() => {
+        if (isKadett && selectedDepartment !== 'Sisekaitseakadeemia') {
+            onDepartmentSelect('Sisekaitseakadeemia');
+        } else if (!isAbipolitseinik && !isKadett && currentDepartment) {
+            onDepartmentSelect(currentDepartment);
+        }
+    }, [isKadett, isAbipolitseinik, currentDepartment, selectedDepartment, onDepartmentSelect]);
+
+    // For academy students who are Kadett, show only Sisekaitseakadeemia
     const getAvailableDepartments = () => {
         if (isKadett) {
-            return [
-                'Sisekaitseakadeemia',
-                'Põhja prefektuur',
-                'Lääne prefektuur',
-                'Lõuna prefektuur',
-                'Ida prefektuur'
-            ];
+            return ['Sisekaitseakadeemia'];
         }
         return getDepartmentsByPrefecture(prefecture);
     };
 
     const departments = getAvailableDepartments();
 
-    // Auto-select for non-abipolitseinik
-    React.useEffect(() => {
-        if (!isAbipolitseinik && !isKadett && currentDepartment) {
-            onDepartmentSelect(currentDepartment);
-        }
-    }, [isAbipolitseinik, isKadett, currentDepartment, onDepartmentSelect]);
-
     const getSelectorTitle = () => {
-        if (isKadett) return 'Vali praktikakoht';
+        if (isKadett) return 'Töökoht';
         return 'Vali tööpiirkond';
     };
 
     const getSelectorInfo = () => {
         if (isKadett) {
-            return 'Kadettina saad valida, kus soovid praktikat läbida või tööampsu teha.';
+            return 'Kadettina töötad Sisekaitseakadeemias.';
         }
         if (isAbipolitseinik) {
             return 'Abipolitseinikuna saad valida oma prefektuuri mis tahes piirkonna.';
@@ -58,11 +54,24 @@ export const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
         return null;
     };
 
+    // Don't show selector for Kadett - just show the locked department
+    if (isKadett) {
+        return (
+            <div className="department-selector">
+                <h3>{getSelectorTitle()}</h3>
+                <div className="department-locked kadett-department">
+                    <p>Sinu töökoht: <strong>Sisekaitseakadeemia</strong></p>
+                    <p className="info-text">{getSelectorInfo()}</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="department-selector">
             <h3>{getSelectorTitle()}</h3>
 
-            {(isAbipolitseinik || isKadett) ? (
+            {isAbipolitseinik ? (
                 <>
                     {getSelectorInfo() && (
                         <p className="selector-info">{getSelectorInfo()}</p>
@@ -72,9 +81,7 @@ export const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
                         value={selectedDepartment}
                         onChange={(e) => onDepartmentSelect(e.target.value)}
                     >
-                        <option value="">
-                            {isKadett ? '-- Vali praktikakoht --' : '-- Vali piirkond --'}
-                        </option>
+                        <option value="">-- Vali piirkond --</option>
                         {departments.map(dept => (
                             <option key={dept} value={dept}>
                                 {dept}
