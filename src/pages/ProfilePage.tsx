@@ -10,6 +10,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { PlayerStats } from '../types';
 import { initializeAttributes } from '../services/TrainingService';
 import { ProfileInventory} from "../components/profile/ProfileInventory";
+import { CharacterEquipment } from '../components/profile/CharacterEquipment';
+import { equipItem, unequipItem } from '../services/EquipmentService';
 import '../styles/pages/Profile.css';
 
 const ProfilePage: React.FC = () => {
@@ -18,6 +20,7 @@ const ProfilePage: React.FC = () => {
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const [loading, setLoading] = useState(true);
     const inventory = playerStats?.inventory || [];
+    const equipment = playerStats?.equipment || {};
 
 
     useEffect(() => {
@@ -79,6 +82,36 @@ const ProfilePage: React.FC = () => {
                 <ProfileAttributes attributes={attributes} />
                 <ProfileSkills abilityIds={abilities} />
                 <ProfileInventory items={inventory} />
+                <CharacterEquipment
+                    equipment={equipment}
+                    inventory={inventory}
+                    onEquip={async (slot, itemId) => {
+                        if (!currentUser) return;
+
+                        const item = inventory.find(i => i.id === itemId);
+                        if (item) {
+                            try {
+                                await equipItem(currentUser.uid, slot, item);
+                                // The real-time listener will update the UI automatically
+                            } catch (error) {
+                                console.error('Failed to equip item:', error);
+                            }
+                        }
+                    }}
+                    onUnequip={async (slot) => {
+                        if (!currentUser) return;
+
+                        const item = equipment[slot];
+                        if (item) {
+                            try {
+                                await unequipItem(currentUser.uid, slot, item);
+                                // The real-time listener will update the UI automatically
+                            } catch (error) {
+                                console.error('Failed to unequip item:', error);
+                            }
+                        }
+                    }}
+                />
             </main>
         </div>
     );
