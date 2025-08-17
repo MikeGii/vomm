@@ -6,12 +6,15 @@ import { PlayerStatsCard } from '../components/dashboard/PlayerStatsCard';
 import { QuickActions } from '../components/dashboard/QuickActions';
 import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { PlayerStats } from '../types';
 import { initializePlayerStats, getPlayerStats } from '../services/PlayerService';
 import { PrefectureSelectionModal } from '../components/dashboard/PrefectureSelectionModal';
 import { Leaderboard} from "../components/leaderboard/Leaderboard";
 import { checkForPendingEvent } from '../services/EventService';
 import { HealthRecoveryManager} from "../components/dashboard/HealthRecoveryManager";
+import { checkAndApplyHealthRecovery } from '../services/HealthService';
+import { checkCourseCompletion } from '../services/CourseService';
 
 import '../styles/pages/Dashboard.css';
 import {PlayerAbilities} from "../components/dashboard/PlayerAbilities";
@@ -19,6 +22,7 @@ import {PlayerAbilities} from "../components/dashboard/PlayerAbilities";
 function DashboardPage() {
     const { currentUser, userData } = useAuth();
     const navigate = useNavigate();
+    const { showToast } = useToast();  // ADD THIS
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [showTutorial, setShowTutorial] = useState(false);
@@ -28,6 +32,27 @@ function DashboardPage() {
         const loadPlayerStats = async () => {
             if (currentUser) {
                 try {
+                    // First check and apply health recovery (works offline)
+                    try {
+                        const recoveryResult = await checkAndApplyHealthRecovery(currentUser.uid);
+                        if (recoveryResult.recovered && recoveryResult.amountRecovered > 0) {
+                            showToast(`Tervis taastus +${recoveryResult.amountRecovered} HP`, 'success');
+                        }
+                    } catch (error) {
+                        console.error('Error checking health recovery:', error);
+                    }
+
+                    // Check course completion
+                    try {
+                        const courseCompleted = await checkCourseCompletion(currentUser.uid);
+                        if (courseCompleted) {
+                            showToast('Koolitus lõpetatud!', 'success');
+                        }
+                    } catch (error) {
+                        console.error('Error checking course completion:', error);
+                    }
+
+                    // Now load the updated stats
                     const stats = await initializePlayerStats(currentUser.uid);
                     setPlayerStats(stats);
 
@@ -60,7 +85,7 @@ function DashboardPage() {
         };
 
         loadPlayerStats();
-    }, [currentUser, navigate]);
+    }, [currentUser, navigate, showToast]);  // ADD showToast to dependencies
 
     // Add handler for prefecture selection complete
     const handlePrefectureComplete = async () => {

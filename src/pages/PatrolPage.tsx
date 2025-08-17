@@ -11,6 +11,7 @@ import { WorkHistory } from '../components/patrol/WorkHistory';
 import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
 import { WorkedHoursDisplay } from "../components/patrol/WorkedHoursDisplay";
 import { EventModal } from '../components/events/EventModal';
+import { checkAndApplyHealthRecovery } from '../services/HealthService';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { PlayerStats, WorkActivity } from '../types';
@@ -183,18 +184,19 @@ const PatrolPage: React.FC = () => {
         }
     }, [currentUser, pendingEvent, activeWorkForEvent, showToast, loadWorkHistory]);
 
-    // Check for pending events on mount
-    useEffect(() => {
-        if (currentUser && !loading) {
-            checkForPendingEvent().catch(console.error);
-        }
-    }, [currentUser, loading, checkForPendingEvent]);
-
-    // Listen to player stats
     useEffect(() => {
         if (!currentUser) return;
 
         const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+
+        // Check health recovery when page loads
+        checkAndApplyHealthRecovery(currentUser.uid).then(recoveryResult => {
+            if (recoveryResult.recovered && recoveryResult.amountRecovered > 0) {
+                showToast(`Tervis taastus +${recoveryResult.amountRecovered} HP`, 'success');
+            }
+        }).catch(error => {
+            console.error('Error checking health recovery on page load:', error);
+        });
 
         const unsubscribe = onSnapshot(statsRef, (doc) => {
             if (doc.exists()) {
@@ -209,7 +211,14 @@ const PatrolPage: React.FC = () => {
         });
 
         return () => unsubscribe();
-    }, [currentUser, processStatsUpdate]);
+    }, [currentUser, processStatsUpdate, showToast]);
+
+    // Check for pending events on mount
+    useEffect(() => {
+        if (currentUser && !loading) {
+            checkForPendingEvent().catch(console.error);
+        }
+    }, [currentUser, loading, checkForPendingEvent]);
 
     // Load work history on mount
     useEffect(() => {
@@ -265,6 +274,31 @@ const PatrolPage: React.FC = () => {
 
         setIsStartingWork(true);
         try {
+            // Check and apply health recovery first (in case player was recovering offline)
+            try {
+                const recoveryResult = await checkAndApplyHealthRecovery(currentUser.uid);
+                if (recoveryResult.recovered && recoveryResult.amountRecovered > 0) {
+                    showToast(`Tervis taastus +${recoveryResult.amountRecovered} HP`, 'success');
+
+                    // Wait a moment for the stats to update
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
+                    // Re-check if we can still work after recovery
+                    const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+                    const statsDoc = await getDoc(statsRef);
+                    if (statsDoc.exists()) {
+                        const updatedStats = statsDoc.data() as PlayerStats;
+                        if (!updatedStats.health || updatedStats.health.current < 50) {
+                            showToast('Su tervis on ikka liiga madal töötamiseks!', 'error');
+                            setIsStartingWork(false);
+                            return;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking health recovery:', error);
+            }
+
             // Check if this is tutorial work
             const isTutorial = !playerStats.tutorialProgress.isCompleted &&
                 playerStats.tutorialProgress.currentStep === 21;
