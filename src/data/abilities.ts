@@ -1,4 +1,9 @@
 // src/data/abilities.ts
+import { IconType } from 'react-icons';
+import { GiPistolGun, GiElectric } from 'react-icons/gi';
+import { MdSpeed } from 'react-icons/md';
+import { FaTabletAlt } from 'react-icons/fa';
+
 export interface TrainingBonus {
     attribute: 'strength' | 'agility' | 'dexterity' | 'intelligence' | 'endurance';
     percentage: number; // e.g., 0.05 for 5%
@@ -8,7 +13,7 @@ export interface Ability {
     id: string;
     name: string;
     description: string;
-    icon: string;
+    icon: IconType;
     requiredCourse: string;
     trainingBonuses: TrainingBonus[];
     replacedBy?: string;
@@ -20,19 +25,19 @@ export const ABILITIES: Ability[] = [
         id: 'firearm_carry_abipolitseinik',
         name: 'Tulirelva kandmine - Abipolitseinik',
         description: 'Õigus kanda ja kasutada tulirelva',
-        icon: '🔫',
+        icon: GiPistolGun,
         requiredCourse: 'firearm_training_abipolitseinik',
         trainingBonuses: [
             { attribute: 'dexterity', percentage: 0.05 },
             { attribute: 'agility', percentage: 0.05 }
         ],
-        replacedBy: 'firearm_carry_enhanced'  // ADD THIS
+        replacedBy: 'firearm_carry_enhanced'
     },
     {
         id: 'firearm_carry_enhanced',
         name: 'Tulirelva kandmine',
         description: 'Täiustatud tulirelva käsitsemise oskused Glock teenistusrelvaga',
-        icon: '🔫',
+        icon: GiPistolGun,
         requiredCourse: 'firearm_handling_glock',
         trainingBonuses: [
             { attribute: 'dexterity', percentage: 0.10 },
@@ -40,11 +45,32 @@ export const ABILITIES: Ability[] = [
         ]
     },
     {
+      id: 'electrical_weapon_usage_abipolitseinik',
+      name: 'Elektrišokirelva kandmine - Abipoltiseinik',
+      description: 'Õigus kanda ja kasutada elektrišokirelva',
+      icon: GiElectric,
+      requiredCourse: 'electrical_shock_weapon_abipolitseinik',
+      trainingBonuses: [
+          { attribute: 'dexterity', percentage: 0.02 },
+          { attribute: 'agility', percentage: 0.02 },
+      ]
+    },
+    {
         id: 'speed_measurement_abipolitseinik',
         name: 'Kiiruse mõõtmine - Abipolitseinik',
         description: 'Oskus kasutada kiirusmõõtmise seadmeid',
-        icon: '📡',
+        icon: MdSpeed,
         requiredCourse: 'speed_measurement_abipolitseinik',
+        trainingBonuses: [
+            { attribute: 'intelligence', percentage: 0.05 }
+        ]
+    },
+    {
+        id: 'police_e_politsei_usage_abipolitseinik',
+        name: 'E-Polistei kasutamine - Abipolitseinik',
+        description: 'Oskus ja õigus kasutada Apollot',
+        icon: FaTabletAlt,
+        requiredCourse: 'police_apollo_usage_abipolitseinik',
         trainingBonuses: [
             { attribute: 'intelligence', percentage: 0.05 }
         ]
