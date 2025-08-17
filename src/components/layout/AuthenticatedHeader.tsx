@@ -178,6 +178,17 @@ export const AuthenticatedHeader: React.FC = () => {
                                     </button>
                                 </div>
 
+                                <button
+                                    onClick={() => {
+                                        navigate('/shop');
+                                        setIsMenuOpen(false);
+                                    }}
+                                    className="menu-item"
+                                >
+                                    <span className="menu-icon">🛒</span>
+                                    <span>Pood</span>
+                                </button>
+
                                 <div className="menu-divider"></div>
 
                                 <div className="menu-section">
