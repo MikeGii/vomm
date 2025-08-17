@@ -5,14 +5,13 @@ import { getFirestore } from 'firebase/firestore';
 import { getDatabase } from 'firebase/database';
 
 const firebaseConfig = {
-    // You'll get these from Firebase Console
-    apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-    authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.REACT_APP_FIREBASE_APP_ID,
-    databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL
+    apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyDssboQ4CjH6gAg3tc2nNtr4tP7tez4Pqg",
+    authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "vomm-eesti.firebaseapp.com",
+    projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "vomm-eesti",
+    storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "vomm-eesti.firebasestorage.app",
+    messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "157866958098",
+    appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:157866958098:web:aa5800f0bdb3baf160a7cb",
+    databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL || "https://vomm-eesti-default-rtdb.europe-west1.firebasedatabase.app"
 };
 
 const app = initializeApp(firebaseConfig);
