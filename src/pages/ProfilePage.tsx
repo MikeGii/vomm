@@ -9,6 +9,7 @@ import { ProfileSkills } from '../components/profile/ProfileSkills';
 import { useAuth } from '../contexts/AuthContext';
 import { PlayerStats } from '../types';
 import { initializeAttributes } from '../services/TrainingService';
+import { ProfileInventory} from "../components/profile/ProfileInventory";
 import '../styles/pages/Profile.css';
 
 const ProfilePage: React.FC = () => {
@@ -16,6 +17,8 @@ const ProfilePage: React.FC = () => {
     const { currentUser } = useAuth();
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const [loading, setLoading] = useState(true);
+    const inventory = playerStats?.inventory || [];
+
 
     useEffect(() => {
         if (!currentUser) return;
@@ -74,7 +77,8 @@ const ProfilePage: React.FC = () => {
                 <h1 className="profile-title">Minu Profiil</h1>
 
                 <ProfileAttributes attributes={attributes} />
-                <ProfileSkills abilities={abilities} />
+                <ProfileSkills abilityIds={abilities} />
+                <ProfileInventory items={inventory} />
             </main>
         </div>
     );
