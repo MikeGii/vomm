@@ -31,7 +31,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     // Get tutorial steps for current page and step
     const TUTORIAL_STEPS = useTutorialSteps(page, currentStep);
     const currentTutorialStep = TUTORIAL_STEPS.find(s => s.step === currentStep);
-    const lastProcessedDbStep = useRef(stats.tutorialProgress.currentStep);
 
     // Use smart positioning for tutorial box
     const { position, arrowPosition } = useSmartPosition(

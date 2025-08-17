@@ -1,5 +1,5 @@
 // src/components/tutorial/hooks/useTutorialHandlers.ts
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { PlayerStats } from '../../../types';
 import { TutorialPage } from '../types/tutorial.types';
 import { updateTutorialProgress } from '../../../services/PlayerService';

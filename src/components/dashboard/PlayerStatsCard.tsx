@@ -1,7 +1,8 @@
 // src/components/dashboard/PlayerStatsCard.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlayerStats } from '../../types';
 import { getExpProgress } from '../../services/PlayerService';
+import { Timestamp } from 'firebase/firestore';
 import '../../styles/components/PlayerStatsCard.css';
 
 interface PlayerStatsCardProps {
@@ -12,6 +13,51 @@ interface PlayerStatsCardProps {
 export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, username }) => {
     const expProgress = getExpProgress(stats.experience);
     const expPercentage = expProgress.percentage;
+    const [healthRecoveryTime, setHealthRecoveryTime] = useState<string>('');
+
+    // Calculate health recovery timer
+    useEffect(() => {
+        if (!stats.health || stats.health.current >= stats.health.max) {
+            setHealthRecoveryTime('');
+            return;
+        }
+
+        const calculateTimeToNextRecovery = () => {
+            // If no lastHealthUpdate, initialize it
+            if (!stats.lastHealthUpdate) {
+                setHealthRecoveryTime('60:00');
+                return;
+            }
+
+            // Convert to Date
+            let lastUpdateDate: Date;
+            if (stats.lastHealthUpdate instanceof Timestamp) {
+                lastUpdateDate = stats.lastHealthUpdate.toDate();
+            } else if (stats.lastHealthUpdate && typeof stats.lastHealthUpdate === 'object' && 'seconds' in stats.lastHealthUpdate) {
+                lastUpdateDate = new Date((stats.lastHealthUpdate as any).seconds * 1000);
+            } else {
+                lastUpdateDate = new Date(stats.lastHealthUpdate);
+            }
+
+            const now = new Date();
+            const timeSinceLastUpdate = now.getTime() - lastUpdateDate.getTime();
+
+            // Calculate time until next 5 HP recovery (1 hour = 5 HP)
+            const msPerHour = 60 * 60 * 1000;
+            const timeToNextRecovery = msPerHour - (timeSinceLastUpdate % msPerHour);
+
+            // Format time
+            const minutes = Math.floor(timeToNextRecovery / 60000);
+            const seconds = Math.floor((timeToNextRecovery % 60000) / 1000);
+
+            setHealthRecoveryTime(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        };
+
+        calculateTimeToNextRecovery();
+        const interval = setInterval(calculateTimeToNextRecovery, 1000);
+
+        return () => clearInterval(interval);
+    }, [stats.health, stats.lastHealthUpdate]);
 
     // Check if player is a Kadett (in academy)
     const isKadett = stats.completedCourses?.includes('sisekaitseakadeemia_entrance');
@@ -38,13 +84,14 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
     };
 
     const getHealthStatus = () => {
-        if (!stats.health) return { text: '—', color: '' };
+        if (!stats.health) return { text: '—', color: '', showRecovery: false };
         const percentage = (stats.health.current / stats.health.max) * 100;
+        const showRecovery = stats.health.current < stats.health.max;
 
-        if (percentage >= 75) return { text: `${stats.health.current}/${stats.health.max}`, color: 'health-good' };
-        if (percentage >= 50) return { text: `${stats.health.current}/${stats.health.max}`, color: 'health-medium' };
-        if (percentage >= 25) return { text: `${stats.health.current}/${stats.health.max}`, color: 'health-low' };
-        return { text: `${stats.health.current}/${stats.health.max}`, color: 'health-critical' };
+        if (percentage >= 75) return { text: `${stats.health.current}/${stats.health.max}`, color: 'health-good', showRecovery };
+        if (percentage >= 50) return { text: `${stats.health.current}/${stats.health.max}`, color: 'health-medium', showRecovery };
+        if (percentage >= 25) return { text: `${stats.health.current}/${stats.health.max}`, color: 'health-low', showRecovery };
+        return { text: `${stats.health.current}/${stats.health.max}`, color: 'health-critical', showRecovery };
     };
 
     const healthStatus = getHealthStatus();
@@ -107,15 +154,20 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                     </div>
                 </div>
 
-                <div className="stat-card">
-                    <span className="stat-icon">❤️</span>
-                    <div className="stat-content">
-                        <span className="stat-title">Tervis</span>
-                        <span className={`stat-value ${healthStatus.color}`}>
+                    <div className="stat-card">
+                        <span className="stat-icon">❤️</span>
+                        <div className="stat-content">
+                            <span className="stat-title">Tervis</span>
+                            <span className={`stat-value ${healthStatus.color}`}>
                             {healthStatus.text}
                         </span>
+                            {healthStatus.showRecovery && healthRecoveryTime && (
+                                <span className="health-recovery-timer">
+                                +5 HP: {healthRecoveryTime}
+                            </span>
+                            )}
+                        </div>
                     </div>
-                </div>
 
                 <div className="stat-card">
                     <span className="stat-icon">⏱️</span>

@@ -1,6 +1,8 @@
 // src/types/index.ts
 
 // Simple user type
+import {Timestamp} from "firebase/firestore";
+
 export interface User {
     uid: string;
     email: string;
@@ -77,6 +79,7 @@ export interface PlayerStats {
     activeWork: ActiveWork | null;
     workHistory?: string[];
     health?: PlayerHealth;
+    lastHealthUpdate?: Timestamp;
 }
 
 // Course definition

@@ -11,6 +11,7 @@ import { initializePlayerStats, getPlayerStats } from '../services/PlayerService
 import { PrefectureSelectionModal } from '../components/dashboard/PrefectureSelectionModal';
 import { Leaderboard} from "../components/leaderboard/Leaderboard";
 import { checkForPendingEvent } from '../services/EventService';
+import { HealthRecoveryManager} from "../components/dashboard/HealthRecoveryManager";
 
 import '../styles/pages/Dashboard.css';
 import {PlayerAbilities} from "../components/dashboard/PlayerAbilities";
@@ -97,6 +98,7 @@ function DashboardPage() {
 
     return (
         <div className="page">
+            <HealthRecoveryManager />
             <AuthenticatedHeader />
             <main className="dashboard-container">
                 {playerStats && userData && (
