@@ -1,6 +1,6 @@
 // src/data/abilities.ts
 import { IconType } from 'react-icons';
-import { GiPistolGun, GiElectric } from 'react-icons/gi';
+import { GiPistolGun, GiElectric, GiPoliceCar } from 'react-icons/gi';
 import { MdSpeed } from 'react-icons/md';
 import { FaTabletAlt } from 'react-icons/fa';
 
@@ -73,6 +73,16 @@ export const ABILITIES: Ability[] = [
         requiredCourse: 'police_apollo_usage_abipolitseinik',
         trainingBonuses: [
             { attribute: 'intelligence', percentage: 0.05 }
+        ]
+    },
+    {
+        id: 'police_car_usage_right_abipolitseinik',
+        name: 'Alarmsõiduki juhtimisõigus - Abipolitseinik',
+        description: 'Õigus ja oskus juhtida ohutult alarmsõidukit teenistusülesandeid täites',
+        icon: GiPoliceCar,
+        requiredCourse: 'police_car_training_abipolitseinik',
+        trainingBonuses: [
+            { attribute: 'dexterity', percentage: 0.05 }
         ]
     }
 ];

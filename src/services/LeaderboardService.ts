@@ -2,7 +2,6 @@
 import {
     collection,
     query,
-    orderBy,
     limit,
     getDocs,
     doc,
@@ -10,6 +9,8 @@ import {
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { LeaderboardEntry, LeaderboardSortBy } from '../types';
+
+const EXCLUDED_EMAILS = ['cjmike12@gmail.com'];
 
 export const getLeaderboard = async (
     sortBy: LeaderboardSortBy = 'level',
@@ -31,14 +32,28 @@ export const getLeaderboard = async (
                 continue;
             }
 
+            // Get user data to check email
             let username = 'Tundmatu';
+            let shouldExclude = false;
+
             try {
                 const userDoc = await getDoc(doc(firestore, 'users', statsDoc.id));
                 if (userDoc.exists()) {
-                    username = userDoc.data().username || 'Tundmatu';
+                    const userData = userDoc.data();
+                    username = userData.username || 'Tundmatu';
+
+                    // Check if this user should be excluded
+                    if (userData.email && EXCLUDED_EMAILS.includes(userData.email)) {
+                        shouldExclude = true;
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching username for', statsDoc.id, error);
+            }
+
+            // Skip if user should be excluded
+            if (shouldExclude) {
+                continue;
             }
 
             leaderboard.push({
@@ -47,7 +62,7 @@ export const getLeaderboard = async (
                 level: playerData.level || 1,
                 experience: playerData.experience || 0,
                 reputation: playerData.reputation || 0,
-                money: playerData.money || 0,  // ADD THIS
+                money: playerData.money || 0,
                 rank: playerData.rank || null,
                 badgeNumber: playerData.badgeNumber || null,
                 isEmployed: playerData.isEmployed || false,
@@ -113,78 +128,6 @@ export const getLeaderboard = async (
         return leaderboard;
     } catch (error) {
         console.error('Error fetching leaderboard:', error);
-        return [];
-    }
-};
-
-// Optional: Get all players including those without training
-export const getAllPlayersLeaderboard = async (
-    sortBy: LeaderboardSortBy = 'level',
-    limitCount: number = 50
-): Promise<LeaderboardEntry[]> => {
-    try {
-        const statsQuery = query(
-            collection(firestore, 'playerStats'),
-            limit(limitCount)
-        );
-
-        const querySnapshot = await getDocs(statsQuery);
-        const leaderboard: LeaderboardEntry[] = [];
-
-        for (const statsDoc of querySnapshot.docs) {
-            const playerData = statsDoc.data();
-
-            // Get username
-            let username = 'Tundmatu';
-            try {
-                const userDoc = await getDoc(doc(firestore, 'users', statsDoc.id));
-                if (userDoc.exists()) {
-                    username = userDoc.data().username || 'Tundmatu';
-                }
-            } catch (error) {
-                console.error('Error fetching username for', statsDoc.id, error);
-            }
-
-            leaderboard.push({
-                userId: statsDoc.id,
-                username,
-                level: playerData.level || 1,
-                experience: playerData.experience || 0,
-                reputation: playerData.reputation || 0,
-                money: playerData.money || 0,
-                rank: playerData.rank || null,
-                badgeNumber: playerData.badgeNumber || null,
-                isEmployed: playerData.isEmployed || false,
-                hasCompletedTraining: playerData.hasCompletedTraining || false,
-                completedCourses: playerData.completedCourses || [],
-                attributes: playerData.attributes,
-                casesCompleted: playerData.casesCompleted || 0,
-                criminalsArrested: playerData.criminalsArrested || 0,
-                totalWorkedHours: playerData.totalWorkedHours || 0
-            });
-        }
-
-        // Sort in memory
-        leaderboard.sort((a, b) => {
-            switch (sortBy) {
-                case 'level':
-                    if (b.level !== a.level) {
-                        return b.level - a.level;
-                    }
-                    return b.reputation - a.reputation;
-                case 'reputation':
-                    if (b.reputation !== a.reputation) {
-                        return b.reputation - a.reputation;
-                    }
-                    return b.level - a.level;
-                default:
-                    return b.level - a.level;
-            }
-        });
-
-        return leaderboard;
-    } catch (error) {
-        console.error('Error fetching all players leaderboard:', error);
         return [];
     }
 };

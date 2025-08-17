@@ -13,7 +13,7 @@ export const gameUpdates: GameUpdate[] = [
     {
         id: '1',
         title: 'Tasakaalustatud koolitused',
-        description: 'Lisatud 3 uut koolitust abipolitseinikele ja 2 uut oskust ning tasakaalustatud iga koolituse tasud. Mängija näeb nüüd koolituste lehe alt vastavalt ' +
+        description: 'Lisatud 3 uut koolitust abipolitseinikele ja 3 uut oskust ning tasakaalustatud iga koolituse tasud. Mängija näeb nüüd koolituste lehe alt vastavalt ' +
             'enda staatusele kõiki koolitusi ja iga koolituse avamise jaoks vajalike nõudmisi. Uued ikoonid Omandatud oskuste sektsioonis.',
         date: '2025-08-17'
     }

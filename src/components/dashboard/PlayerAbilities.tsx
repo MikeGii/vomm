@@ -1,5 +1,4 @@
 import React from 'react';
-import { IconType} from "react-icons";
 import { PlayerStats } from '../../types';
 import { getActiveAbilities } from '../../data/abilities';
 import '../../styles/components/PlayerAbilities.css';

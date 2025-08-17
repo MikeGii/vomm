@@ -1,5 +1,5 @@
 // src/components/tutorial/TutorialOverlay.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { TutorialOverlayProps } from './types/tutorial.types';
 import { useTutorialSteps } from './hooks/useTutorialSteps';
 import { useTutorialHighlight } from './hooks/useTutorialHighlight';
@@ -51,6 +51,26 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         onTutorialComplete
     });
 
+    // Define handleWaitingComplete BEFORE it's used in useEffects
+    const handleWaitingComplete = useCallback(() => {
+        setIsWaiting(false);
+
+        // Progress to next step based on context
+        if (currentStep === 6) {
+            // Course completed, move to step 7
+            setCurrentStep(7);
+            updateTutorialProgress(userId, 7);
+            setIsVisible(true);
+        } else if (currentStep === 22) {
+            // Work completed, move to step 23
+            setTimeout(async () => {
+                await updateTutorialProgress(userId, 23);
+                setCurrentStep(23);
+                setIsVisible(true);
+            }, 1500); // Small delay to let work completion process
+        }
+    }, [currentStep, userId]);
+
     // Handle waiting states for course and work completion
     useEffect(() => {
         // Course completion waiting (step 6)
@@ -77,7 +97,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         }
     }, [currentStep, stats.activeCourse, stats.activeWork]);
 
-    // Also add a periodic update for the waiting time
+    // Periodic update for the waiting time
     useEffect(() => {
         if (!isWaiting) return;
 
@@ -99,27 +119,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
         const interval = setInterval(updateWaitingTime, 1000);
         return () => clearInterval(interval);
-    }, [isWaiting, currentStep, stats.activeCourse, stats.activeWork]);
-
-    // Handle waiting completion
-    const handleWaitingComplete = () => {
-        setIsWaiting(false);
-
-        // Progress to next step based on context
-        if (currentStep === 6) {
-            // Course completed, move to step 7
-            setCurrentStep(7);
-            updateTutorialProgress(userId, 7);
-            setIsVisible(true);
-        } else if (currentStep === 22) {
-            // Work completed, move to step 23
-            setTimeout(async () => {
-                await updateTutorialProgress(userId, 23);
-                setCurrentStep(23);
-                setIsVisible(true);
-            }, 1500); // Small delay to let work completion process
-        }
-    };
+    }, [isWaiting, currentStep, stats.activeCourse, stats.activeWork, handleWaitingComplete]);
 
     // Update step 9 content with prefecture name
     useEffect(() => {
@@ -188,7 +188,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             }
         }
     }, [stats.tutorialProgress.isCompleted, stats.tutorialProgress.currentStep,
-        userId, page, isWaiting]);
+        userId, page, isWaiting, currentStep, stats.activeWork]);
 
     // Check if course was completed during waiting
     useEffect(() => {
@@ -199,7 +199,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             // Course completed, trigger waiting complete
             handleWaitingComplete();
         }
-    }, [stats.completedCourses, currentStep, stats.activeCourse, stats.tutorialProgress.isCompleted]);
+    }, [stats.completedCourses, currentStep, stats.activeCourse, stats.tutorialProgress.isCompleted, handleWaitingComplete]);
 
     // Check if work was completed during waiting
     useEffect(() => {
@@ -210,7 +210,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             // Work completed, trigger waiting complete
             handleWaitingComplete();
         }
-    }, [currentStep, stats.activeWork, isWaiting, stats.tutorialProgress.isCompleted]);
+    }, [currentStep, stats.activeWork, isWaiting, stats.tutorialProgress.isCompleted, handleWaitingComplete]);
 
     // Highlight elements when visible
     useEffect(() => {

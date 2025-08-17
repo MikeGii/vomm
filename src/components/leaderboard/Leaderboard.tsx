@@ -1,5 +1,5 @@
 // src/components/leaderboard/Leaderboard.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { LeaderboardTable } from './LeaderboardTable';
 import { LeaderboardFilter } from './LeaderboardFilter';
 import { getLeaderboard } from '../../services/LeaderboardService';
@@ -16,11 +16,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        loadLeaderboard();
-    }, [sortBy]);
-
-    const loadLeaderboard = async () => {
+    const loadLeaderboard = useCallback(async () => {
         setLoading(true);
         setError(null);
 
@@ -33,7 +29,11 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [sortBy]);
+
+    useEffect(() => {
+        loadLeaderboard();
+    }, [loadLeaderboard]);
 
     const handleSortChange = (newSort: LeaderboardSortBy) => {
         setSortBy(newSort);
