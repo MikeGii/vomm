@@ -1,7 +1,6 @@
-// src/pages/PatrolPage.tsx
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { HealthDisplay } from '../components/patrol/HealthDisplay';
@@ -10,22 +9,28 @@ import { WorkActivitySelector } from '../components/patrol/WorkActivitySelector'
 import { ActiveWorkProgress } from '../components/patrol/ActiveWorkProgress';
 import { WorkHistory } from '../components/patrol/WorkHistory';
 import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
+import { WorkedHoursDisplay } from "../components/patrol/WorkedHoursDisplay";
+import { EventModal } from '../components/events/EventModal';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { PlayerStats, WorkActivity } from '../types';
+import { WorkEvent, EventChoice } from '../types/events.types';
 import {
     startWork,
     checkWorkCompletion,
     getRemainingWorkTime,
-    getWorkHistory
+    getWorkHistory,
+    completeWorkAfterEvent
 } from '../services/WorkService';
-import { getAvailableWorkActivities } from '../data/workActivities';
+import { getAvailableWorkActivities, getWorkActivityById } from '../data/workActivities';
 import { updateTutorialProgress } from '../services/PlayerService';
-import { WorkedHoursDisplay} from "../components/patrol/WorkedHoursDisplay";
+import { getPendingEvent, processEventChoice } from '../services/EventService';
 import '../styles/pages/Patrol.css';
 
 const PatrolPage: React.FC = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
+    const { showToast } = useToast();
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
@@ -38,10 +43,12 @@ const PatrolPage: React.FC = () => {
     const [workHistory, setWorkHistory] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showTutorial, setShowTutorial] = useState(false);
+    const [pendingEvent, setPendingEvent] = useState<WorkEvent | null>(null);
+    const [isProcessingEvent, setIsProcessingEvent] = useState(false);
+    const [activeWorkForEvent, setActiveWorkForEvent] = useState<any>(null);
+
     const completionAlertShownRef = useRef<boolean>(false);
     const isKadett = playerStats?.completedCourses?.includes('sisekaitseakadeemia_entrance') || false;
-
-
 
     // Load work history
     const loadWorkHistory = useCallback(async () => {
@@ -59,6 +66,25 @@ const PatrolPage: React.FC = () => {
         }
         return 'Patrullteenistus';
     };
+
+    // Check for pending events
+    const checkForPendingEvent = useCallback(async () => {
+        if (!currentUser) return;
+
+        const event = await getPendingEvent(currentUser.uid);
+        if (event) {
+            setPendingEvent(event.eventData);
+            // Get fresh stats instead of using the stale closure
+            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+            const statsDoc = await getDoc(statsRef);
+            if (statsDoc.exists()) {
+                const currentStats = statsDoc.data() as PlayerStats;
+                if (currentStats.activeWork) {
+                    setActiveWorkForEvent(currentStats.activeWork);
+                }
+            }
+        }
+    }, [currentUser]);
 
     // Process stats update
     const processStatsUpdate = useCallback(async (stats: PlayerStats) => {
@@ -78,21 +104,25 @@ const PatrolPage: React.FC = () => {
             if (remaining <= 0 && !completionAlertShownRef.current) {
                 completionAlertShownRef.current = true;
 
-                // Store activeWork before it gets cleared by checkWorkCompletion
-                const wasTrainingWork = stats.activeWork?.isTutorial || false;
+                // Check for work completion and events
+                const result = await checkWorkCompletion(currentUser!.uid);
 
-                const completed = await checkWorkCompletion(currentUser!.uid);
-                if (completed) {
-                    alert('Töö on edukalt lõpetatud!');
+                if (result.hasPendingEvent) {
+                    // Has event, show it
+                    await checkForPendingEvent();
+                } else if (result.completed) {
+                    // Work completed without event - removed unused variable
+                    const expGained = stats.activeWork!.expectedExp;
 
-                    setTimeout(async () => {
-                        await loadWorkHistory();
+                    showToast(`Töö on edukalt lõpetatud! Teenitud kogemus: +${expGained} XP`, 'success', 4000);
 
-                        // Check if this was tutorial work and progress to step 23
-                        if (wasTrainingWork &&
-                            stats.tutorialProgress.currentStep === 22) {
-                            // Progress to step 23 to show work history
-                            await updateTutorialProgress(currentUser!.uid, 23);
+                    setTimeout(() => {
+                        loadWorkHistory().catch(console.error);
+
+                        // Check tutorial progress
+                        const wasTrainingWork = stats.activeWork?.isTutorial || false;
+                        if (wasTrainingWork && stats.tutorialProgress.currentStep === 22) {
+                            updateTutorialProgress(currentUser!.uid, 23).catch(console.error);
                             setShowTutorial(true);
                         }
                     }, 1500);
@@ -111,7 +141,54 @@ const PatrolPage: React.FC = () => {
             stats.tutorialProgress.currentStep <= 24) {
             setShowTutorial(true);
         }
-    }, [currentUser, loadWorkHistory]);
+    }, [currentUser, loadWorkHistory, checkForPendingEvent, showToast]);
+
+    // Handle event choice
+    const handleEventChoice = useCallback(async (choice: EventChoice) => {
+        if (!currentUser || !pendingEvent || !activeWorkForEvent) return;
+
+        setIsProcessingEvent(true);
+
+        try {
+            // Get work activity name
+            const workActivity = getWorkActivityById(activeWorkForEvent.workId);
+            const workName = workActivity?.name || 'Tundmatu töö';
+
+            // Process the event choice
+            const success = await processEventChoice(
+                currentUser.uid,
+                activeWorkForEvent.workSessionId || `${currentUser.uid}_${Date.now()}`,
+                pendingEvent,
+                choice,
+                workName
+            );
+
+            if (success) {
+                // Complete the work after event
+                await completeWorkAfterEvent(currentUser.uid);
+
+                // Show completion message
+                setTimeout(() => {
+                    showToast('Töö on edukalt lõpetatud!', 'success');
+                    setPendingEvent(null);
+                    setActiveWorkForEvent(null);
+                    loadWorkHistory().catch(console.error);
+                }, 500);
+            }
+        } catch (error) {
+            console.error('Error processing event:', error);
+            showToast('Viga sündmuse töötlemisel!', 'error');
+        } finally {
+            setIsProcessingEvent(false);
+        }
+    }, [currentUser, pendingEvent, activeWorkForEvent, showToast, loadWorkHistory]);
+
+    // Check for pending events on mount
+    useEffect(() => {
+        if (currentUser && !loading) {
+            checkForPendingEvent().catch(console.error);
+        }
+    }, [currentUser, loading, checkForPendingEvent]);
 
     // Listen to player stats
     useEffect(() => {
@@ -123,7 +200,7 @@ const PatrolPage: React.FC = () => {
             if (doc.exists()) {
                 const stats = doc.data() as PlayerStats;
                 setPlayerStats(stats);
-                processStatsUpdate(stats);
+                processStatsUpdate(stats).catch(console.error);
                 setLoading(false);
             }
         }, (error) => {
@@ -136,7 +213,7 @@ const PatrolPage: React.FC = () => {
 
     // Load work history on mount
     useEffect(() => {
-        loadWorkHistory();
+        loadWorkHistory().catch(console.error);
     }, [loadWorkHistory]);
 
     // Timer for active work
@@ -157,14 +234,16 @@ const PatrolPage: React.FC = () => {
                         intervalRef.current = null;
                     }
 
-                    setTimeout(async () => {
-                        await checkWorkCompletion(currentUser!.uid);
+                    setTimeout(() => {
+                        checkWorkCompletion(currentUser!.uid).catch(console.error);
                     }, 1100);
                 }
             };
 
-            checkAndUpdate();
-            intervalRef.current = setInterval(checkAndUpdate, 1000);
+            checkAndUpdate().catch(console.error);
+            intervalRef.current = setInterval(() => {
+                checkAndUpdate().catch(console.error);
+            }, 1000);
         }
 
         return () => {
@@ -176,11 +255,11 @@ const PatrolPage: React.FC = () => {
     }, [playerStats?.activeWork, currentUser]);
 
     // Handle start work
-    const handleStartWork = async () => {
+    const handleStartWork = useCallback(async () => {
         if (!currentUser || !playerStats || isStartingWork) return;
 
         if (!selectedDepartment || !selectedActivity || selectedHours < 1) {
-            alert('Palun vali osakond, tegevus ja tunnid!');
+            showToast('Palun vali osakond, tegevus ja tunnid!', 'warning');
             return;
         }
 
@@ -204,17 +283,18 @@ const PatrolPage: React.FC = () => {
                 await updateTutorialProgress(currentUser.uid, 22);
             }
         } catch (error: any) {
-            alert(error.message || 'Tööle asumine ebaõnnestus');
+            showToast(error.message || 'Tööle asumine ebaõnnestus', 'error');
         } finally {
             setIsStartingWork(false);
         }
-    };
+    }, [currentUser, playerStats, isStartingWork, selectedDepartment, selectedActivity, selectedHours, showToast]);
 
     // Handle tutorial complete
     const handleTutorialComplete = useCallback(() => {
         setShowTutorial(false);
     }, []);
 
+    // Loading state
     if (loading) {
         return (
             <div className="page">
@@ -226,6 +306,7 @@ const PatrolPage: React.FC = () => {
         );
     }
 
+    // Error state
     if (!playerStats) {
         return (
             <div className="page">
@@ -319,6 +400,15 @@ const PatrolPage: React.FC = () => {
 
                 {/* Work history */}
                 <WorkHistory history={workHistory} />
+
+                {/* Event Modal */}
+                {pendingEvent && (
+                    <EventModal
+                        event={pendingEvent}
+                        onChoiceSelect={handleEventChoice}
+                        isProcessing={isProcessingEvent}
+                    />
+                )}
 
                 {/* Tutorial overlay */}
                 {showTutorial && currentUser && (

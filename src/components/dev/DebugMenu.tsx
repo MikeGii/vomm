@@ -1,6 +1,6 @@
 // src/components/dev/DebugMenu.tsx
 import React, { useState, useEffect } from 'react';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import {doc, updateDoc, getDoc, setDoc} from 'firebase/firestore';
 import { firestore } from '../../config/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { initializeAttributes, initializeTrainingData } from '../../services/TrainingService';
@@ -8,6 +8,8 @@ import { PlayerStats } from '../../types';
 import { checkCourseCompletion } from '../../services/CourseService';
 import { checkWorkCompletion } from '../../services/WorkService';
 import { Timestamp } from 'firebase/firestore';
+import { createActiveEvent, getPendingEvent } from '../../services/EventService';
+import { ALL_EVENTS } from '../../data/events';
 import '../../styles/components/dev/DebugMenu.css';
 
 export const DebugMenu: React.FC = () => {
@@ -267,6 +269,153 @@ export const DebugMenu: React.FC = () => {
         }
     };
 
+    const triggerRandomEvent = async () => {
+        if (!currentUser || !playerStats?.activeWork) {
+            alert('Aktiivne töö puudub! Alusta tööd esmalt.');
+            return;
+        }
+
+        if (!window.confirm('Trigger random event for current work?')) return;
+
+        setIsProcessing(true);
+        try {
+            // Create an event for current work
+            const workSessionId = playerStats.activeWork.workSessionId || `${currentUser.uid}_${Date.now()}`;
+            const event = await createActiveEvent(
+                currentUser.uid,
+                workSessionId,
+                playerStats.activeWork.workId,
+                playerStats.level
+            );
+
+            if (event) {
+                alert('Event triggered! Refresh the page to see it.');
+                window.location.reload();
+            } else {
+                alert('No event was triggered (30% chance of no event)');
+            }
+        } catch (error) {
+            console.error('Error triggering event:', error);
+            alert('Failed to trigger event');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    const completeWorkWithEvent = async () => {
+        if (!currentUser || !playerStats?.activeWork) {
+            alert('Aktiivne töö puudub!');
+            return;
+        }
+
+        if (!window.confirm('Complete work and trigger an event?')) return;
+
+        setIsProcessing(true);
+        try {
+            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+
+            // First create an event
+            const workSessionId = playerStats.activeWork.workSessionId || `${currentUser.uid}_${Date.now()}`;
+            await createActiveEvent(
+                currentUser.uid,
+                workSessionId,
+                playerStats.activeWork.workId,
+                playerStats.level
+            );
+
+            // Then complete the work
+            await updateDoc(statsRef, {
+                'activeWork.endsAt': Timestamp.now()
+            });
+
+            // Wait and trigger completion
+            setTimeout(() => {
+                alert('Work completed with event! Refresh to see the event.');
+                window.location.reload();
+            }, 100);
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to complete with event');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    const forceSpecificEvent = async () => {
+        if (!currentUser || !playerStats?.activeWork) {
+            alert('Aktiivne töö puudub!');
+            return;
+        }
+
+        // Get events for current work activity
+        const availableEvents = ALL_EVENTS.filter(e =>
+            e.activityTypes.includes(playerStats.activeWork!.workId)
+        );
+
+        if (availableEvents.length === 0) {
+            alert('No events available for current work type');
+            return;
+        }
+
+        // Let developer choose which event
+        const eventList = availableEvents.map((e, i) => `${i + 1}. ${e.title}`).join('\n');
+        const choice = prompt(`Choose event (1-${availableEvents.length}):\n${eventList}`);
+
+        if (!choice) return;
+
+        const eventIndex = parseInt(choice) - 1;
+        if (isNaN(eventIndex) || eventIndex < 0 || eventIndex >= availableEvents.length) {
+            alert('Invalid choice');
+            return;
+        }
+
+        setIsProcessing(true);
+        try {
+            const selectedEvent = availableEvents[eventIndex];
+            const workSessionId = playerStats.activeWork.workSessionId || `${currentUser.uid}_${Date.now()}`;
+
+            // Create the specific event
+            const activeEvent = {
+                eventId: selectedEvent.id,
+                userId: currentUser.uid,
+                workSessionId: workSessionId,
+                triggeredAt: Timestamp.now(),
+                status: 'pending' as const
+            };
+
+            // Store in activeEvents collection
+            const eventRef = doc(firestore, 'activeEvents', `${currentUser.uid}_${workSessionId}`);
+            await setDoc(eventRef, activeEvent);
+
+            alert(`Event "${selectedEvent.title}" created! Refresh to see it.`);
+            window.location.reload();
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to create event');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    const checkPendingEvents = async () => {
+        if (!currentUser) return;
+
+        setIsProcessing(true);
+        try {
+            const pending = await getPendingEvent(currentUser.uid);
+            if (pending) {
+                alert(`Pending event found: "${pending.eventData.title}"\n\nRefresh the page to see it.`);
+            } else {
+                alert('No pending events');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to check events');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     return (
         <>
             {/* Floating debug button */}
@@ -348,6 +497,42 @@ export const DebugMenu: React.FC = () => {
                                 disabled={isProcessing}
                             >
                                 ⚠️ FULL RESET
+                            </button>
+                        </div>
+
+                        <div className="debug-section">
+                            <h4>Event Testing</h4>
+                            <button
+                                className="debug-btn"
+                                onClick={triggerRandomEvent}
+                                disabled={isProcessing || !playerStats?.activeWork}
+                                title="Triggers a random event for current work"
+                            >
+                                🎲 Trigger Random Event
+                            </button>
+                            <button
+                                className="debug-btn"
+                                onClick={forceSpecificEvent}
+                                disabled={isProcessing || !playerStats?.activeWork}
+                                title="Choose specific event to trigger"
+                            >
+                                🎯 Force Specific Event
+                            </button>
+                            <button
+                                className="debug-btn"
+                                onClick={completeWorkWithEvent}
+                                disabled={isProcessing || !playerStats?.activeWork}
+                                title="Complete work and trigger event"
+                            >
+                                ⚡ Complete Work + Event
+                            </button>
+                            <button
+                                className="debug-btn"
+                                onClick={checkPendingEvents}
+                                disabled={isProcessing}
+                                title="Check if there are pending events"
+                            >
+                                🔍 Check Pending Events
                             </button>
                         </div>
 

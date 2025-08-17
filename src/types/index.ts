@@ -143,6 +143,7 @@ export interface ActiveWork {
     expectedMoney?: number; // For future use
     status: 'in_progress' | 'completed';
     isTutorial?: boolean; // For 20-second tutorial work
+    workSessionId?: string;
 }
 
 export interface WorkHistoryEntry {
@@ -193,3 +194,5 @@ export interface GameUpdate {
     date: string;
     isNew?: boolean;
 }
+
+export * from './events.types';

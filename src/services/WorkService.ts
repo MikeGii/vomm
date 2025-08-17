@@ -11,12 +11,13 @@ import {
     where,
     orderBy,
     limit,
-    getDocs
+    getDocs, deleteDoc
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import {PlayerStats, ActiveWork, WorkHistoryEntry, TrainingData} from '../types';
 import { getWorkActivityById, calculateWorkRewards } from '../data/workActivities';
 import {calculateLevelFromExp} from "./PlayerService";
+import { createActiveEvent, getPendingEvent} from "./EventService";
 
 // Start a work session
 export const startWork = async (
@@ -66,6 +67,9 @@ export const startWork = async (
     const endsAtMillis = now.toMillis() + (duration * 1000);
     const endsAt = Timestamp.fromMillis(endsAtMillis);
 
+    // Generate work session ID
+    const workSessionId = `${userId}_${Date.now()}`;
+
     const activeWork: ActiveWork = {
         workId: workId,
         userId: userId,
@@ -76,7 +80,8 @@ export const startWork = async (
         totalHours: hours,
         expectedExp: expectedExp,
         status: 'in_progress',
-        isTutorial: isTutorial
+        isTutorial: isTutorial,
+        workSessionId: workSessionId
     };
 
     // Update player stats
@@ -89,20 +94,28 @@ export const startWork = async (
     // Store in activeWork collection
     await setDoc(doc(firestore, 'activeWork', `${userId}_${Date.now()}`), activeWork);
 
+    // Create event for this work session (70% chance, handled in service)
+    if (!isTutorial) { // Don't create events for tutorial work
+        await createActiveEvent(userId, workSessionId, workId, stats.level);
+    }
+
     return activeWork;
 };
 
 // Check and complete work if time is up
-export const checkWorkCompletion = async (userId: string): Promise<boolean> => {
+export const checkWorkCompletion = async (userId: string): Promise<{
+    completed: boolean;
+    hasPendingEvent: boolean;
+}> => {
     const statsRef = doc(firestore, 'playerStats', userId);
     const statsDoc = await getDoc(statsRef);
 
-    if (!statsDoc.exists()) return false;
+    if (!statsDoc.exists()) return { completed: false, hasPendingEvent: false };
 
     const stats = statsDoc.data() as PlayerStats;
 
     if (!stats.activeWork || stats.activeWork.status !== 'in_progress') {
-        return false;
+        return { completed: false, hasPendingEvent: false };
     }
 
     const now = Timestamp.now();
@@ -118,55 +131,87 @@ export const checkWorkCompletion = async (userId: string): Promise<boolean> => {
     }
 
     if (now.toMillis() >= endsAtMillis) {
-        // Work is complete
-        const workActivity = getWorkActivityById(stats.activeWork.workId);
-        if (!workActivity) return false;
+        // Work time is complete, check for pending event
+        const pendingEvent = await getPendingEvent(userId);
 
-        // Add to work history
-        const historyEntry: WorkHistoryEntry = {
-            userId: userId,
-            workId: stats.activeWork.workId,
-            workName: workActivity.name,
-            prefecture: stats.activeWork.prefecture,
-            department: stats.activeWork.department,
-            hoursWorked: stats.activeWork.totalHours,
-            expEarned: stats.activeWork.expectedExp,
-            completedAt: new Date()
-        };
+        if (pendingEvent) {
+            // Has pending event, don't complete work yet
+            return { completed: false, hasPendingEvent: true };
+        }
 
-        const historyRef = await addDoc(collection(firestore, 'workHistory'), historyEntry);
-
-        // Update player stats
-        const newExperience = stats.experience + stats.activeWork.expectedExp;
-        const newLevel = calculateLevelFromExp(newExperience);
-
-        // Calculate new total worked hours
-        const newTotalWorkedHours = (stats.totalWorkedHours || 0) + stats.activeWork.totalHours;
-
-        // Since minimum work is 1 hour, training clicks should reset to full 50
-        const normalTrainingClicks = 50;
-
-        // Reset training data with new timestamp for the new hour
-        const updatedTrainingData: TrainingData = {
-            remainingClicks: normalTrainingClicks,
-            lastResetTime: Timestamp.now(),
-            totalTrainingsDone: stats.trainingData?.totalTrainingsDone || 0,
-            isWorking: false
-        };
-
-        await updateDoc(statsRef, {
-            activeWork: null,
-            experience: newExperience,
-            level: newLevel,
-            totalWorkedHours: newTotalWorkedHours,
-            workHistory: [...(stats.workHistory || []), historyRef.id],
-            trainingData: updatedTrainingData
-        });
-
-        return true;
+        // No pending event, complete the work
+        await completeWork(userId, stats);
+        return { completed: true, hasPendingEvent: false };
     }
 
-    return false;
+    return { completed: false, hasPendingEvent: false };
+};
+
+// New function to complete work after event
+export const completeWorkAfterEvent = async (userId: string): Promise<boolean> => {
+    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsDoc = await getDoc(statsRef);
+
+    if (!statsDoc.exists()) return false;
+
+    const stats = statsDoc.data() as PlayerStats;
+
+    if (!stats.activeWork) return false;
+
+    await completeWork(userId, stats);
+    return true;
+};
+
+// Extract work completion logic to separate function
+const completeWork = async (userId: string, stats: PlayerStats): Promise<void> => {
+    if (!stats.activeWork) return;
+
+    const workActivity = getWorkActivityById(stats.activeWork.workId);
+    if (!workActivity) return;
+
+    // Add to work history
+    const historyEntry: WorkHistoryEntry = {
+        userId: userId,
+        workId: stats.activeWork.workId,
+        workName: workActivity.name,
+        prefecture: stats.activeWork.prefecture,
+        department: stats.activeWork.department,
+        hoursWorked: stats.activeWork.totalHours,
+        expEarned: stats.activeWork.expectedExp,
+        completedAt: new Date()
+    };
+
+    await addDoc(collection(firestore, 'workHistory'), historyEntry);
+
+    // Update player stats
+    const newExperience = stats.experience + stats.activeWork.expectedExp;
+    const newLevel = calculateLevelFromExp(newExperience);
+
+    // Calculate new total worked hours
+    const newTotalWorkedHours = (stats.totalWorkedHours || 0) + stats.activeWork.totalHours;
+
+    // Reset training data
+    const normalTrainingClicks = 50;
+    const updatedTrainingData: TrainingData = {
+        remainingClicks: normalTrainingClicks,
+        lastResetTime: Timestamp.now(),
+        totalTrainingsDone: stats.trainingData?.totalTrainingsDone || 0,
+        isWorking: false
+    };
+
+    // Clean up active work from collection
+    if (stats.activeWork.workSessionId) {
+        await deleteDoc(doc(firestore, 'activeWork', stats.activeWork.workSessionId));
+    }
+
+    // Update player stats
+    await updateDoc(doc(firestore, 'playerStats', userId), {
+        experience: newExperience,
+        level: newLevel,
+        totalWorkedHours: newTotalWorkedHours,
+        activeWork: null,
+        trainingData: updatedTrainingData
+    });
 };
 
 // Get remaining time for active work

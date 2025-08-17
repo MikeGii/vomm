@@ -1,5 +1,5 @@
 // src/components/tutorial/hooks/useTutorialHandlers.ts
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { PlayerStats } from '../../../types';
 import { TutorialPage } from '../types/tutorial.types';
 import { updateTutorialProgress } from '../../../services/PlayerService';
@@ -27,16 +27,6 @@ export const useTutorialHandlers = ({
                                         removeHighlight,
                                         onTutorialComplete
                                     }: HandlerProps) => {
-
-    // Sync currentStep with database
-    useEffect(() => {
-        const dbStep = stats.tutorialProgress.currentStep;
-        // Only sync if there's an actual difference and not both are 0
-        if (dbStep !== currentStep && !(dbStep === 0 && currentStep === 0)) {
-            console.log('Syncing currentStep from stats:', dbStep);
-            setCurrentStep(dbStep);
-        }
-    }, [stats.tutorialProgress.currentStep, currentStep, setCurrentStep]);
 
     // Handle step 6 - Course enrollment
     useEffect(() => {
