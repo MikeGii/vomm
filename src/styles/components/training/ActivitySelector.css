@@ -162,3 +162,155 @@ select option:disabled {
     color: #666;
     background: #2a2a2a;
 }
+
+.player-level-info {
+    background: linear-gradient(135deg, #2a2a2a 0%, #333 100%);
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.player-level-info span {
+    color: #b0b0b0;
+    font-size: 0.95rem;
+}
+
+.level-display {
+    color: #4a90e2;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+/* Style for optgroups in dropdown */
+.activity-dropdown optgroup {
+    background-color: #1a1a1a;
+    color: #4a90e2;
+    font-weight: 600;
+    padding: 0.5rem;
+}
+
+.activity-dropdown optgroup[label*="lukus"] {
+    color: #666;
+}
+
+.activity-dropdown option:disabled {
+    color: #555;
+    font-style: italic;
+}
+
+/* Enhanced requirement warning */
+.requirement-warning {
+    background: linear-gradient(135deg, #3a2525 0%, #4a2a2a 100%);
+    border: 1px solid #aa4444;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.warning-icon {
+    font-size: 1.5rem;
+    color: #ff6b6b;
+}
+
+.warning-content {
+    flex: 1;
+}
+
+.warning-content strong {
+    color: #ff9999;
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.warning-content p {
+    color: #daa;
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+}
+
+.level-difference {
+    color: #ff6b6b !important;
+    font-weight: 600;
+    margin-top: 0.5rem !important;
+}
+
+/* Enhanced equipment bonus display */
+.equipment-bonus-info {
+    background: linear-gradient(135deg, #2a3a2a 0%, #3a4a3a 100%);
+    border: 1px solid #4a9e4a;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.bonus-details {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.bonus-item {
+    color: #6acc6a;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Enhanced rewards display */
+.activity-rewards {
+    background: #252525;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.activity-rewards h4 {
+    color: #4a90e2;
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+}
+
+.activity-rewards li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #333;
+}
+
+.activity-rewards li:last-child {
+    border-bottom: none;
+}
+
+.exp-reward {
+    color: #ffd700 !important;
+    font-weight: 600;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .player-level-info {
+        padding: 0.5rem;
+    }
+
+    .bonus-details {
+        font-size: 0.85rem;
+    }
+
+    .requirement-warning {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .warning-icon {
+        align-self: center;
+    }
+}

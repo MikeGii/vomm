@@ -3,7 +3,6 @@ import React from 'react';
 import { TrainingActivity, PlayerStats } from '../../types';
 import { calculateEquipmentBonuses, getEffectiveAttributes } from '../../services/EquipmentBonusService';
 import '../../styles/components/training/ActivitySelector.css';
-import { getTrainingBonusForAttribute } from "../../data/abilities";
 
 interface ActivitySelectorProps {
     activities: TrainingActivity[];
@@ -31,21 +30,39 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
     const effectiveAttributes = playerStats?.attributes && playerStats?.equipment ?
         getEffectiveAttributes(playerStats.attributes, playerStats.equipment) : null;
 
-// Check if player can train this activity (for future use with level requirements)
+    // Get player's actual level (not attribute levels)
+    const playerLevel = playerStats?.level || 1;
+
+    // Check if player can train this activity based on their main level
     const canTrainActivity = (activity: TrainingActivity): boolean => {
-        if (!playerStats || !playerStats.attributes) return false;
-
-        // Use the minimum effective attribute level as the player's training level
-        const minAttributeLevel = effectiveAttributes ?
-            Math.min(...Object.values(effectiveAttributes)) :
-            Math.min(...Object.values(playerStats.attributes).map(a => a.level));
-
-        return minAttributeLevel >= activity.requiredLevel;
+        if (!playerStats) return false;
+        return playerLevel >= activity.requiredLevel;
     };
+
+    // Group activities by required level
+    const groupedActivities = activities.reduce((groups, activity) => {
+        const level = activity.requiredLevel;
+        if (!groups[level]) {
+            groups[level] = [];
+        }
+        groups[level].push(activity);
+        return groups;
+    }, {} as Record<number, TrainingActivity[]>);
+
+    // Sort levels
+    const sortedLevels = Object.keys(groupedActivities)
+        .map(Number)
+        .sort((a, b) => a - b);
 
     return (
         <div className="activity-selector">
             <h3 className="selector-title">Vali treening</h3>
+
+            {/* Show player's current level */}
+            <div className="player-level-info">
+                <span>Sinu tase: </span>
+                <strong className="level-display">{playerLevel}</strong>
+            </div>
 
             <select
                 className="activity-dropdown"
@@ -54,118 +71,101 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                 disabled={isTraining}
             >
                 <option value="">-- Vali tegevus --</option>
-                {activities.map(activity => {
-                    const canDo = canTrainActivity(activity);
-                    const minLevel = playerStats?.attributes ?
-                        Math.min(...Object.values(playerStats.attributes).map(a => a.level)) : 0;
-                    const effectiveMinLevel = effectiveAttributes ?
-                        Math.min(...Object.values(effectiveAttributes)) : minLevel;
-
-                    return (
-                        <option
-                            key={activity.id}
-                            value={activity.id}
-                            disabled={!canDo}
-                        >
-                            {activity.name}
-                            {!canDo && ` (Nõutav: ${activity.requiredLevel}, Sul: ${minLevel}${effectiveMinLevel > minLevel ? `+${effectiveMinLevel - minLevel}` : ''})`}
-                        </option>
-                    );
-                })}
+                {sortedLevels.map(requiredLevel => (
+                    <optgroup
+                        key={requiredLevel}
+                        label={`Tase ${requiredLevel} treeningud ${playerLevel < requiredLevel ? '(lukus)' : ''}`}
+                    >
+                        {groupedActivities[requiredLevel].map(activity => {
+                            const canDo = canTrainActivity(activity);
+                            return (
+                                <option
+                                    key={activity.id}
+                                    value={activity.id}
+                                    disabled={!canDo}
+                                >
+                                    {activity.name}
+                                    {!canDo && ` 🔒`}
+                                </option>
+                            );
+                        })}
+                    </optgroup>
+                ))}
             </select>
 
             {selectedActivityData && (
                 <div className="activity-details">
-                    {/* Show if equipment helps meet requirements */}
+                    {/* Show clear requirement warning if player can't train */}
                     {!canTrainActivity(selectedActivityData) && (
                         <div className="requirement-warning">
-                            ⚠️ Nõutav tase: {selectedActivityData.requiredLevel}
-                            {playerStats?.attributes && (
-                                <span>
-                        {' '}(Sul: {Math.min(...Object.values(playerStats.attributes).map(a => a.level))}
-                                    {effectiveAttributes && Math.min(...Object.values(effectiveAttributes)) > Math.min(...Object.values(playerStats.attributes).map(a => a.level)) &&
-                                        `+${Math.min(...Object.values(effectiveAttributes)) - Math.min(...Object.values(playerStats.attributes).map(a => a.level))}`
-                                    })
-                    </span>
-                            )}
+                            <span className="warning-icon">⚠️</span>
+                            <div className="warning-content">
+                                <strong>Treeningut ei saa sooritada</strong>
+                                <p>Nõutav tase: {selectedActivityData.requiredLevel}</p>
+                                <p>Sinu tase: {playerLevel}</p>
+                                <p className="level-difference">
+                                    Puudu: {selectedActivityData.requiredLevel - playerLevel} taset
+                                </p>
+                            </div>
                         </div>
                     )}
 
-                    {/* Show active equipment bonuses */}
+                    {/* Show active equipment bonuses for attributes */}
                     {equipmentBonuses && Object.values(equipmentBonuses).some(v => v > 0) && (
                         <div className="equipment-bonus-info">
-                            <span className="bonus-label">📦 Varustuse boonused aktiivsed</span>
+                            <span className="bonus-label">📦 Varustuse boonused:</span>
+                            <div className="bonus-details">
+                                {Object.entries(equipmentBonuses).map(([attr, bonus]) =>
+                                        bonus > 0 && (
+                                            <span key={attr} className="bonus-item">
+                                            {attr === 'strength' && '💪'}
+                                                {attr === 'agility' && '🏃'}
+                                                {attr === 'dexterity' && '🎯'}
+                                                {attr === 'intelligence' && '🧠'}
+                                                {attr === 'endurance' && '🏋️'}
+                                                +{bonus}
+                                        </span>
+                                        )
+                                )}
+                            </div>
                         </div>
                     )}
 
                     <p className="activity-description">{selectedActivityData.description}</p>
+
                     <div className="activity-rewards">
                         <h4>Tasu:</h4>
                         <ul>
                             {selectedActivityData.rewards.strength && (
-                                <li>
-                                    💪 Jõud: +{selectedActivityData.rewards.strength} XP
-                                    {playerStats && getTrainingBonusForAttribute(playerStats.completedCourses || [], 'strength') > 0 && (
-                                        <span className="bonus-indicator">
-                                            {' '}(+{(getTrainingBonusForAttribute(playerStats.completedCourses || [], 'strength') * 100).toFixed(0)}% boonus)
-                                        </span>
-                                    )}
-                                </li>
+                                <li>💪 Jõud: +{selectedActivityData.rewards.strength}</li>
                             )}
                             {selectedActivityData.rewards.agility && (
-                                <li>
-                                    🏃 Kiirus: +{selectedActivityData.rewards.agility} XP
-                                    {playerStats && getTrainingBonusForAttribute(playerStats.completedCourses || [], 'agility') > 0 && (
-                                        <span className="bonus-indicator">
-                                            {' '}(+{(getTrainingBonusForAttribute(playerStats.completedCourses || [], 'agility') * 100).toFixed(0)}% boonus)
-                                        </span>
-                                    )}
-                                </li>
+                                <li>🏃 Kiirus: +{selectedActivityData.rewards.agility}</li>
                             )}
                             {selectedActivityData.rewards.dexterity && (
-                                <li>
-                                    🎯 Osavus: +{selectedActivityData.rewards.dexterity} XP
-                                    {playerStats && getTrainingBonusForAttribute(playerStats.completedCourses || [], 'dexterity') > 0 && (
-                                        <span className="bonus-indicator">
-                                            {' '}(+{(getTrainingBonusForAttribute(playerStats.completedCourses || [], 'dexterity') * 100).toFixed(0)}% boonus)
-                                        </span>
-                                    )}
-                                </li>
+                                <li>🎯 Osavus: +{selectedActivityData.rewards.dexterity}</li>
                             )}
                             {selectedActivityData.rewards.intelligence && (
-                                <li>
-                                    🧠 Intelligentsus: +{selectedActivityData.rewards.intelligence} XP
-                                    {playerStats && getTrainingBonusForAttribute(playerStats.completedCourses || [], 'intelligence') > 0 && (
-                                        <span className="bonus-indicator">
-                                            {' '}(+{(getTrainingBonusForAttribute(playerStats.completedCourses || [], 'intelligence') * 100).toFixed(0)}% boonus)
-                                        </span>
-                                    )}
-                                </li>
+                                <li>🧠 Intelligentsus: +{selectedActivityData.rewards.intelligence}</li>
                             )}
                             {selectedActivityData.rewards.endurance && (
-                                <li>
-                                    ❤️ Vastupidavus: +{selectedActivityData.rewards.endurance} XP
-                                    {playerStats && getTrainingBonusForAttribute(playerStats.completedCourses || [], 'endurance') > 0 && (
-                                        <span className="bonus-indicator">
-                                            {' '}(+{(getTrainingBonusForAttribute(playerStats.completedCourses || [], 'endurance') * 100).toFixed(0)}% boonus)
-                                        </span>
-                                    )}
-                                </li>
+                                <li>🏋️ Vastupidavus: +{selectedActivityData.rewards.endurance}</li>
                             )}
-                            <li>⭐ Kogemus: +{selectedActivityData.rewards.playerExp} XP</li>
+                            <li className="exp-reward">⭐ Kogemus: +{selectedActivityData.rewards.playerExp}</li>
                         </ul>
                     </div>
+
+                    <button
+                        className="train-button"
+                        onClick={onTrain}
+                        disabled={!canTrain || isTraining || !canTrainActivity(selectedActivityData)}
+                    >
+                        {isTraining ? 'Treenid...' :
+                            !canTrainActivity(selectedActivityData) ? `Nõutav tase ${selectedActivityData.requiredLevel}` :
+                                'Treeni'}
+                    </button>
                 </div>
             )}
-
-            <button
-                className="train-button"
-                onClick={onTrain}
-                disabled={!selectedActivity || isTraining || !canTrain || (selectedActivityData && !canTrainActivity(selectedActivityData))}
-            >
-                {isTraining ? 'Trenni...' :
-                    selectedActivityData && !canTrainActivity(selectedActivityData) ? 'Nõuded täitmata' : 'Treeni'}
-            </button>
         </div>
     );
 };

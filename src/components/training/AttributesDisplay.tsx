@@ -13,7 +13,7 @@ export const AttributesDisplay: React.FC<AttributesDisplayProps> = ({ attributes
         { key: 'agility', name: 'Kiirus', icon: '🏃', data: attributes.agility },
         { key: 'dexterity', name: 'Osavus', icon: '🎯', data: attributes.dexterity },
         { key: 'intelligence', name: 'Intelligentsus', icon: '🧠', data: attributes.intelligence },
-        { key: 'endurance', name: 'Vastupidavus', icon: '❤️', data: attributes.endurance }
+        { key: 'endurance', name: 'Vastupidavus', icon: '🏋️', data: attributes.endurance }
     ];
 
     return (

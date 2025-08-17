@@ -240,7 +240,7 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                         </div>
                         <div className="attribute-compact">
                             <span className="attribute-emoji">🧠</span>
-                            <span className="attribute-name">Intel.</span>
+                            <span className="attribute-name">Intelligentsus</span>
                             <span className="attribute-value">
                     {stats.attributes.intelligence.level}
                                 {equipmentBonuses?.intelligence ? (
@@ -249,8 +249,8 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                 </span>
                         </div>
                         <div className="attribute-compact">
-                            <span className="attribute-emoji">🛡️</span>
-                            <span className="attribute-name">Vastup.</span>
+                            <span className="attribute-emoji">🏋️</span>
+                            <span className="attribute-name">Vastupidavus</span>
                             <span className="attribute-value">
                     {stats.attributes.endurance.level}
                                 {equipmentBonuses?.endurance ? (
