@@ -12,6 +12,7 @@ import { Course, ActiveCourse, PlayerStats } from '../types';
 import { ALL_COURSES, getCourseById } from '../data/courses';
 import {calculateLevelFromExp} from "./PlayerService";
 import { ABILITIES} from "../data/abilities";
+import { ABIPOLITSEINIK_UNIFORM } from '../data/equipment';
 
 // Get courses available for player
 export const getAvailableCourses = (playerStats: PlayerStats): Course[] => {
@@ -182,6 +183,23 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
             updates.hasCompletedTraining = true;
             updates.isEmployed = true;
             updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
+
+            // ADD THIS: Grant uniform items to inventory
+            const uniformItems = ABIPOLITSEINIK_UNIFORM.map(item => ({
+                id: item.id,
+                name: item.name,
+                description: item.description,
+                category: 'equipment' as const,
+                quantity: 1,
+                rarity: item.rarity,
+                equipped: false,
+                equipmentSlot: item.slot,
+                source: 'training' as const
+            }));
+
+            // Add uniform items to existing inventory
+            updates.inventory = [...(playerStats.inventory || []), ...uniformItems];
+
         } else if (course.id === 'sisekaitseakadeemia_entrance') {
             updates.rank = course.rewards.unlocksRank || 'Nooreminspektor';
             updates.isEmployed = true;

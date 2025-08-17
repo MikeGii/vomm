@@ -1,0 +1,277 @@
+/* src/styles/components/profile/CharacterEquipment.css */
+.character-equipment-simple {
+    background: #2a2a2a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.equipment-title {
+    color: #f0f0f0;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.equipment-table {
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 150px 1fr 120px;
+    background: #333;
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid #444;
+    font-weight: 600;
+    color: #4a90e2;
+}
+
+.header-slot,
+.header-item,
+.header-actions {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+}
+
+.equipment-row-container {
+    border-bottom: 1px solid #333;
+}
+
+.equipment-row-container:last-child {
+    border-bottom: none;
+}
+
+.equipment-row {
+    display: grid;
+    grid-template-columns: 150px 1fr 120px;
+    padding: 0.75rem 1rem;
+    align-items: center;
+    transition: background 0.2s ease;
+}
+
+.equipment-row:hover {
+    background: #222;
+}
+
+.slot-name {
+    color: #aaa;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.equipped-item {
+    color: #f0f0f0;
+}
+
+.item-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.item-name {
+    color: #4a90e2;
+    font-weight: 500;
+}
+
+.empty-slot-text {
+    color: #666;
+    font-style: italic;
+}
+
+.slot-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.action-button {
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    border: 1px solid #444;
+    background: #2a2a2a;
+    color: #f0f0f0;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.action-button:hover {
+    background: #333;
+    border-color: #4a90e2;
+}
+
+.action-button.unequip {
+    border-color: #aa4444;
+    color: #ff6666;
+}
+
+.action-button.unequip:hover {
+    background: #3a2222;
+    border-color: #ff6666;
+}
+
+.action-button.equip {
+    border-color: #4a90e2;
+    color: #4a90e2;
+}
+
+.no-items {
+    color: #555;
+    font-size: 0.875rem;
+    font-style: italic;
+}
+
+/* Dropdown available items */
+.available-items {
+    background: #222;
+    border-top: 1px solid #444;
+    padding: 1rem;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 300px;
+    }
+}
+
+.items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.available-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.available-item:hover {
+    background: #2a2a2a;
+    border-color: #4a90e2;
+}
+
+.item-details {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #f0f0f0;
+    font-size: 0.875rem;
+}
+
+.rarity-badge {
+    padding: 0.125rem 0.375rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.rarity-common {
+    background: #666;
+    color: #fff;
+}
+
+.rarity-uncommon {
+    background: #4a9e4a;
+    color: #fff;
+}
+
+.rarity-rare {
+    background: #4a7fb8;
+    color: #fff;
+}
+
+.rarity-epic {
+    background: #9146ff;
+    color: #fff;
+}
+
+.rarity-legendary {
+    background: #ff9800;
+    color: #fff;
+}
+
+.equip-button {
+    padding: 0.25rem 0.625rem;
+    background: #4a90e2;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.equip-button:hover {
+    background: #357abd;
+    transform: translateY(-1px);
+}
+
+/* Scrollbar styling */
+.items-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.items-list::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.items-list::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 3px;
+}
+
+.items-list::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .table-header,
+    .equipment-row {
+        grid-template-columns: 100px 1fr 80px;
+        padding: 0.5rem;
+    }
+
+    .header-slot,
+    .header-item,
+    .header-actions {
+        font-size: 0.75rem;
+    }
+
+    .slot-name {
+        font-size: 0.85rem;
+    }
+
+    .action-button {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .available-items {
+        padding: 0.75rem;
+    }
+
+    .item-details {
+        font-size: 0.8rem;
+    }
+}
