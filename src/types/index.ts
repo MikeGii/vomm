@@ -2,6 +2,7 @@
 
 // Simple user type
 import {Timestamp} from "firebase/firestore";
+import { InventoryItem} from "./inventory";
 
 export interface User {
     uid: string;
@@ -80,6 +81,7 @@ export interface PlayerStats {
     workHistory?: string[];
     health?: PlayerHealth;
     lastHealthUpdate?: Timestamp;
+    inventory?: InventoryItem[];
 }
 
 // Course definition
@@ -199,3 +201,4 @@ export interface GameUpdate {
 }
 
 export * from './events.types';
+export * from './inventory';
