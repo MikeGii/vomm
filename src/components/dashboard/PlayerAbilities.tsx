@@ -1,4 +1,5 @@
 import React from 'react';
+import { IconType} from "react-icons";
 import { PlayerStats } from '../../types';
 import { getActiveAbilities } from '../../data/abilities';
 import '../../styles/components/PlayerAbilities.css';
@@ -8,7 +9,7 @@ interface PlayerAbilitiesProps {
 }
 
 export const PlayerAbilities: React.FC<PlayerAbilitiesProps> = ({ stats }) => {
-    // Use the new getActiveAbilities function instead
+
     const abilities = getActiveAbilities(stats.completedCourses || []);
 
     if (!stats.hasCompletedTraining) {
@@ -43,7 +44,9 @@ export const PlayerAbilities: React.FC<PlayerAbilitiesProps> = ({ stats }) => {
                 <div className="abilities-grid">
                     {abilities.map(ability => (
                         <div key={ability.id} className="ability-card">
-                            <div className="ability-icon">{ability.icon}</div>
+                            <div className="ability-icon">
+                                {React.createElement(ability.icon as any, { size: 32 })}
+                            </div>
                             <div className="ability-info">
                                 <h4 className="ability-name">{ability.name}</h4>
                                 <p className="ability-description">{ability.description}</p>

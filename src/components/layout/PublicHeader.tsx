@@ -24,7 +24,14 @@ export const PublicHeader: React.FC = () => {
                 <div className="header-container">
                     <div className="header-left"></div>
                     <div className="header-center">
-                        <h1 className="game-title">Võmm</h1>
+                        <div className="title-with-badge">
+                            <h1 className="game-title">Võmm</h1>
+                            <img
+                                src="/images/policeBadge.png"
+                                alt="Police Badge"
+                                className="title-badge"
+                            />
+                        </div>
                     </div>
                     <div className="header-right">
                         <button
