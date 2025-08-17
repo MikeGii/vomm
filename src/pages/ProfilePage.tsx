@@ -22,7 +22,6 @@ const ProfilePage: React.FC = () => {
     const inventory = playerStats?.inventory || [];
     const equipment = playerStats?.equipment || {};
 
-
     useEffect(() => {
         if (!currentUser) return;
 
@@ -79,7 +78,10 @@ const ProfilePage: React.FC = () => {
 
                 <h1 className="profile-title">Minu Profiil</h1>
 
-                <ProfileAttributes attributes={attributes} />
+                <ProfileAttributes
+                    attributes={playerStats.attributes || initializeAttributes()}
+                    equipment={playerStats.equipment}  // ADD this prop
+                />
                 <ProfileSkills abilityIds={abilities} />
                 <ProfileInventory items={inventory} />
                 <CharacterEquipment

@@ -17,10 +17,14 @@ export interface EquipmentItem {
     slot: EquipmentSlot;
     icon?: IconType;
     imageUrl?: string;
+    shopPrice: number;
+    marketPrice?: number;
     stats?: {
-        defense?: number;
+        strength?: number;
         agility?: number;
-        charisma?: number;
+        dexterity?: number;
+        intelligence?: number;
+        endurance?: number;
     };
     rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
     level?: number;
