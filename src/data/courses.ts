@@ -200,6 +200,27 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
             replacesAbility: 'firearm_carry_abipolitseinik'
         },
         category: 'sisekaitseakadeemia'
+    },
+    {
+        id: 'firearm_handling_r20',
+        name: 'Tugirelva käsitsemine - R20',
+        description: 'Spetsialiseeritud koolitus tugirelva LMT R-20 teenistusrelva käsitsemiseks. Täiustab lasketehnikat ja taktilist relvakasutust.',
+        duration: 10800, // 3 hours
+        requirements: {
+            completedCourses: ['sisekaitseakadeemia_entrance'],
+            totalWorkedHours: 25,
+            attributes: {
+                dexterity: 10,
+                agility: 10
+            }
+        },
+        rewards: {
+            experience: 500,
+            reputation: 50,
+            money: 450,
+            grantsAbility: 'firearm_carry_r20_automatic',
+        },
+        category: 'sisekaitseakadeemia'
     }
 ];
 
