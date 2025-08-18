@@ -61,3 +61,12 @@
         min-height: 300px;
     }
 }
+
+.loading-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    color: #888;
+    font-size: 1.1rem;
+}
