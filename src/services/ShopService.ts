@@ -3,7 +3,6 @@ import {
     doc,
     getDoc,
     updateDoc,
-    arrayUnion,
     Timestamp
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
@@ -76,7 +75,7 @@ export const purchaseItem = async (
             };
         }
 
-        // CHECK STOCK - NEW
+        // CHECK STOCK
         const currentStock = await getItemStock(itemId);
         if (currentStock < quantity) {
             return {
@@ -86,7 +85,7 @@ export const purchaseItem = async (
             };
         }
 
-        // CALCULATE DYNAMIC PRICE - NEW
+        // CALCULATE DYNAMIC PRICE
         const dynamicPrice = calculateDynamicPrice(shopItem.basePrice, currentStock, shopItem.maxStock);
         const totalCost = dynamicPrice * quantity;
 
@@ -112,21 +111,40 @@ export const purchaseItem = async (
             };
         }
 
-        // Create inventory items with dynamic price
-        const inventoryItems: InventoryItem[] = [];
-        for (let i = 0; i < quantity; i++) {
-            const invItem = shopItemToInventoryItem(shopItem);
-            invItem.shopPrice = dynamicPrice; // Use dynamic price
-            inventoryItems.push(invItem);
+        // Get current inventory
+        const currentInventory = playerStats.inventory || [];
+
+        // Check if item already exists in inventory - stack ALL items
+        let updatedInventory = [...currentInventory];
+        const existingItemIndex = updatedInventory.findIndex(
+            (invItem: InventoryItem) =>
+                invItem.name === shopItem.name &&
+                !invItem.equipped // Don't stack with currently equipped items
+        );
+
+        if (existingItemIndex !== -1) {
+            // Item exists - increase quantity
+            updatedInventory[existingItemIndex] = {
+                ...updatedInventory[existingItemIndex],
+                quantity: updatedInventory[existingItemIndex].quantity + quantity,
+                shopPrice: dynamicPrice // Update to latest purchase price
+            };
+        } else {
+            // Item doesn't exist - create new inventory item
+            const newItem = shopItemToInventoryItem(shopItem);
+            newItem.quantity = quantity; // Set the correct quantity
+            newItem.shopPrice = dynamicPrice; // Use dynamic price
+            newItem.id = `${shopItem.id}_${Date.now()}_${Math.random()}`; // Ensure unique ID
+            updatedInventory.push(newItem);
         }
 
         // UPDATE STOCK
         await updateStockAfterPurchase(itemId, quantity);
 
-        // Update player stats (decrease money and add items to inventory)
+        // Update player stats (decrease money and update inventory)
         await updateDoc(playerRef, {
             money: playerStats.money - totalCost,
-            inventory: arrayUnion(...inventoryItems),
+            inventory: updatedInventory,
             lastModified: Timestamp.now()
         });
 

@@ -32,26 +32,56 @@ export const equipItem = async (
             equipped: true
         };
 
-        // Only add marketPrice if the item has one (player-listed price)
+        // Only add marketPrice if the item has one
         if (item.marketPrice !== undefined) {
             equipmentItem.marketPrice = item.marketPrice;
         }
 
+        // Update inventory
+        let updatedInventory = [...currentInventory];
 
-        // Update inventory - mark item as equipped
-        let updatedInventory = currentInventory.map((invItem: InventoryItem) =>
-            invItem.id === item.id
-                ? { ...invItem, equipped: true }
-                : invItem
-        );
+        // Find the item in inventory
+        const itemIndex = updatedInventory.findIndex(invItem => invItem.id === item.id);
+
+        if (itemIndex !== -1) {
+            const inventoryItem = updatedInventory[itemIndex];
+
+            if (inventoryItem.quantity > 1) {
+                // If quantity > 1, decrease quantity and create a new equipped item
+                updatedInventory[itemIndex] = {
+                    ...inventoryItem,
+                    quantity: inventoryItem.quantity - 1
+                };
+
+                // Add the equipped item as a separate entry
+                const equippedItem = {
+                    ...inventoryItem,
+                    id: `${item.id}_equipped_${Date.now()}`,
+                    quantity: 1,
+                    equipped: true
+                };
+                updatedInventory.push(equippedItem);
+
+                // Update equipment item ID to match
+                equipmentItem.id = equippedItem.id;
+            } else {
+                // If quantity = 1, just mark as equipped
+                updatedInventory[itemIndex] = {
+                    ...inventoryItem,
+                    equipped: true
+                };
+            }
+        }
 
         // If there was an existing item in the slot, unequip it first
         if (existingItem) {
-            updatedInventory = updatedInventory.map((invItem: InventoryItem) =>
-                invItem.id === existingItem.id
-                    ? { ...invItem, equipped: false }
-                    : invItem
-            );
+            const existingIndex = updatedInventory.findIndex(invItem => invItem.id === existingItem.id);
+            if (existingIndex !== -1) {
+                updatedInventory[existingIndex] = {
+                    ...updatedInventory[existingIndex],
+                    equipped: false
+                };
+            }
         }
 
         // Update both equipment and inventory
@@ -78,34 +108,36 @@ export const unequipItem = async (
         const playerData = playerDoc.data();
         const currentInventory = playerData?.inventory || [];
 
-        // Update inventory - mark item as not equipped
-        const updatedInventory = currentInventory.map((invItem: InventoryItem) =>
-            invItem.id === item.id
-                ? { ...invItem, equipped: false }
-                : invItem
-        );
+        // Update inventory
+        let updatedInventory = [...currentInventory];
 
-        // If item is not in inventory (shouldn't happen but just in case), add it back
-        const itemExists = currentInventory.some((invItem: InventoryItem) => invItem.id === item.id);
-        if (!itemExists) {
-            const inventoryItem: InventoryItem = {
-                id: item.id,
-                name: item.name,
-                description: item.description,
-                category: 'equipment',
-                quantity: 1,
-                shopPrice: item.shopPrice,
-                stats: item.stats,
-                equipped: false,
-                equipmentSlot: slot
+        // Find the equipped item
+        const equippedIndex = updatedInventory.findIndex(invItem => invItem.id === item.id);
+
+        if (equippedIndex !== -1) {
+            // Mark as not equipped
+            updatedInventory[equippedIndex] = {
+                ...updatedInventory[equippedIndex],
+                equipped: false
             };
 
-            // Only add marketPrice if it exists
-            if (item.marketPrice !== undefined) {
-                inventoryItem.marketPrice = item.marketPrice;
-            }
+            // Check if we can stack with existing unequipped items
+            const stackableIndex = updatedInventory.findIndex(
+                invItem =>
+                    invItem.name === item.name &&
+                    !invItem.equipped &&
+                    invItem.id !== item.id
+            );
 
-            updatedInventory.push(inventoryItem);
+            if (stackableIndex !== -1) {
+                // Stack with existing unequipped item
+                updatedInventory[stackableIndex] = {
+                    ...updatedInventory[stackableIndex],
+                    quantity: updatedInventory[stackableIndex].quantity + 1
+                };
+                // Remove the unequipped item
+                updatedInventory.splice(equippedIndex, 1);
+            }
         }
 
         // Remove from equipment slot and update inventory

@@ -4,7 +4,7 @@ import {doc, updateDoc, getDoc, setDoc, deleteDoc, getDocs, query, collection, w
 import { firestore } from '../../config/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { initializeAttributes, initializeTrainingData } from '../../services/TrainingService';
-import {ActiveWork, PlayerStats, TrainingData, WorkHistoryEntry} from '../../types';
+import {ActiveWork, InventoryItem, PlayerStats, TrainingData, WorkHistoryEntry} from '../../types';
 import { checkCourseCompletion } from '../../services/CourseService';
 import { checkWorkCompletion } from '../../services/WorkService';
 import { Timestamp } from 'firebase/firestore';
@@ -771,6 +771,135 @@ export const DebugMenu: React.FC = () => {
         }
     };
 
+    const restackAllPlayerItems = async () => {
+        if (!verifyAdminAndLog('restackAllPlayerItems')) {
+            alert('Unauthorized');
+            return;
+        }
+
+        if (!window.confirm(
+            '⚠️ ADMIN ACTION: Restack all items for ALL players?\n\n' +
+            'This will:\n' +
+            '• Combine duplicate unequipped items in each player\'s inventory\n' +
+            '• Keep equipped items separate\n' +
+            '• Each player\'s items remain separate\n\n' +
+            'Continue?'
+        )) return;
+
+        setIsProcessing(true);
+        try {
+            // Get all player stats documents
+            const playerStatsCollection = collection(firestore, 'playerStats');
+            const playerStatsDocs = await getDocs(playerStatsCollection);
+
+            let playersProcessed = 0;
+            let totalItemsRestacked = 0;
+            const errors: string[] = [];
+
+            for (const playerDoc of playerStatsDocs.docs) {
+                try {
+                    const playerId = playerDoc.id;
+                    const playerData = playerDoc.data() as PlayerStats;
+                    const currentInventory = playerData.inventory || [];
+
+                    if (currentInventory.length === 0) continue;
+
+                    // Group items by name (only unequipped items)
+                    const itemGroups = new Map<string, InventoryItem[]>();
+                    const equippedItems: InventoryItem[] = [];
+
+                    currentInventory.forEach((item: InventoryItem) => {
+                        if (item.equipped) {
+                            // Keep equipped items separate
+                            equippedItems.push(item);
+                        } else {
+                            // Group unequipped items by name
+                            const key = item.name;
+                            if (!itemGroups.has(key)) {
+                                itemGroups.set(key, []);
+                            }
+                            itemGroups.get(key)!.push(item);
+                        }
+                    });
+
+                    // Create new inventory with stacked items
+                    const newInventory: InventoryItem[] = [];
+
+                    // Add equipped items as-is
+                    equippedItems.forEach(item => {
+                        newInventory.push(item);
+                    });
+
+                    // Stack unequipped items
+                    itemGroups.forEach((items, itemName) => {
+                        if (items.length > 1) {
+                            // Multiple items of same type - stack them
+                            const totalQuantity = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+
+                            // Use the most recent item as base (latest shopPrice)
+                            const baseItem = items.reduce((latest, item) => {
+                                const latestDate = latest.obtainedAt ? new Date(latest.obtainedAt).getTime() : 0;
+                                const itemDate = item.obtainedAt ? new Date(item.obtainedAt).getTime() : 0;
+                                return itemDate > latestDate ? item : latest;
+                            });
+
+                            const stackedItem: InventoryItem = {
+                                ...baseItem,
+                                quantity: totalQuantity,
+                                id: `${itemName.toLowerCase().replace(/\s+/g, '_')}_${playerId}_${Date.now()}`
+                            };
+
+                            newInventory.push(stackedItem);
+                            totalItemsRestacked += items.length - 1; // Count how many items were merged
+                        } else {
+                            // Single item - add as-is
+                            newInventory.push(items[0]);
+                        }
+                    });
+
+                    // Update player's inventory if changes were made
+                    if (newInventory.length < currentInventory.length) {
+                        await updateDoc(doc(firestore, 'playerStats', playerId), {
+                            inventory: newInventory,
+                            lastModified: Timestamp.now()
+                        });
+                        playersProcessed++;
+                    }
+
+                } catch (error) {
+                    console.error(`Error processing player ${playerDoc.id}:`, error);
+                    errors.push(playerDoc.id);
+                }
+            }
+
+            // Show results
+            let message = `✅ Restacking complete!\n\n`;
+            message += `Players processed: ${playersProcessed}\n`;
+            message += `Items restacked: ${totalItemsRestacked}\n`;
+            message += `Total players checked: ${playerStatsDocs.size}`;
+
+            if (errors.length > 0) {
+                message += `\n\n⚠️ Errors for ${errors.length} players (see console)`;
+                console.error('Failed to process players:', errors);
+            }
+
+            alert(message);
+
+            // Reload current player's stats
+            const statsRef = doc(firestore, 'playerStats', currentUser!.uid);
+            const statsDoc = await getDoc(statsRef);
+            if (statsDoc.exists()) {
+                setPlayerStats(statsDoc.data() as PlayerStats);
+            }
+
+        } catch (error) {
+            console.error('Error restacking items:', error);
+            alert('Failed to restack items! Check console for details.');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     return (
         <>
             {/* Floating debug button */}
@@ -938,6 +1067,21 @@ export const DebugMenu: React.FC = () => {
                             </button>
                             <small style={{ display: 'block', marginTop: '5px', color: '#888' }}>
                                 Adds missing stats, prices, and grants missing equipment from completed courses
+                            </small>
+                        </div>
+
+                        <div className="debug-section">
+                            <h4>Inventory Management</h4>
+                            <button
+                                className="debug-btn"
+                                onClick={restackAllPlayerItems}
+                                disabled={isProcessing}
+                                title="Restack duplicate items for all players"
+                            >
+                                📦 Restack All Player Items
+                            </button>
+                            <small style={{ display: 'block', marginTop: '5px', color: '#888' }}>
+                                Combines duplicate unequipped items in each player's inventory
                             </small>
                         </div>
 
