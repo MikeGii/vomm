@@ -31,7 +31,8 @@ export const ShopTable: React.FC<ShopTableProps> = ({
     const getCategoryName = (category: string): string => {
         const names: { [key: string]: string } = {
             protection: 'Kaitsevahendid',
-            trainingBooster: 'Sporditarbed'
+            trainingBooster: 'Sporditarbed',
+            medical: 'Meditsiinitarbed'
         };
         return names[category] || category;
     };
@@ -56,12 +57,18 @@ export const ShopTable: React.FC<ShopTableProps> = ({
         );
     };
 
-    const formatEffect = (effect: any): React.ReactElement => {
-        if (!effect) return <span>-</span>;
-        if (effect.type === 'trainingClicks') {
-            return <span className="effect-text">+{effect.value} treeningklõpsu</span>;
+    const formatEffect = (effect?: any): React.ReactElement => {
+        if (!effect || !effect.consumableEffect) return <span>-</span>;
+
+        const consumable = effect.consumableEffect;
+        switch (consumable.type) {
+            case 'trainingClicks':
+                return <span className="effect-text">+{consumable.value} klõpsu</span>;
+            case 'health':
+                return <span className="effect-text">+{consumable.value === 9999 ? 'Täielik' : consumable.value} HP</span>;
+            default:
+                return <span>-</span>;
         }
-        return <span>-</span>;
     };
 
     const getStockStatus = (current: number, max: number): string => {

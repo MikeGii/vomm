@@ -21,6 +21,7 @@ export interface ShopItem {
 export type ShopCategory =
     | 'protection'
     | 'trainingBooster'
+    | 'medical';
 
 export interface ConsumableEffect {
     type: 'trainingClicks' | 'heal' | 'energy' | 'experience' | 'temporary_boost';
@@ -51,6 +52,11 @@ export const SHOP_CATEGORIES: Record<ShopCategory, ShopCategoryInfo> = {
         id: 'trainingBooster',
         name: 'Sporditarbed',
         description: 'Energiajoogid ja treeningtarbed',
+    },
+    medical: {
+        id: 'medical',
+        name: 'Meditsiinitarbed',
+        description: 'Sidemed, plaastrid ja muud meditsiinitarbed',
     }
 };
 
