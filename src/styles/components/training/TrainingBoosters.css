@@ -1,0 +1,143 @@
+/* src/styles/components/training/TrainingBoosters.css - NEW FILE */
+.training-boosters {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background-color: #1a1a1a;
+    border-radius: 12px;
+    border: 1px solid #333;
+}
+
+.boosters-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #f0f0f0;
+    margin-bottom: 1rem;
+}
+
+.boosters-info {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.boosters-info p {
+    margin: 0;
+    color: #888;
+}
+
+.boosters-info strong {
+    color: #4a90e2;
+    font-weight: 600;
+}
+
+.boosters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.booster-card {
+    padding: 1rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.booster-card:hover {
+    transform: translateY(-2px);
+    border-color: #4a90e2;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+}
+
+.booster-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.booster-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #f0f0f0;
+    margin: 0;
+}
+
+.booster-effect {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #4CAF50;
+    background-color: rgba(76, 175, 80, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.booster-description {
+    font-size: 0.875rem;
+    color: #888;
+    margin: 0.5rem 0;
+}
+
+.booster-use-button {
+    width: 100%;
+    padding: 0.5rem;
+    background: linear-gradient(90deg, #4a90e2, #357abd);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.booster-use-button:hover:not(:disabled) {
+    background: linear-gradient(90deg, #357abd, #2968a3);
+    transform: translateY(-1px);
+}
+
+.booster-use-button:disabled {
+    background: #333;
+    color: #666;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .boosters-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.boosters-empty-state {
+    padding: 2rem 1rem;
+    text-align: center;
+}
+
+.empty-state-message {
+    color: #888;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.go-to-shop-button {
+    padding: 0.75rem 2rem;
+    background: linear-gradient(90deg, #4a90e2, #357abd);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.go-to-shop-button:hover {
+    background: linear-gradient(90deg, #357abd, #2968a3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
