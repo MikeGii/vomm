@@ -1,0 +1,80 @@
+/* src/styles/components/shop/ShopHeader.css - Updated */
+.shop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 2px solid #333;
+    margin-bottom: 2rem;
+}
+
+.shop-back-button {
+    background: #333;
+    color: #f0f0f0;
+    border: 1px solid #444;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.arrow-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.shop-back-button:hover {
+    background: #444;
+    border-color: #4a90e2;
+    transform: translateX(-4px);
+}
+
+.shop-title {
+    color: #f0f0f0;
+    font-size: 2rem;
+    margin: 0;
+}
+
+.shop-money-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #2a2a2a;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.money-icon {
+    color: #ffd700;
+    font-size: 1.4rem;
+    font-weight: bold;
+}
+
+.money-amount {
+    color: #4a90e2;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .shop-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .shop-title {
+        font-size: 1.5rem;
+        text-align: center;
+    }
+
+    .shop-money-display {
+        justify-content: center;
+    }
+}

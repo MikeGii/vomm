@@ -68,21 +68,21 @@ export const PATROL_EVENTS: WorkEvent[] = [
     },
     {
         id: 'domestic_dispute',
-        title: 'Kodune tüli',
+        title: 'Lähisuhtevägivald',
         description: 'Naabrid on teatanud valjust tülist korteris. Kohal olles kuuled karjumist.',
         choices: [
             {
                 id: 'immediate_entry',
-                text: 'Sisestad korterisse kohe',
+                text: 'Sisened kohe korterisse',
                 consequences: {
                     health: -20,
                     experience: 30
                 },
-                resultText: 'Leidsid füüsilise konflikti ja sekkusid. Said kerge vigastuse.'
+                resultText: 'Nägid füüsilist konflikti ja sekkusid. Said kerge vigastuse.'
             },
             {
                 id: 'knock_talk',
-                text: 'Koputtad ja üritad rahulikult rääkida',
+                text: 'Koputad ja üritad rahulikult rääkida',
                 consequences: {
                     reputation: 10
                 },
