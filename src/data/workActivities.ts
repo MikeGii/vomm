@@ -66,12 +66,14 @@ const getPlayerStatus = (
     completedCourses: string[],
     rank: string | null
 ): PlayerStatus => {
+    // Check if player graduated from academy
+    if (completedCourses.includes('lopueksam')) {
+        return 'politseiametnik';
+    }
+
     // Check if player is a Kadett (in academy but not graduated)
-    if (completedCourses.includes('sisekaitseakadeemia_entrance')) {
-        // TODO: When graduation course is implemented, check for it here
-        // if (completedCourses.includes('sisekaitseakadeemia_graduation')) {
-        //     return 'politseiametnik';
-        // }
+    if (completedCourses.includes('sisekaitseakadeemia_entrance') &&
+        !completedCourses.includes('lopueksam')) {
         return 'kadett';
     }
 

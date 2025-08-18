@@ -323,6 +323,25 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
             money: 1000
         },
         category: 'sisekaitseakadeemia'
+    },
+    {
+        id: 'lopueksam',
+        name: 'Lõpueksam',
+        description: 'Sisekaitseakadeemia lõpueksam. Pead demonstreerima kõiki omandatud oskusi ja teadmisi. Läbimine annab sulle politseiametniku staatuse ja inspektori auastme.',
+        duration: 7200, // 2 hours
+        requirements: {
+            level: 30,
+            completedCourses: ['procedural_practice'],
+            totalWorkedHours: 30,
+        },
+        rewards: {
+            experience: 1000,
+            reputation: 500,
+            money: 250,
+            unlocksRank: 'Inspektor',
+            unlocksStatus: 'Politseiametnik'
+        },
+        category: 'sisekaitseakadeemia'
     }
 
 
