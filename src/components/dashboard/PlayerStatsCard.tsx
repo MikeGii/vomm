@@ -78,7 +78,17 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
 
     // Determine what to show for location
     const getLocationInfo = () => {
-        if (isKadett) {
+        // Check if graduated from academy
+        if (stats.completedCourses?.includes('lopueksam')) {
+            // Graduated officer
+            return {
+                icon: '🏛️',
+                title: 'Prefektuur',
+                value: stats.department ?
+                    `${stats.prefecture} - ${stats.department}` :
+                    stats.prefecture || 'Määramata'
+            };
+        } else if (stats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
             // Kadett in academy
             return {
                 icon: '🎓',

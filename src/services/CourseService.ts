@@ -228,6 +228,21 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
                 // Add police uniform items to existing inventory
                 updates.inventory = [...(playerStats.inventory || []), ...policeUniformItems];
 
+        } else if (course.id === 'lopueksam') {
+            // Graduate from academy
+            updates.rank = 'Inspektor'; // Promote to Inspektor
+            updates.isEmployed = true;
+            updates.hasCompletedTraining = true;
+
+            // Reset prefecture and department - player needs to choose again
+            updates.prefecture = null;
+            updates.department = null;
+
+            // Update status from Kadett to Politseiametnik
+            if (!playerStats.badgeNumber) {
+                updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
+            }
+
         } else if (course.rewards.unlocksRank) {
             updates.rank = course.rewards.unlocksRank;
             updates.isEmployed = true;
