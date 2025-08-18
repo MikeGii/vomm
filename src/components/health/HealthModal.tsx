@@ -21,6 +21,7 @@ export const HealthModal: React.FC<HealthModalProps> = ({
     const { currentUser } = useAuth();
     const [medicalItems, setMedicalItems] = useState<InventoryItem[]>([]);
     const [selectedItemId, setSelectedItemId] = useState<string>('');
+    const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
     const [isHealing, setIsHealing] = useState(false);
     const [recoveryTime, setRecoveryTime] = useState<string>('');
 
@@ -29,6 +30,7 @@ export const HealthModal: React.FC<HealthModalProps> = ({
             const items = getMedicalItems(playerStats.inventory);
             setMedicalItems(items);
             setSelectedItemId('');
+            setSelectedQuantity(1);
         }
     }, [isOpen, playerStats.inventory]);
 
@@ -69,6 +71,26 @@ export const HealthModal: React.FC<HealthModalProps> = ({
         return () => clearInterval(interval);
     }, [playerStats.health, playerStats.lastHealthUpdate]);
 
+    // Update quantity when item selection changes
+    useEffect(() => {
+        if (selectedItemId && playerStats.health) {
+            const item = medicalItems.find(i => i.id === selectedItemId);
+            if (item) {
+                const healthNeeded = playerStats.health.max - playerStats.health.current;
+                const healPerItem = item.consumableEffect?.value || 0;
+
+                if (healPerItem >= 9999) {
+                    // Full heal items only need 1
+                    setSelectedQuantity(1);
+                } else {
+                    // Calculate optimal quantity
+                    const optimal = Math.ceil(healthNeeded / healPerItem);
+                    setSelectedQuantity(Math.min(optimal, item.quantity));
+                }
+            }
+        }
+    }, [selectedItemId, medicalItems, playerStats.health]);
+
     if (!isOpen || !playerStats.health) return null;
 
     const health = playerStats.health;
@@ -76,12 +98,29 @@ export const HealthModal: React.FC<HealthModalProps> = ({
     const missingHealth = health.max - health.current;
     const isFullHealth = health.current >= health.max;
 
+    const selectedItem = medicalItems.find(i => i.id === selectedItemId);
+    const maxQuantity = selectedItem?.quantity || 1;
+    const isFullHealItem = selectedItem?.consumableEffect?.value && selectedItem.consumableEffect.value >= 9999;
+
+    const handleQuantityChange = (newQuantity: number) => {
+        const validQuantity = Math.max(1, Math.min(newQuantity, maxQuantity));
+        setSelectedQuantity(validQuantity);
+    };
+
+    const calculateHealthPreview = () => {
+        if (!selectedItem || !selectedItem.consumableEffect) return 0;
+
+        const healPerItem = selectedItem.consumableEffect.value;
+        if (healPerItem >= 9999) return missingHealth;
+
+        return Math.min(healPerItem * selectedQuantity, missingHealth);
+    };
+
     const handleUseItem = async () => {
-        if (!selectedItemId || isHealing || !currentUser) return;  // Check currentUser
+        if (!selectedItemId || isHealing || !currentUser) return;
 
         setIsHealing(true);
-        // Use currentUser.uid instead of playerStats.id
-        const result = await consumeMedicalItem(currentUser.uid, selectedItemId);
+        const result = await consumeMedicalItem(currentUser.uid, selectedItemId, selectedQuantity);
 
         if (result.success) {
             // Refresh the parent component
@@ -91,16 +130,13 @@ export const HealthModal: React.FC<HealthModalProps> = ({
             const updatedItems = getMedicalItems(playerStats.inventory || []);
             setMedicalItems(updatedItems);
             setSelectedItemId('');
-
-            // Show success message (you can add a toast here)
-            console.log(result.message);
+            setSelectedQuantity(1);
 
             // Close modal if health is now full
             if (result.newHealth && result.newHealth >= health.max) {
                 setTimeout(() => onClose(), 1500);
             }
         } else {
-            // Show error message (you can add a toast here)
             console.error(result.message);
         }
 
@@ -119,7 +155,7 @@ export const HealthModal: React.FC<HealthModalProps> = ({
             return `Taastab täielikult (${missingHealth} HP)`;
         }
         const healAmount = Math.min(item.consumableEffect?.value || 0, missingHealth);
-        return `Taastab ${healAmount} HP`;
+        return `Taastab ${healAmount} HP | Laos: ${item.quantity}`;
     };
 
     return (
@@ -137,6 +173,15 @@ export const HealthModal: React.FC<HealthModalProps> = ({
                                 {health.current} / {health.max} HP
                             </span>
                         </div>
+                        {selectedItem && (
+                            <div
+                                className="health-bar-preview"
+                                style={{
+                                    left: `${healthPercentage}%`,
+                                    width: `${(calculateHealthPreview() / health.max) * 100}%`
+                                }}
+                            />
+                        )}
                     </div>
 
                     <div className="health-details">
@@ -208,16 +253,50 @@ export const HealthModal: React.FC<HealthModalProps> = ({
                                     ))}
                                 </select>
 
+                                {selectedItem && !isFullHealItem && (
+                                    <div className="quantity-selector">
+                                        <label className="quantity-label">Kogus:</label>
+                                        <div className="quantity-controls">
+                                            <button
+                                                className="quantity-btn"
+                                                onClick={() => handleQuantityChange(selectedQuantity - 1)}
+                                                disabled={selectedQuantity <= 1 || isHealing}
+                                            >
+                                                -
+                                            </button>
+                                            <input
+                                                type="number"
+                                                className="quantity-input"
+                                                value={selectedQuantity}
+                                                onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
+                                                min="1"
+                                                max={maxQuantity}
+                                                disabled={isHealing}
+                                            />
+                                            <button
+                                                className="quantity-btn"
+                                                onClick={() => handleQuantityChange(selectedQuantity + 1)}
+                                                disabled={selectedQuantity >= maxQuantity || isHealing}
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                        <div className="quantity-info">
+                                            <span>Taastab: +{calculateHealthPreview()} HP</span>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <button
                                     className="use-medical-button"
                                     onClick={handleUseItem}
                                     disabled={!selectedItemId || isHealing}
                                 >
-                                    {isHealing ? 'Kasutan...' : 'Kasuta'}
+                                    {isHealing ? 'Kasutan...' : `Kasuta ${selectedQuantity > 1 ? `${selectedQuantity}x` : ''}`}
                                 </button>
 
                                 <div className="inventory-count">
-                                    <span>Meditsiinitarbeid inventaaris: {medicalItems.length}</span>
+                                    <span>Meditsiinitarbeid inventaaris: {medicalItems.reduce((sum, item) => sum + item.quantity, 0)}</span>
                                 </div>
                             </>
                         ) : (
