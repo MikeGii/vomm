@@ -13,11 +13,29 @@ import { migrateUserEquipment, migrateAllUsers } from '../../services/EquipmentM
 import { ALL_EVENTS } from '../../data/events';
 import '../../styles/components/dev/DebugMenu.css';
 
+// ADMIN EMAIL CONSTANT
+const ADMIN_EMAIL = 'cjmike12@gmail.com';
+
 export const DebugMenu: React.FC = () => {
     const { currentUser } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
+
+    // Security check helper
+    const isAdmin = () => {
+        return currentUser?.email === ADMIN_EMAIL;
+    };
+
+    // Security check with logging
+    const verifyAdminAndLog = (action: string): boolean => {
+        if (!currentUser || currentUser.email !== ADMIN_EMAIL) {
+            console.error(`SECURITY: Non-admin attempted ${action}`, currentUser?.email);
+            return false;
+        }
+        console.log(`ADMIN ACTION: ${action} by ${currentUser.email} (${currentUser.uid})`);
+        return true;
+    };
 
     // Load player stats to check active course/work
     useEffect(() => {
@@ -38,36 +56,55 @@ export const DebugMenu: React.FC = () => {
         }
     }, [currentUser, isOpen]);
 
-    // Only show for developer account - moved after hooks
-    if (currentUser?.email !== 'cjmike12@gmail.com') {
+    // Only show for admin account
+    if (!isAdmin()) {
         return null;
     }
 
     const completeCurrentWork = async () => {
-        if (!currentUser || !playerStats?.activeWork) {
+        if (!verifyAdminAndLog('completeCurrentWork')) {
+            alert('Unauthorized');
+            return;
+        }
+
+        if (!playerStats?.activeWork) {
             alert('Aktiivne töö puudub!');
             return;
         }
 
-        if (!window.confirm('Lõpeta praegune töö kohe?')) return;
+        // Extra validation - ensure work belongs to admin
+        if (playerStats.activeWork.userId && playerStats.activeWork.userId !== currentUser!.uid) {
+            console.error('SECURITY: Attempted to modify another user\'s work!');
+            alert('SECURITY ERROR: This work belongs to another user!');
+            return;
+        }
+
+        if (!window.confirm(`Lõpeta praegune töö kohe?\nUser: ${currentUser!.email}\nUID: ${currentUser!.uid}`)) return;
 
         setIsProcessing(true);
         try {
-            // Set work end time to now
-            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
-            await updateDoc(statsRef, {
+            // ONLY update admin's document
+            const adminStatsRef = doc(firestore, 'playerStats', currentUser!.uid);
+
+            // Double-check document exists and belongs to admin
+            const statsDoc = await getDoc(adminStatsRef);
+            if (!statsDoc.exists()) {
+                throw new Error('Admin stats document not found');
+            }
+
+            await updateDoc(adminStatsRef, {
                 'activeWork.endsAt': Timestamp.now()
             });
 
-            // Wait a moment then trigger completion
+            // Wait a moment then trigger completion FOR ADMIN ONLY
             setTimeout(async () => {
-                await checkWorkCompletion(currentUser.uid);
-                alert('Töö lõpetatud!');
+                await checkWorkCompletion(currentUser!.uid); // Pass admin's UID explicitly
+                alert(`Töö lõpetatud!\nUser: ${currentUser!.email}`);
 
-                // Reload stats
-                const statsDoc = await getDoc(statsRef);
-                if (statsDoc.exists()) {
-                    setPlayerStats(statsDoc.data() as PlayerStats);
+                // Reload ADMIN's stats only
+                const updatedDoc = await getDoc(adminStatsRef);
+                if (updatedDoc.exists()) {
+                    setPlayerStats(updatedDoc.data() as PlayerStats);
                 }
             }, 100);
         } catch (error) {
@@ -79,42 +116,52 @@ export const DebugMenu: React.FC = () => {
     };
 
     const completeCurrentCourse = async () => {
-        if (!currentUser || !playerStats?.activeCourse) {
+        if (!verifyAdminAndLog('completeCurrentCourse')) {
+            alert('Unauthorized');
+            return;
+        }
+
+        if (!playerStats?.activeCourse) {
             alert('Aktiivne koolitus puudub!');
             return;
         }
 
-        // Additional safety check
         if (playerStats.activeCourse.status !== 'in_progress') {
             alert('Koolitus ei ole aktiivne!');
             return;
         }
 
-        if (!window.confirm('Lõpeta praegune koolitus kohe?')) return;
+        // Extra validation - ensure course belongs to admin
+        if (playerStats.activeCourse.userId && playerStats.activeCourse.userId !== currentUser!.uid) {
+            console.error('SECURITY: Attempted to modify another user\'s course!');
+            alert('SECURITY ERROR: This course belongs to another user!');
+            return;
+        }
+
+        if (!window.confirm(`Lõpeta praegune koolitus kohe?\nUser: ${currentUser!.email}\nUID: ${currentUser!.uid}`)) return;
 
         setIsProcessing(true);
         try {
-            // Only update the current user's document
-            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+            // ONLY update admin's document
+            const adminStatsRef = doc(firestore, 'playerStats', currentUser!.uid);
 
-            // Verify the document exists and belongs to current user
-            const statsDoc = await getDoc(statsRef);
+            // Verify the document exists
+            const statsDoc = await getDoc(adminStatsRef);
             if (!statsDoc.exists()) {
-                throw new Error('Kasutaja andmed puuduvad');
+                throw new Error('Admin stats document not found');
             }
 
-            // Set course end time to now
-            await updateDoc(statsRef, {
+            await updateDoc(adminStatsRef, {
                 'activeCourse.endsAt': Timestamp.now()
             });
 
-            // Wait a moment then trigger completion
+            // Wait a moment then trigger completion FOR ADMIN ONLY
             setTimeout(async () => {
-                await checkCourseCompletion(currentUser.uid);
-                alert('Koolitus lõpetatud!');
+                await checkCourseCompletion(currentUser!.uid); // Pass admin's UID explicitly
+                alert(`Koolitus lõpetatud!\nUser: ${currentUser!.email}`);
 
-                // Reload stats
-                const updatedDoc = await getDoc(statsRef);
+                // Reload ADMIN's stats only
+                const updatedDoc = await getDoc(adminStatsRef);
                 if (updatedDoc.exists()) {
                     setPlayerStats(updatedDoc.data() as PlayerStats);
                 }
@@ -128,24 +175,28 @@ export const DebugMenu: React.FC = () => {
     };
 
     const refillTrainingClicks = async () => {
-        if (!currentUser) return;
+        if (!verifyAdminAndLog('refillTrainingClicks')) {
+            alert('Unauthorized');
+            return;
+        }
 
-        if (!window.confirm('Taasta kõik treeningkorrad (50)?')) return;
+        if (!window.confirm(`Taasta kõik treeningkorrad (50)?\nUser: ${currentUser!.email}`)) return;
 
         setIsProcessing(true);
         try {
-            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+            // ONLY update admin's document
+            const adminStatsRef = doc(firestore, 'playerStats', currentUser!.uid);
             const maxClicks = playerStats?.activeWork ? 10 : 50;
 
-            await updateDoc(statsRef, {
+            await updateDoc(adminStatsRef, {
                 'trainingData.remainingClicks': maxClicks,
                 'trainingData.lastResetTime': Timestamp.now()
             });
 
-            alert(`Treeningkorrad taastatud: ${maxClicks}`);
+            alert(`Treeningkorrad taastatud: ${maxClicks}\nUser: ${currentUser!.email}`);
 
-            // Reload stats
-            const statsDoc = await getDoc(statsRef);
+            // Reload ADMIN's stats only
+            const statsDoc = await getDoc(adminStatsRef);
             if (statsDoc.exists()) {
                 setPlayerStats(statsDoc.data() as PlayerStats);
             }
@@ -158,12 +209,18 @@ export const DebugMenu: React.FC = () => {
     };
 
     const resetTutorialAndCourses = async () => {
-        if (!currentUser || !window.confirm('Reset tutorial and all courses?')) return;
+        if (!verifyAdminAndLog('resetTutorialAndCourses')) {
+            alert('Unauthorized');
+            return;
+        }
+
+        if (!window.confirm(`Reset tutorial and all courses?\nUser: ${currentUser!.email}`)) return;
 
         setIsProcessing(true);
         try {
-            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
-            await updateDoc(statsRef, {
+            // ONLY update admin's document
+            const adminStatsRef = doc(firestore, 'playerStats', currentUser!.uid);
+            await updateDoc(adminStatsRef, {
                 'tutorialProgress.isCompleted': false,
                 'tutorialProgress.currentStep': 0,
                 'tutorialProgress.startedAt': null,
@@ -174,7 +231,7 @@ export const DebugMenu: React.FC = () => {
                 isEmployed: false,
                 badgeNumber: null
             });
-            alert('Tutorial and courses reset!');
+            alert(`Tutorial and courses reset!\nUser: ${currentUser!.email}`);
         } catch (error) {
             console.error('Error resetting tutorial:', error);
             alert('Failed to reset tutorial');
@@ -184,16 +241,22 @@ export const DebugMenu: React.FC = () => {
     };
 
     const resetAttributes = async () => {
-        if (!currentUser || !window.confirm('Reset all attributes to level 0?')) return;
+        if (!verifyAdminAndLog('resetAttributes')) {
+            alert('Unauthorized');
+            return;
+        }
+
+        if (!window.confirm(`Reset all attributes to level 0?\nUser: ${currentUser!.email}`)) return;
 
         setIsProcessing(true);
         try {
-            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
-            await updateDoc(statsRef, {
+            // ONLY update admin's document
+            const adminStatsRef = doc(firestore, 'playerStats', currentUser!.uid);
+            await updateDoc(adminStatsRef, {
                 attributes: initializeAttributes(),
                 trainingData: initializeTrainingData()
             });
-            alert('Attributes reset!');
+            alert(`Attributes reset!\nUser: ${currentUser!.email}`);
         } catch (error) {
             console.error('Error resetting attributes:', error);
             alert('Failed to reset attributes');
@@ -203,12 +266,18 @@ export const DebugMenu: React.FC = () => {
     };
 
     const resetPlayerStats = async () => {
-        if (!currentUser || !window.confirm('Reset level, reputation, prefecture, and department?')) return;
+        if (!verifyAdminAndLog('resetPlayerStats')) {
+            alert('Unauthorized');
+            return;
+        }
+
+        if (!window.confirm(`Reset level, reputation, prefecture, and department?\nUser: ${currentUser!.email}`)) return;
 
         setIsProcessing(true);
         try {
-            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
-            await updateDoc(statsRef, {
+            // ONLY update admin's document
+            const adminStatsRef = doc(firestore, 'playerStats', currentUser!.uid);
+            await updateDoc(adminStatsRef, {
                 level: 1,
                 experience: 0,
                 reputation: 0,
@@ -218,7 +287,7 @@ export const DebugMenu: React.FC = () => {
                 casesCompleted: 0,
                 criminalsArrested: 0
             });
-            alert('Player stats reset!');
+            alert(`Player stats reset!\nUser: ${currentUser!.email}`);
         } catch (error) {
             console.error('Error resetting stats:', error);
             alert('Failed to reset stats');
@@ -228,12 +297,18 @@ export const DebugMenu: React.FC = () => {
     };
 
     const fullReset = async () => {
-        if (!currentUser || !window.confirm('⚠️ FULL RESET - This will reset EVERYTHING. Are you sure?')) return;
+        if (!verifyAdminAndLog('fullReset')) {
+            alert('Unauthorized');
+            return;
+        }
+
+        if (!window.confirm(`⚠️ FULL RESET - This will reset EVERYTHING.\nUser: ${currentUser!.email}\nAre you sure?`)) return;
 
         setIsProcessing(true);
         try {
-            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
-            await updateDoc(statsRef, {
+            // ONLY update admin's document
+            const adminStatsRef = doc(firestore, 'playerStats', currentUser!.uid);
+            await updateDoc(adminStatsRef, {
                 level: 1,
                 experience: 0,
                 reputation: 0,
@@ -255,7 +330,7 @@ export const DebugMenu: React.FC = () => {
                 attributes: initializeAttributes(),
                 trainingData: initializeTrainingData()
             });
-            alert('Full reset complete!');
+            alert(`Full reset complete!\nUser: ${currentUser!.email}`);
             window.location.reload();
         } catch (error) {
             console.error('Error doing full reset:', error);
@@ -266,15 +341,19 @@ export const DebugMenu: React.FC = () => {
     };
 
     const skipToStep = async (step: number) => {
-        if (!currentUser) return;
+        if (!verifyAdminAndLog(`skipToStep ${step}`)) {
+            alert('Unauthorized');
+            return;
+        }
 
         setIsProcessing(true);
         try {
-            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
-            await updateDoc(statsRef, {
+            // ONLY update admin's document
+            const adminStatsRef = doc(firestore, 'playerStats', currentUser!.uid);
+            await updateDoc(adminStatsRef, {
                 'tutorialProgress.currentStep': step
             });
-            alert(`Jumped to tutorial step ${step}`);
+            alert(`Jumped to tutorial step ${step}\nUser: ${currentUser!.email}`);
             window.location.reload();
         } catch (error) {
             console.error('Error jumping to step:', error);
@@ -285,26 +364,38 @@ export const DebugMenu: React.FC = () => {
     };
 
     const triggerRandomEvent = async () => {
-        if (!currentUser || !playerStats?.activeWork) {
+        if (!verifyAdminAndLog('triggerRandomEvent')) {
+            alert('Unauthorized');
+            return;
+        }
+
+        if (!playerStats?.activeWork) {
             alert('Aktiivne töö puudub! Alusta tööd esmalt.');
             return;
         }
 
-        if (!window.confirm('Trigger random event for current work?')) return;
+        // Ensure work belongs to admin
+        if (playerStats.activeWork.userId && playerStats.activeWork.userId !== currentUser!.uid) {
+            console.error('SECURITY: Work belongs to different user!');
+            alert('SECURITY ERROR: Work belongs to different user!');
+            return;
+        }
+
+        if (!window.confirm(`Trigger random event for current work?\nUser: ${currentUser!.email}`)) return;
 
         setIsProcessing(true);
         try {
-            // Create an event for current work
-            const workSessionId = playerStats.activeWork.workSessionId || `${currentUser.uid}_${Date.now()}`;
+            // Create an event for ADMIN's work only
+            const workSessionId = playerStats.activeWork.workSessionId || `${currentUser!.uid}_${Date.now()}`;
             const event = await createActiveEvent(
-                currentUser.uid,
+                currentUser!.uid, // Explicitly pass admin's UID
                 workSessionId,
                 playerStats.activeWork.workId,
                 playerStats.level
             );
 
             if (event) {
-                alert('Event triggered! Refresh the page to see it.');
+                alert(`Event triggered!\nUser: ${currentUser!.email}\nRefresh the page to see it.`);
                 window.location.reload();
             } else {
                 alert('No event was triggered (30% chance of no event)');
@@ -318,29 +409,40 @@ export const DebugMenu: React.FC = () => {
     };
 
     const completeWorkWithEvent = async () => {
-        if (!currentUser || !playerStats?.activeWork) {
+        if (!verifyAdminAndLog('completeWorkWithEvent')) {
+            alert('Unauthorized');
+            return;
+        }
+
+        if (!playerStats?.activeWork) {
             alert('Aktiivne töö puudub!');
             return;
         }
 
-        if (!window.confirm('Complete work immediately and potentially trigger an event?')) return;
+        // Ensure work belongs to admin
+        if (playerStats.activeWork.userId && playerStats.activeWork.userId !== currentUser!.uid) {
+            console.error('SECURITY: Work belongs to different user!');
+            alert('SECURITY ERROR: Work belongs to different user!');
+            return;
+        }
+
+        if (!window.confirm(`Complete work immediately and potentially trigger an event?\nUser: ${currentUser!.email}`)) return;
 
         setIsProcessing(true);
         try {
-            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+            // ONLY update admin's document
+            const adminStatsRef = doc(firestore, 'playerStats', currentUser!.uid);
 
-            // Set work to end now
-            await updateDoc(statsRef, {
+            await updateDoc(adminStatsRef, {
                 'activeWork.endsAt': Timestamp.now()
             });
 
-            // Trigger completion check which will create event if needed
             setTimeout(async () => {
-                const result = await checkWorkCompletion(currentUser.uid);
+                const result = await checkWorkCompletion(currentUser!.uid); // Explicitly pass admin's UID
                 if (result.hasPendingEvent) {
-                    alert('Work completed with event! Refresh to see the event.');
+                    alert(`Work completed with event!\nUser: ${currentUser!.email}`);
                 } else if (result.completed) {
-                    alert('Work completed without event!');
+                    alert(`Work completed without event!\nUser: ${currentUser!.email}`);
                 }
                 window.location.reload();
             }, 100);
@@ -353,8 +455,20 @@ export const DebugMenu: React.FC = () => {
     };
 
     const forceSpecificEvent = async () => {
-        if (!currentUser || !playerStats?.activeWork) {
+        if (!verifyAdminAndLog('forceSpecificEvent')) {
+            alert('Unauthorized');
+            return;
+        }
+
+        if (!playerStats?.activeWork) {
             alert('Aktiivne töö puudub!');
+            return;
+        }
+
+        // Ensure work belongs to admin
+        if (playerStats.activeWork.userId && playerStats.activeWork.userId !== currentUser!.uid) {
+            console.error('SECURITY: Work belongs to different user!');
+            alert('SECURITY ERROR: Work belongs to different user!');
             return;
         }
 
@@ -368,9 +482,8 @@ export const DebugMenu: React.FC = () => {
             return;
         }
 
-        // Let developer choose which event
         const eventList = availableEvents.map((e, i) => `${i + 1}. ${e.title}`).join('\n');
-        const choice = prompt(`Choose event (1-${availableEvents.length}):\n${eventList}`);
+        const choice = prompt(`Choose event (1-${availableEvents.length}):\n${eventList}\nUser: ${currentUser!.email}`);
 
         if (!choice) return;
 
@@ -383,22 +496,22 @@ export const DebugMenu: React.FC = () => {
         setIsProcessing(true);
         try {
             const selectedEvent = availableEvents[eventIndex];
-            const workSessionId = playerStats.activeWork.workSessionId || `${currentUser.uid}_${Date.now()}`;
+            const workSessionId = playerStats.activeWork.workSessionId || `${currentUser!.uid}_${Date.now()}`;
 
-            // Create the specific event
+            // Create the specific event FOR ADMIN ONLY
             const activeEvent = {
                 eventId: selectedEvent.id,
-                userId: currentUser.uid,
+                userId: currentUser!.uid, // Explicitly set admin's UID
                 workSessionId: workSessionId,
                 triggeredAt: Timestamp.now(),
                 status: 'pending' as const
             };
 
-            // Store in activeEvents collection
-            const eventRef = doc(firestore, 'activeEvents', `${currentUser.uid}_${workSessionId}`);
+            // Store in activeEvents collection with admin's ID
+            const eventRef = doc(firestore, 'activeEvents', `${currentUser!.uid}_${workSessionId}`);
             await setDoc(eventRef, activeEvent);
 
-            alert(`Event "${selectedEvent.title}" created! Refresh to see it.`);
+            alert(`Event "${selectedEvent.title}" created!\nUser: ${currentUser!.email}\nRefresh to see it.`);
             window.location.reload();
         } catch (error) {
             console.error('Error:', error);
@@ -409,15 +522,19 @@ export const DebugMenu: React.FC = () => {
     };
 
     const checkPendingEvents = async () => {
-        if (!currentUser) return;
+        if (!verifyAdminAndLog('checkPendingEvents')) {
+            alert('Unauthorized');
+            return;
+        }
 
         setIsProcessing(true);
         try {
-            const pending = await getPendingEvent(currentUser.uid);
+            // Check pending events for ADMIN ONLY
+            const pending = await getPendingEvent(currentUser!.uid);
             if (pending) {
-                alert(`Pending event found: "${pending.eventData.title}"\n\nRefresh the page to see it.`);
+                alert(`Pending event found: "${pending.eventData.title}"\nUser: ${currentUser!.email}\nRefresh the page to see it.`);
             } else {
-                alert('No pending events');
+                alert(`No pending events\nUser: ${currentUser!.email}`);
             }
         } catch (error) {
             console.error('Error:', error);
@@ -428,36 +545,41 @@ export const DebugMenu: React.FC = () => {
     };
 
     const setWorkToLast20Seconds = async () => {
-        if (!currentUser || !playerStats?.activeWork) {
+        if (!verifyAdminAndLog('setWorkToLast20Seconds')) {
+            alert('Unauthorized');
+            return;
+        }
+
+        if (!playerStats?.activeWork) {
             alert('Aktiivne töö puudub! Alusta tööd esmalt.');
             return;
         }
 
-        // Extra validation to ensure we're only affecting current user
-        if (playerStats.activeWork.userId && playerStats.activeWork.userId !== currentUser.uid) {
-            alert('VIGA: Töö ei kuulu sellele kasutajale!');
+        // Extra validation to ensure work belongs to admin
+        if (playerStats.activeWork.userId && playerStats.activeWork.userId !== currentUser!.uid) {
+            console.error('SECURITY: Work belongs to different user!');
+            alert('SECURITY ERROR: Töö ei kuulu sellele kasutajale!');
             return;
         }
 
-        if (!window.confirm('Määra töö lõppema 20 sekundi pärast?\n(Mõjutab ainult sinu tööd)')) return;
+        if (!window.confirm(`Määra töö lõppema 20 sekundi pärast?\nUser: ${currentUser!.email}\n(Mõjutab ainult sinu tööd)`)) return;
 
         setIsProcessing(true);
         try {
-            // ONLY update the current user's document
-            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+            // ONLY update admin's document
+            const adminStatsRef = doc(firestore, 'playerStats', currentUser!.uid);
             const newEndsAt = Timestamp.fromMillis(Date.now() + 20000);
 
-            // Update playerStats for THIS user only
-            await updateDoc(statsRef, {
+            await updateDoc(adminStatsRef, {
                 'activeWork.endsAt': newEndsAt
             });
 
             // Also update the activeWork collection if needed
             if (playerStats.activeWork.workSessionId) {
-                // Ensure the workSessionId includes the userId
-                if (!playerStats.activeWork.workSessionId.startsWith(currentUser.uid)) {
-                    console.error('WorkSessionId does not match current user!');
-                    alert('VIGA: Töö sessioon ei vasta kasutajale!');
+                // Ensure the workSessionId includes the admin's userId
+                if (!playerStats.activeWork.workSessionId.startsWith(currentUser!.uid)) {
+                    console.error('SECURITY: WorkSessionId does not match admin user!');
+                    alert('SECURITY ERROR: Töö sessioon ei vasta kasutajale!');
                     return;
                 }
 
@@ -465,17 +587,17 @@ export const DebugMenu: React.FC = () => {
                     const activeWorkRef = doc(firestore, 'activeWork', playerStats.activeWork.workSessionId);
                     await updateDoc(activeWorkRef, {
                         endsAt: newEndsAt,
-                        userId: currentUser.uid  // Ensure userId is set
+                        userId: currentUser!.uid  // Ensure userId is admin's
                     });
                 } catch (error) {
                     console.log('ActiveWork document update failed (this is OK):', error);
                 }
             }
 
-            alert(`Töö lõppeb 20 sekundi pärast!\nAinult kasutaja: ${currentUser.email}`);
+            alert(`Töö lõppeb 20 sekundi pärast!\nUser: ${currentUser!.email}`);
 
-            // Reload only THIS user's stats
-            const statsDoc = await getDoc(statsRef);
+            // Reload ADMIN's stats only
+            const statsDoc = await getDoc(adminStatsRef);
             if (statsDoc.exists()) {
                 setPlayerStats(statsDoc.data() as PlayerStats);
             }
@@ -488,21 +610,24 @@ export const DebugMenu: React.FC = () => {
     };
 
     const migrateEquipment = async () => {
-        if (!currentUser) return;
+        if (!verifyAdminAndLog('migrateEquipment')) {
+            alert('Unauthorized');
+            return;
+        }
 
         const choice = window.confirm(
-            'Choose migration type:\n\n' +
-            'OK = Migrate only your account\n' +
-            'Cancel = Migrate ALL users (admin only)'
+            `Choose migration type:\n\n` +
+            `OK = Migrate only YOUR account (${currentUser!.email})\n` +
+            `Cancel = Migrate ALL users (admin only)`
         );
 
         setIsProcessing(true);
         try {
             if (choice) {
-                // Migrate current user only
-                const result = await migrateUserEquipment(currentUser.uid);
+                // Migrate ADMIN user only
+                const result = await migrateUserEquipment(currentUser!.uid);
                 if (result.success) {
-                    alert(`✅ ${result.message}`);
+                    alert(`✅ ${result.message}\nUser: ${currentUser!.email}`);
                     if (!result.alreadyMigrated) {
                         window.location.reload();
                     }
@@ -510,18 +635,20 @@ export const DebugMenu: React.FC = () => {
                     alert(`❌ Migration failed: ${result.message}`);
                 }
             } else {
-                // Migrate all users
-                if (!window.confirm('⚠️ This will migrate ALL users in the database. Continue?')) {
+                // Migrate all users - SPECIAL CASE: This affects all users intentionally
+                if (!window.confirm('⚠️ ADMIN ACTION: This will migrate ALL users in the database. Continue?')) {
                     setIsProcessing(false);
                     return;
                 }
 
+                console.warn('ADMIN ACTION: Migrating ALL users by', currentUser!.email);
                 const results = await migrateAllUsers();
                 alert(`Migration complete!\n\n` +
                     `Total users: ${results.total}\n` +
                     `Successfully migrated: ${results.migrated}\n` +
                     `Already migrated: ${results.alreadyMigrated}\n` +
                     `Failed: ${results.failed}\n\n` +
+                    `Admin: ${currentUser!.email}\n` +
                     `Check console for details.`
                 );
                 console.log('Migration results:', results);
@@ -540,7 +667,7 @@ export const DebugMenu: React.FC = () => {
             <button
                 className="debug-toggle"
                 onClick={() => setIsOpen(!isOpen)}
-                title="Developer Tools"
+                title={`Developer Tools (${currentUser?.email})`}
             >
                 🛠️
             </button>
@@ -549,7 +676,7 @@ export const DebugMenu: React.FC = () => {
             {isOpen && (
                 <div className="debug-menu">
                     <div className="debug-header">
-                        <h3>Developer Tools</h3>
+                        <h3>Developer Tools (ADMIN)</h3>
                         <button
                             className="debug-close"
                             onClick={() => setIsOpen(false)}
@@ -559,6 +686,17 @@ export const DebugMenu: React.FC = () => {
                     </div>
 
                     <div className="debug-content">
+                        <div className="debug-warning" style={{
+                            backgroundColor: '#ff000020',
+                            border: '1px solid #ff0000',
+                            padding: '10px',
+                            marginBottom: '10px',
+                            borderRadius: '5px'
+                        }}>
+                            ⚠️ ADMIN MODE: {currentUser?.email}<br/>
+                            All actions affect ONLY your account
+                        </div>
+
                         <div className="debug-section">
                             <h4>Quick Actions</h4>
                             <button
@@ -694,7 +832,9 @@ export const DebugMenu: React.FC = () => {
                         </div>
 
                         <div className="debug-info">
-                            <small>User: {currentUser?.email}</small>
+                            <small>Admin User: {currentUser?.email}</small>
+                            <br />
+                            <small>UID: {currentUser?.uid}</small>
                             {playerStats && (
                                 <>
                                     <br />

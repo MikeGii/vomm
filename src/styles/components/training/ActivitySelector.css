@@ -344,9 +344,7 @@ select option:disabled {
 
 /* Hide the desktop training counter on mobile when showing badge */
 @media (max-width: 768px) {
-    .training-counter {
-        display: none;
-    }
+
 
     .train-button {
         padding: 0.9rem;

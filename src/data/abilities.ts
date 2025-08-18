@@ -1,6 +1,6 @@
 // src/data/abilities.ts
 import { IconType } from 'react-icons';
-import { GiPistolGun, GiElectric, GiPoliceCar } from 'react-icons/gi';
+import { GiPistolGun, GiElectric, GiPoliceCar, GiMachineGunMagazine } from 'react-icons/gi';
 import { MdSpeed } from 'react-icons/md';
 import { FaTabletAlt } from 'react-icons/fa';
 import { GoLaw } from 'react-icons/go';
@@ -40,6 +40,17 @@ export const ABILITIES: Ability[] = [
         description: 'Täiustatud tulirelva käsitsemise oskused Glock teenistusrelvaga',
         icon: GiPistolGun,
         requiredCourse: 'firearm_handling_glock',
+        trainingBonuses: [
+            { attribute: 'dexterity', percentage: 0.10 },
+            { attribute: 'agility', percentage: 0.10 }
+        ]
+    },
+    {
+        id: 'firearm_carry_r20_automatic',
+        name: 'Tugirelva R-20 kandmine',
+        description: 'Tugirelva R-20 käsitsemise oskused',
+        icon: GiMachineGunMagazine,
+        requiredCourse: 'firearm_handling_r20',
         trainingBonuses: [
             { attribute: 'dexterity', percentage: 0.10 },
             { attribute: 'agility', percentage: 0.10 }
