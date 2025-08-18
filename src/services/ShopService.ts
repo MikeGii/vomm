@@ -28,8 +28,7 @@ const shopItemToInventoryItem = (shopItem: ShopItem): InventoryItem => {
         name: shopItem.name,
         description: shopItem.description,
         category: shopItem.category === 'protection' ? 'equipment' :
-            shopItem.category === 'trainingBooster' ? 'consumable' :
-                shopItem.category === 'consumables' ? 'consumable' : 'misc',
+            shopItem.category === 'trainingBooster' ? 'consumable' : 'misc',
         quantity: 1,
         shopPrice: shopItem.price,
         equipped: false,
@@ -37,13 +36,17 @@ const shopItemToInventoryItem = (shopItem: ShopItem): InventoryItem => {
         obtainedAt: new Date()
     };
 
-    // Only add optional properties if they exist
     if (shopItem.equipmentSlot) {
         inventoryItem.equipmentSlot = shopItem.equipmentSlot;
     }
 
     if (shopItem.stats) {
         inventoryItem.stats = shopItem.stats;
+    }
+
+    // Add consumable effect for training boosters
+    if (shopItem.consumableEffect) {
+        inventoryItem.consumableEffect = shopItem.consumableEffect;
     }
 
     return inventoryItem;

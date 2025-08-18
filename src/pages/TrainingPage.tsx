@@ -1,4 +1,4 @@
-// src/pages/TrainingPage.tsx
+// src/pages/TrainingPage.tsx - Updated version
 import React, { useState, useEffect, useCallback } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
@@ -8,9 +8,12 @@ import { TrainingCounter } from '../components/training/TrainingCounter';
 import { ActivitySelector } from '../components/training/ActivitySelector';
 import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
 import { TrainingMilestones} from "../components/training/TrainingMilestones";
+import { TrainingBoosters } from '../components/training/TrainingBoosters';
+import { getTrainingBoosters } from '../services/TrainingBoosterService';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { PlayerStats, TrainingActivity } from '../types';
+import { InventoryItem } from '../types';
 import {
     checkAndResetTrainingClicks,
     performTraining,
@@ -29,6 +32,7 @@ const TrainingPage: React.FC = () => {
     const [isTraining, setIsTraining] = useState(false);
     const [loading, setLoading] = useState(true);
     const [showTutorial, setShowTutorial] = useState(false);
+    const [trainingBoosters, setTrainingBoosters] = useState<InventoryItem[]>([]);
 
     // Set up real-time listener for player stats
     useEffect(() => {
@@ -53,6 +57,10 @@ const TrainingPage: React.FC = () => {
                 stats.trainingData = updatedTrainingData;
 
                 setPlayerStats(stats);
+
+                // Get training boosters from inventory
+                const boosters = getTrainingBoosters(stats.inventory || []);
+                setTrainingBoosters(boosters);
 
                 // Get available activities based on player level
                 const activities = getAvailableActivities(stats.level);
@@ -120,6 +128,12 @@ const TrainingPage: React.FC = () => {
         }
     };
 
+    // Handle booster used callback
+    const handleBoosterUsed = () => {
+        // The onSnapshot listener will automatically update the state
+        // This is just a placeholder for any additional logic if needed
+    };
+
     if (loading) {
         return (
             <div className="page">
@@ -165,7 +179,7 @@ const TrainingPage: React.FC = () => {
                     attributes={playerStats.attributes || initializeAttributes()}
                 />
 
-                {/* Training milestones - ADD THIS */}
+                {/* Training milestones */}
                 <TrainingMilestones
                     currentLevel={playerStats.level}
                 />
@@ -179,6 +193,14 @@ const TrainingPage: React.FC = () => {
                     isTraining={isTraining}
                     canTrain={(playerStats.trainingData?.remainingClicks || 0) > 0}
                     playerStats={playerStats}
+                />
+
+                {/* Training boosters - NEW COMPONENT */}
+                <TrainingBoosters
+                    boosters={trainingBoosters}
+                    currentClicks={playerStats.trainingData?.remainingClicks || 0}
+                    maxClicks={playerStats.activeWork ? 10 : 50}
+                    onBoosterUsed={handleBoosterUsed}
                 />
 
                 {/* Tutorial overlay */}

@@ -21,4 +21,9 @@ export interface InventoryItem {
         intelligence?: number;
         endurance?: number;
     };
+    consumableEffect?: {
+        type: 'trainingClicks' | 'heal' | 'energy' | 'experience' | 'temporary_boost';
+        value: number;
+        duration?: number;
+    };
 }
