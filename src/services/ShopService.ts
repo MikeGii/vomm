@@ -33,7 +33,7 @@ const shopItemToInventoryItem = (shopItem: ShopItem): InventoryItem => {
         name: shopItem.name,
         description: shopItem.description,
         category: shopItem.category === 'protection' ? 'equipment' :
-            shopItem.category === 'trainingBooster' ? 'consumable' : 'misc',
+            (shopItem.category === 'trainingBooster' || shopItem.category === 'medical') ? 'consumable' : 'misc',
         quantity: 1,
         shopPrice: shopItem.price,
         equipped: false,
