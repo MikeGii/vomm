@@ -8,6 +8,7 @@ export interface UseMedicalResult {
     message: string;
     healthRestored?: number;
     newHealth?: number;
+    itemsUsed?: number;
 }
 
 /**
@@ -21,11 +22,12 @@ export const getMedicalItems = (inventory: InventoryItem[]): InventoryItem[] => 
 };
 
 /**
- * Use a medical item to restore health
+ * Use medical items to restore health
  */
 export const consumeMedicalItem = async (
     userId: string,
-    itemId: string
+    itemId: string,
+    quantity: number = 1
 ): Promise<UseMedicalResult> => {
     try {
         const playerRef = doc(firestore, 'playerStats', userId);
@@ -77,51 +79,87 @@ export const consumeMedicalItem = async (
             };
         }
 
+        // Check if player has enough items
+        if (medicalItem.quantity < quantity) {
+            return {
+                success: false,
+                message: `Pole piisavalt esemeid! Sul on ${medicalItem.quantity}, tahad kasutada ${quantity}`
+            };
+        }
+
         // Calculate health restoration
-        const healAmount = medicalItem.consumableEffect.value;
+        const healPerItem = medicalItem.consumableEffect.value;
         const currentHealth = health.current;
         const maxHealth = health.max;
+        const healthNeeded = maxHealth - currentHealth;
 
         // Handle "full heal" items (value 9999)
-        const actualHealAmount = healAmount >= 9999
-            ? maxHealth - currentHealth
-            : Math.min(healAmount, maxHealth - currentHealth);
+        if (healPerItem >= 9999) {
+            // Full heal items only need 1 to restore all health
+            quantity = 1;
+        } else {
+            // Calculate optimal quantity (don't use more than needed)
+            const optimalQuantity = Math.ceil(healthNeeded / healPerItem);
+            quantity = Math.min(quantity, optimalQuantity, medicalItem.quantity);
+        }
 
+        // Calculate actual health restored
+        const totalHealAmount = healPerItem >= 9999
+            ? healthNeeded
+            : healPerItem * quantity;
+
+        const actualHealAmount = Math.min(totalHealAmount, healthNeeded);
         const newHealth = currentHealth + actualHealAmount;
 
-        // Remove the medical item from inventory
+        // Update inventory
         const updatedInventory = [...inventory];
-        updatedInventory.splice(itemIndex, 1);
-
-        // Prepare updates
-        const updates: any = {
-            'health.current': newHealth,
-            inventory: updatedInventory,
-            lastModified: Timestamp.now()
-        };
-
-        // Clear recovery timer if health is now at max
-        if (newHealth >= maxHealth) {
-            updates.lastHealthUpdate = null;
+        if (medicalItem.quantity === quantity) {
+            // Remove item completely
+            updatedInventory.splice(itemIndex, 1);
+        } else {
+            // Reduce quantity
+            updatedInventory[itemIndex] = {
+                ...medicalItem,
+                quantity: medicalItem.quantity - quantity
+            };
         }
 
         // Update player stats
-        await updateDoc(playerRef, updates);
+        await updateDoc(playerRef, {
+            'health.current': newHealth,
+            'health.lastHealTime': Timestamp.now(),
+            inventory: updatedInventory,
+            lastModified: Timestamp.now()
+        });
 
         return {
             success: true,
-            message: `Kasutasid ${medicalItem.name}. Taastati ${actualHealAmount} HP!`,
+            message: `Tervis taastatud! +${actualHealAmount} HP (kasutatud ${quantity}x ${medicalItem.name})`,
             healthRestored: actualHealAmount,
-            newHealth: newHealth
+            newHealth: newHealth,
+            itemsUsed: quantity
         };
 
     } catch (error) {
         console.error('Error using medical item:', error);
         return {
             success: false,
-            message: 'Meditsiinitarbe kasutamine ebaõnnestus'
+            message: 'Viga meditsiinivarustuse kasutamisel'
         };
     }
+};
+
+/**
+ * Calculate how many items needed for full heal
+ */
+export const calculateItemsNeededForFullHeal = (
+    currentHealth: number,
+    maxHealth: number,
+    healPerItem: number
+): number => {
+    if (healPerItem >= 9999) return 1; // Full heal items
+    const healthNeeded = maxHealth - currentHealth;
+    return Math.ceil(healthNeeded / healPerItem);
 };
 
 /**
