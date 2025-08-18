@@ -19,32 +19,18 @@ export const ProfileInventory: React.FC<ProfileInventoryProps> = ({ items }) => 
 
     const getCategoryName = (category: string): string => {
         const names: { [key: string]: string } = {
-            weapon: 'Relvad',
             equipment: 'Varustus',
-            consumable: 'Tarbitavad',
-            document: 'Dokumendid',
-            valuable: 'Väärtesemed',
+            consumable: 'Sporditarbed',
             misc: 'Muu'
         };
         return names[category] || category;
-    };
-
-    const getRarityName = (rarity: string): string => {
-        const names: { [key: string]: string } = {
-            common: 'Tavaline',
-            uncommon: 'Ebatavaline',
-            rare: 'Haruldane',
-            epic: 'Eepiline',
-            legendary: 'Legendaarne'
-        };
-        return names[rarity] || rarity;
     };
 
     if (!items || items.length === 0) {
         return (
             <div className="profile-inventory-simple">
                 <h2 className="inventory-title">Inventar</h2>
-                <p className="no-items">Inventar on tühi. Koguge esemeid poe, ülesannete ja koolituste kaudu!</p>
+                <p className="no-items">Inventar on tühi. Koguge esemeid poest!</p>
             </div>
         );
     }
@@ -61,7 +47,6 @@ export const ProfileInventory: React.FC<ProfileInventoryProps> = ({ items }) => 
                             <th>Ese</th>
                             <th>Kirjeldus</th>
                             <th>Kogus</th>
-                            <th>Haruldus</th>
                             <th>Staatus</th>
                         </tr>
                         </thead>
@@ -71,13 +56,6 @@ export const ProfileInventory: React.FC<ProfileInventoryProps> = ({ items }) => 
                                 <td className="item-name">{item.name}</td>
                                 <td className="item-description">{item.description}</td>
                                 <td className="item-quantity">{item.quantity}</td>
-                                <td className="item-rarity">
-                                    {item.rarity && (
-                                        <span className={`rarity-badge rarity-${item.rarity}`}>
-                                                {getRarityName(item.rarity)}
-                                            </span>
-                                    )}
-                                </td>
                                 <td className="item-status">
                                     {item.equipped ? (
                                         <span className="status-equipped">Varustatud</span>

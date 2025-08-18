@@ -12,7 +12,6 @@ export const ABIPOLITSEINIK_UNIFORM: EquipmentItem[] = [
         stats: {
             intelligence: 1
         },
-        rarity: 'common',
         equipped: false
     },
     {
@@ -24,7 +23,6 @@ export const ABIPOLITSEINIK_UNIFORM: EquipmentItem[] = [
         stats: {
             strength: 1
         },
-        rarity: 'common',
         equipped: false
     },
     {
@@ -36,7 +34,6 @@ export const ABIPOLITSEINIK_UNIFORM: EquipmentItem[] = [
         stats: {
             agility: 1
         },
-        rarity: 'common',
         equipped: false
     },
     {
@@ -48,7 +45,6 @@ export const ABIPOLITSEINIK_UNIFORM: EquipmentItem[] = [
         stats: {
             dexterity: 1
         },
-        rarity: 'common',
         equipped: false
     },
     {
@@ -60,7 +56,6 @@ export const ABIPOLITSEINIK_UNIFORM: EquipmentItem[] = [
         stats: {
             dexterity: 1
         },
-        rarity: 'common',
         equipped: false
     },
     {
@@ -73,7 +68,6 @@ export const ABIPOLITSEINIK_UNIFORM: EquipmentItem[] = [
             dexterity: 1,
             agility: 1
         },
-        rarity: 'common',
         equipped: false
     },
     {
@@ -85,7 +79,6 @@ export const ABIPOLITSEINIK_UNIFORM: EquipmentItem[] = [
         stats: {
             agility: 2
         },
-        rarity: 'common',
         equipped: false
     }
 ];
@@ -101,7 +94,6 @@ export const POLITSEI_UNIFORM: EquipmentItem[] = [
         stats: {
             intelligence: 2
         },
-        rarity: 'uncommon',
         equipped: false
     },
     {
@@ -113,7 +105,6 @@ export const POLITSEI_UNIFORM: EquipmentItem[] = [
         stats: {
             strength: 2
         },
-        rarity: 'uncommon',
         equipped: false
     },
     {
@@ -125,7 +116,6 @@ export const POLITSEI_UNIFORM: EquipmentItem[] = [
         stats: {
             agility: 2
         },
-        rarity: 'uncommon',
         equipped: false
     },
     {
@@ -137,7 +127,6 @@ export const POLITSEI_UNIFORM: EquipmentItem[] = [
         stats: {
             dexterity: 2
         },
-        rarity: 'uncommon',
         equipped: false
     },
     {
@@ -149,7 +138,6 @@ export const POLITSEI_UNIFORM: EquipmentItem[] = [
         stats: {
             dexterity: 2
         },
-        rarity: 'uncommon',
         equipped: false
     },
     {
@@ -162,7 +150,6 @@ export const POLITSEI_UNIFORM: EquipmentItem[] = [
             dexterity: 2,
             agility: 2
         },
-        rarity: 'uncommon',
         equipped: false
     },
     {
@@ -175,7 +162,6 @@ export const POLITSEI_UNIFORM: EquipmentItem[] = [
             agility: 2,
             endurance: 1
         },
-        rarity: 'uncommon',
         equipped: false
     }
 ];

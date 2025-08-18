@@ -15,8 +15,6 @@ export interface EquipmentItem {
     name: string;
     description: string;
     slot: EquipmentSlot;
-    icon?: IconType;
-    imageUrl?: string;
     shopPrice: number;
     marketPrice?: number;
     stats?: {
@@ -26,8 +24,6 @@ export interface EquipmentItem {
         intelligence?: number;
         endurance?: number;
     };
-    rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-    level?: number;
     equipped: boolean;
 }
 
@@ -45,7 +41,7 @@ export const EQUIPMENT_SLOT_NAMES: Record<EquipmentSlot, string> = {
     head: 'Pea',
     upperBody: 'Ülakeha',
     lowerBody: 'Alakeha',
-    hands: 'Käed',  // Changed
+    hands: 'Käed',
     belt: 'Vöö',
     weaponHolster: 'Relva kabuur',
     shoes: 'Jalatsid'

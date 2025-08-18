@@ -2,7 +2,6 @@
 import React from 'react';
 import { ShopItem } from '../../types/shop';
 import { ShopItemCard } from './ShopItemCard';
-import { calculateFinalPrice } from '../../services/ShopService';
 import '../../styles/components/shop/ShopItemGrid.css';
 
 interface ShopItemGridProps {
@@ -32,7 +31,7 @@ export const ShopItemGrid: React.FC<ShopItemGridProps> = ({
                 <ShopItemCard
                     key={item.id}
                     item={item}
-                    canAfford={playerMoney >= calculateFinalPrice(item)}
+                    canAfford={playerMoney >= item.price}
                     onPurchase={onPurchase}
                     onViewDetails={onViewDetails}
                 />

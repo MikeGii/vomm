@@ -1,4 +1,4 @@
-// src/services/ShopService.ts - Updated version
+// src/services/ShopService.ts - Fixed version
 import {
     doc,
     getDoc,
@@ -23,24 +23,30 @@ export const getShopItemById = (itemId: string): ShopItem | undefined => {
  * Convert shop item to inventory item
  */
 const shopItemToInventoryItem = (shopItem: ShopItem): InventoryItem => {
-    return {
-        id: `${shopItem.id}_${Date.now()}`, // Unique ID for inventory
+    const inventoryItem: InventoryItem = {
+        id: `${shopItem.id}_${Date.now()}`,
         name: shopItem.name,
         description: shopItem.description,
-        category: shopItem.category === 'uniforms' ? 'equipment' :
-            shopItem.category === 'protection' ? 'equipment' :
-                shopItem.category === 'weapons' ? 'weapon' :
-                    shopItem.category === 'documents' ? 'document' :
-                        shopItem.category === 'consumables' ? 'consumable' : 'misc',
+        category: shopItem.category === 'protection' ? 'equipment' :
+            shopItem.category === 'trainingBooster' ? 'consumable' :
+                shopItem.category === 'consumables' ? 'consumable' : 'misc',
         quantity: 1,
         shopPrice: shopItem.price,
-        rarity: shopItem.rarity,
         equipped: false,
-        equipmentSlot: shopItem.equipmentSlot,
-        stats: shopItem.stats,
         source: 'shop',
         obtainedAt: new Date()
     };
+
+    // Only add optional properties if they exist
+    if (shopItem.equipmentSlot) {
+        inventoryItem.equipmentSlot = shopItem.equipmentSlot;
+    }
+
+    if (shopItem.stats) {
+        inventoryItem.stats = shopItem.stats;
+    }
+
+    return inventoryItem;
 };
 
 /**
@@ -132,28 +138,11 @@ export const getAffordableItems = (
 };
 
 /**
- * Get items with active discounts
- */
-export const getDiscountedItems = (): ShopItem[] => {
-    return ALL_SHOP_ITEMS.filter(item => item.discount && item.discount > 0);
-};
-
-/**
- * Calculate final price with discount
- */
-export const calculateFinalPrice = (item: ShopItem): number => {
-    if (item.discount) {
-        return Math.floor(item.price * (1 - item.discount / 100));
-    }
-    return item.price;
-};
-
-/**
  * Sort shop items
  */
 export const sortShopItems = (
     items: ShopItem[],
-    sortBy: 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc' | 'rarity'
+    sortBy: 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc'
 ): ShopItem[] => {
     const sorted = [...items];
 
@@ -166,13 +155,6 @@ export const sortShopItems = (
             return sorted.sort((a, b) => a.name.localeCompare(b.name));
         case 'name_desc':
             return sorted.sort((a, b) => b.name.localeCompare(a.name));
-        case 'rarity':
-            const rarityOrder = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
-            return sorted.sort((a, b) => {
-                const aIndex = rarityOrder.indexOf(a.rarity || 'common');
-                const bIndex = rarityOrder.indexOf(b.rarity || 'common');
-                return bIndex - aIndex;
-            });
         default:
             return sorted;
     }

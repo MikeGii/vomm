@@ -1,7 +1,6 @@
 // src/components/shop/ShopPurchaseModal.tsx
 import React from 'react';
 import { ShopItem } from '../../types/shop';
-import { calculateFinalPrice } from '../../services/ShopService';
 import '../../styles/components/shop/ShopPurchaseModal.css';
 
 interface ShopPurchaseModalProps {
@@ -21,7 +20,7 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
                                                                     }) => {
     if (!isOpen || !item) return null;
 
-    const finalPrice = calculateFinalPrice(item);
+    const finalPrice = item.price;
     const canAfford = playerMoney >= finalPrice;
 
     return (

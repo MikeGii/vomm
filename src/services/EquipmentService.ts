@@ -29,7 +29,6 @@ export const equipItem = async (
             slot: slot,
             shopPrice: item.shopPrice,
             stats: item.stats,
-            rarity: item.rarity,
             equipped: true
         };
 
@@ -97,7 +96,6 @@ export const unequipItem = async (
                 quantity: 1,
                 shopPrice: item.shopPrice,
                 stats: item.stats,
-                rarity: item.rarity,
                 equipped: false,
                 equipmentSlot: slot
             };
