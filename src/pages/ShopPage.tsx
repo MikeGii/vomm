@@ -1,4 +1,4 @@
-// src/pages/ShopPage.tsx
+// src/pages/ShopPage.tsx - Updated version
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,13 +7,18 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { ShopHeader } from '../components/shop/ShopHeader';
-import { ShopCategories } from '../components/shop/ShopCategories';
-import { ShopItemGrid } from '../components/shop/ShopItemGrid';
+import { ShopTable } from '../components/shop/ShopTable';
 import { ShopPurchaseModal } from '../components/shop/ShopPurchaseModal';
 import { ShopItem } from '../types/shop';
 import { PlayerStats } from '../types';
-import { ALL_SHOP_ITEMS, getItemsByCategory } from '../data/shop';
-import { purchaseItem, sortShopItems } from '../services/ShopService';
+import { purchaseItem } from '../services/ShopService';
+import {
+    initializeShopStock,
+    getAllItemsWithStock,
+    getItemStock,
+    calculateDynamicPrice
+} from '../services/ShopStockService';
+import { ALL_SHOP_ITEMS } from '../data/shop';
 import '../styles/pages/Shop.css';
 
 const ShopPage: React.FC = () => {
@@ -22,11 +27,29 @@ const ShopPage: React.FC = () => {
     const { showToast } = useToast();
 
     const [playerMoney, setPlayerMoney] = useState(0);
-    const [activeCategory, setActiveCategory] = useState('all');
-    const [displayedItems, setDisplayedItems] = useState<ShopItem[]>(ALL_SHOP_ITEMS);
+    const [itemsWithStock, setItemsWithStock] = useState<Array<{
+        item: any;
+        currentStock: number;
+        dynamicPrice: number;
+    }>>([]);
     const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
+    const [selectedItemStock, setSelectedItemStock] = useState(0);
+    const [selectedItemPrice, setSelectedItemPrice] = useState(0);
     const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    // Initialize shop stock on first load
+    useEffect(() => {
+        const initStock = async () => {
+            try {
+                await initializeShopStock();
+            } catch (error) {
+                console.error('Error initializing shop stock:', error);
+            }
+        };
+        initStock();
+    }, []);
 
     // Listen to player stats for money updates
     useEffect(() => {
@@ -42,39 +65,49 @@ const ShopPage: React.FC = () => {
                     const stats = doc.data() as PlayerStats;
                     setPlayerMoney(stats.money || 0);
                 }
-                setIsLoading(false);
             },
             (error) => {
                 console.error('Error fetching player stats:', error);
                 showToast('Viga andmete laadimisel', 'error');
-                setIsLoading(false);
             }
         );
 
         return () => unsubscribe();
     }, [currentUser, navigate, showToast]);
 
-    // Update displayed items when category changes
-    useEffect(() => {
-        if (activeCategory === 'all') {
-            setDisplayedItems(sortShopItems(ALL_SHOP_ITEMS, 'price_asc'));
-        } else {
-            const categoryItems = getItemsByCategory(activeCategory);
-            setDisplayedItems(sortShopItems(categoryItems, 'price_asc'));
+    // Load items with stock
+    const loadItemsWithStock = async () => {
+        setIsRefreshing(true);
+        try {
+            const items = await getAllItemsWithStock();
+            setItemsWithStock(items);
+        } catch (error) {
+            console.error('Error loading items:', error);
+            showToast('Viga esemete laadimisel', 'error');
+        } finally {
+            setIsLoading(false);
+            setIsRefreshing(false);
         }
-    }, [activeCategory]);
-
-    const handleCategoryChange = (category: string) => {
-        setActiveCategory(category);
     };
 
-    const handlePurchase = (item: ShopItem) => {
-        setSelectedItem(item);
-        setIsPurchaseModalOpen(true);
-    };
+    // Load items on mount and set up periodic refresh
+    useEffect(() => {
+        loadItemsWithStock();
 
-    const handleViewDetails = (item: ShopItem) => {
+        // Refresh stock every 30 seconds
+        const interval = setInterval(loadItemsWithStock, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const handlePurchase = async (itemId: string) => {
+        const itemData = itemsWithStock.find(i => i.item.id === itemId);
+        if (!itemData) return;
+
+        const { item, currentStock, dynamicPrice } = itemData;
+
         setSelectedItem(item);
+        setSelectedItemStock(currentStock);
+        setSelectedItemPrice(dynamicPrice);
         setIsPurchaseModalOpen(true);
     };
 
@@ -87,6 +120,9 @@ const ShopPage: React.FC = () => {
             showToast(result.message, 'success');
             setIsPurchaseModalOpen(false);
             setSelectedItem(null);
+
+            // Reload items to update stock
+            loadItemsWithStock();
         } else {
             showToast(result.message, 'error');
         }
@@ -97,50 +133,32 @@ const ShopPage: React.FC = () => {
         setSelectedItem(null);
     };
 
-    // Calculate item counts for categories
-    const getItemCounts = () => {
-        const counts: Record<string, number> = {
-            all: ALL_SHOP_ITEMS.length
-        };
-
-        ['uniforms', 'protection', 'weapons', 'equipment', 'consumables', 'documents'].forEach(category => {
-            counts[category] = getItemsByCategory(category).length;
-        });
-
-        return counts;
-    };
-
     if (isLoading) {
         return (
-            <div className="page">
+            <div className="shop-page">
                 <AuthenticatedHeader />
-                <main className="shop-container">
-                    <div className="loading-state">Laadin poodi...</div>
-                </main>
+                <div className="shop-container">
+                    <div className="loading">Laadin poodi...</div>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="page">
+        <div className="shop-page">
             <AuthenticatedHeader />
-            <main className="shop-container">
+            <div className="shop-container">
                 <ShopHeader
                     playerMoney={playerMoney}
-                    onBack={() => navigate('/dashboard')}
+                    onRefresh={loadItemsWithStock}
+                    isRefreshing={isRefreshing}
                 />
 
-                <ShopCategories
-                    activeCategory={activeCategory}
-                    onCategoryChange={handleCategoryChange}
-                    itemCounts={getItemCounts()}
-                />
-
-                <ShopItemGrid
-                    items={displayedItems}
+                <ShopTable
+                    items={itemsWithStock}
                     playerMoney={playerMoney}
                     onPurchase={handlePurchase}
-                    onViewDetails={handleViewDetails}
+                    isLoading={isRefreshing}
                 />
 
                 <ShopPurchaseModal
@@ -150,7 +168,7 @@ const ShopPage: React.FC = () => {
                     onConfirm={confirmPurchase}
                     onCancel={cancelPurchase}
                 />
-            </main>
+            </div>
         </div>
     );
 };

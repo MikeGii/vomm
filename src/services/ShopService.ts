@@ -8,9 +8,14 @@ import {
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { ShopItem, PurchaseResult } from '../types/shop';
-import { InventoryItem } from '../types/inventory';
+import { InventoryItem } from '../types';
 import { PlayerStats } from '../types';
 import { ALL_SHOP_ITEMS } from '../data/shop';
+import {
+    getItemStock,
+    calculateDynamicPrice,
+    updateStockAfterPurchase
+} from "./ShopStockService";
 
 /**
  * Get shop item by ID
@@ -53,7 +58,7 @@ const shopItemToInventoryItem = (shopItem: ShopItem): InventoryItem => {
 };
 
 /**
- * Purchase item from shop
+ * Purchase item from shop WITH STOCK CHECK
  */
 export const purchaseItem = async (
     userId: string,
@@ -71,6 +76,20 @@ export const purchaseItem = async (
             };
         }
 
+        // CHECK STOCK - NEW
+        const currentStock = await getItemStock(itemId);
+        if (currentStock < quantity) {
+            return {
+                success: false,
+                message: `Laos pole piisavalt! Saadaval: ${currentStock}`,
+                failureReason: 'out_of_stock'
+            };
+        }
+
+        // CALCULATE DYNAMIC PRICE - NEW
+        const dynamicPrice = calculateDynamicPrice(shopItem.basePrice, currentStock, shopItem.maxStock);
+        const totalCost = dynamicPrice * quantity;
+
         // Get player stats
         const playerRef = doc(firestore, 'playerStats', userId);
         const playerDoc = await getDoc(playerRef);
@@ -84,23 +103,25 @@ export const purchaseItem = async (
 
         const playerStats = playerDoc.data() as PlayerStats;
 
-        // Calculate total cost
-        const totalCost = shopItem.price * quantity;
-
         // Check if player has enough money
         if (playerStats.money < totalCost) {
             return {
                 success: false,
-                message: `Ebapiisav raha. Vaja: €${totalCost}, Sul on: €${playerStats.money}`,
+                message: `Ebapiisav raha. Vaja: €${totalCost.toFixed(2)}, Sul on: €${playerStats.money.toFixed(2)}`,
                 failureReason: 'insufficient_funds'
             };
         }
 
-        // Create inventory items
+        // Create inventory items with dynamic price
         const inventoryItems: InventoryItem[] = [];
         for (let i = 0; i < quantity; i++) {
-            inventoryItems.push(shopItemToInventoryItem(shopItem));
+            const invItem = shopItemToInventoryItem(shopItem);
+            invItem.shopPrice = dynamicPrice; // Use dynamic price
+            inventoryItems.push(invItem);
         }
+
+        // UPDATE STOCK
+        await updateStockAfterPurchase(itemId, quantity);
 
         // Update player stats (decrease money and add items to inventory)
         await updateDoc(playerRef, {
@@ -115,50 +136,11 @@ export const purchaseItem = async (
             newBalance: playerStats.money - totalCost
         };
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Purchase error:', error);
         return {
             success: false,
-            message: 'Ostu sooritamine ebaõnnestus'
+            message: error.message || 'Ostu sooritamine ebaõnnestus'
         };
-    }
-};
-
-/**
- * Get items player can afford
- */
-export const getAffordableItems = (
-    playerMoney: number,
-    category?: string
-): ShopItem[] => {
-    let items = ALL_SHOP_ITEMS.filter(item => item.price <= playerMoney);
-
-    if (category && category !== 'all') {
-        items = items.filter(item => item.category === category);
-    }
-
-    return items;
-};
-
-/**
- * Sort shop items
- */
-export const sortShopItems = (
-    items: ShopItem[],
-    sortBy: 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc'
-): ShopItem[] => {
-    const sorted = [...items];
-
-    switch (sortBy) {
-        case 'price_asc':
-            return sorted.sort((a, b) => a.price - b.price);
-        case 'price_desc':
-            return sorted.sort((a, b) => b.price - a.price);
-        case 'name_asc':
-            return sorted.sort((a, b) => a.name.localeCompare(b.name));
-        case 'name_desc':
-            return sorted.sort((a, b) => b.name.localeCompare(a.name));
-        default:
-            return sorted;
     }
 };

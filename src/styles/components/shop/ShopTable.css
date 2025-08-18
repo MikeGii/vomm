@@ -1,0 +1,325 @@
+/* src/styles/components/shop/ShopTable.css - Fixed column alignment */
+
+/* Container */
+.shop-table-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+/* Category sections */
+.category-section {
+    background-color: #1a1a1a;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #333;
+}
+
+.category-title {
+    color: #f0f0f0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #4a90e2;
+}
+
+/* Table */
+.shop-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    overflow: hidden;
+    table-layout: fixed; /* Keep this for consistent column widths */
+}
+
+/* Table header */
+.shop-table thead {
+    background-color: #333;
+}
+
+.shop-table th {
+    padding: 1rem;
+    color: #4a90e2;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #444;
+}
+
+/* Set specific column widths and alignments */
+.shop-table th:nth-child(1) { /* Ese */
+    width: 15%;
+    text-align: left;
+}
+
+.shop-table th:nth-child(2) { /* Kirjeldus */
+    width: 25%;
+    text-align: left;
+}
+
+.shop-table th:nth-child(3) { /* Boonused */
+    width: 20%;
+    text-align: left;
+}
+
+.shop-table th:nth-child(4) { /* Hind */
+    width: 15%;
+    text-align: center;
+}
+
+.shop-table th:nth-child(5) { /* Laoseis */
+    width: 15%;
+    text-align: center;
+}
+
+.shop-table th:nth-child(6) { /* Tegevus */
+    width: 10%;
+    text-align: center;
+}
+
+/* Table body */
+.shop-table tbody tr {
+    border-bottom: 1px solid #333;
+    transition: background-color 0.2s ease;
+}
+
+.shop-table tbody tr:hover:not(.out-of-stock) {
+    background-color: rgba(74, 144, 226, 0.1);
+}
+
+.shop-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.shop-table tbody tr.out-of-stock {
+    opacity: 0.5;
+}
+
+/* Table cells - match header widths */
+.shop-table td {
+    padding: 1rem;
+    color: #f0f0f0;
+    font-size: 0.95rem;
+    vertical-align: middle;
+}
+
+.shop-table td:nth-child(1) { /* Ese */
+    width: 15%;
+    text-align: left;
+}
+
+.shop-table td:nth-child(2) { /* Kirjeldus */
+    width: 25%;
+    text-align: left;
+}
+
+.shop-table td:nth-child(3) { /* Boonused */
+    width: 20%;
+    text-align: left;
+}
+
+.shop-table td:nth-child(4) { /* Hind */
+    width: 15%;
+    text-align: center;
+}
+
+.shop-table td:nth-child(5) { /* Laoseis */
+    width: 15%;
+    text-align: center;
+}
+
+.shop-table td:nth-child(6) { /* Tegevus */
+    width: 10%;
+    text-align: center;
+}
+
+/* Column specific styles */
+.item-name {
+    font-weight: 600;
+    color: #4a90e2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.item-description {
+    color: #888;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Bonuses column */
+.item-bonuses {
+    color: #4CAF50;
+    font-size: 0.9rem;
+}
+
+.stat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.stat-item {
+    white-space: nowrap;
+}
+
+/* Price column */
+.price-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.price {
+    font-weight: 600;
+    color: #FFD700;
+    font-size: 1rem;
+}
+
+.price-increased {
+    color: #ff6b6b;
+}
+
+.price-indicator {
+    color: #ff6b6b;
+    font-size: 0.8rem;
+}
+
+/* Stock display */
+.stock-display {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.stock-number {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.stock-bar {
+    width: 80px;
+    height: 6px;
+    background-color: #1a1a1a;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.stock-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* Stock colors */
+.stock-high .stock-number {
+    color: #4CAF50;
+}
+
+.stock-high .stock-fill {
+    background-color: #4CAF50;
+}
+
+.stock-medium .stock-number {
+    color: #FFC107;
+}
+
+.stock-medium .stock-fill {
+    background-color: #FFC107;
+}
+
+.stock-low .stock-number {
+    color: #FF9800;
+}
+
+.stock-low .stock-fill {
+    background-color: #FF9800;
+}
+
+.stock-critical .stock-number {
+    color: #f44336;
+}
+
+.stock-critical .stock-fill {
+    background-color: #f44336;
+}
+
+.stock-empty .stock-number {
+    color: #666;
+}
+
+/* Buy button */
+.buy-button {
+    padding: 0.5rem 1rem;
+    background: linear-gradient(90deg, #4a90e2, #357abd);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.buy-button:hover:not(:disabled) {
+    background: linear-gradient(90deg, #357abd, #2968a3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3);
+}
+
+.buy-button:disabled {
+    background: #333;
+    color: #666;
+    cursor: not-allowed;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .shop-table-container {
+        padding: 0.5rem;
+    }
+
+    .category-section {
+        padding: 1rem;
+    }
+
+    /* Hide bonuses column on mobile */
+    .shop-table th:nth-child(3),
+    .shop-table td:nth-child(3) {
+        display: none;
+    }
+
+    /* Adjust remaining columns for mobile */
+    .shop-table th:nth-child(1),
+    .shop-table td:nth-child(1) {
+        width: 20%;
+    }
+
+    .shop-table th:nth-child(2),
+    .shop-table td:nth-child(2) {
+        width: 35%;
+    }
+
+    .shop-table th:nth-child(4),
+    .shop-table td:nth-child(4) {
+        width: 15%;
+    }
+
+    .shop-table th:nth-child(5),
+    .shop-table td:nth-child(5) {
+        width: 20%;
+    }
+
+    .shop-table th:nth-child(6),
+    .shop-table td:nth-child(6) {
+        width: 10%;
+    }
+}
