@@ -22,7 +22,7 @@ import {PlayerAbilities} from "../components/dashboard/PlayerAbilities";
 function DashboardPage() {
     const { currentUser, userData } = useAuth();
     const navigate = useNavigate();
-    const { showToast } = useToast();  // ADD THIS
+    const { showToast } = useToast();
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [showTutorial, setShowTutorial] = useState(false);
@@ -85,7 +85,23 @@ function DashboardPage() {
         };
 
         loadPlayerStats();
-    }, [currentUser, navigate, showToast]);  // ADD showToast to dependencies
+    }, [currentUser, navigate, showToast]);
+
+    // ADD THIS: Handler for when health is updated from the modal
+    const handleHealthUpdate = async () => {
+        if (currentUser) {
+            try {
+                const updatedStats = await getPlayerStats(currentUser.uid);
+                if (updatedStats) {
+                    setPlayerStats(updatedStats);
+                    showToast('Tervis taastatud!', 'success');
+                }
+            } catch (error) {
+                console.error('Error updating health:', error);
+                showToast('Viga tervise uuendamisel', 'error');
+            }
+        }
+    };
 
     // Add handler for prefecture selection complete
     const handlePrefectureComplete = async () => {
@@ -131,6 +147,7 @@ function DashboardPage() {
                         <PlayerStatsCard
                             stats={playerStats}
                             username={userData.username}
+                            onHealthUpdate={handleHealthUpdate}
                         />
                         <QuickActions
                             stats={playerStats}

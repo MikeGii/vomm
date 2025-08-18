@@ -1,0 +1,323 @@
+/* src/styles/components/health/HealthModal.css */
+.health-modal {
+    background: #2a2a2a;
+    border: 2px solid #444;
+    border-radius: 12px;
+    padding: 0;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.health-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #444;
+    background: #1a1a1a;
+    border-radius: 12px 12px 0 0;
+}
+
+.health-modal-header h2 {
+    color: #f0f0f0;
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.close-button:hover {
+    color: #f0f0f0;
+}
+
+/* Health Status Section */
+.health-status-section {
+    padding: 1.5rem;
+    border-bottom: 1px solid #333;
+}
+
+.health-bar-large {
+    width: 100%;
+    height: 40px;
+    background: #1a1a1a;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 2px solid #333;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.health-bar-fill {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.health-text {
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+
+/* Health status colors */
+.health-good .health-bar-fill {
+    background: linear-gradient(90deg, #4CAF50, #66BB6A);
+}
+
+.health-medium .health-bar-fill {
+    background: linear-gradient(90deg, #FFC107, #FFD54F);
+}
+
+.health-low .health-bar-fill {
+    background: linear-gradient(90deg, #FF9800, #FFB74D);
+}
+
+.health-critical .health-bar-fill {
+    background: linear-gradient(90deg, #f44336, #ef5350);
+}
+
+/* Health Details */
+.health-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.health-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: #1a1a1a;
+    border-radius: 6px;
+}
+
+.health-detail-row .label {
+    color: #888;
+    font-size: 0.95rem;
+}
+
+.health-detail-row .value {
+    color: #f0f0f0;
+    font-weight: 600;
+}
+
+.health-detail-row .value.missing {
+    color: #ff9800;
+}
+
+.health-detail-row .value.recovery {
+    color: #4CAF50;
+    font-size: 0.9rem;
+}
+
+.health-detail-row .value.health-good {
+    color: #4CAF50;
+}
+
+.health-detail-row .value.health-medium {
+    color: #FFC107;
+}
+
+.health-detail-row .value.health-low {
+    color: #FF9800;
+}
+
+.health-detail-row .value.health-critical {
+    color: #f44336;
+}
+
+/* Health Bonuses */
+.health-bonuses {
+    background: #1a1a1a;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.bonus-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.bonus-row:last-child {
+    margin-bottom: 0;
+}
+
+.bonus-row .label {
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.bonus-row .value {
+    color: #888;
+    font-size: 0.85rem;
+}
+
+.bonus-row .value.bonus {
+    color: #4CAF50;
+}
+
+/* Medical Items Section */
+.medical-items-section {
+    padding: 1.5rem;
+}
+
+.medical-items-section h3 {
+    color: #f0f0f0;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.medical-item-select {
+    width: 100%;
+    padding: 0.75rem;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #f0f0f0;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+}
+
+.medical-item-select:focus {
+    outline: none;
+    border-color: #4a90e2;
+}
+
+.medical-item-select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.use-medical-button {
+    width: 100%;
+    padding: 0.75rem;
+    background: linear-gradient(90deg, #4CAF50, #66BB6A);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+.use-medical-button:hover:not(:disabled) {
+    background: linear-gradient(90deg, #45a049, #5cb85c);
+    transform: translateY(-1px);
+}
+
+.use-medical-button:disabled {
+    background: #333;
+    color: #666;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.inventory-count {
+    text-align: center;
+    color: #888;
+    font-size: 0.9rem;
+}
+
+/* No Medical Items */
+.no-medical-items {
+    text-align: center;
+    padding: 2rem;
+    background: #1a1a1a;
+    border-radius: 8px;
+}
+
+.no-medical-items p {
+    color: #888;
+    margin-bottom: 0.5rem;
+}
+
+.no-medical-items .hint {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Full Health Message */
+.full-health-message {
+    padding: 2rem;
+    text-align: center;
+}
+
+.full-health-message p {
+    color: #4CAF50;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.full-health-message .hint {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+    .health-modal {
+        max-width: calc(100vw - 2rem);
+    }
+
+    .health-modal-header {
+        padding: 1rem;
+    }
+
+    .health-status-section {
+        padding: 1rem;
+    }
+
+    .medical-items-section {
+        padding: 1rem;
+    }
+
+    .health-bar-large {
+        height: 36px;
+    }
+
+    .health-text {
+        font-size: 1rem;
+    }
+}

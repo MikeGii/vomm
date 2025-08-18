@@ -4,17 +4,20 @@ import { PlayerStats } from '../../types';
 import { getExpProgress } from '../../services/PlayerService';
 import { Timestamp } from 'firebase/firestore';
 import {calculateEquipmentBonuses} from "../../services/EquipmentBonusService";
+import { HealthModal } from '../health/HealthModal';
 import '../../styles/components/PlayerStatsCard.css';
 
 interface PlayerStatsCardProps {
     stats: PlayerStats;
     username: string;
+    onHealthUpdate?: () => void;
 }
 
-export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, username }) => {
+export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, username, onHealthUpdate }) => {
     const expProgress = getExpProgress(stats.experience);
     const expPercentage = expProgress.percentage;
     const [healthRecoveryTime, setHealthRecoveryTime] = useState<string>('');
+    const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
 
     // Calculate health recovery timer
     useEffect(() => {
@@ -59,6 +62,14 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
 
         return () => clearInterval(interval);
     }, [stats.health, stats.lastHealthUpdate]);
+
+    // Handle health update from modal
+    const handleHealthModalUpdate = () => {
+        // Call parent's onHealthUpdate if provided
+        if (onHealthUpdate) {
+            onHealthUpdate();
+        }
+    };
 
     // Check if player is a Kadett (in academy)
     const isKadett = stats.completedCourses?.includes('sisekaitseakadeemia_entrance');
@@ -158,20 +169,25 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                     </div>
                 </div>
 
-                    <div className="stat-card">
-                        <span className="stat-icon">❤️</span>
-                        <div className="stat-content">
-                            <span className="stat-title">Tervis</span>
-                            <span className={`stat-value ${healthStatus.color}`}>
+                <div
+                    className="stat-card health-card clickable"
+                    onClick={() => setIsHealthModalOpen(true)}
+                    style={{ cursor: 'pointer', position: 'relative' }}
+                >
+                    <span className="stat-icon">❤️</span>
+                    <div className="stat-content">
+                        <span className="stat-title">Tervis</span>
+                        <span className={`stat-value ${healthStatus.color}`}>
                             {healthStatus.text}
                         </span>
-                            {healthStatus.showRecovery && healthRecoveryTime && (
-                                <span className="health-recovery-timer">
+                        {healthStatus.showRecovery && healthRecoveryTime && (
+                            <span className="health-recovery-timer">
                                 +5 HP: {healthRecoveryTime}
                             </span>
-                            )}
-                        </div>
+                        )}
                     </div>
+                    <div className="click-hint">Kliki ravimiseks</div>
+                </div>
 
                 <div className="stat-card">
                     <span className="stat-icon">⏱️</span>
@@ -302,6 +318,14 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                     </div>
                 </div>
             )}
+
+            {/* Health Modal */}
+            <HealthModal
+                isOpen={isHealthModalOpen}
+                onClose={() => setIsHealthModalOpen(false)}
+                playerStats={stats}
+                onHealthUpdate={handleHealthModalUpdate}
+            />
         </div>
     );
 };

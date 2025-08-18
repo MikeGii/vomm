@@ -429,3 +429,72 @@
         font-size: 1rem;
     }
 }
+
+.health-stat {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.health-stat:hover {
+    background: #333;
+    transform: translateY(-1px);
+}
+
+.health-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.click-hint {
+    position: absolute;
+    bottom: -18px;
+    right: 0;
+    font-size: 0.7rem;
+    color: #666;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.health-stat:hover .click-hint {
+    opacity: 1;
+}
+
+/* Cursor pointer for clickable elements */
+.stat.clickable {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Clickable health card styles */
+.stat-card.health-card {
+    transition: all 0.2s ease;
+}
+
+.stat-card.health-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.stat-card.clickable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.click-hint {
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    font-size: 0.7rem;
+    color: #666;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    font-style: italic;
+}
+
+.stat-card.health-card:hover .click-hint {
+    opacity: 1;
+}

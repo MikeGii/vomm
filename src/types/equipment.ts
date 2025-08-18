@@ -31,7 +31,7 @@ export interface CharacterEquipment {
     head?: EquipmentItem;
     upperBody?: EquipmentItem;
     lowerBody?: EquipmentItem;
-    hands?: EquipmentItem;  // Changed from leftHand/rightHand
+    hands?: EquipmentItem;
     belt?: EquipmentItem;
     weaponHolster?: EquipmentItem;
     shoes?: EquipmentItem;
