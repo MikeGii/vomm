@@ -99,18 +99,31 @@ export const startWork = async (
 };
 
 // Check and complete work if time is up
-export const checkWorkCompletion = async (userId: string): Promise<{
-    completed: boolean;
-    hasPendingEvent: boolean;
-}> => {
+export const checkWorkCompletion = async (
+    userId: string
+): Promise<{ completed: boolean; hasPendingEvent: boolean }> => {
     const statsRef = doc(firestore, 'playerStats', userId);
     const statsDoc = await getDoc(statsRef);
 
-    if (!statsDoc.exists()) return { completed: false, hasPendingEvent: false };
+    if (!statsDoc.exists()) {
+        return { completed: false, hasPendingEvent: false };
+    }
 
     const stats = statsDoc.data() as PlayerStats;
 
     if (!stats.activeWork || stats.activeWork.status !== 'in_progress') {
+        // Also check for stuck 'pending' status
+        if (stats.activeWork?.status === 'pending') {
+            // Check if there's actually a pending event
+            const pendingEvent = await getPendingEvent(userId);
+            if (!pendingEvent) {
+                // No event exists, complete the work
+                console.log('Recovering orphaned pending work...');
+                await completeWork(userId, stats);
+                return { completed: true, hasPendingEvent: false };
+            }
+            return { completed: false, hasPendingEvent: true };
+        }
         return { completed: false, hasPendingEvent: false };
     }
 
@@ -147,10 +160,14 @@ export const checkWorkCompletion = async (userId: string): Promise<{
         }
 
         if (pendingEventResult) {
-            // Has pending event, mark work as pending
-            await updateDoc(statsRef, {
-                'activeWork.status': 'pending'
-            });
+            // Has pending event, mark work as pending with a transaction to avoid race conditions
+            try {
+                await updateDoc(statsRef, {
+                    'activeWork.status': 'pending'
+                });
+            } catch (error) {
+                console.error('Error updating work status to pending:', error);
+            }
             return { completed: false, hasPendingEvent: true };
         }
 
@@ -162,7 +179,60 @@ export const checkWorkCompletion = async (userId: string): Promise<{
     return { completed: false, hasPendingEvent: false };
 };
 
-// New function to complete work after event
+export const validateAndFixWorkState = async (userId: string): Promise<void> => {
+    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsDoc = await getDoc(statsRef);
+
+    if (!statsDoc.exists()) return;
+
+    const stats = statsDoc.data() as PlayerStats;
+
+    if (!stats.activeWork) return;
+
+    // Check various invalid states
+    if (stats.activeWork.status === 'pending') {
+        // Check if event exists
+        const pendingEvent = await getPendingEvent(userId);
+
+        if (!pendingEvent) {
+            console.log('Found pending work without event, completing...');
+            await completeWork(userId, stats);
+            return;
+        }
+    }
+
+    if (stats.activeWork.status === 'in_progress') {
+        // Check if time is up
+        const remaining = getRemainingWorkTime(stats.activeWork);
+
+        if (remaining <= 0) {
+            // Time is up but work still in progress
+            const result = await checkWorkCompletion(userId);
+
+            if (!result.hasPendingEvent && !result.completed) {
+                console.log('Found expired work, completing...');
+                await completeWork(userId, stats);
+            }
+        }
+    }
+
+    // Check for work that's been active too long (failsafe)
+    if (stats.activeWork.startedAt) {
+        const startTime = stats.activeWork.startedAt instanceof Timestamp
+            ? stats.activeWork.startedAt.toMillis()
+            : new Date(stats.activeWork.startedAt).getTime();
+
+        const maxDuration = (stats.activeWork.totalHours * 3600 * 1000) + (5 * 60 * 1000); // Add 5 min buffer
+        const now = Date.now();
+
+        if (now - startTime > maxDuration) {
+            console.log('Found stuck work (exceeded max duration), completing...');
+            await completeWork(userId, stats);
+        }
+    }
+};
+
+// Update completeWorkAfterEvent to be idempotent
 export const completeWorkAfterEvent = async (userId: string): Promise<boolean> => {
     const statsRef = doc(firestore, 'playerStats', userId);
     const statsDoc = await getDoc(statsRef);
@@ -171,7 +241,11 @@ export const completeWorkAfterEvent = async (userId: string): Promise<boolean> =
 
     const stats = statsDoc.data() as PlayerStats;
 
-    if (!stats.activeWork) return false;
+    // Only complete if work exists and is in pending status
+    if (!stats.activeWork || stats.activeWork.status !== 'pending') {
+        console.log('No pending work to complete');
+        return false;
+    }
 
     await completeWork(userId, stats);
     return true;

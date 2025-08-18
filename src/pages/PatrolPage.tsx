@@ -21,7 +21,7 @@ import {
     checkWorkCompletion,
     getRemainingWorkTime,
     getWorkHistory,
-    completeWorkAfterEvent
+    completeWorkAfterEvent, validateAndFixWorkState
 } from '../services/WorkService';
 import { getAvailableWorkActivities, getWorkActivityById } from '../data/workActivities';
 import { updateTutorialProgress } from '../services/PlayerService';
@@ -74,25 +74,48 @@ const PatrolPage: React.FC = () => {
         if (!currentUser) return;
 
         const eventResult = await getPendingEvent(currentUser.uid);
+
+        // Get current stats
+        const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+        const statsDoc = await getDoc(statsRef);
+        if (!statsDoc.exists()) return;
+
+        const currentStats = statsDoc.data() as PlayerStats;
+
         if (eventResult) {
             setPendingEvent(eventResult.eventData);
-            setEventDocumentId(eventResult.documentId); // Store the document ID
+            setEventDocumentId(eventResult.documentId);
 
-            // Get fresh stats instead of using the stale closure
-            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
-            const statsDoc = await getDoc(statsRef);
-            if (statsDoc.exists()) {
-                const currentStats = statsDoc.data() as PlayerStats;
-                if (currentStats.activeWork) {
-                    setActiveWorkForEvent(currentStats.activeWork);
-                }
+            if (currentStats.activeWork) {
+                setActiveWorkForEvent(currentStats.activeWork);
             }
         } else {
+            // No pending event found
             setPendingEvent(null);
             setEventDocumentId(null);
             setActiveWorkForEvent(null);
+
+            // IMPORTANT: Check if work is stuck in 'pending' status without an event
+            if (currentStats.activeWork?.status === 'pending') {
+                console.log('Found orphaned pending work, completing it...');
+
+                // Complete the work since there's no event
+                try {
+                    await completeWorkAfterEvent(currentUser.uid);
+                    showToast('Töö on edukalt lõpetatud!', 'success');
+                    await loadWorkHistory();
+
+                    // Refresh stats
+                    const updatedStatsDoc = await getDoc(statsRef);
+                    if (updatedStatsDoc.exists()) {
+                        setPlayerStats(updatedStatsDoc.data() as PlayerStats);
+                    }
+                } catch (error) {
+                    console.error('Error completing orphaned work:', error);
+                }
+            }
         }
-    }, [currentUser]);
+    }, [currentUser, loadWorkHistory, showToast]);
 
     // Process stats update
     const processStatsUpdate = useCallback(async (stats: PlayerStats) => {
@@ -151,7 +174,6 @@ const PatrolPage: React.FC = () => {
         }
     }, [currentUser, loadWorkHistory, checkForPendingEvent, showToast]);
 
-    // Handle event choice
     const handleEventChoice = useCallback(async (choice: EventChoice) => {
         if (!currentUser || !pendingEvent || !activeWorkForEvent || !eventDocumentId) return;
 
@@ -165,7 +187,7 @@ const PatrolPage: React.FC = () => {
             // Process the event choice using the document ID
             const success = await processEventChoice(
                 currentUser.uid,
-                eventDocumentId, // Use the stored document ID
+                eventDocumentId,
                 pendingEvent,
                 choice,
                 workName
@@ -182,12 +204,32 @@ const PatrolPage: React.FC = () => {
                     setEventDocumentId(null);
                     setActiveWorkForEvent(null);
                     loadWorkHistory().catch(console.error);
+
+                    // Also reload player stats to update UI
+                    const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+                    getDoc(statsRef).then(doc => {
+                        if (doc.exists()) {
+                            setPlayerStats(doc.data() as PlayerStats);
+                        }
+                    });
                 }, 500);
+            } else {
+                // If processing failed, show error and reset
+                showToast('Viga sündmuse töötlemisel!', 'error');
+                setPendingEvent(null);
+                setEventDocumentId(null);
+                setActiveWorkForEvent(null);
             }
         } catch (error) {
             console.error('Error processing event:', error);
             showToast('Viga sündmuse töötlemisel!', 'error');
+
+            // Reset event state on error
+            setPendingEvent(null);
+            setEventDocumentId(null);
+            setActiveWorkForEvent(null);
         } finally {
+            // Always set processing to false
             setIsProcessingEvent(false);
         }
     }, [currentUser, pendingEvent, activeWorkForEvent, eventDocumentId, showToast, loadWorkHistory]);
@@ -232,6 +274,20 @@ const PatrolPage: React.FC = () => {
     useEffect(() => {
         loadWorkHistory().catch(console.error);
     }, [loadWorkHistory]);
+
+    useEffect(() => {
+        if (!currentUser || loading) return;
+
+        // Run state validation every 5 seconds
+        const validationInterval = setInterval(async () => {
+            await validateAndFixWorkState(currentUser.uid);
+        }, 5000);
+
+        // Also run on mount
+        validateAndFixWorkState(currentUser.uid);
+
+        return () => clearInterval(validationInterval);
+    }, [currentUser, loading]);
 
     // Timer for active work
     useEffect(() => {

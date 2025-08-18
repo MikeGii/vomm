@@ -20,9 +20,10 @@ import {
     WorkEvent,
     EventChoice,
     EventConsequences
-} from '../types/events.types';
+} from '../types';
 import { PlayerStats } from '../types';
 import { selectRandomEvent } from '../data/events';
+import {getWorkActivityById} from "../data/workActivities";
 
 // Create an active event for a work session
 export const createActiveEvent = async (
@@ -154,13 +155,48 @@ export const processEventChoice = async (
             updates.lastHealthUpdate = Timestamp.now();
         }
 
+        // IMPORTANT: Complete the work as part of the same update
+        if (currentStats.activeWork && currentStats.activeWork.status === 'pending') {
+            const workActivity = getWorkActivityById(currentStats.activeWork.workId);
+            if (workActivity) {
+                // Calculate work rewards
+                const expReward = currentStats.activeWork.expectedExp || 0;
+                const moneyReward = currentStats.activeWork.expectedMoney || 0;
+
+                // Add work rewards to updates
+                updates.experience = (updates.experience || currentStats.experience) + expReward;
+                updates.money = (updates.money || currentStats.money) + moneyReward;
+                updates.totalWorkedHours = (currentStats.totalWorkedHours || 0) + currentStats.activeWork.totalHours;
+
+                // Clear active work
+                updates.activeWork = null;
+
+                // Add to work history
+                const historyEntry = {
+                    userId: userId,
+                    workId: currentStats.activeWork.workId,
+                    workName: workActivity.name,
+                    prefecture: currentStats.activeWork.prefecture,
+                    department: currentStats.activeWork.department,
+                    hoursWorked: currentStats.activeWork.totalHours,
+                    expEarned: expReward,
+                    moneyEarned: moneyReward,
+                    completedAt: Timestamp.now(),
+                    hadEvent: true,
+                    eventId: eventData.id,
+                    eventChoice: choice.id
+                };
+
+                // Store work history
+                await addDoc(collection(firestore, 'workHistory'), historyEntry);
+            }
+        }
+
         // Update player stats
         await updateDoc(statsRef, updates);
 
-        // Use the document ID directly
+        // Mark event as completed
         const eventRef = doc(firestore, 'activeEvents', eventDocumentId);
-
-        // Update the event document
         await updateDoc(eventRef, {
             status: 'completed',
             respondedAt: Timestamp.now(),
@@ -175,7 +211,7 @@ export const processEventChoice = async (
             choiceId: choice.id,
             choiceText: choice.text,
             consequences: choice.consequences,
-            workActivityId: eventDocumentId, // Store document ID for reference
+            workActivityId: eventDocumentId,
             workActivityName: workActivityName,
             completedAt: Timestamp.now()
         };

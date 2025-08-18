@@ -1,4 +1,4 @@
-import { WorkEvent } from '../../types/events.types';
+import { WorkEvent } from '../../types';
 
 export const ACADEMY_EVENTS: WorkEvent[] = [
     {
@@ -96,8 +96,6 @@ export const ACADEMY_EVENTS: WorkEvent[] = [
         ],
         activityTypes: ['academy_guard_duty']
     },
-
-
     {
         id: 'practice_mistake',
         title: 'Praktika viga',
