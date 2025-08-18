@@ -128,10 +128,10 @@ export const checkWorkCompletion = async (userId: string): Promise<{
 
     if (now.toMillis() >= endsAtMillis) {
         // Work time is complete, check for pending event first
-        let pendingEvent = await getPendingEvent(userId);
+        let pendingEventResult = await getPendingEvent(userId);
 
         // If no pending event exists yet, create one now (70% chance)
-        if (!pendingEvent && !stats.activeWork.isTutorial) {
+        if (!pendingEventResult && !stats.activeWork.isTutorial) {
             const workSessionId = stats.activeWork.workSessionId || `${userId}_${Date.now()}`;
             const eventCreated = await createActiveEvent(
                 userId,
@@ -142,11 +142,11 @@ export const checkWorkCompletion = async (userId: string): Promise<{
 
             if (eventCreated) {
                 // Event was created, check again for pending event
-                pendingEvent = await getPendingEvent(userId);
+                pendingEventResult = await getPendingEvent(userId);
             }
         }
 
-        if (pendingEvent) {
+        if (pendingEventResult) {
             // Has pending event, mark work as pending
             await updateDoc(statsRef, {
                 'activeWork.status': 'pending'
