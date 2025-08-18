@@ -1,20 +1,12 @@
 // src/data/shop/index.ts
 import { ShopItem } from '../../types/shop';
-import { UNIFORMS_ITEMS } from './uniforms';
-import { PROTECTION_ITEMS } from './protection';
-import { WEAPONS_ITEMS } from './weapons';
-import { EQUIPMENT_ITEMS } from './equipment';
-import { CONSUMABLES_ITEMS } from './consumables';
-import { DOCUMENTS_ITEMS } from './documents';
+import { PROTECTION_ITEMS } from './equipment';
+import { TRAINING_BOOSTER_ITEMS } from './trainingBoosters';
 
 // Combine all shop items
 export const ALL_SHOP_ITEMS: ShopItem[] = [
-    ...UNIFORMS_ITEMS,
     ...PROTECTION_ITEMS,
-    ...WEAPONS_ITEMS,
-    ...EQUIPMENT_ITEMS,
-    ...CONSUMABLES_ITEMS,
-    ...DOCUMENTS_ITEMS
+    ...TRAINING_BOOSTER_ITEMS
 ];
 
 // Get items by category

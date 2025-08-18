@@ -1,31 +1,30 @@
 // src/data/shop/equipment.ts
 import { ShopItem } from '../../types/shop';
 
-export const EQUIPMENT_ITEMS: ShopItem[] = [
+export const PROTECTION_ITEMS: ShopItem[] = [
     {
-        id: 'police_belt',
-        name: 'Teenistusvöö',
-        description: 'Multifunktsionaalne vöö varustuse kandmiseks',
-        category: 'equipment',
-        price: 300,
-        rarity: 'common',
-        equipmentSlot: 'belt',
+        id: 'basic_vest',
+        name: 'Kerge kuulivest',
+        description: 'Põhiline ballistiline kaitse',
+        category: 'protection',
+        price: 800,
+        equipmentSlot: 'upperBody',
         stats: {
-            dexterity: 1,
-            agility: 1
+            endurance: 3,
+            agility: -1
         }
     },
     {
-        id: 'patrol_boots',
-        name: 'Patrullsaapad',
-        description: 'Mugavad ja vastupidavad teenistussaapad',
-        category: 'equipment',
-        price: 420,
-        rarity: 'common',
-        equipmentSlot: 'shoes',
+        id: 'tactical_helmet',
+        name: 'Taktikaline kiiver',
+        description: 'Kaitsekiiver erioperatsioonideks',
+        category: 'protection',
+        price: 650,
+        equipmentSlot: 'head',
         stats: {
-            agility: 2,
-            endurance: 1
+            endurance: 2,
+            intelligence: -1,
+            strength: 1
         }
     }
 ];

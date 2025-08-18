@@ -191,7 +191,6 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
                 description: item.description,
                 category: 'equipment' as const,
                 quantity: 1,
-                rarity: item.rarity,
                 equipped: false,
                 equipmentSlot: item.slot,
                 source: 'training' as const
@@ -217,7 +216,6 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
                     description: item.description,
                     category: 'equipment' as const,
                     quantity: 1,
-                    rarity: item.rarity,
                     equipped: false,
                     equipmentSlot: item.slot,
                     source: 'training' as const

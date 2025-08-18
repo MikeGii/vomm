@@ -97,10 +97,6 @@ export const migrateUserEquipment = async (userId: string): Promise<any> => {
                         item.shopPrice = template.shopPrice;
                         updated = true;
                     }
-                    if (!item.rarity && template.rarity) {
-                        item.rarity = template.rarity;
-                        updated = true;
-                    }
                     if (updated) equipmentItemsUpdated++;
                 }
             }
@@ -121,10 +117,6 @@ export const migrateUserEquipment = async (userId: string): Promise<any> => {
                     }
                     if (!item.shopPrice && template.shopPrice) {
                         updates.shopPrice = template.shopPrice;
-                        updated = true;
-                    }
-                    if (!item.rarity && template.rarity) {
-                        updates.rarity = template.rarity;
                         updated = true;
                     }
                     if (!item.equipmentSlot && template.slot) {
@@ -186,7 +178,6 @@ export const migrateUserEquipment = async (userId: string): Promise<any> => {
                                 quantity: 1,
                                 shopPrice: template.shopPrice,
                                 stats: template.stats,
-                                rarity: template.rarity,
                                 equipped: false,
                                 equipmentSlot: template.slot,
                                 source: 'migration'
