@@ -147,3 +147,105 @@
         padding: 1.5rem;
     }
 }
+
+/* Quantity Selector */
+.quantity-selector {
+    background: #1a1a1a;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #333;
+}
+
+.quantity-label {
+    display: block;
+    color: #999;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.quantity-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #444;
+    background: #2a2a2a;
+    color: #f0f0f0;
+    border-radius: 4px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quantity-btn:hover:not(:disabled) {
+    background: #333;
+    border-color: #4a90e2;
+}
+
+.quantity-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.quantity-input {
+    flex: 1;
+    max-width: 80px;
+    padding: 0.5rem;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: #f0f0f0;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.quantity-input:focus {
+    outline: none;
+    border-color: #4a90e2;
+}
+
+/* Remove number input spinners */
+.quantity-input::-webkit-inner-spin-button,
+.quantity-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.quantity-input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.quantity-info {
+    display: block;
+    color: #888;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+/* Update insufficient balance color */
+.remaining.insufficient {
+    color: #e74c3c;
+}
+
+/* Mobile responsiveness for quantity selector */
+@media (max-width: 480px) {
+    .quantity-controls {
+        justify-content: center;
+    }
+
+    .quantity-input {
+        max-width: 60px;
+    }
+}

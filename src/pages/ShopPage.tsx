@@ -111,15 +111,18 @@ const ShopPage: React.FC = () => {
         setIsPurchaseModalOpen(true);
     };
 
-    const confirmPurchase = async () => {
+    const confirmPurchase = async (quantity: number) => {
         if (!selectedItem || !currentUser) return;
 
-        const result = await purchaseItem(currentUser.uid, selectedItem.id);
+        // Update the purchaseItem call to include quantity
+        const result = await purchaseItem(currentUser.uid, selectedItem.id, quantity);
 
         if (result.success) {
             showToast(result.message, 'success');
             setIsPurchaseModalOpen(false);
             setSelectedItem(null);
+            setSelectedItemStock(0);
+            setSelectedItemPrice(0);
 
             // Reload items to update stock
             loadItemsWithStock();
@@ -131,6 +134,8 @@ const ShopPage: React.FC = () => {
     const cancelPurchase = () => {
         setIsPurchaseModalOpen(false);
         setSelectedItem(null);
+        setSelectedItemStock(0);
+        setSelectedItemPrice(0);
     };
 
     if (isLoading) {
@@ -172,6 +177,7 @@ const ShopPage: React.FC = () => {
                     item={selectedItem}
                     isOpen={isPurchaseModalOpen}
                     playerMoney={playerMoney}
+                    currentStock={selectedItemStock}
                     onConfirm={confirmPurchase}
                     onCancel={cancelPurchase}
                 />

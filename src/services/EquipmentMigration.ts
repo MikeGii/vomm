@@ -5,7 +5,7 @@ import { firestore } from '../config/firebase';
 import { ALL_EQUIPMENT } from '../data/equipment';
 
 // Track migration version
-const MIGRATION_VERSION = 'equipment_stats_v1';
+const MIGRATION_VERSION = 'equipment_stats_v2';
 
 export interface MigrationRecord {
     userId: string;
