@@ -1,6 +1,7 @@
 // src/components/courses/ActiveCourseProgress.tsx
 import React from 'react';
 import { Course } from '../../types';
+import { formatTimeEstonian} from "../../utils/timeFormatter";
 import '../../styles/components/courses/ActiveCourseProgress.css';
 
 interface ActiveCourseProgressProps {
@@ -12,12 +13,6 @@ export const ActiveCourseProgress: React.FC<ActiveCourseProgressProps> = ({
                                                                               course,
                                                                               remainingTime
                                                                           }) => {
-    const formatTime = (seconds: number): string => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
     const progressPercentage = ((course.duration - remainingTime) / course.duration) * 100;
 
     return (
@@ -26,7 +21,7 @@ export const ActiveCourseProgress: React.FC<ActiveCourseProgressProps> = ({
             <p className="active-course-name">{course.name}</p>
             <div className="progress-container">
                 <div className="time-remaining">
-                    Aega jäänud: {formatTime(remainingTime)}
+                    Aega jäänud: {formatTimeEstonian(remainingTime)}
                 </div>
                 <div className="progress-bar">
                     <div
