@@ -5,7 +5,8 @@ export interface ShopItem {
     description: string;
     category: ShopCategory;
     price: number;
-    stock?: number;
+    basePrice: number;
+    maxStock: number;
     stats?: {
         strength?: number;
         agility?: number;
@@ -52,3 +53,9 @@ export const SHOP_CATEGORIES: Record<ShopCategory, ShopCategoryInfo> = {
         description: 'Energiajoogid ja treeningtarbed',
     }
 };
+
+export interface ShopStock {
+    itemId: string;
+    currentStock: number;
+    lastRestockTime: Date;
+}

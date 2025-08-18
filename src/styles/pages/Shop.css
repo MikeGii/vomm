@@ -1,72 +1,27 @@
-/* src/styles/pages/Shop.css */
+/* src/styles/pages/Shop.css - Updated */
+.shop-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+}
+
 .shop-container {
-    width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 2rem 1rem;
 }
 
-.back-to-dashboard {
-    background: #333;
-    color: #f0f0f0;
-    border: 1px solid #444;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-bottom: 1.5rem;
-}
-
-.back-to-dashboard:hover {
-    background: #444;
-    border-color: #4a90e2;
-    transform: translateX(-4px);
-}
-
-.shop-title {
-    color: #f0f0f0;
-    font-size: 2rem;
-    margin-bottom: 2rem;
-}
-
-.shop-content {
-    background: #2a2a2a;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 2rem;
-    min-height: 400px;
+.loading {
     display: flex;
-    align-items: center;
     justify-content: center;
-}
-
-.coming-soon {
-    color: #888;
+    align-items: center;
+    min-height: 60vh;
+    color: #f0f0f0;
     font-size: 1.2rem;
-    font-style: italic;
 }
 
-/* Mobile responsiveness */
+/* Mobile */
 @media (max-width: 768px) {
     .shop-container {
-        padding: 1rem;
+        padding: 1rem 0.5rem;
     }
-
-    .shop-title {
-        font-size: 1.5rem;
-    }
-
-    .shop-content {
-        padding: 1rem;
-        min-height: 300px;
-    }
-}
-
-.loading-state {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 400px;
-    color: #888;
-    font-size: 1.1rem;
 }
