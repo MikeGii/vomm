@@ -119,7 +119,8 @@ const applyConsequences = (
 
     // Apply experience change
     if (consequences.experience !== undefined) {
-        updates.experience = stats.experience + Math.max(0, consequences.experience);
+        // Ensure total experience never goes below 0
+        updates.experience = Math.max(0, stats.experience + consequences.experience);
     }
 
     return updates;
