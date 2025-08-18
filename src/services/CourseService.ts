@@ -193,6 +193,8 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
                 quantity: 1,
                 equipped: false,
                 equipmentSlot: item.slot,
+                shopPrice: item.shopPrice,
+                stats: item.stats,
                 source: 'training' as const
             }));
 
@@ -218,6 +220,8 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
                     quantity: 1,
                     equipped: false,
                     equipmentSlot: item.slot,
+                    shopPrice: item.shopPrice,
+                    stats: item.stats,
                     source: 'training' as const
                 }));
 

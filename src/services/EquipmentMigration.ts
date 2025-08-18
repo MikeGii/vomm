@@ -37,14 +37,30 @@ const recordMigration = async (userId: string, changes: any) => {
 
 // Helper function to find matching equipment template
 const findEquipmentTemplate = (itemId: string) => {
-    // Remove any timestamp or random suffixes to get base ID
-    const baseId = itemId.split('_').slice(0, -2).join('_') || itemId;
+    // First try exact match
+    let template = ALL_EQUIPMENT.find(e => e.id === itemId);
 
-    return ALL_EQUIPMENT.find(e =>
-        e.id === baseId ||
-        e.id === itemId ||
-        itemId.includes(e.id)
-    );
+    if (!template) {
+        // Remove any timestamp or random suffixes to get base ID
+        const baseId = itemId.split('_').slice(0, -2).join('_') || itemId;
+        template = ALL_EQUIPMENT.find(e => e.id === baseId);
+    }
+
+    if (!template) {
+        // Try partial match for uniform items
+        const uniformKeywords = ['kadett', 'police', 'abipolitseinik'];
+        for (const keyword of uniformKeywords) {
+            if (itemId.includes(keyword)) {
+                template = ALL_EQUIPMENT.find(e =>
+                    e.id.includes(keyword) &&
+                    itemId.includes(e.id.split('_')[1])
+                );
+                if (template) break;
+            }
+        }
+    }
+
+    return template;
 };
 
 // Migrate a single user's equipment

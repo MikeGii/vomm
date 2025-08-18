@@ -1,10 +1,10 @@
 // src/components/dev/DebugMenu.tsx
 import React, { useState, useEffect } from 'react';
-import {doc, updateDoc, getDoc, setDoc} from 'firebase/firestore';
+import {doc, updateDoc, getDoc, setDoc, deleteDoc, getDocs, query, collection, where, addDoc} from 'firebase/firestore';
 import { firestore } from '../../config/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { initializeAttributes, initializeTrainingData } from '../../services/TrainingService';
-import { PlayerStats } from '../../types';
+import {ActiveWork, PlayerStats, TrainingData, WorkHistoryEntry} from '../../types';
 import { checkCourseCompletion } from '../../services/CourseService';
 import { checkWorkCompletion } from '../../services/WorkService';
 import { Timestamp } from 'firebase/firestore';
@@ -12,6 +12,8 @@ import { createActiveEvent, getPendingEvent } from '../../services/EventService'
 import { migrateUserEquipment, migrateAllUsers } from '../../services/EquipmentMigration';
 import { ALL_EVENTS } from '../../data/events';
 import '../../styles/components/dev/DebugMenu.css';
+import {calculateWorkRewards, getWorkActivityById} from "../../data/workActivities";
+import {calculateLevelFromExp} from "../../services/PlayerService";
 
 // ADMIN EMAIL CONSTANT
 const ADMIN_EMAIL = 'cjmike12@gmail.com';
@@ -661,6 +663,114 @@ export const DebugMenu: React.FC = () => {
         }
     };
 
+    const finishAllWorksNoEvent = async () => {
+        if (!currentUser) {
+            alert('Kasutaja pole sisse logitud!');
+            return;
+        }
+
+        if (!window.confirm('Lõpeta kõik aktiivsed tööd ilma sündmusteta?')) return;
+
+        setIsProcessing(true);
+        try {
+            // Query all active work sessions
+            const activeWorkQuery = query(
+                collection(firestore, 'activeWork'),
+                where('status', '==', 'in_progress')
+            );
+
+            const activeWorkDocs = await getDocs(activeWorkQuery);
+            let completedCount = 0;
+            let totalRewards = 0;
+
+            for (const workDoc of activeWorkDocs.docs) {
+                const activeWork = workDoc.data() as ActiveWork;
+
+                // Get player stats for this work
+                const statsRef = doc(firestore, 'playerStats', activeWork.userId);
+                const statsDoc = await getDoc(statsRef);
+
+                if (!statsDoc.exists()) continue;
+
+                const stats = statsDoc.data() as PlayerStats;
+
+                // Get work activity details
+                const workActivity = getWorkActivityById(activeWork.workId);
+                if (!workActivity) continue;
+
+                // Calculate rewards
+                const expReward = activeWork.expectedExp || calculateWorkRewards(workActivity, activeWork.totalHours);
+                totalRewards += expReward;
+
+                // Add to work history
+                const historyEntry: WorkHistoryEntry = {
+                    userId: activeWork.userId,
+                    workId: activeWork.workId,
+                    workName: workActivity.name,
+                    prefecture: activeWork.prefecture,
+                    department: activeWork.department,
+                    hoursWorked: activeWork.totalHours,
+                    expEarned: expReward,
+                    completedAt: new Date()
+                };
+                await addDoc(collection(firestore, 'workHistory'), historyEntry);
+
+                // Update player stats
+                const newExperience = stats.experience + expReward;
+                const newLevel = calculateLevelFromExp(newExperience);
+                const newTotalWorkedHours = (stats.totalWorkedHours || 0) + activeWork.totalHours;
+
+                // Reset training data to normal
+                const normalTrainingClicks = 50;
+                const updatedTrainingData: TrainingData = {
+                    remainingClicks: normalTrainingClicks,
+                    lastResetTime: Timestamp.now(),
+                    totalTrainingsDone: stats.trainingData?.totalTrainingsDone || 0,
+                    isWorking: false
+                };
+
+                // Update player stats and remove active work
+                await updateDoc(statsRef, {
+                    experience: newExperience,
+                    level: newLevel,
+                    totalWorkedHours: newTotalWorkedHours,
+                    activeWork: null,
+                    trainingData: updatedTrainingData
+                });
+
+                // Delete the active work document
+                await deleteDoc(doc(firestore, 'activeWork', workDoc.id));
+
+                completedCount++;
+            }
+
+            // Also check for any pending events and clear them
+            const eventsQuery = query(
+                collection(firestore, 'activeEvents'),
+                where('status', '==', 'pending')
+            );
+
+            const eventDocs = await getDocs(eventsQuery);
+            for (const eventDoc of eventDocs.docs) {
+                await deleteDoc(doc(firestore, 'activeEvents', eventDoc.id));
+            }
+
+            alert(`Lõpetatud ${completedCount} tööd!\nKogukogemus: ${totalRewards} XP\nKõik sündmused tühistatud.`);
+
+            // Reload stats
+            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+            const statsDoc = await getDoc(statsRef);
+            if (statsDoc.exists()) {
+                setPlayerStats(statsDoc.data() as PlayerStats);
+            }
+        } catch (error) {
+            console.error('Error finishing works:', error);
+            alert('Viga tööde lõpetamisel! Vaata konsooli.');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     return (
         <>
             {/* Floating debug button */}
@@ -793,6 +903,17 @@ export const DebugMenu: React.FC = () => {
                         </div>
 
                         <div className="debug-section">
+                        <h4>Work Management</h4>
+                        <button
+                            className="debug-btn"
+                            onClick={finishAllWorksNoEvent}
+                            disabled={isProcessing}
+                            title="Complete ALL active works server-wide without events"
+                        >
+                            ✅ Lõpeta KÕIK tööd (admin)
+                        </button>
+
+                        <div className="debug-section">
                             <h4>Work Timer Testing</h4>
                             <button
                                 className="debug-btn"
@@ -802,6 +923,7 @@ export const DebugMenu: React.FC = () => {
                             >
                                 ⏱️ Töö lõppeb 20s pärast
                             </button>
+                        </div>
                         </div>
 
                         <div className="debug-section">
