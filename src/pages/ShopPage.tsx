@@ -23,8 +23,8 @@ import '../styles/pages/Shop.css';
 
 const ShopPage: React.FC = () => {
     const navigate = useNavigate();
-    const { currentUser } = useAuth();
-    const { showToast } = useToast();
+    const {currentUser} = useAuth();
+    const {showToast} = useToast();
 
     const [playerMoney, setPlayerMoney] = useState(0);
     const [itemsWithStock, setItemsWithStock] = useState<Array<{
@@ -103,7 +103,7 @@ const ShopPage: React.FC = () => {
         const itemData = itemsWithStock.find(i => i.item.id === itemId);
         if (!itemData) return;
 
-        const { item, currentStock, dynamicPrice } = itemData;
+        const {item, currentStock, dynamicPrice} = itemData;
 
         setSelectedItem(item);
         setSelectedItemStock(currentStock);
@@ -136,7 +136,7 @@ const ShopPage: React.FC = () => {
     if (isLoading) {
         return (
             <div className="shop-page">
-                <AuthenticatedHeader />
+                <AuthenticatedHeader/>
                 <div className="shop-container">
                     <div className="loading">Laadin poodi...</div>
                 </div>
@@ -146,8 +146,15 @@ const ShopPage: React.FC = () => {
 
     return (
         <div className="shop-page">
-            <AuthenticatedHeader />
+            <AuthenticatedHeader/>
             <div className="shop-container">
+                <button
+                    className="back-to-dashboard"
+                    onClick={() => navigate('/dashboard')}
+                >
+                    ← Tagasi töölauale
+                </button>
+
                 <ShopHeader
                     playerMoney={playerMoney}
                     onRefresh={loadItemsWithStock}
@@ -171,6 +178,6 @@ const ShopPage: React.FC = () => {
             </div>
         </div>
     );
-};
+}
 
 export default ShopPage;

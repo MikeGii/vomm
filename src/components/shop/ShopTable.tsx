@@ -1,4 +1,4 @@
-// src/components/shop/ShopTable.tsx - Updated with proper formatting
+// src/components/shop/ShopTable.tsx - Fixed version
 import React from 'react';
 import '../../styles/components/shop/ShopTable.css';
 
@@ -102,23 +102,24 @@ export const ShopTable: React.FC<ShopTableProps> = ({
 
                             return (
                                 <tr key={item.id} className={!hasStock ? 'out-of-stock' : ''}>
-                                    <td className="item-name">{item.name}</td>
-                                    <td className="item-description">{item.description}</td>
-                                    <td className="item-bonuses">
-                                        {item.stats ? formatStats(item.stats) :
-                                            item.consumableEffect ? formatEffect(item.consumableEffect) : <span>-</span>}
+                                    <td>
+                                        <div className="item-name">{item.name}</div>
                                     </td>
-                                    <td className="item-price">
+                                    <td>
+                                        <div className="item-description">{item.description}</div>
+                                    </td>
+                                    <td>
+                                        {item.stats ? formatStats(item.stats) : formatEffect(item.effect)}
+                                    </td>
+                                    <td>
                                         <div className="price-wrapper">
-                        <span className={`price ${priceIncreased ? 'price-increased' : ''}`}>
-                            €{dynamicPrice.toFixed(2)}
-                        </span>
-                                            {priceIncreased && (
-                                                <span className="price-indicator">↑</span>
-                                            )}
+                                                <span className={`price ${priceIncreased ? 'price-increased' : ''}`}>
+                                                    €{dynamicPrice.toFixed(2)}
+                                                </span>
+                                            {priceIncreased && <span className="price-indicator">↑</span>}
                                         </div>
                                     </td>
-                                    <td className="item-stock">
+                                    <td>
                                         <div className={`stock-display ${stockClass}`}>
                                             <span className="stock-number">{currentStock}/{item.maxStock}</span>
                                             <div className="stock-bar">
@@ -129,14 +130,13 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="item-action">
+                                    <td>
                                         <button
                                             className="buy-button"
                                             onClick={() => onPurchase(item.id)}
-                                            disabled={!canAfford || !hasStock || isLoading}
+                                            disabled={!canAfford || !hasStock}
                                         >
-                                            {!hasStock ? 'Otsas' :
-                                                !canAfford ? 'Pole raha' : 'Osta'}
+                                            {!hasStock ? 'Otsas' : !canAfford ? 'Pole raha' : 'Osta'}
                                         </button>
                                     </td>
                                 </tr>
