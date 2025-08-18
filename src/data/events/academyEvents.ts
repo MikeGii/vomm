@@ -91,7 +91,7 @@ export const ACADEMY_EVENTS: WorkEvent[] = [
                     reputation: 10
                 },
                 resultText: 'Sa ei osalenud, seega jäid uutest kogemustest ilma, kuid jõudsid koolitöödega valmis'
-            },
+            }
 
         ],
         activityTypes: ['academy_guard_duty']

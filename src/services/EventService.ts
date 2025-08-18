@@ -54,6 +54,7 @@ export const createActiveEvent = async (
 export const getPendingEvent = async (userId: string): Promise<{
     activeEvent: ActiveEvent;
     eventData: WorkEvent;
+    documentId: string; // Add document ID to the return
 } | null> => {
     try {
         // Query for pending events
@@ -67,7 +68,8 @@ export const getPendingEvent = async (userId: string): Promise<{
         const snapshot = await getDocs(eventsQuery);
         if (snapshot.empty) return null;
 
-        const activeEvent = snapshot.docs[0].data() as ActiveEvent;
+        const doc = snapshot.docs[0];
+        const activeEvent = doc.data() as ActiveEvent;
 
         // Get the event data
         const { ALL_EVENTS } = await import('../data/events');
@@ -78,7 +80,11 @@ export const getPendingEvent = async (userId: string): Promise<{
             return null;
         }
 
-        return { activeEvent, eventData };
+        return {
+            activeEvent,
+            eventData,
+            documentId: doc.id // Return the actual document ID
+        };
     } catch (error) {
         console.error('Error getting pending event:', error);
         return null;
@@ -113,7 +119,8 @@ const applyConsequences = (
 
     // Apply experience change
     if (consequences.experience !== undefined) {
-        updates.experience = stats.experience + Math.max(0, consequences.experience);
+        // Ensure total experience never goes below 0
+        updates.experience = Math.max(0, stats.experience + consequences.experience);
     }
 
     return updates;
@@ -122,7 +129,7 @@ const applyConsequences = (
 // Process event choice
 export const processEventChoice = async (
     userId: string,
-    workSessionId: string,
+    eventDocumentId: string, // Change parameter to accept document ID directly
     eventData: WorkEvent,
     choice: EventChoice,
     workActivityName: string
@@ -150,8 +157,10 @@ export const processEventChoice = async (
         // Update player stats
         await updateDoc(statsRef, updates);
 
-        // Mark event as completed
-        const eventRef = doc(firestore, 'activeEvents', `${userId}_${workSessionId}`);
+        // Use the document ID directly
+        const eventRef = doc(firestore, 'activeEvents', eventDocumentId);
+
+        // Update the event document
         await updateDoc(eventRef, {
             status: 'completed',
             respondedAt: Timestamp.now(),
@@ -166,7 +175,7 @@ export const processEventChoice = async (
             choiceId: choice.id,
             choiceText: choice.text,
             consequences: choice.consequences,
-            workActivityId: workSessionId,
+            workActivityId: eventDocumentId, // Store document ID for reference
             workActivityName: workActivityName,
             completedAt: Timestamp.now()
         };

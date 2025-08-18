@@ -47,6 +47,7 @@ const PatrolPage: React.FC = () => {
     const [pendingEvent, setPendingEvent] = useState<WorkEvent | null>(null);
     const [isProcessingEvent, setIsProcessingEvent] = useState(false);
     const [activeWorkForEvent, setActiveWorkForEvent] = useState<any>(null);
+    const [eventDocumentId, setEventDocumentId] = useState<string | null>(null);
 
     const completionAlertShownRef = useRef<boolean>(false);
     const isKadett = playerStats?.completedCourses?.includes('sisekaitseakadeemia_entrance') || false;
@@ -68,13 +69,15 @@ const PatrolPage: React.FC = () => {
         return 'Patrullteenistus';
     };
 
-    // Check for pending events
+// Check for pending events
     const checkForPendingEvent = useCallback(async () => {
         if (!currentUser) return;
 
-        const event = await getPendingEvent(currentUser.uid);
-        if (event) {
-            setPendingEvent(event.eventData);
+        const eventResult = await getPendingEvent(currentUser.uid);
+        if (eventResult) {
+            setPendingEvent(eventResult.eventData);
+            setEventDocumentId(eventResult.documentId); // Store the document ID
+
             // Get fresh stats instead of using the stale closure
             const statsRef = doc(firestore, 'playerStats', currentUser.uid);
             const statsDoc = await getDoc(statsRef);
@@ -84,6 +87,10 @@ const PatrolPage: React.FC = () => {
                     setActiveWorkForEvent(currentStats.activeWork);
                 }
             }
+        } else {
+            setPendingEvent(null);
+            setEventDocumentId(null);
+            setActiveWorkForEvent(null);
         }
     }, [currentUser]);
 
@@ -146,7 +153,7 @@ const PatrolPage: React.FC = () => {
 
     // Handle event choice
     const handleEventChoice = useCallback(async (choice: EventChoice) => {
-        if (!currentUser || !pendingEvent || !activeWorkForEvent) return;
+        if (!currentUser || !pendingEvent || !activeWorkForEvent || !eventDocumentId) return;
 
         setIsProcessingEvent(true);
 
@@ -155,10 +162,10 @@ const PatrolPage: React.FC = () => {
             const workActivity = getWorkActivityById(activeWorkForEvent.workId);
             const workName = workActivity?.name || 'Tundmatu töö';
 
-            // Process the event choice
+            // Process the event choice using the document ID
             const success = await processEventChoice(
                 currentUser.uid,
-                activeWorkForEvent.workSessionId || `${currentUser.uid}_${Date.now()}`,
+                eventDocumentId, // Use the stored document ID
                 pendingEvent,
                 choice,
                 workName
@@ -172,6 +179,7 @@ const PatrolPage: React.FC = () => {
                 setTimeout(() => {
                     showToast('Töö on edukalt lõpetatud!', 'success');
                     setPendingEvent(null);
+                    setEventDocumentId(null);
                     setActiveWorkForEvent(null);
                     loadWorkHistory().catch(console.error);
                 }, 500);
@@ -182,7 +190,7 @@ const PatrolPage: React.FC = () => {
         } finally {
             setIsProcessingEvent(false);
         }
-    }, [currentUser, pendingEvent, activeWorkForEvent, showToast, loadWorkHistory]);
+    }, [currentUser, pendingEvent, activeWorkForEvent, eventDocumentId, showToast, loadWorkHistory]);
 
     useEffect(() => {
         if (!currentUser) return;
