@@ -11,7 +11,8 @@ import {
     where,
     orderBy,
     limit,
-    getDocs
+    getDocs,
+    increment
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats, ActiveWork, WorkHistoryEntry } from '../types';
@@ -55,6 +56,9 @@ export const startWork = async (
         throw new Error('Töötegevus ei ole saadaval');
     }
 
+    // Calculate expected rewards (both experience and money)
+    const expectedRewards = calculateWorkRewards(workActivity, hours, stats.rank);
+
     // Create work session
     const now = Timestamp.now();
     const duration = hours * 3600;
@@ -68,8 +72,9 @@ export const startWork = async (
         startedAt: now,
         endsAt: Timestamp.fromMillis(now.toMillis() + (duration * 1000)),
         totalHours: hours,
-        expectedExp: calculateWorkRewards(workActivity, hours),
-        status: 'in_progress', // Add missing status property
+        expectedExp: expectedRewards.experience,
+        expectedMoney: expectedRewards.money,
+        status: 'in_progress',
         workSessionId
     };
 
@@ -134,15 +139,13 @@ export const completeWork = async (userId: string): Promise<void> => {
     const workActivity = getWorkActivityById(stats.activeWork.workId);
     if (!workActivity) return;
 
+    // Calculate actual rewards based on current player rank
+    const actualRewards = calculateWorkRewards(workActivity, stats.activeWork.totalHours, stats.rank);
+
     // Calculate new stats
-    const newExp = stats.experience + stats.activeWork.expectedExp;
+    const newExp = stats.experience + actualRewards.experience;
     const newLevel = calculateLevelFromExp(newExp);
-    // Use workActivity.moneyReward with fallback to 0 if undefined
-    const moneyReward = workActivity.moneyReward || 0;
-    const newMoney = stats.money + moneyReward;
-
     const newTotalWorkedHours = (stats.totalWorkedHours || 0) + stats.activeWork.totalHours;
-
 
     // Add to history
     const historyEntry: WorkHistoryEntry = {
@@ -154,22 +157,28 @@ export const completeWork = async (userId: string): Promise<void> => {
         startedAt: stats.activeWork.startedAt,
         completedAt: Timestamp.now(),
         hoursWorked: stats.activeWork.totalHours,
-        expEarned: stats.activeWork.expectedExp,
-        moneyEarned: moneyReward
+        expEarned: actualRewards.experience,
+        moneyEarned: actualRewards.money
     };
 
     await addDoc(collection(firestore, 'workHistory'), historyEntry);
 
     // Update stats - clear work and update rewards
-    await updateDoc(statsRef, {
+    const updateData: any = {
         activeWork: null,
         experience: newExp,
         level: newLevel,
-        money: newMoney,
         totalWorkedHours: newTotalWorkedHours,
         'trainingData.isWorking': false,
         'trainingData.remainingClicks': 50
-    });
+    };
+
+    // Only update money if there's a monetary reward
+    if (actualRewards.money > 0) {
+        updateData.money = increment(actualRewards.money);
+    }
+
+    await updateDoc(statsRef, updateData);
 };
 
 // Get remaining time in milliseconds

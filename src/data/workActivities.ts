@@ -156,8 +156,9 @@ export const getWorkActivityById = (workId: string): WorkActivity | undefined =>
 // Calculate total exp for work duration
 export const calculateWorkRewards = (
     activity: WorkActivity,
-    hours: number
-): number => {
+    hours: number,
+    playerRank?: string | null
+): { experience: number; money: number } => {
     let totalExp = 0;
 
     for (let hour = 1; hour <= hours; hour++) {
@@ -165,5 +166,27 @@ export const calculateWorkRewards = (
         totalExp += Math.floor(hourExp);
     }
 
-    return totalExp;
+    // Calculate money for police officers
+    const money = playerRank ? calculateSalaryForOfficer(playerRank, hours) : 0;
+
+    return {
+        experience: totalExp,
+        money
+    };
+};
+
+export const calculateSalaryForOfficer = (rank: string | null, hours: number): number => {
+    if (!rank) return 0;
+
+    // Define hourly rates by rank
+    const hourlyRates: Record<string, number> = {
+        'inspektor': 120,
+        'vaneminspektor': 140,
+        'üleminspektor': 160,
+    };
+
+    const normalizedRank = rank.toLowerCase();
+    const hourlyRate = hourlyRates[normalizedRank] || 0;
+
+    return hourlyRate * hours;
 };

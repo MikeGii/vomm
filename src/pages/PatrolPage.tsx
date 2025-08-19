@@ -413,6 +413,7 @@ const PatrolPage: React.FC = () => {
                             onStartWork={handleStartWork}
                             isStarting={isStartingWork}
                             isKadett={isKadett}
+                            playerRank={playerStats?.rank}
                         />
                     </div>
                 )}
