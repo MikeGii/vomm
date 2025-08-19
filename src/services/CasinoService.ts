@@ -1,6 +1,6 @@
 // src/services/CasinoService.ts
 import { firestore } from '../config/firebase';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import { PlayerStats } from '../types';
 
 export interface CasinoData {
@@ -23,13 +23,24 @@ export const getTimeUntilCasinoReset = (): string => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
+export const canPlayerGamble = (playerStats: PlayerStats): { canGamble: boolean; reason?: string } => {
+    // Check if player reputation is negative
+    if (playerStats.reputation < 5) {
+        return {
+            canGamble: false,
+            reason: 'Sinu maine on liiga madal kasiinosse pääsemiseks. Maine peab olema vähemalt 5.'
+        };
+    }
+
+    return { canGamble: true };
+};
+
 // Get remaining casino plays for current hour
 export const getRemainingCasinoPlays = (stats: PlayerStats): number => {
     if (!stats.casinoData) {
         return MAX_PLAYS_PER_HOUR;
     }
 
-    const now = Date.now();
     const currentHour = new Date().getHours();
     const lastPlayHour = new Date(stats.casinoData.lastPlayTime).getHours();
 
@@ -104,6 +115,12 @@ export const playSlotMachine = async (userId: string, stats: PlayerStats, betAmo
     updatedStats: PlayerStats;
     gameResult: SlotResult;
 }> => {
+
+    const { canGamble, reason } = canPlayerGamble(stats);
+    if (!canGamble) {
+        throw new Error(reason || 'Sa ei saa mängida.');
+    }
+
     const statsRef = doc(firestore, 'playerStats', userId);
 
     const remaining = getRemainingCasinoPlays(stats);
@@ -137,7 +154,7 @@ export const playSlotMachine = async (userId: string, stats: PlayerStats, betAmo
 
     // Calculate new money and reputation
     const newMoney = stats.money - betAmount + gameResult.winAmount;
-    const newReputation = Math.max(0, stats.reputation - 5); // Always lose 5 reputation
+    const newReputation = Math.max(0, stats.reputation - 5);
 
     const updates = {
         casinoData: updatedCasinoData,
