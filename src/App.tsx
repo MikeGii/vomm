@@ -13,6 +13,7 @@ import ProfilePage from './pages/ProfilePage';
 import ShopPage from './pages/ShopPage';
 import {DebugMenu} from "./components/dev/DebugMenu";
 import CasinoPage from './pages/CasinoPage';
+import BankPage from "./pages/BankPage";
 
 function App() {
     return (
@@ -72,6 +73,15 @@ function App() {
                                 <CasinoPage />
                             </ProtectedRoute>
                         } />
+
+                        <Route
+                            path="/bank"
+                            element={
+                                <ProtectedRoute>
+                                    <BankPage />
+                                </ProtectedRoute>
+                            }
+                        />
 
                         <Route
                             path="/department"
