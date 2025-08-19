@@ -33,6 +33,7 @@
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .badge-display,
@@ -497,4 +498,41 @@
 
 .stat-card.health-card:hover .click-hint {
     opacity: 1;
+}
+
+.rank-display {
+    padding: 0.3rem 0.8rem;
+    background-color: #2a2a2a;
+    border: 1px solid #4a90e2;
+    border-radius: 4px;
+    color: #4a90e2;
+    font-size: 0.9rem;
+}
+
+/* Add new styles for the rank image container: */
+.rank-image-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem;
+
+}
+
+.rank-image {
+    width: 24px;
+    height: 48px;
+    object-fit: contain;
+    filter: brightness(1.1);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 480px) {
+    .rank-image {
+        width: 48px;
+        height: 48px;
+    }
+
+    .rank-image-container {
+        padding: 0.15rem;
+    }
 }
