@@ -8,6 +8,7 @@ export const MEDICAL_ITEMS: ShopItem[] = [
         description: 'Taastab 10 HP',
         category: 'medical',
         price: 25.00,
+        currency: 'money',
         basePrice: 25.00,
         maxStock: 150,
         consumableEffect: {
@@ -21,6 +22,7 @@ export const MEDICAL_ITEMS: ShopItem[] = [
         description: 'Taastab 15 HP',
         category: 'medical',
         price: 40.00,
+        currency: 'money',
         basePrice: 40.00,
         maxStock: 100,
         consumableEffect: {
@@ -34,6 +36,7 @@ export const MEDICAL_ITEMS: ShopItem[] = [
         description: 'Taastab 25 HP',
         category: 'medical',
         price: 250.00,
+        currency: 'money',
         basePrice: 250.00,
         maxStock: 50,
         consumableEffect: {

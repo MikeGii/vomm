@@ -101,9 +101,13 @@ export const AuthenticatedHeader: React.FC = () => {
                                 <span className="header-stat-label">Maine</span>
                                 <span className="header-stat-value">{playerStats.reputation}</span>
                             </div>
-                            <div className="header-stat-item">
+                            <div className="header-stat-item header-money">
                                 <span className="header-stat-label">Raha</span>
                                 <span className="header-stat-value money">{playerStats.money || 0} €</span>
+                            </div>
+                            <div className="header-stat-item header-pollid">
+                                <span className="header-stat-label">Pollid</span>
+                                <span className="header-stat-value pollid">💎 {playerStats.pollid || 0}</span>
                             </div>
                         </div>
                     )}

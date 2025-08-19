@@ -24,6 +24,7 @@ const ShopPage: React.FC = () => {
     const {showToast} = useToast();
 
     const [playerMoney, setPlayerMoney] = useState(0);
+    const [playerPollid, setPlayerPollid] = useState(0);
     const [itemsWithStock, setItemsWithStock] = useState<Array<{
         item: any;
         currentStock: number;
@@ -60,6 +61,7 @@ const ShopPage: React.FC = () => {
                 if (doc.exists()) {
                     const stats = doc.data() as PlayerStats;
                     setPlayerMoney(stats.money || 0);
+                    setPlayerPollid(stats.pollid || 0);
                 }
             },
             (error) => {
@@ -155,6 +157,7 @@ const ShopPage: React.FC = () => {
 
                 <ShopHeader
                     playerMoney={playerMoney}
+                    playerPollid={playerPollid}
                     onRefresh={loadItemsWithStock}
                     isRefreshing={isRefreshing}
                 />
@@ -162,6 +165,7 @@ const ShopPage: React.FC = () => {
                 <ShopTable
                     items={itemsWithStock}
                     playerMoney={playerMoney}
+                    playerPollid={playerPollid}
                     onPurchase={handlePurchase}
                     isLoading={isRefreshing}
                 />
@@ -170,6 +174,7 @@ const ShopPage: React.FC = () => {
                     item={selectedItem}
                     isOpen={isPurchaseModalOpen}
                     playerMoney={playerMoney}
+                    playerPollid={playerPollid}
                     currentStock={selectedItemStock}
                     onConfirm={confirmPurchase}
                     onCancel={cancelPurchase}

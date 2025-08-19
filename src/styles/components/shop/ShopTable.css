@@ -323,3 +323,54 @@
         width: 10%;
     }
 }
+
+.price-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.money-price {
+    color: #4caf50;
+    font-weight: 600;
+}
+
+.pollid-price {
+    color: #9c27b0;
+    font-weight: 700;
+    text-shadow: 0 0 6px rgba(156, 39, 176, 0.4);
+}
+
+.vip-effect {
+    color: #9c27b0;
+    font-weight: 600;
+}
+
+.vip-category {
+    background: linear-gradient(135deg, rgba(74, 20, 140, 0.1), rgba(123, 31, 162, 0.1));
+    border: 1px solid rgba(156, 39, 176, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.vip-category .category-title {
+    color: #9c27b0;
+    text-shadow: 0 0 8px rgba(156, 39, 176, 0.3);
+}
+
+.buy-button.pollid-buy {
+    background: linear-gradient(135deg, #7b1fa2, #9c27b0);
+    border: 1px solid #9c27b0;
+}
+
+.buy-button.pollid-buy:hover:not(:disabled) {
+    background: linear-gradient(135deg, #6a1b9a, #8e24aa);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(156, 39, 176, 0.3);
+}
+
+.buy-button.pollid-buy:disabled {
+    background: #666;
+    border: 1px solid #666;
+}

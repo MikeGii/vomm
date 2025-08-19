@@ -1,5 +1,5 @@
 // src/services/PlayerService.ts
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import {doc, setDoc, getDoc, updateDoc} from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats, PlayerHealth } from '../types';
 import { initializeAttributes, initializeTrainingData } from './TrainingService';
@@ -71,6 +71,12 @@ export const initializePlayerStats = async (userId: string): Promise<PlayerStats
         // Initialize money if not present
         if (stats.money === undefined) {
             stats.money = 0;
+        }
+
+        if (stats.pollid === undefined) {
+            stats.pollid = 0;
+
+            await updateDoc(statsRef, { pollid: 0 });
         }
 
         // Calculate health if not present

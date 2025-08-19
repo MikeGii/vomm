@@ -5,7 +5,10 @@ export interface ShopItem {
     description: string;
     category: ShopCategory;
     price: number;
+    pollidPrice?: number;
+    currency: 'money' | 'pollid' | 'both';
     basePrice: number;
+    basePollidPrice?: number;
     maxStock: number;
     stats?: {
         strength?: number;
@@ -21,10 +24,11 @@ export interface ShopItem {
 export type ShopCategory =
     | 'protection'
     | 'trainingBooster'
-    | 'medical';
+    | 'medical'
+    | 'vip'
 
 export interface ConsumableEffect {
-    type: 'trainingClicks' | 'heal' | 'energy' | 'experience' | 'temporary_boost';
+    type: 'trainingClicks' | 'heal' | 'energy' | 'experience' | 'temporary_boost' | 'workTimeReduction';
     value: number;
     duration?: number;
 }
@@ -33,8 +37,8 @@ export interface PurchaseResult {
     success: boolean;
     message: string;
     newBalance?: number;
-    failureReason?: 'insufficient_funds' | 'requirements_not_met' | 'out_of_stock' | 'inventory_full';
-}
+    newPollidBalance?: number;
+    failureReason?: 'insufficient_funds' | 'insufficient_pollid' | 'requirements_not_met' | 'out_of_stock' | 'inventory_full';}
 
 export interface ShopCategoryInfo {
     id: ShopCategory;
@@ -57,6 +61,11 @@ export const SHOP_CATEGORIES: Record<ShopCategory, ShopCategoryInfo> = {
         id: 'medical',
         name: 'Meditsiinitarbed',
         description: 'Sidemed, plaastrid ja muud meditsiinitarbed',
+    },
+    vip: {
+        id: 'vip',
+        name: 'VIP Pood',
+        description: 'Eksklusiivesed, mida saab osta ainult Pollidega',
     }
 };
 

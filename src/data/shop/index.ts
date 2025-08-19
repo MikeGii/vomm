@@ -3,12 +3,14 @@ import { ShopItem } from '../../types/shop';
 import { PROTECTION_ITEMS } from './equipment';
 import { TRAINING_BOOSTER_ITEMS } from './trainingBoosters';
 import { MEDICAL_ITEMS } from './medicalItems';
+import {VIP_ITEMS} from "./vipItems";
 
 // Combine all shop items
 export const ALL_SHOP_ITEMS: ShopItem[] = [
     ...PROTECTION_ITEMS,
     ...TRAINING_BOOSTER_ITEMS,
-    ...MEDICAL_ITEMS
+    ...MEDICAL_ITEMS,
+    ...VIP_ITEMS
 ];
 
 // Get items by category
@@ -16,7 +18,21 @@ export const getItemsByCategory = (category: string): ShopItem[] => {
     return ALL_SHOP_ITEMS.filter(item => item.category === category);
 };
 
-// Get affordable items for player
+// Get affordable items for player (money)
 export const getAffordableItems = (playerMoney: number): ShopItem[] => {
-    return ALL_SHOP_ITEMS.filter(item => item.price <= playerMoney);
+    return ALL_SHOP_ITEMS.filter(item =>
+        item.currency === 'money' && item.price <= playerMoney
+    );
+};
+
+// Get affordable VIP items for player (pollid)
+export const getAffordableVipItems = (playerPollid: number): ShopItem[] => {
+    return ALL_SHOP_ITEMS.filter(item =>
+        item.currency === 'pollid' && (item.pollidPrice || 0) <= playerPollid
+    );
+};
+
+// Get VIP items only
+export const getVipItems = (): ShopItem[] => {
+    return ALL_SHOP_ITEMS.filter(item => item.category === 'vip');
 };

@@ -32,9 +32,9 @@ const shopItemToInventoryItem = (shopItem: ShopItem): InventoryItem => {
         name: shopItem.name,
         description: shopItem.description,
         category: shopItem.category === 'protection' ? 'equipment' :
-            (shopItem.category === 'trainingBooster' || shopItem.category === 'medical') ? 'consumable' : 'misc',
+            (shopItem.category === 'trainingBooster' || shopItem.category === 'medical' || shopItem.category === 'vip') ? 'consumable' : 'misc',
         quantity: 1,
-        shopPrice: shopItem.price,
+        shopPrice: shopItem.currency === 'pollid' ? (shopItem.pollidPrice || 0) : shopItem.price,
         equipped: false,
         source: 'shop',
         obtainedAt: new Date()
@@ -57,7 +57,7 @@ const shopItemToInventoryItem = (shopItem: ShopItem): InventoryItem => {
 };
 
 /**
- * Purchase item from shop WITH STOCK CHECK
+ * Purchase item from shop WITH STOCK CHECK AND CURRENCY SUPPORT
  */
 export const purchaseItem = async (
     userId: string,
@@ -85,10 +85,6 @@ export const purchaseItem = async (
             };
         }
 
-        // CALCULATE DYNAMIC PRICE
-        const dynamicPrice = calculateDynamicPrice(shopItem.basePrice, currentStock, shopItem.maxStock);
-        const totalCost = dynamicPrice * quantity;
-
         // Get player stats
         const playerRef = doc(firestore, 'playerStats', userId);
         const playerDoc = await getDoc(playerRef);
@@ -102,12 +98,33 @@ export const purchaseItem = async (
 
         const playerStats = playerDoc.data() as PlayerStats;
 
-        // Check if player has enough money
-        if (playerStats.money < totalCost) {
+        // Determine currency and calculate cost
+        const isPollidPurchase = shopItem.currency === 'pollid';
+        let totalCost: number;
+        let currentBalance: number;
+
+        if (isPollidPurchase) {
+            // Pollid purchase - use fixed price (no dynamic pricing for VIP items)
+            totalCost = (shopItem.pollidPrice || 0) * quantity;
+            currentBalance = playerStats.pollid || 0;
+        } else {
+            // Money purchase - use dynamic pricing
+            const dynamicPrice = calculateDynamicPrice(shopItem.basePrice, currentStock, shopItem.maxStock);
+            totalCost = dynamicPrice * quantity;
+            currentBalance = playerStats.money || 0;
+        }
+
+        // Check if player has enough currency
+        if (currentBalance < totalCost) {
+            const currencyName = isPollidPurchase ? 'Pollide' : 'raha';
+            const currencySymbol = isPollidPurchase ? '💎' : '€';
+            const costDisplay = isPollidPurchase ? `${totalCost}` : `${totalCost.toFixed(2)}`;
+            const balanceDisplay = isPollidPurchase ? `${currentBalance}` : `${currentBalance.toFixed(2)}`;
+
             return {
                 success: false,
-                message: `Ebapiisav raha. Vaja: €${totalCost.toFixed(2)}, Sul on: €${playerStats.money.toFixed(2)}`,
-                failureReason: 'insufficient_funds'
+                message: `Ebapiisav ${currencyName}. Vaja: ${currencySymbol}${costDisplay}, Sul on: ${currencySymbol}${balanceDisplay}`,
+                failureReason: isPollidPurchase ? 'insufficient_pollid' : 'insufficient_funds'
             };
         }
 
@@ -127,32 +144,49 @@ export const purchaseItem = async (
             updatedInventory[existingItemIndex] = {
                 ...updatedInventory[existingItemIndex],
                 quantity: updatedInventory[existingItemIndex].quantity + quantity,
-                shopPrice: dynamicPrice // Update to latest purchase price
+                shopPrice: isPollidPurchase ? (shopItem.pollidPrice || 0) : totalCost / quantity
             };
         } else {
             // Item doesn't exist - create new inventory item
             const newItem = shopItemToInventoryItem(shopItem);
-            newItem.quantity = quantity; // Set the correct quantity
-            newItem.shopPrice = dynamicPrice; // Use dynamic price
-            newItem.id = `${shopItem.id}_${Date.now()}_${Math.random()}`; // Ensure unique ID
+            newItem.quantity = quantity;
+            newItem.shopPrice = isPollidPurchase ? (shopItem.pollidPrice || 0) : totalCost / quantity;
+            newItem.id = `${shopItem.id}_${Date.now()}_${Math.random()}`;
             updatedInventory.push(newItem);
         }
 
         // UPDATE STOCK
         await updateStockAfterPurchase(itemId, quantity);
 
-        // Update player stats (decrease money and update inventory)
-        await updateDoc(playerRef, {
-            money: playerStats.money - totalCost,
+        // Prepare update object based on currency
+        const updateData: any = {
             inventory: updatedInventory,
             lastModified: Timestamp.now()
-        });
+        };
 
-        return {
+        if (isPollidPurchase) {
+            updateData.pollid = currentBalance - totalCost;
+        } else {
+            updateData.money = currentBalance - totalCost;
+        }
+
+        // Update player stats
+        await updateDoc(playerRef, updateData);
+
+        const currencySymbol = isPollidPurchase ? '💎' : '€';
+        const result: PurchaseResult = {
             success: true,
             message: `Ostsid: ${shopItem.name}${quantity > 1 ? ` x${quantity}` : ''}`,
-            newBalance: playerStats.money - totalCost
         };
+
+        // Add appropriate balance to result
+        if (isPollidPurchase) {
+            result.newPollidBalance = currentBalance - totalCost;
+        } else {
+            result.newBalance = currentBalance - totalCost;
+        }
+
+        return result;
 
     } catch (error: any) {
         console.error('Purchase error:', error);

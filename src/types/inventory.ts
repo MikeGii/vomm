@@ -1,6 +1,4 @@
 // src/types/inventory.ts
-import { IconType } from 'react-icons';
-
 
 export interface InventoryItem {
     id: string;
@@ -22,7 +20,7 @@ export interface InventoryItem {
         endurance?: number;
     };
     consumableEffect?: {
-        type: 'trainingClicks' | 'heal' | 'energy' | 'experience' | 'temporary_boost';
+        type: 'trainingClicks' | 'heal' | 'energy' | 'experience' | 'temporary_boost' | 'workTimeReduction';
         value: number;
         duration?: number;
     };
