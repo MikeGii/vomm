@@ -12,7 +12,7 @@ export const VIP_ITEMS: ShopItem[] = [
         currency: 'pollid',
         basePrice: 0,
         basePollidPrice: 10,
-        maxStock: 10,
+        maxStock: 100,
         consumableEffect: {
             type: 'workTimeReduction',
             value: 95
@@ -28,7 +28,7 @@ export const VIP_ITEMS: ShopItem[] = [
         currency: 'pollid',
         basePrice: 0,
         basePollidPrice: 10,
-        maxStock: 10,
+        maxStock: 100,
         consumableEffect: {
             type: 'courseTimeReduction',
             value: 95
