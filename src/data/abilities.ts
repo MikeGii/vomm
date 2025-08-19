@@ -3,6 +3,7 @@ import { IconType } from 'react-icons';
 import { GiPistolGun, GiElectric, GiPoliceCar, GiMachineGunMagazine } from 'react-icons/gi';
 import { MdSpeed } from 'react-icons/md';
 import { FaTabletAlt } from 'react-icons/fa';
+import { FaComputer } from 'react-icons/fa6';
 import { GoLaw } from 'react-icons/go';
 
 export interface TrainingBonus {
@@ -65,7 +66,20 @@ export const ABILITIES: Ability[] = [
       trainingBonuses: [
           { attribute: 'dexterity', percentage: 0.02 },
           { attribute: 'agility', percentage: 0.02 },
-      ]
+      ],
+        replacedBy: 'electrical_weapon_usage_police'
+
+    },
+    {
+        id: 'electrical_weapon_usage_police',
+        name: 'Elektrišokirelva oskuslik käsitsemine',
+        description: 'Elektrišokirelva täiendkoolitus paremaks käsitsemiseks',
+        icon: GiElectric,
+        requiredCourse: 'self-defence_training',
+        trainingBonuses: [
+            { attribute: 'dexterity', percentage: 0.05 },
+            { attribute: 'agility', percentage: 0.05 },
+        ]
     },
     {
         id: 'speed_measurement_abipolitseinik',
@@ -75,6 +89,17 @@ export const ABILITIES: Ability[] = [
         requiredCourse: 'speed_measurement_abipolitseinik',
         trainingBonuses: [
             { attribute: 'intelligence', percentage: 0.05 }
+        ],
+        replacedBy: 'speed_measurement_police'
+    },
+    {
+        id: 'speed_measurement_police',
+        name: 'Oskuslik kiiruse mõõtja pädevus',
+        description: 'Oskus kasutada kõiki kiiruse mõõtmise seadeid',
+        icon: MdSpeed,
+        requiredCourse: 'response_training',
+        trainingBonuses: [
+            { attribute: 'intelligence', percentage: 0.1 }
         ]
     },
     {
@@ -85,6 +110,17 @@ export const ABILITIES: Ability[] = [
         requiredCourse: 'police_apollo_usage_abipolitseinik',
         trainingBonuses: [
             { attribute: 'intelligence', percentage: 0.05 }
+        ],
+        replacedBy: 'police_e_politsei_usage_police'
+    },
+    {
+        id: 'police_e_politsei_usage_police',
+        name: 'Politsei andmebaaside kasutamise oskus',
+        description: 'Oskus ja õigus kasutada kohusetundlikult politsei andmebaase',
+        icon: FaComputer,
+        requiredCourse: 'procedural_practice',
+        trainingBonuses: [
+            { attribute: 'intelligence', percentage: 0.1 }
         ]
     },
     {
@@ -95,6 +131,17 @@ export const ABILITIES: Ability[] = [
         requiredCourse: 'police_car_training_abipolitseinik',
         trainingBonuses: [
             { attribute: 'dexterity', percentage: 0.05 }
+        ],
+        replacedBy: 'police_car_usage_right_police'
+    },
+    {
+        id: 'police_car_usage_right_police',
+        name: 'Alarmsõiduki oskuslik juhtimine',
+        description: 'Alarmsõiduki täiendkoolituse läbinud ametnik',
+        icon: GiPoliceCar,
+        requiredCourse: 'response_training',
+        trainingBonuses: [
+            { attribute: 'dexterity', percentage: 0.08 }
         ]
     },
     {

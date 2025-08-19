@@ -223,3 +223,23 @@
         padding: 0.2rem 0.5rem;
     }
 }
+
+.result-consequences {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.result-consequences h4 {
+    color: #4a90e2;
+    font-size: 1rem;
+    margin: 0 0 0.75rem 0;
+    text-align: center;
+}
+
+.result-consequences .choice-consequences {
+    justify-content: center;
+    padding-left: 0;
+}
