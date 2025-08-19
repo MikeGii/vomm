@@ -204,6 +204,17 @@ export const AuthenticatedHeader: React.FC = () => {
                                     <span>Pood</span>
                                 </button>
 
+                                <button
+                                    onClick={() => {
+                                        navigate('/casino');
+                                        setIsMenuOpen(false);
+                                    }}
+                                    className="menu-item"
+                                >
+                                    <span className="menu-icon">🎰</span>
+                                    <span>Kasiino</span>
+                                </button>
+
                                 <div className="menu-divider"></div>
 
                                 <div className="menu-section">

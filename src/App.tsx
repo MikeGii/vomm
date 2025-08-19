@@ -12,6 +12,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import ProfilePage from './pages/ProfilePage';
 import ShopPage from './pages/ShopPage';
 import {DebugMenu} from "./components/dev/DebugMenu";
+import CasinoPage from './pages/CasinoPage';
 
 function App() {
     return (
@@ -63,6 +64,12 @@ function App() {
                         <Route path="/shop" element={
                             <ProtectedRoute>
                                 <ShopPage />
+                            </ProtectedRoute>
+                        } />
+
+                        <Route path="/casino" element={
+                            <ProtectedRoute>
+                                <CasinoPage />
                             </ProtectedRoute>
                         } />
 
