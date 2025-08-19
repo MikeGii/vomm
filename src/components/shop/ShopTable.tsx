@@ -91,11 +91,98 @@ export const ShopTable: React.FC<ShopTableProps> = ({
         return dynamicPrice > basePrice * 1.1; // Show if price is 10% higher
     };
 
+    const renderMobileCard = (item: any, currentStock: number, dynamicPrice: number) => {
+        const canAfford = item.currency === 'pollid'
+            ? playerPollid >= (item.pollidPrice || 0)
+            : playerMoney >= dynamicPrice;
+
+        const hasStock = currentStock > 0;
+        const stockClass = getStockStatus(currentStock, item.maxStock);
+        const priceIncreased = getPriceStatus(item.basePrice, dynamicPrice);
+        const stockPercentage = (currentStock / item.maxStock) * 100;
+
+        return (
+            <div key={item.id} className={`mobile-shop-item ${!hasStock ? 'out-of-stock' : ''}`}>
+                {/* Header: Name, Description & Price */}
+                <div className="mobile-item-header">
+                    <div className="mobile-item-info">
+                        <h4 className="mobile-item-name">{item.name}</h4>
+                        <p className="mobile-item-description">{item.description}</p>
+                    </div>
+                    <div className="mobile-item-price">
+                        {item.currency === 'money' ? (
+                            <>
+                                <div className={`mobile-price-display money-price ${priceIncreased ? 'price-increased' : ''}`}>
+                                    €{dynamicPrice.toFixed(2)}
+                                </div>
+                                {priceIncreased && <div className="mobile-price-indicator">Hind tõusnud!</div>}
+                            </>
+                        ) : (
+                            <div className="mobile-price-display pollid-price">
+                                💎{item.pollidPrice}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Details: Bonuses & Stock */}
+                <div className="mobile-item-details">
+                    <div className="mobile-item-bonuses">
+                        <div className="mobile-bonuses-title">Boonused</div>
+                        <div className="mobile-stat-list">
+                            {item.stats ? (
+                                <>
+                                    {item.stats.strength && <span className="mobile-stat-item">Jõud +{item.stats.strength}</span>}
+                                    {item.stats.agility && <span className="mobile-stat-item">Kiirus {item.stats.agility > 0 ? '+' : ''}{item.stats.agility}</span>}
+                                    {item.stats.dexterity && <span className="mobile-stat-item">Osavus +{item.stats.dexterity}</span>}
+                                    {item.stats.intelligence && <span className="mobile-stat-item">Intel {item.stats.intelligence > 0 ? '+' : ''}{item.stats.intelligence}</span>}
+                                    {item.stats.endurance && <span className="mobile-stat-item">Vastup {item.stats.endurance > 0 ? '+' : ''}{item.stats.endurance}</span>}
+                                </>
+                            ) : item.consumableEffect ? (
+                                <>
+                                    {item.consumableEffect.type === 'trainingClicks' && <span className="mobile-stat-item">+{item.consumableEffect.value} klõpsu</span>}
+                                    {item.consumableEffect.type === 'heal' && <span className="mobile-stat-item">+{item.consumableEffect.value === 9999 ? 'Täielik' : item.consumableEffect.value} HP</span>}
+                                    {item.consumableEffect.type === 'workTimeReduction' && <span className="mobile-vip-effect">-{item.consumableEffect.value}% tööaeg</span>}
+                                    {item.consumableEffect.type === 'courseTimeReduction' && <span className="mobile-vip-effect">-{item.consumableEffect.value}% kursuse aeg</span>}
+                                </>
+                            ) : (
+                                <span className="mobile-stat-item">Puuduvad</span>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="mobile-item-stock">
+                        <div className="mobile-stock-title">Laoseis</div>
+                        <div className={`mobile-stock-display ${stockClass}`}>
+                            <span className="mobile-stock-number">{currentStock}/{item.maxStock}</span>
+                            <div className="mobile-stock-bar">
+                                <div className="mobile-stock-fill" style={{ width: `${stockPercentage}%` }}></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Action: Buy Button */}
+                <div className="mobile-item-action">
+                    <button
+                        className={`mobile-buy-button ${item.currency === 'pollid' ? 'pollid-buy' : ''}`}
+                        onClick={() => onPurchase(item.id)}
+                        disabled={!canAfford || !hasStock || isLoading}
+                    >
+                        {!hasStock ? 'Laost otsas' : !canAfford ? 'Pole raha' : 'Osta'}
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="shop-table-container">
             {Object.entries(groupedItems).map(([category, categoryItems]) => (
-                <div key={category} className="category-section">
+                <div key={category} className={`category-section ${category === 'vip' ? 'vip-category' : ''}`}>
                     <h3 className="category-title">{getCategoryName(category)}</h3>
+
+                    {/* Desktop Table */}
                     <table className="shop-table">
                         <thead>
                         <tr>
@@ -126,7 +213,7 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                                         <div className="item-description">{item.description}</div>
                                     </td>
                                     <td>
-                                        {item.stats ? formatStats(item.stats) : formatEffect(item.effect)}
+                                        {item.stats ? formatStats(item.stats) : formatEffect(item)}
                                     </td>
                                     <td>
                                         <div className="price-wrapper">
@@ -135,13 +222,11 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                                                     <span className={`price money-price ${priceIncreased ? 'price-increased' : ''}`}>
                                                         €{dynamicPrice.toFixed(2)}
                                                     </span>
-                                                    {priceIncreased && <span className="price-indicator">↑</span>}
+                                                    {priceIncreased && <div className="price-indicator">↑</div>}
                                                 </>
                                             )}
                                             {item.currency === 'pollid' && (
-                                                <span className="price pollid-price">
-                                                    💎 {item.pollidPrice}
-                                                </span>
+                                                <span className="price pollid-price">💎{item.pollidPrice}</span>
                                             )}
                                         </div>
                                     </td>
@@ -149,10 +234,7 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                                         <div className={`stock-display ${stockClass}`}>
                                             <span className="stock-number">{currentStock}/{item.maxStock}</span>
                                             <div className="stock-bar">
-                                                <div
-                                                    className="stock-fill"
-                                                    style={{ width: `${(currentStock / item.maxStock) * 100}%` }}
-                                                />
+                                                <div className="stock-fill" style={{ width: `${(currentStock / item.maxStock) * 100}%` }}></div>
                                             </div>
                                         </div>
                                     </td>
@@ -160,11 +242,9 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                                         <button
                                             className={`buy-button ${item.currency === 'pollid' ? 'pollid-buy' : ''}`}
                                             onClick={() => onPurchase(item.id)}
-                                            disabled={!canAfford || !hasStock}
+                                            disabled={!canAfford || !hasStock || isLoading}
                                         >
-                                            {!hasStock ? 'Otsas' :
-                                                !canAfford ? (item.currency === 'pollid' ? 'Pole Pollide' : 'Pole raha') :
-                                                    'Osta'}
+                                            {!hasStock ? 'Otsas' : !canAfford ? 'Pole raha' : 'Osta'}
                                         </button>
                                     </td>
                                 </tr>
@@ -172,6 +252,13 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                         })}
                         </tbody>
                     </table>
+
+                    {/* Mobile Card Layout */}
+                    <div className="mobile-shop-items">
+                        {categoryItems.map(({ item, currentStock, dynamicPrice }) =>
+                            renderMobileCard(item, currentStock, dynamicPrice)
+                        )}
+                    </div>
                 </div>
             ))}
         </div>
