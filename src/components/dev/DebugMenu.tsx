@@ -1,6 +1,9 @@
 // src/components/dev/DebugMenu.tsx
 import React, { useState, useEffect } from 'react';
-import {doc, updateDoc, collection, getDocs, Timestamp, onSnapshot} from 'firebase/firestore';
+import {doc, updateDoc, collection, getDocs, Timestamp, onSnapshot,     query,
+    where,
+    limit,
+    deleteDoc } from 'firebase/firestore';
 import { firestore } from '../../config/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -60,14 +63,23 @@ export const DebugMenu: React.FC = () => {
 
         const statsRef = doc(firestore, 'playerStats', currentUser.uid);
 
-        // Set course end time to now to trigger completion
+        // Set course end time to past time to ensure it triggers completion
+        const pastTime = Timestamp.fromMillis(Date.now() - 5000); // 5 seconds ago
+
         await updateDoc(statsRef, {
-            'activeCourse.endsAt': Timestamp.now(),
-            'activeCourse.status': 'completed'
+            'activeCourse.endsAt': pastTime
+            // Don't set status to 'completed' here - let checkCourseCompletion handle it
         });
 
-        // Trigger course completion check
-        await checkCourseCompletion(currentUser.uid);
+        // Add a small delay to ensure the update is written
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Now trigger course completion check
+        const wasCompleted = await checkCourseCompletion(currentUser.uid);
+
+        if (!wasCompleted) {
+            throw new Error('Kursuse lõpetamine ebaõnnestus');
+        }
     };
 
     // 2. Shorten work time to 20 seconds for admin
@@ -98,11 +110,28 @@ export const DebugMenu: React.FC = () => {
         const snapshot = await getDocs(playerStatsCollection);
 
         let completedCount = 0;
+        let eventsCleanedCount = 0;
 
         for (const docSnapshot of snapshot.docs) {
             const stats = docSnapshot.data() as PlayerStats;
             if (stats.activeWork) {
                 try {
+                    // First, check and clean up any pending events for this player
+                    const eventsQuery = query(
+                        collection(firestore, 'activeEvents'),
+                        where('userId', '==', docSnapshot.id),
+                        limit(10)
+                    );
+
+                    const eventsSnapshot = await getDocs(eventsQuery);
+
+                    // Delete all pending events for this player
+                    for (const eventDoc of eventsSnapshot.docs) {
+                        await deleteDoc(doc(firestore, 'activeEvents', eventDoc.id));
+                        eventsCleanedCount++;
+                    }
+
+                    // Now safely complete the work
                     await completeWork(docSnapshot.id);
                     completedCount++;
                 } catch (error) {
@@ -115,7 +144,11 @@ export const DebugMenu: React.FC = () => {
             throw new Error('Ühtegi aktiivet tööd ei leitud');
         }
 
-        showToast(`${completedCount} mängija töö lõpetatud`, 'success');
+        const message = eventsCleanedCount > 0
+            ? `${completedCount} mängija töö lõpetatud, ${eventsCleanedCount} sündmust tühistatud`
+            : `${completedCount} mängija töö lõpetatud`;
+
+        showToast(message, 'success');
     };
 
     // Get current active course info
