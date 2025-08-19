@@ -23,7 +23,29 @@ const PATROL_ACTIVITIES: WorkActivity[] = [
         baseExpPerHour: 150,
         expGrowthRate: 0.10,
         maxHours: 12,
-        allowedFor: ['abipolitseinik', 'politseiametnik']
+        allowedFor: ['abipolitseinik']
+    },
+    {
+        id: 'patrol_second_member_police',
+        name: 'Alusta patrulli teise liikmena',
+        description: 'Värskelt sisekaitseakadeemia lõpetanud ametnikuna suudad iseseisvalt toimida teise liikmena',
+        minLevel: 30,
+        requiredCourses: ['lopueksam'],
+        baseExpPerHour: 250,
+        expGrowthRate: 0.10,
+        maxHours: 12,
+        allowedFor: ['politseiametnik']
+    },
+    {
+        id: 'patrol_car_chief',
+        name: 'Alusta patrulli toimkonna vanemana',
+        description: 'Mõningase patrullkogemusega suudad juba iseseisvalt patrulltoimkonda juhtida',
+        minLevel: 35,
+        requiredCourses: ['lopueksam'],
+        baseExpPerHour: 350,
+        expGrowthRate: 0.10,
+        maxHours: 12,
+        allowedFor: ['politseiametnik']
     }
 ];
 
