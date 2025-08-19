@@ -1,3 +1,5 @@
+// Update src/services/WorkService.ts
+
 import {
     doc,
     getDoc,
@@ -9,7 +11,8 @@ import {
     where,
     orderBy,
     limit,
-    getDocs
+    getDocs,
+    setDoc
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats, ActiveWork, WorkHistoryEntry } from '../types';
@@ -43,6 +46,7 @@ export const startWork = async (
         throw new Error('Sa ei saa töötada koolituse ajal!');
     }
 
+    // Safe health check with optional chaining
     if (!stats.health || stats.health.current < 50) {
         throw new Error('Su tervis on liiga madal töötamiseks! Minimaalne tervis on 50.');
     }
@@ -66,6 +70,7 @@ export const startWork = async (
         endsAt: Timestamp.fromMillis(now.toMillis() + (duration * 1000)),
         totalHours: hours,
         expectedExp: calculateWorkRewards(workActivity, hours),
+        status: 'in_progress', // Add missing status property
         workSessionId
     };
 
@@ -79,7 +84,7 @@ export const startWork = async (
     return activeWork;
 };
 
-// Check if work is complete and handle it - SIMPLIFIED
+// Check if work is complete and handle it
 export const checkAndCompleteWork = async (userId: string): Promise<{
     completed: boolean;
     hasEvent: boolean;
@@ -133,7 +138,9 @@ export const completeWork = async (userId: string): Promise<void> => {
     // Calculate new stats
     const newExp = stats.experience + stats.activeWork.expectedExp;
     const newLevel = calculateLevelFromExp(newExp);
-    const newMoney = stats.money + workActivity.moneyReward;
+    // Use workActivity.moneyReward with fallback to 0 if undefined
+    const moneyReward = workActivity.moneyReward || 0;
+    const newMoney = stats.money + moneyReward;
 
     // Add to history
     const historyEntry: WorkHistoryEntry = {
@@ -145,8 +152,8 @@ export const completeWork = async (userId: string): Promise<void> => {
         startedAt: stats.activeWork.startedAt,
         completedAt: Timestamp.now(),
         hoursWorked: stats.activeWork.totalHours,
-        expGained: stats.activeWork.expectedExp,
-        moneyEarned: workActivity.moneyReward
+        expEarned: stats.activeWork.expectedExp,
+        moneyEarned: moneyReward
     };
 
     await addDoc(collection(firestore, 'workHistory'), historyEntry);

@@ -1,3 +1,5 @@
+// Update src/services/EventService.ts
+
 import {
     doc,
     getDoc,
@@ -8,7 +10,8 @@ import {
     limit,
     getDocs,
     Timestamp,
-    deleteDoc
+    deleteDoc,
+    setDoc
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { ActiveWork, WorkEvent, EventChoice, PlayerStats } from '../types';
@@ -33,7 +36,9 @@ export const triggerWorkEvent = async (
 
     // Store active event
     const eventId = `${userId}_${activeWork.workSessionId}`;
-    await doc(firestore, 'activeEvents', eventId).set({
+    const eventRef = doc(firestore, 'activeEvents', eventId);
+
+    await setDoc(eventRef, {
         eventId: selectedEvent.id,
         userId,
         workSessionId: activeWork.workSessionId,
@@ -89,7 +94,7 @@ export const processEventChoice = async (
         // Apply consequences
         const updates: any = {};
 
-        if (choice.consequences.health) {
+        if (choice.consequences.health && stats.health) {
             updates['health.current'] = Math.max(0, Math.min(100,
                 stats.health.current + choice.consequences.health));
         }

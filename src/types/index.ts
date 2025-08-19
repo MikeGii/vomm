@@ -125,6 +125,7 @@ export interface WorkActivity {
     expGrowthRate: number; // percentage as decimal (0.15 for 15%)
     maxHours: number;
     allowedFor?: ('kadett' | 'abipolitseinik' | 'politseiametnik')[];
+    moneyReward?: number;
 }
 
 export interface ActiveWork {
@@ -148,10 +149,11 @@ export interface WorkHistoryEntry {
     workName: string;
     prefecture: string;
     department: string;
+    startedAt: Date | Timestamp;
     hoursWorked: number;
     expEarned: number;
     moneyEarned?: number;
-    completedAt: Date;
+    completedAt: Date | Timestamp;
 }
 
 export interface PlayerHealth {

@@ -1,3 +1,5 @@
+// Update src/pages/PatrolPage.tsx
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
@@ -14,7 +16,7 @@ import { checkAndApplyHealthRecovery } from '../services/HealthService';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { PlayerStats, WorkActivity } from '../types';
-import { WorkEvent, EventChoice } from '../types/events.types';
+import { WorkEvent, EventChoice } from '../types';
 import {
     startWork,
     checkAndCompleteWork,
@@ -164,8 +166,8 @@ const PatrolPage: React.FC = () => {
                 // Reload stats after recovery
                 await loadPlayerStats();
 
-                // Check if health is still too low
-                if (playerStats.health.current < 50) {
+                // Check if health is still too low (safe check with optional chaining)
+                if (!playerStats.health || playerStats.health.current < 50) {
                     showToast('Su tervis on ikka liiga madal töötamiseks!', 'error');
                     setIsStartingWork(false);
                     return;
@@ -232,9 +234,12 @@ const PatrolPage: React.FC = () => {
                 // Event triggered, check for it
                 await checkForEvents();
             } else if (result.completed) {
-                // Work completed without event
-                showToast(`Töö on edukalt lõpetatud! Teenitud kogemus: +${playerStats.activeWork.expectedExp} XP`,
-                    'success', 4000);
+                // Work completed without event - safe access to activeWork
+                const activeWork = playerStats.activeWork;
+                if (activeWork) {
+                    showToast(`Töö on edukalt lõpetatud! Teenitud kogemus: +${activeWork.expectedExp} XP`,
+                        'success', 4000);
+                }
 
                 // Reload data
                 await Promise.all([
@@ -251,11 +256,14 @@ const PatrolPage: React.FC = () => {
 
         // Set up interval to check every second
         const interval = setInterval(() => {
-            const remaining = getRemainingWorkTime(playerStats.activeWork!);
-            setRemainingTime(remaining);
+            const activeWork = playerStats.activeWork;
+            if (activeWork) {
+                const remaining = getRemainingWorkTime(activeWork);
+                setRemainingTime(remaining);
 
-            if (remaining <= 0) {
-                checkWork();
+                if (remaining <= 0) {
+                    checkWork();
+                }
             }
         }, 1000);
 
@@ -309,10 +317,12 @@ const PatrolPage: React.FC = () => {
         );
     }
 
-    // Check if player can work
-    const canWork = playerStats.health.current >= 50 &&
-        !playerStats.activeCourse &&
-        playerStats.hasCompletedTraining;
+    // Check if player can work - Updated logic without hasCompletedTraining
+    const hasBasicTraining = playerStats.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
+    const healthOk = playerStats.health && playerStats.health.current >= 50;
+    const notInCourse = !playerStats.activeCourse || playerStats.activeCourse.status !== 'in_progress';
+
+    const canWork = hasBasicTraining && healthOk && notInCourse;
 
     return (
         <div className="page">
@@ -327,8 +337,10 @@ const PatrolPage: React.FC = () => {
 
                 <h1 className="patrol-title">{getPageTitle()}</h1>
 
-                {/* Health display */}
-                <HealthDisplay health={playerStats.health} />
+                {/* Health display - safe access */}
+                {playerStats.health && (
+                    <HealthDisplay health={playerStats.health} />
+                )}
 
                 {/* Worked hours display */}
                 <WorkedHoursDisplay totalHours={playerStats.totalWorkedHours || 0} />
@@ -369,13 +381,13 @@ const PatrolPage: React.FC = () => {
                 {/* Work unavailable messages */}
                 {!playerStats.activeWork && !canWork && (
                     <div className="work-unavailable">
-                        {!playerStats.hasCompletedTraining && (
+                        {!hasBasicTraining && (
                             <p>Pead esmalt läbima abipolitseiniku koolituse!</p>
                         )}
-                        {playerStats.health.current < 50 && (
+                        {(!playerStats.health || playerStats.health.current < 50) && (
                             <p>Su tervis on liiga madal töötamiseks! Minimaalne tervis on 50.</p>
                         )}
-                        {playerStats.activeCourse && (
+                        {playerStats.activeCourse && playerStats.activeCourse.status === 'in_progress' && (
                             <p>Sa ei saa alustada uut tööd koolituse ajal!</p>
                         )}
                     </div>
