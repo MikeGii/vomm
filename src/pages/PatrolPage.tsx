@@ -46,7 +46,20 @@ const PatrolPage: React.FC = () => {
     const [eventDocumentId, setEventDocumentId] = useState<string | null>(null);
     const [isProcessingEvent, setIsProcessingEvent] = useState(false);
 
-    const isKadett = playerStats?.completedCourses?.includes('sisekaitseakadeemia_entrance') || false;
+    // Player status checks - Updated logic
+    const isAbipolitseinik = Boolean(
+        playerStats?.completedCourses?.includes('basic_police_training_abipolitseinik') &&
+        !playerStats?.completedCourses?.includes('sisekaitseakadeemia_entrance')
+    );
+
+    const isKadett = Boolean(
+        playerStats?.completedCourses?.includes('sisekaitseakadeemia_entrance') &&
+        !playerStats?.completedCourses?.includes('lopueksam')
+    );
+
+    const isPolitseiametnik = Boolean(
+        playerStats?.completedCourses?.includes('lopueksam')
+    );
 
     // Load work history
     const loadWorkHistory = useCallback(async () => {
@@ -150,8 +163,16 @@ const PatrolPage: React.FC = () => {
     const handleStartWork = useCallback(async () => {
         if (!currentUser || !playerStats || isStartingWork) return;
 
-        if (!selectedDepartment || !selectedActivity || selectedHours < 1) {
-            showToast('Palun vali osakond, tegevus ja tunnid!', 'warning');
+        const departmentToUse = isPolitseiametnik
+            ? playerStats.department
+            : selectedDepartment;
+
+        if (!departmentToUse || !selectedActivity || selectedHours < 1) {
+            if (isPolitseiametnik && !playerStats.department) {
+                showToast('Su osakond pole määratud! Võta ühendust administraatoriga.', 'error');
+            } else {
+                showToast('Palun vali osakond, tegevus ja tunnid!', 'warning');
+            }
             return;
         }
 
@@ -179,7 +200,7 @@ const PatrolPage: React.FC = () => {
                 currentUser.uid,
                 selectedActivity,
                 playerStats.prefecture || '',
-                selectedDepartment,
+                departmentToUse,
                 selectedHours
             );
 
@@ -190,7 +211,7 @@ const PatrolPage: React.FC = () => {
             setIsStartingWork(false);
         }
     }, [currentUser, playerStats, isStartingWork, selectedDepartment, selectedActivity,
-        selectedHours, showToast, loadPlayerStats]);
+        selectedHours, showToast, loadPlayerStats, isPolitseiametnik]);
 
     // Listen to player stats
     useEffect(() => {
@@ -283,13 +304,17 @@ const PatrolPage: React.FC = () => {
         loadWorkHistory();
     }, [loadWorkHistory]);
 
-    // Page title helper
+    // getPageTitle function
     const getPageTitle = (): string => {
         if (!playerStats) return 'Patrullteenistus';
 
-        if (playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
-            return 'Praktika ja tööamp';
+        // If player is currently a Kadett (in academy but not graduated)
+        if (playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance') &&
+            !playerStats.completedCourses?.includes('lopueksam')) {
+            return 'Praktika ja tööamps';
         }
+
+        // For everyone else (Abipolitseinik and Politseiametnik)
         return 'Patrullteenistus';
     };
 
@@ -318,9 +343,9 @@ const PatrolPage: React.FC = () => {
     }
 
     // Check if player can work - Updated logic without hasCompletedTraining
-    const hasBasicTraining = playerStats.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
-    const healthOk = playerStats.health && playerStats.health.current >= 50;
-    const notInCourse = !playerStats.activeCourse || playerStats.activeCourse.status !== 'in_progress';
+    const hasBasicTraining = playerStats?.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
+    const healthOk = playerStats?.health && playerStats?.health.current >= 50;
+    const notInCourse = !playerStats?.activeCourse || playerStats?.activeCourse.status !== 'in_progress';
 
     const canWork = hasBasicTraining && healthOk && notInCourse;
 
@@ -354,16 +379,30 @@ const PatrolPage: React.FC = () => {
                 )}
 
                 {/* Work setup section */}
-                {!playerStats.activeWork && canWork && (
+                {!playerStats?.activeWork && canWork && (
                     <div className="work-setup">
-                        <DepartmentSelector
-                            prefecture={playerStats.prefecture || ''}
-                            isAbipolitseinik={!playerStats.rank}
-                            currentDepartment={playerStats.department}
-                            selectedDepartment={selectedDepartment}
-                            onDepartmentSelect={setSelectedDepartment}
-                            isKadett={isKadett}
-                        />
+                        {/* Department selector - Only show for Abipolitseinik and Kadett */}
+                        {(isAbipolitseinik || isKadett) && (
+                            <DepartmentSelector
+                                prefecture={playerStats?.prefecture || ''}
+                                isAbipolitseinik={isAbipolitseinik}
+                                currentDepartment={playerStats?.department}
+                                selectedDepartment={selectedDepartment}
+                                onDepartmentSelect={setSelectedDepartment}
+                                isKadett={isKadett}
+                            />
+                        )}
+
+                        {/* For graduated officers (Politseiametnik), show locked department */}
+                        {isPolitseiametnik && (
+                            <div className="department-selector">
+                                <h3>Tööpiirkond</h3>
+                                <div className="department-locked">
+                                    <p>Sinu tööpiirkond: <strong>{playerStats?.department || 'Määramata'}</strong></p>
+                                    <p className="info-text">Politseiametnikuna oled määratud konkreetsesse osakonda.</p>
+                                </div>
+                            </div>
+                        )}
 
                         <WorkActivitySelector
                             activities={availableActivities}
@@ -379,15 +418,15 @@ const PatrolPage: React.FC = () => {
                 )}
 
                 {/* Work unavailable messages */}
-                {!playerStats.activeWork && !canWork && (
+                {!playerStats?.activeWork && !canWork && (
                     <div className="work-unavailable">
                         {!hasBasicTraining && (
                             <p>Pead esmalt läbima abipolitseiniku koolituse!</p>
                         )}
-                        {(!playerStats.health || playerStats.health.current < 50) && (
+                        {(!playerStats?.health || playerStats.health.current < 50) && (
                             <p>Su tervis on liiga madal töötamiseks! Minimaalne tervis on 50.</p>
                         )}
-                        {playerStats.activeCourse && playerStats.activeCourse.status === 'in_progress' && (
+                        {playerStats?.activeCourse && playerStats.activeCourse.status === 'in_progress' && (
                             <p>Sa ei saa alustada uut tööd koolituse ajal!</p>
                         )}
                     </div>
