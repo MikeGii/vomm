@@ -73,6 +73,11 @@ export interface PlayerStats {
     lastHealthUpdate?: Timestamp;
     inventory?: InventoryItem[];
     equipment?: CharacterEquipment;
+    casinoData?: {
+        playsUsed: number;
+        lastPlayTime: number;
+        hourlyReset: number;
+    };
 }
 
 // Course definition

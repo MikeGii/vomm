@@ -1,0 +1,311 @@
+/* src/styles/components/casino/SlotMachine.css */
+.slot-machine {
+    background-color: #1a1a1a;
+    border: 2px solid #ffd700;
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.slot-machine-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.slot-machine-header h3 {
+    color: #ffd700;
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.player-money {
+    color: #4caf50;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.slot-display {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.slot-reels {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.slot-reel {
+    width: 80px;
+    height: 80px;
+    background-color: #2a2a2a;
+    border: 3px solid #ffd700;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    transition: all 0.3s ease;
+}
+
+.slot-reel.spinning {
+    animation: spin 0.1s infinite;
+    border-color: #ff9800;
+}
+
+.result-display {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    font-weight: bold;
+}
+
+.result-display.win {
+    background-color: rgba(76, 175, 80, 0.2);
+    border: 1px solid #4caf50;
+    color: #4caf50;
+}
+
+.result-display.lose {
+    background-color: rgba(244, 67, 54, 0.2);
+    border: 1px solid #f44336;
+    color: #f44336;
+}
+
+.win-message small {
+    display: block;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+    opacity: 0.8;
+}
+
+.betting-section {
+    margin-bottom: 2rem;
+}
+
+.bet-input-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.bet-input-section label {
+    color: #f0f0f0;
+    font-weight: bold;
+}
+
+.bet-input-section input {
+    width: 80px;
+    padding: 0.5rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #f0f0f0;
+    text-align: center;
+}
+
+.bet-input-section span {
+    color: #f0f0f0;
+    font-weight: bold;
+}
+
+.quick-bets {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.quick-bet {
+    padding: 0.5rem 1rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #f0f0f0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.quick-bet:hover:not(:disabled) {
+    background-color: #444;
+    border-color: #ffd700;
+}
+
+.quick-bet.active {
+    background-color: #ffd700;
+    color: #1a1a1a;
+    border-color: #ffd700;
+}
+
+.quick-bet:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.play-button {
+    width: 100%;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.play-button:hover:not(.disabled) {
+    background: linear-gradient(135deg, #f57c00, #ef6c00);
+    transform: translateY(-2px);
+}
+
+.play-button.disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.game-info {
+    border-top: 1px solid #333;
+    padding-top: 1rem;
+}
+
+.payout-info h4 {
+    color: #ffd700;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.payout-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.payout-item {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background-color: #2a2a2a;
+    border-radius: 4px;
+    align-items: center;
+    border-left: 3px solid #666;
+}
+
+.payout-item.jackpot {
+    border-left-color: #e91e63;
+    background-color: rgba(233, 30, 99, 0.1);
+}
+
+.payout-item.high {
+    border-left-color: #9c27b0;
+    background-color: rgba(156, 39, 176, 0.1);
+}
+
+.payout-item.medium {
+    border-left-color: #ff9800;
+    background-color: rgba(255, 152, 0, 0.1);
+}
+
+.payout-item.low {
+    border-left-color: #4caf50;
+    background-color: rgba(76, 175, 80, 0.1);
+}
+
+.payout-item.bonus {
+    border-left-color: #2196f3;
+    background-color: rgba(33, 150, 243, 0.1);
+}
+
+.combination {
+    color: #f0f0f0;
+    font-weight: bold;
+}
+
+.multiplier {
+    color: #ffd700;
+    font-weight: bold;
+    text-align: center;
+}
+
+.probability {
+    color: #888;
+    text-align: right;
+    font-size: 0.9rem;
+}
+
+.total-win-chance {
+    text-align: center;
+    padding: 0.75rem;
+    background-color: rgba(76, 175, 80, 0.1);
+    border: 1px solid #4caf50;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    color: #4caf50;
+}
+
+.house-edge {
+    text-align: center;
+    padding: 0.5rem;
+    background-color: rgba(255, 152, 0, 0.1);
+    border: 1px solid #ff9800;
+    border-radius: 6px;
+    color: #ff9800;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .slot-machine {
+        padding: 1.5rem;
+    }
+
+    .slot-machine-header {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    .slot-reels {
+        gap: 0.5rem;
+    }
+
+    .slot-reel {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+
+    .quick-bets {
+        gap: 0.25rem;
+    }
+
+    .quick-bet {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    .payout-item {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 0.25rem;
+    }
+
+    .probability {
+        text-align: center;
+    }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

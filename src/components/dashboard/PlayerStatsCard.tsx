@@ -5,6 +5,7 @@ import { getExpProgress } from '../../services/PlayerService';
 import { Timestamp } from 'firebase/firestore';
 import {calculateEquipmentBonuses} from "../../services/EquipmentBonusService";
 import { HealthModal } from '../health/HealthModal';
+import { getRankImagePath} from "../../utils/rankUtils";
 import '../../styles/components/PlayerStatsCard.css';
 
 interface PlayerStatsCardProps {
@@ -126,11 +127,20 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                     <div className="player-badges">
                         {stats.badgeNumber && (
                             <span className="badge-display">
-                                Ametitõend #{stats.badgeNumber}
-                            </span>
+            Ametitõend #{stats.badgeNumber}
+        </span>
                         )}
                         {stats.rank && (
                             <span className="rank-display">{stats.rank}</span>
+                        )}
+                        {stats.rank && getRankImagePath(stats.rank) && (
+                            <div className="rank-image-container">
+                                <img
+                                    src={getRankImagePath(stats.rank)!}
+                                    alt={`${stats.rank} märk`}
+                                    className="rank-image"
+                                />
+                            </div>
                         )}
                     </div>
                 </div>
