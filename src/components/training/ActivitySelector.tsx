@@ -1,7 +1,7 @@
 // src/components/training/ActivitySelector.tsx
 import React from 'react';
 import { TrainingActivity, PlayerStats } from '../../types';
-import { calculateEquipmentBonuses, getEffectiveAttributes } from '../../services/EquipmentBonusService';
+import { calculateEquipmentBonuses } from '../../services/EquipmentBonusService';
 import '../../styles/components/training/ActivitySelector.css';
 
 interface ActivitySelectorProps {
@@ -27,8 +27,6 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
 
     // Calculate equipment bonuses and effective attributes
     const equipmentBonuses = playerStats?.equipment ? calculateEquipmentBonuses(playerStats.equipment) : null;
-    const effectiveAttributes = playerStats?.attributes && playerStats?.equipment ?
-        getEffectiveAttributes(playerStats.attributes, playerStats.equipment) : null;
 
     // Get player's actual level (not attribute levels)
     const playerLevel = playerStats?.level || 1;
