@@ -96,6 +96,7 @@ const CasinoPage: React.FC = () => {
                             <SlotMachine
                                 onPlay={handleSlotPlay}
                                 playerMoney={playerStats.money}
+                                playerStats={playerStats}
                                 isPlaying={isPlaying}
                                 canPlay={canPlay}
                             />

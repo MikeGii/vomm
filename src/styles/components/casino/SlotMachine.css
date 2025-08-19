@@ -309,3 +309,55 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+.reputation-blocked {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: #2a1a1a;
+    border: 2px solid #aa4444;
+    border-radius: 8px;
+}
+
+.blocked-message {
+    text-align: center;
+    color: #ff6666;
+}
+
+.blocked-message h4 {
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.blocked-message p {
+    margin: 0.5rem 0;
+    color: #ccc;
+}
+
+.negative-reputation {
+    color: #ff6666;
+    font-weight: bold;
+}
+
+.slot-display.disabled,
+.betting-section.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.play-button.disabled {
+    background: #444;
+    color: #888;
+    cursor: not-allowed;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .reputation-blocked {
+        margin: 0.5rem 0;
+        padding: 0.75rem;
+    }
+
+    .blocked-message h4 {
+        font-size: 1rem;
+    }
+}

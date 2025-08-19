@@ -1,11 +1,13 @@
 // src/components/casino/SlotMachine.tsx
 import React, { useState } from 'react';
-import { SlotResult } from '../../services/CasinoService';
+import { SlotResult, canPlayerGamble } from '../../services/CasinoService';
+import { PlayerStats } from '../../types';
 import '../../styles/components/casino/SlotMachine.css';
 
 interface SlotMachineProps {
     onPlay: (betAmount: number) => Promise<SlotResult>;
     playerMoney: number;
+    playerStats: PlayerStats;
     isPlaying: boolean;
     canPlay: boolean;
 }
@@ -13,6 +15,7 @@ interface SlotMachineProps {
 export const SlotMachine: React.FC<SlotMachineProps> = ({
                                                             onPlay,
                                                             playerMoney,
+                                                            playerStats,
                                                             isPlaying,
                                                             canPlay
                                                         }) => {
@@ -20,7 +23,16 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
     const [lastResult, setLastResult] = useState<SlotResult | null>(null);
     const [spinning, setSpinning] = useState(false);
 
+    const { canGamble, reason } = canPlayerGamble(playerStats);
+
     const handlePlay = async () => {
+        // Add reputation check here
+        if (!canGamble) {
+            // You can show a toast here if you have access to showToast
+            // showToast(reason || 'Sa ei saa mängida.', 'error');
+            return;
+        }
+
         if (!canPlay || isPlaying || betAmount > playerMoney) return;
 
         setSpinning(true);
@@ -65,6 +77,16 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
                 <h3>🎰 Slotiautomaadi mäng</h3>
                 <div className="player-money">Sinu raha: {playerMoney}€</div>
             </div>
+
+            {!canGamble && (
+                <div className="reputation-blocked">
+                    <div className="blocked-message">
+                        <h4>❌ Mäng blokeeritud</h4>
+                        <p>{reason}</p>
+                        <p>Sinu praegune maine: <span className="negative-reputation">{playerStats.reputation}</span></p>
+                    </div>
+                </div>
+            )}
 
             <div className="slot-display">
                 <div className="slot-reels">
