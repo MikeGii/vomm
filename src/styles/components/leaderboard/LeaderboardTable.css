@@ -95,34 +95,20 @@
 }
 
 .level-column,
-.reputation-column,
-.value-column {
+.reputation-column {
     text-align: center !important;
     min-width: 80px;
+    font-weight: 600;
 }
 
 .reputation-column {
-    min-width: 120px;
-}
-
-.sorted-value {
-    color: #4a90e2;
-    font-weight: 600;
-    font-size: 1.1rem;
+    min-width: 100px;
 }
 
 .leaderboard-empty {
     text-align: center;
     padding: 3rem;
     color: #888;
-}
-
-/* Highlight the sorted column */
-.value-column .sorted-value {
-    background-color: rgba(74, 144, 226, 0.1);
-    padding: 0.25rem 0.75rem;
-    border-radius: 4px;
-    display: inline-block;
 }
 
 /* Mobile responsiveness */
@@ -133,7 +119,11 @@
 
     .leaderboard-table th,
     .leaderboard-table td {
-        padding: 0.5rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .rank-column {
+        width: 50px;
     }
 
     .rank-number {
@@ -143,56 +133,63 @@
         font-size: 0.8rem;
     }
 
-    /* Hide status column on mobile */
-    .status-column {
-        display: none;
-    }
-
-    .leaderboard-table th.status-column {
-        display: none;
-    }
-
-    /* Adjust column widths for mobile */
     .name-column {
-        min-width: 80px;
+        min-width: 100px;
+    }
+
+    .status-column {
+        min-width: 110px;
+    }
+
+    .status-badge {
+        font-size: 0.75rem !important;
+        padding: 0.2rem 0.4rem !important;
     }
 
     .level-column,
-    .reputation-column,
-    .value-column {
-        min-width: 50px;
+    .reputation-column {
+        min-width: 70px;
     }
 }
 
 @media (max-width: 480px) {
-    /* On very small screens, hide reputation if not sorting by it */
-    .reputation-column:not(.sorted-column) {
-        display: none;
+    .leaderboard-table {
+        font-size: 0.8rem;
     }
 
-    .leaderboard-table th.reputation-column:not(.sorted-column) {
-        display: none;
-    }
-
-    .sorted-value {
-        font-size: 1rem;
+    .leaderboard-table th,
+    .leaderboard-table td {
+        padding: 0.4rem 0.5rem;
     }
 }
 
-.money-column {
-    text-align: center !important;
-    min-width: 100px;
-    color: #4caf50;  /* Green color for money */
+.player-name-button {
+    background: none;
+    border: none;
+    color: #f0f0f0;
     font-weight: 600;
+    font-size: inherit;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+    transition: color 0.3s ease;
+    text-decoration: none;
 }
 
-/* Mobile responsiveness - hide money on very small screens if needed */
-@media (max-width: 480px) {
-    .money-column:not(.sorted-column) {
-        display: none;
-    }
+.player-name-button:hover {
+    color: #4a90e2;
+    text-decoration: underline;
+}
 
-    .leaderboard-table th.money-column:not(.sorted-column) {
-        display: none;
+.player-name-button:focus {
+    outline: 2px solid #4a90e2;
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .player-name-button {
+        font-size: 0.85rem;
     }
 }
