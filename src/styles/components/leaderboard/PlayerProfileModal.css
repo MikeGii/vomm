@@ -2,6 +2,10 @@
 .player-profile-modal {
     max-width: 450px;
     width: 90%;
+    max-height: 90vh; /* ADD: Limit height */
+    overflow-y: auto; /* ADD: Enable scrolling */
+    display: flex; /* ADD: Flexbox layout */
+    flex-direction: column; /* ADD: Column layout */
 }
 
 .player-profile-content {
@@ -9,6 +13,8 @@
     flex-direction: column;
     gap: 1rem;
     margin-top: 1rem;
+    flex: 1; /* ADD: Allow content to grow */
+    overflow-y: auto; /* ADD: Make content scrollable */
 }
 
 .profile-field {
@@ -19,6 +25,7 @@
     background-color: #2a2a2a;
     border: 1px solid #444;
     border-radius: 6px;
+    flex-shrink: 0; /* ADD: Prevent shrinking */
 }
 
 .profile-field label {
@@ -62,6 +69,7 @@
     border-radius: 8px;
     padding: 1rem;
     margin-top: 0.5rem;
+    flex-shrink: 0; /* ADD: Prevent shrinking */
 }
 
 .attributes-section .section-title {
@@ -113,10 +121,34 @@
     font-weight: 700;
 }
 
+/* ADD: Scrollbar styling */
+.player-profile-modal::-webkit-scrollbar,
+.player-profile-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.player-profile-modal::-webkit-scrollbar-track,
+.player-profile-content::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 3px;
+}
+
+.player-profile-modal::-webkit-scrollbar-thumb,
+.player-profile-content::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 3px;
+}
+
+.player-profile-modal::-webkit-scrollbar-thumb:hover,
+.player-profile-content::-webkit-scrollbar-thumb:hover {
+    background: #777;
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
     .player-profile-modal {
         max-width: 95%;
+        max-height: 95vh; /* ADD: More height on mobile */
     }
 
     .profile-field {
@@ -132,6 +164,7 @@
 
     .profile-field span {
         font-size: 0.9rem;
+        align-self: flex-end; /* ADD: Right-align values */
     }
 
     .attributes-compact-grid {
@@ -156,7 +189,18 @@
 }
 
 @media (max-width: 480px) {
+    .player-profile-modal {
+        max-height: 98vh; /* ADD: Almost full height on small screens */
+    }
+
     .attributes-compact-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ADD: Special rules for short screens */
+@media (max-height: 600px) {
+    .player-profile-modal {
+        max-height: 95vh;
     }
 }

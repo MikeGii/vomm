@@ -3,7 +3,7 @@ import { IconType } from 'react-icons';
 import { GiPistolGun, GiElectric, GiPoliceCar, GiMachineGunMagazine } from 'react-icons/gi';
 import { MdSpeed } from 'react-icons/md';
 import { FaTabletAlt } from 'react-icons/fa';
-import { FaComputer } from 'react-icons/fa6';
+import { FaComputer, FaPeopleGroup } from 'react-icons/fa6';
 import { GoLaw } from 'react-icons/go';
 
 export interface TrainingBonus {
@@ -152,6 +152,17 @@ export const ABILITIES: Ability[] = [
         requiredCourse: 'law_studies_curriculum',
         trainingBonuses: [
             { attribute: 'intelligence', percentage: 0.10 }
+        ]
+    },
+    {
+        id: 'police_ground_force_lead',
+        name: 'Välijuhtimise oskus',
+        description: 'Oled omandanud teadmised ja oskused efektiivseks välitöö juhtimiseks',
+        icon: FaPeopleGroup,
+        requiredCourse: 'police_ground_leader_course',
+        trainingBonuses: [
+            { attribute: 'strength', percentage: 0.10 },
+            { attribute: 'dexterity', percentage: 0.10 }
         ]
     }
 ];

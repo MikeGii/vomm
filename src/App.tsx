@@ -14,6 +14,7 @@ import ShopPage from './pages/ShopPage';
 import {DebugMenu} from "./components/dev/DebugMenu";
 import CasinoPage from './pages/CasinoPage';
 import BankPage from "./pages/BankPage";
+import FightClubPage from './pages/FightClubPage';
 
 function App() {
     return (
@@ -79,6 +80,15 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <BankPage />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/fight-club"
+                            element={
+                                <ProtectedRoute>
+                                    <FightClubPage />
                                 </ProtectedRoute>
                             }
                         />
