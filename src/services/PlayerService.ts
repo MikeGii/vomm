@@ -1,7 +1,7 @@
 // src/services/PlayerService.ts
 import {doc, setDoc, getDoc, updateDoc} from 'firebase/firestore';
 import { firestore } from '../config/firebase';
-import { PlayerStats, PlayerHealth } from '../types';
+import {PlayerStats, PlayerHealth, InventoryItem} from '../types';
 import { initializeAttributes, initializeTrainingData } from './TrainingService';
 
 // Calculate experience needed for a specific level
@@ -61,6 +61,42 @@ export const calculatePlayerHealth = (strengthLevel: number, enduranceLevel: num
     };
 };
 
+// Create initial VIP items for new players
+const createInitialVipItems = (): InventoryItem[] => {
+    return [
+        {
+            id: `vip_work_time_booster_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            name: 'Tööaeg 95%',
+            description: 'Lühendab aktiivset tööaega 95%',
+            category: 'consumable',
+            quantity: 1,
+            shopPrice: 0,
+            equipped: false,
+            source: 'event',
+            obtainedAt: new Date(),
+            consumableEffect: {
+                type: 'workTimeReduction',
+                value: 95
+            }
+        },
+        {
+            id: `vip_course_time_booster_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            name: 'Kursus 95%',
+            description: 'Lühendab aktiivset kursust 95%',
+            category: 'consumable',
+            quantity: 1,
+            shopPrice: 0,
+            equipped: false,
+            source: 'event',
+            obtainedAt: new Date(),
+            consumableEffect: {
+                type: 'courseTimeReduction',
+                value: 95
+            }
+        }
+    ];
+};
+
 export const initializePlayerStats = async (userId: string): Promise<PlayerStats> => {
     const statsRef = doc(firestore, 'playerStats', userId);
     const statsDoc = await getDoc(statsRef);
@@ -115,7 +151,8 @@ export const initializePlayerStats = async (userId: string): Promise<PlayerStats
         trainingData: initializeTrainingData(),
         activeWork: null,
         workHistory: [],
-        health: calculatePlayerHealth(0, 0)
+        health: calculatePlayerHealth(0, 0),
+        inventory: createInitialVipItems()
     };
 
     await setDoc(statsRef, initialStats);
