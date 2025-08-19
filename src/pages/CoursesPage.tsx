@@ -116,7 +116,7 @@ const CoursesPage: React.FC = () => {
             lastActiveCourseRef.current = null;
         }
 
-    }, [currentUser]);
+    }, []);
 
     // Set up real-time listener for player stats
     useEffect(() => {

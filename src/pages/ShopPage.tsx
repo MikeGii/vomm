@@ -1,5 +1,5 @@
 // src/pages/ShopPage.tsx - Updated version
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -14,11 +14,8 @@ import { PlayerStats } from '../types';
 import { purchaseItem } from '../services/ShopService';
 import {
     initializeShopStock,
-    getAllItemsWithStock,
-    getItemStock,
-    calculateDynamicPrice
+    getAllItemsWithStock
 } from '../services/ShopStockService';
-import { ALL_SHOP_ITEMS } from '../data/shop';
 import '../styles/pages/Shop.css';
 
 const ShopPage: React.FC = () => {
@@ -34,7 +31,6 @@ const ShopPage: React.FC = () => {
     }>>([]);
     const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
     const [selectedItemStock, setSelectedItemStock] = useState(0);
-    const [selectedItemPrice, setSelectedItemPrice] = useState(0);
     const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -75,8 +71,8 @@ const ShopPage: React.FC = () => {
         return () => unsubscribe();
     }, [currentUser, navigate, showToast]);
 
-    // Load items with stock
-    const loadItemsWithStock = async () => {
+    // Load items with stock - wrapped in useCallback
+    const loadItemsWithStock = useCallback(async () => {
         setIsRefreshing(true);
         try {
             const items = await getAllItemsWithStock();
@@ -88,7 +84,7 @@ const ShopPage: React.FC = () => {
             setIsLoading(false);
             setIsRefreshing(false);
         }
-    };
+    }, [showToast]);
 
     // Load items on mount and set up periodic refresh
     useEffect(() => {
@@ -97,17 +93,16 @@ const ShopPage: React.FC = () => {
         // Refresh stock every 30 seconds
         const interval = setInterval(loadItemsWithStock, 30000);
         return () => clearInterval(interval);
-    }, []);
+    }, [loadItemsWithStock]);
 
     const handlePurchase = async (itemId: string) => {
         const itemData = itemsWithStock.find(i => i.item.id === itemId);
         if (!itemData) return;
 
-        const {item, currentStock, dynamicPrice} = itemData;
+        const {item, currentStock} = itemData;
 
         setSelectedItem(item);
         setSelectedItemStock(currentStock);
-        setSelectedItemPrice(dynamicPrice);
         setIsPurchaseModalOpen(true);
     };
 
@@ -122,7 +117,6 @@ const ShopPage: React.FC = () => {
             setIsPurchaseModalOpen(false);
             setSelectedItem(null);
             setSelectedItemStock(0);
-            setSelectedItemPrice(0);
 
             // Reload items to update stock
             loadItemsWithStock();
@@ -135,7 +129,6 @@ const ShopPage: React.FC = () => {
         setIsPurchaseModalOpen(false);
         setSelectedItem(null);
         setSelectedItemStock(0);
-        setSelectedItemPrice(0);
     };
 
     if (isLoading) {

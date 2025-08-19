@@ -1,5 +1,5 @@
 // app/pages/BankPage.tsx
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
@@ -41,7 +41,7 @@ const BankPage: React.FC = () => {
     }, [currentUser]);
 
     // Load transactions
-    const loadTransactions = async () => {
+    const loadTransactions = useCallback(async () => {
         if (!currentUser) return;
 
         setTransactionsLoading(true);
@@ -53,11 +53,11 @@ const BankPage: React.FC = () => {
         } finally {
             setTransactionsLoading(false);
         }
-    };
+    }, [currentUser]);
 
     useEffect(() => {
         loadTransactions();
-    }, [currentUser]);
+    }, [currentUser, loadTransactions]);
 
     // Handle transaction completion
     const handleTransactionComplete = () => {

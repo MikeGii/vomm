@@ -1,8 +1,6 @@
 // src/components/bank/TransactionList.tsx
-import React, { useEffect, useState } from 'react';
-import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore';
-import { firestore } from '../../config/firebase';
-import { BankTransaction } from '../../types/bank';
+import React from 'react';
+import { BankTransaction } from '../../types';
 import '../../styles/components/bank/TransactionList.css';
 
 interface TransactionListProps {
