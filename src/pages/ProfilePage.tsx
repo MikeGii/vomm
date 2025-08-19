@@ -62,7 +62,6 @@ const ProfilePage: React.FC = () => {
         );
     }
 
-    const attributes = playerStats.attributes || initializeAttributes();
     const abilities = playerStats.abilities || [];
 
     return (

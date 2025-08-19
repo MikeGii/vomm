@@ -1,12 +1,12 @@
 // src/pages/DashboardPage.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, deleteDoc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
+import { DebugMenu } from '../components/dev/DebugMenu';
 import { PlayerStatsCard } from '../components/dashboard/PlayerStatsCard';
 import { QuickActions } from '../components/dashboard/QuickActions';
-import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { PlayerStats, ActiveCourse } from '../types';
@@ -14,12 +14,12 @@ import { initializePlayerStats, getPlayerStats } from '../services/PlayerService
 import { PrefectureSelectionModal } from '../components/dashboard/PrefectureSelectionModal';
 import { DepartmentSelectionModal } from '../components/dashboard/DepartmentSelectionModal';
 import { Leaderboard } from "../components/leaderboard/Leaderboard";
-import { checkForPendingEvent } from '../services/EventService';
 import { HealthRecoveryManager } from "../components/dashboard/HealthRecoveryManager";
 import { checkCourseCompletion } from '../services/CourseService';
 import { PlayerAbilities } from "../components/dashboard/PlayerAbilities";
 
 import '../styles/pages/Dashboard.css';
+import {getActiveEvent} from "../services/EventService";
 
 function DashboardPage() {
     const { currentUser, userData } = useAuth();
@@ -27,7 +27,6 @@ function DashboardPage() {
     const { showToast } = useToast();
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const [loading, setLoading] = useState(true);
-    const [showTutorial, setShowTutorial] = useState(false);
     const [showPrefectureSelection, setShowPrefectureSelection] = useState(false);
     const [showDepartmentSelection, setShowDepartmentSelection] = useState(false);
 
@@ -39,7 +38,7 @@ function DashboardPage() {
                     // First initialize player stats (creates document if it doesn't exist for new users)
                     let stats = await initializePlayerStats(currentUser.uid);
 
-                    // RESTORED: Check for completed courses in activeCourses collection
+                    // Check for completed courses in activeCourses collection
                     const activeCoursesRef = collection(firestore, 'activeCourses');
                     const q = query(
                         activeCoursesRef,
@@ -48,7 +47,7 @@ function DashboardPage() {
                     );
                     const querySnapshot = await getDocs(q);
 
-                    // RESTORED: Process completed courses from activeCourses collection
+                    // Process completed courses from activeCourses collection
                     for (const docSnapshot of querySnapshot.docs) {
                         const activeCourse = docSnapshot.data() as ActiveCourse;
                         try {
@@ -67,7 +66,7 @@ function DashboardPage() {
                         }
                     }
 
-                    // ALSO check for course completion using the timer-based method
+                    // Also check for course completion using the timer-based method
                     // Only if stats exist and have an active course (prevents error for new users)
                     if (stats && stats.activeCourse) {
                         const timerBasedCompletion = await checkCourseCompletion(currentUser.uid);
@@ -89,32 +88,30 @@ function DashboardPage() {
                     // Set the player stats
                     setPlayerStats(stats);
 
-                    // RESTORED: Check for pending events (work completed while offline)
-                    const hasPendingEvent = await checkForPendingEvent(currentUser.uid);
-                    if (hasPendingEvent) {
-                        // Redirect to patrol page to handle event
-                        navigate('/patrol');
-                        return;
+                    // Check if there's an active event that needs to be handled
+                    try {
+                        const activeEvent = await getActiveEvent(currentUser.uid);
+                        if (activeEvent) {
+                            // Redirect to patrol page to handle the event
+                            navigate('/patrol');
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('Error checking for active events:', error);
                     }
 
-                    // RESTORED: Check if tutorial should be shown - including steps 9-10
-                    if (!stats.tutorialProgress.isCompleted &&
-                        (stats.tutorialProgress.currentStep < 4 ||
-                            (stats.tutorialProgress.currentStep >= 9 && stats.tutorialProgress.currentStep <= 10) ||
-                            stats.tutorialProgress.currentStep === 16)) {
-                        setShowTutorial(true);
-                    }
-
-                    // NEW: Check if prefecture selection is needed after graduation
+                    // Check if prefecture selection is needed after graduation
                     if (stats.completedCourses?.includes('lopueksam') && !stats.prefecture) {
                         setShowPrefectureSelection(true);
                     }
-                    // NEW: Check if department selection is needed after prefecture selection (for graduated officers)
+                    // Check if department selection is needed after prefecture selection (for graduated officers)
                     else if (stats.completedCourses?.includes('lopueksam') && stats.prefecture && !stats.department) {
                         setShowDepartmentSelection(true);
                     }
-                    // RESTORED: Check if prefecture selection is needed for abipolitseinik (after basic training)
-                    else if (stats.hasCompletedTraining && !stats.prefecture && !stats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
+                    // FIXED: Check if prefecture selection is needed for abipolitseinik (after basic training)
+                    else if (stats.completedCourses?.includes('basic_police_training_abipolitseinik') &&
+                        !stats.prefecture &&
+                        !stats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
                         setShowPrefectureSelection(true);
                     }
                 } catch (error) {
@@ -172,18 +169,6 @@ function DashboardPage() {
         }
     };
 
-    // RESTORED: Tutorial completion handler
-    const handleTutorialComplete = async () => {
-        setShowTutorial(false);
-        // Reload stats to reflect tutorial completion
-        if (currentUser) {
-            const updatedStats = await getPlayerStats(currentUser.uid);
-            if (updatedStats) {
-                setPlayerStats(updatedStats);
-            }
-        }
-    };
-
     if (loading) {
         return (
             <div className="page">
@@ -220,15 +205,6 @@ function DashboardPage() {
                             currentUserId={currentUser?.uid}
                         />
 
-                        {/* RESTORED: Tutorial Overlay */}
-                        {showTutorial && currentUser && (
-                            <TutorialOverlay
-                                stats={playerStats}
-                                userId={currentUser.uid}
-                                onTutorialComplete={handleTutorialComplete}
-                            />
-                        )}
-
                         {/* RESTORED: Prefecture Selection Modal - for both abipolitseinik and graduated officers */}
                         {showPrefectureSelection && currentUser && (
                             <PrefectureSelectionModal
@@ -250,6 +226,7 @@ function DashboardPage() {
                     </>
                 )}
             </main>
+
         </div>
     );
 }

@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+// Update src/pages/PatrolPage.tsx
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
@@ -8,32 +10,29 @@ import { DepartmentSelector } from '../components/patrol/DepartmentSelector';
 import { WorkActivitySelector } from '../components/patrol/WorkActivitySelector';
 import { ActiveWorkProgress } from '../components/patrol/ActiveWorkProgress';
 import { WorkHistory } from '../components/patrol/WorkHistory';
-import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
 import { WorkedHoursDisplay } from "../components/patrol/WorkedHoursDisplay";
 import { EventModal } from '../components/events/EventModal';
 import { checkAndApplyHealthRecovery } from '../services/HealthService';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { PlayerStats, WorkActivity } from '../types';
-import { WorkEvent, EventChoice } from '../types/events.types';
+import { WorkEvent, EventChoice } from '../types';
 import {
     startWork,
-    checkWorkCompletion,
+    checkAndCompleteWork,
     getRemainingWorkTime,
-    getWorkHistory,
-    completeWorkAfterEvent, validateAndFixWorkState
+    getWorkHistory
 } from '../services/WorkService';
-import { getAvailableWorkActivities, getWorkActivityById } from '../data/workActivities';
-import { updateTutorialProgress } from '../services/PlayerService';
-import { getPendingEvent, processEventChoice } from '../services/EventService';
+import { getAvailableWorkActivities } from '../data/workActivities';
+import { getActiveEvent, processEventChoice } from '../services/EventService';
 import '../styles/pages/Patrol.css';
 
 const PatrolPage: React.FC = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     const { showToast } = useToast();
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+    // State
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const [availableActivities, setAvailableActivities] = useState<WorkActivity[]>([]);
     const [selectedDepartment, setSelectedDepartment] = useState<string>('');
@@ -43,83 +42,60 @@ const PatrolPage: React.FC = () => {
     const [remainingTime, setRemainingTime] = useState<number>(0);
     const [workHistory, setWorkHistory] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showTutorial, setShowTutorial] = useState(false);
     const [pendingEvent, setPendingEvent] = useState<WorkEvent | null>(null);
-    const [isProcessingEvent, setIsProcessingEvent] = useState(false);
-    const [activeWorkForEvent, setActiveWorkForEvent] = useState<any>(null);
     const [eventDocumentId, setEventDocumentId] = useState<string | null>(null);
+    const [isProcessingEvent, setIsProcessingEvent] = useState(false);
 
-    const completionAlertShownRef = useRef<boolean>(false);
     const isKadett = playerStats?.completedCourses?.includes('sisekaitseakadeemia_entrance') || false;
 
     // Load work history
     const loadWorkHistory = useCallback(async () => {
-        if (currentUser) {
+        if (!currentUser) return;
+
+        try {
             const history = await getWorkHistory(currentUser.uid, 10);
             setWorkHistory(history);
+        } catch (error) {
+            console.error('Error loading work history:', error);
         }
     }, [currentUser]);
 
-    const getPageTitle = (): string => {
-        if (!playerStats) return 'Patrullteenistus';
-
-        if (playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
-            return 'Praktika ja tööamps';
-        }
-        return 'Patrullteenistus';
-    };
-
-// Check for pending events
-    const checkForPendingEvent = useCallback(async () => {
+    // Load player stats
+    const loadPlayerStats = useCallback(async () => {
         if (!currentUser) return;
 
-        const eventResult = await getPendingEvent(currentUser.uid);
-
-        // Get current stats
-        const statsRef = doc(firestore, 'playerStats', currentUser.uid);
-        const statsDoc = await getDoc(statsRef);
-        if (!statsDoc.exists()) return;
-
-        const currentStats = statsDoc.data() as PlayerStats;
-
-        if (eventResult) {
-            setPendingEvent(eventResult.eventData);
-            setEventDocumentId(eventResult.documentId);
-
-            if (currentStats.activeWork) {
-                setActiveWorkForEvent(currentStats.activeWork);
+        try {
+            const statsDoc = await getDoc(doc(firestore, 'playerStats', currentUser.uid));
+            if (statsDoc.exists()) {
+                setPlayerStats(statsDoc.data() as PlayerStats);
             }
-        } else {
-            // No pending event found
-            setPendingEvent(null);
-            setEventDocumentId(null);
-            setActiveWorkForEvent(null);
-
-            // IMPORTANT: Check if work is stuck in 'pending' status without an event
-            if (currentStats.activeWork?.status === 'pending') {
-                console.log('Found orphaned pending work, completing it...');
-
-                // Complete the work since there's no event
-                try {
-                    await completeWorkAfterEvent(currentUser.uid);
-                    showToast('Töö on edukalt lõpetatud!', 'success');
-                    await loadWorkHistory();
-
-                    // Refresh stats
-                    const updatedStatsDoc = await getDoc(statsRef);
-                    if (updatedStatsDoc.exists()) {
-                        setPlayerStats(updatedStatsDoc.data() as PlayerStats);
-                    }
-                } catch (error) {
-                    console.error('Error completing orphaned work:', error);
-                }
-            }
+        } catch (error) {
+            console.error('Error loading player stats:', error);
         }
-    }, [currentUser, loadWorkHistory, showToast]);
+    }, [currentUser]);
+
+    // Check for active events
+    const checkForEvents = useCallback(async () => {
+        if (!currentUser) return;
+
+        try {
+            const eventData = await getActiveEvent(currentUser.uid);
+
+            if (eventData) {
+                setPendingEvent(eventData.event);
+                setEventDocumentId(eventData.documentId);
+            } else {
+                setPendingEvent(null);
+                setEventDocumentId(null);
+            }
+        } catch (error) {
+            console.error('Error checking for events:', error);
+        }
+    }, [currentUser]);
 
     // Process stats update
-    const processStatsUpdate = useCallback(async (stats: PlayerStats) => {
-        // Get available work activities
+    const processStatsUpdate = useCallback((stats: PlayerStats) => {
+        // Update available activities
         const activities = getAvailableWorkActivities(
             stats.level,
             stats.completedCourses || [],
@@ -127,205 +103,48 @@ const PatrolPage: React.FC = () => {
         );
         setAvailableActivities(activities);
 
-        // Check for work completion
-        if (stats.activeWork?.status === 'in_progress') {
+        // Update remaining time if working
+        if (stats.activeWork) {
             const remaining = getRemainingWorkTime(stats.activeWork);
             setRemainingTime(remaining);
-
-            if (remaining <= 0 && !completionAlertShownRef.current) {
-                completionAlertShownRef.current = true;
-
-                // Check for work completion and events
-                const result = await checkWorkCompletion(currentUser!.uid);
-
-                if (result.hasPendingEvent) {
-                    // Has event, show it
-                    await checkForPendingEvent();
-                } else if (result.completed) {
-                    // Work completed without event - removed unused variable
-                    const expGained = stats.activeWork!.expectedExp;
-
-                    showToast(`Töö on edukalt lõpetatud! Teenitud kogemus: +${expGained} XP`, 'success', 4000);
-
-                    setTimeout(() => {
-                        loadWorkHistory().catch(console.error);
-
-                        // Check tutorial progress
-                        const wasTrainingWork = stats.activeWork?.isTutorial || false;
-                        if (wasTrainingWork && stats.tutorialProgress.currentStep === 22) {
-                            updateTutorialProgress(currentUser!.uid, 23).catch(console.error);
-                            setShowTutorial(true);
-                        }
-                    }, 1500);
-
-                    completionAlertShownRef.current = false;
-                }
-            }
         } else {
             setRemainingTime(0);
-            completionAlertShownRef.current = false;
         }
+    }, []);
 
-        // Check tutorial
-        if (!stats.tutorialProgress.isCompleted &&
-            stats.tutorialProgress.currentStep >= 17 &&
-            stats.tutorialProgress.currentStep <= 24) {
-            setShowTutorial(true);
-        }
-    }, [currentUser, loadWorkHistory, checkForPendingEvent, showToast]);
-
+    // Handle event choice
     const handleEventChoice = useCallback(async (choice: EventChoice) => {
-        if (!currentUser || !pendingEvent || !activeWorkForEvent || !eventDocumentId) return;
+        if (!currentUser || !eventDocumentId) return;
 
         setIsProcessingEvent(true);
 
         try {
-            // Get work activity name
-            const workActivity = getWorkActivityById(activeWorkForEvent.workId);
-            const workName = workActivity?.name || 'Tundmatu töö';
-
-            // Process the event choice using the document ID
             const success = await processEventChoice(
                 currentUser.uid,
                 eventDocumentId,
-                pendingEvent,
-                choice,
-                workName
+                choice
             );
 
             if (success) {
-                // Complete the work after event
-                await completeWorkAfterEvent(currentUser.uid);
-
-                // Show completion message
-                setTimeout(() => {
-                    showToast('Töö on edukalt lõpetatud!', 'success');
-                    setPendingEvent(null);
-                    setEventDocumentId(null);
-                    setActiveWorkForEvent(null);
-                    loadWorkHistory().catch(console.error);
-
-                    // Also reload player stats to update UI
-                    const statsRef = doc(firestore, 'playerStats', currentUser.uid);
-                    getDoc(statsRef).then(doc => {
-                        if (doc.exists()) {
-                            setPlayerStats(doc.data() as PlayerStats);
-                        }
-                    });
-                }, 500);
-            } else {
-                // If processing failed, show error and reset
-                showToast('Viga sündmuse töötlemisel!', 'error');
+                showToast('Töö on edukalt lõpetatud!', 'success');
                 setPendingEvent(null);
                 setEventDocumentId(null);
-                setActiveWorkForEvent(null);
+
+                // Reload data
+                await Promise.all([
+                    loadPlayerStats(),
+                    loadWorkHistory()
+                ]);
+            } else {
+                showToast('Viga sündmuse töötlemisel!', 'error');
             }
         } catch (error) {
             console.error('Error processing event:', error);
             showToast('Viga sündmuse töötlemisel!', 'error');
-
-            // Reset event state on error
-            setPendingEvent(null);
-            setEventDocumentId(null);
-            setActiveWorkForEvent(null);
         } finally {
-            // Always set processing to false
             setIsProcessingEvent(false);
         }
-    }, [currentUser, pendingEvent, activeWorkForEvent, eventDocumentId, showToast, loadWorkHistory]);
-
-    useEffect(() => {
-        if (!currentUser) return;
-
-        const statsRef = doc(firestore, 'playerStats', currentUser.uid);
-
-        // Check health recovery when page loads
-        checkAndApplyHealthRecovery(currentUser.uid).then(recoveryResult => {
-            if (recoveryResult.recovered && recoveryResult.amountRecovered > 0) {
-                showToast(`Tervis taastus +${recoveryResult.amountRecovered} HP`, 'success');
-            }
-        }).catch(error => {
-            console.error('Error checking health recovery on page load:', error);
-        });
-
-        const unsubscribe = onSnapshot(statsRef, (doc) => {
-            if (doc.exists()) {
-                const stats = doc.data() as PlayerStats;
-                setPlayerStats(stats);
-                processStatsUpdate(stats).catch(console.error);
-                setLoading(false);
-            }
-        }, (error) => {
-            console.error('Error listening to player stats:', error);
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, [currentUser, processStatsUpdate, showToast]);
-
-    // Check for pending events on mount
-    useEffect(() => {
-        if (currentUser && !loading) {
-            checkForPendingEvent().catch(console.error);
-        }
-    }, [currentUser, loading, checkForPendingEvent]);
-
-    // Load work history on mount
-    useEffect(() => {
-        loadWorkHistory().catch(console.error);
-    }, [loadWorkHistory]);
-
-    useEffect(() => {
-        if (!currentUser || loading) return;
-
-        // Run state validation every 5 seconds
-        const validationInterval = setInterval(async () => {
-            await validateAndFixWorkState(currentUser.uid);
-        }, 5000);
-
-        // Also run on mount
-        validateAndFixWorkState(currentUser.uid);
-
-        return () => clearInterval(validationInterval);
-    }, [currentUser, loading]);
-
-    // Timer for active work
-    useEffect(() => {
-        if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-        }
-
-        if (playerStats?.activeWork?.status === 'in_progress') {
-            const checkAndUpdate = async () => {
-                const remaining = getRemainingWorkTime(playerStats.activeWork);
-                setRemainingTime(remaining);
-
-                if (remaining <= 0) {
-                    if (intervalRef.current) {
-                        clearInterval(intervalRef.current);
-                        intervalRef.current = null;
-                    }
-
-                    setTimeout(() => {
-                        checkWorkCompletion(currentUser!.uid).catch(console.error);
-                    }, 1100);
-                }
-            };
-
-            checkAndUpdate().catch(console.error);
-            intervalRef.current = setInterval(() => {
-                checkAndUpdate().catch(console.error);
-            }, 1000);
-        }
-
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-            }
-        };
-    }, [playerStats?.activeWork, currentUser]);
+    }, [currentUser, eventDocumentId, showToast, loadPlayerStats, loadWorkHistory]);
 
     // Handle start work
     const handleStartWork = useCallback(async () => {
@@ -337,60 +156,142 @@ const PatrolPage: React.FC = () => {
         }
 
         setIsStartingWork(true);
+
         try {
-            // Check and apply health recovery first (in case player was recovering offline)
-            try {
-                const recoveryResult = await checkAndApplyHealthRecovery(currentUser.uid);
-                if (recoveryResult.recovered && recoveryResult.amountRecovered > 0) {
-                    showToast(`Tervis taastus +${recoveryResult.amountRecovered} HP`, 'success');
+            // Check health recovery first
+            const recoveryResult = await checkAndApplyHealthRecovery(currentUser.uid);
+            if (recoveryResult.recovered && recoveryResult.amountRecovered > 0) {
+                showToast(`Tervis taastus +${recoveryResult.amountRecovered} HP`, 'success');
 
-                    // Wait a moment for the stats to update
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                // Reload stats after recovery
+                await loadPlayerStats();
 
-                    // Re-check if we can still work after recovery
-                    const statsRef = doc(firestore, 'playerStats', currentUser.uid);
-                    const statsDoc = await getDoc(statsRef);
-                    if (statsDoc.exists()) {
-                        const updatedStats = statsDoc.data() as PlayerStats;
-                        if (!updatedStats.health || updatedStats.health.current < 50) {
-                            showToast('Su tervis on ikka liiga madal töötamiseks!', 'error');
-                            setIsStartingWork(false);
-                            return;
-                        }
-                    }
+                // Check if health is still too low (safe check with optional chaining)
+                if (!playerStats.health || playerStats.health.current < 50) {
+                    showToast('Su tervis on ikka liiga madal töötamiseks!', 'error');
+                    setIsStartingWork(false);
+                    return;
                 }
-            } catch (error) {
-                console.error('Error checking health recovery:', error);
             }
 
-            // Check if this is tutorial work
-            const isTutorial = !playerStats.tutorialProgress.isCompleted &&
-                playerStats.tutorialProgress.currentStep === 21;
-
+            // Start work
             await startWork(
                 currentUser.uid,
                 selectedActivity,
                 playerStats.prefecture || '',
                 selectedDepartment,
-                selectedHours,
-                isTutorial
+                selectedHours
             );
 
-            // Progress tutorial if needed
-            if (isTutorial) {
-                await updateTutorialProgress(currentUser.uid, 22);
-            }
+            showToast('Töö alustatud!', 'success');
         } catch (error: any) {
             showToast(error.message || 'Tööle asumine ebaõnnestus', 'error');
         } finally {
             setIsStartingWork(false);
         }
-    }, [currentUser, playerStats, isStartingWork, selectedDepartment, selectedActivity, selectedHours, showToast]);
+    }, [currentUser, playerStats, isStartingWork, selectedDepartment, selectedActivity,
+        selectedHours, showToast, loadPlayerStats]);
 
-    // Handle tutorial complete
-    const handleTutorialComplete = useCallback(() => {
-        setShowTutorial(false);
-    }, []);
+    // Listen to player stats
+    useEffect(() => {
+        if (!currentUser) return;
+
+        // Check health recovery on mount
+        checkAndApplyHealthRecovery(currentUser.uid).then(result => {
+            if (result.recovered && result.amountRecovered > 0) {
+                showToast(`Tervis taastus +${result.amountRecovered} HP`, 'success');
+            }
+        });
+
+        // Subscribe to stats changes
+        const unsubscribe = onSnapshot(
+            doc(firestore, 'playerStats', currentUser.uid),
+            (doc) => {
+                if (doc.exists()) {
+                    const stats = doc.data() as PlayerStats;
+                    setPlayerStats(stats);
+                    processStatsUpdate(stats);
+                    setLoading(false);
+                }
+            },
+            (error) => {
+                console.error('Error listening to player stats:', error);
+                setLoading(false);
+            }
+        );
+
+        return () => unsubscribe();
+    }, [currentUser, processStatsUpdate, showToast]);
+
+    // Check for work completion and events
+    useEffect(() => {
+        if (!currentUser || !playerStats?.activeWork) return;
+
+        const checkWork = async () => {
+            const result = await checkAndCompleteWork(currentUser.uid);
+
+            if (result.hasEvent) {
+                // Event triggered, check for it
+                await checkForEvents();
+            } else if (result.completed) {
+                // Work completed without event - safe access to activeWork
+                const activeWork = playerStats.activeWork;
+                if (activeWork) {
+                    showToast(`Töö on edukalt lõpetatud! Teenitud kogemus: +${activeWork.expectedExp} XP`,
+                        'success', 4000);
+                }
+
+                // Reload data
+                await Promise.all([
+                    loadPlayerStats(),
+                    loadWorkHistory()
+                ]);
+            }
+        };
+
+        // Check immediately if time is up
+        if (remainingTime <= 0) {
+            checkWork();
+        }
+
+        // Set up interval to check every second
+        const interval = setInterval(() => {
+            const activeWork = playerStats.activeWork;
+            if (activeWork) {
+                const remaining = getRemainingWorkTime(activeWork);
+                setRemainingTime(remaining);
+
+                if (remaining <= 0) {
+                    checkWork();
+                }
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [currentUser, playerStats?.activeWork, remainingTime, checkForEvents, showToast,
+        loadPlayerStats, loadWorkHistory]);
+
+    // Check for pending events on mount and when stats change
+    useEffect(() => {
+        if (currentUser && !loading) {
+            checkForEvents();
+        }
+    }, [currentUser, loading, checkForEvents]);
+
+    // Load work history on mount
+    useEffect(() => {
+        loadWorkHistory();
+    }, [loadWorkHistory]);
+
+    // Page title helper
+    const getPageTitle = (): string => {
+        if (!playerStats) return 'Patrullteenistus';
+
+        if (playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
+            return 'Praktika ja tööamp';
+        }
+        return 'Patrullteenistus';
+    };
 
     // Loading state
     if (loading) {
@@ -416,9 +317,12 @@ const PatrolPage: React.FC = () => {
         );
     }
 
-    const canWork = playerStats && playerStats.health && playerStats.health.current >= 50 &&
-        !playerStats.activeCourse &&
-        playerStats.hasCompletedTraining;
+    // Check if player can work - Updated logic without hasCompletedTraining
+    const hasBasicTraining = playerStats.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
+    const healthOk = playerStats.health && playerStats.health.current >= 50;
+    const notInCourse = !playerStats.activeCourse || playerStats.activeCourse.status !== 'in_progress';
+
+    const canWork = hasBasicTraining && healthOk && notInCourse;
 
     return (
         <div className="page">
@@ -433,8 +337,10 @@ const PatrolPage: React.FC = () => {
 
                 <h1 className="patrol-title">{getPageTitle()}</h1>
 
-                {/* Health display */}
-                <HealthDisplay health={playerStats.health} />
+                {/* Health display - safe access */}
+                {playerStats.health && (
+                    <HealthDisplay health={playerStats.health} />
+                )}
 
                 {/* Worked hours display */}
                 <WorkedHoursDisplay totalHours={playerStats.totalWorkedHours || 0} />
@@ -447,7 +353,7 @@ const PatrolPage: React.FC = () => {
                     />
                 )}
 
-                {/* Work setup section - only show when not working and can work */}
+                {/* Work setup section */}
                 {!playerStats.activeWork && canWork && (
                     <div className="work-setup">
                         <DepartmentSelector
@@ -467,32 +373,23 @@ const PatrolPage: React.FC = () => {
                             onHoursSelect={setSelectedHours}
                             onStartWork={handleStartWork}
                             isStarting={isStartingWork}
-                            isTutorial={!playerStats.tutorialProgress.isCompleted &&
-                                playerStats.tutorialProgress.currentStep === 21}
                             isKadett={isKadett}
                         />
                     </div>
                 )}
 
-                {/* Messages for when new work cannot be started */}
+                {/* Work unavailable messages */}
                 {!playerStats.activeWork && !canWork && (
                     <div className="work-unavailable">
-                        {!playerStats.hasCompletedTraining && (
+                        {!hasBasicTraining && (
                             <p>Pead esmalt läbima abipolitseiniku koolituse!</p>
                         )}
-                        {playerStats.health && playerStats.health.current < 50 && (
+                        {(!playerStats.health || playerStats.health.current < 50) && (
                             <p>Su tervis on liiga madal töötamiseks! Minimaalne tervis on 50.</p>
                         )}
-                        {playerStats.activeCourse && (
+                        {playerStats.activeCourse && playerStats.activeCourse.status === 'in_progress' && (
                             <p>Sa ei saa alustada uut tööd koolituse ajal!</p>
                         )}
-                    </div>
-                )}
-
-                {/* Show message if already working but allow viewing the page */}
-                {playerStats.activeWork && !remainingTime && (
-                    <div className="work-unavailable">
-                        <p>Töö on lõppenud, andmeid uuendatakse...</p>
                     </div>
                 )}
 
@@ -505,16 +402,6 @@ const PatrolPage: React.FC = () => {
                         event={pendingEvent}
                         onChoiceSelect={handleEventChoice}
                         isProcessing={isProcessingEvent}
-                    />
-                )}
-
-                {/* Tutorial overlay */}
-                {showTutorial && currentUser && (
-                    <TutorialOverlay
-                        stats={playerStats}
-                        userId={currentUser.uid}
-                        onTutorialComplete={handleTutorialComplete}
-                        page="patrol"
                     />
                 )}
             </main>

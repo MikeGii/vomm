@@ -11,7 +11,10 @@ export const PlayerAbilities: React.FC<PlayerAbilitiesProps> = ({ stats }) => {
 
     const abilities = getActiveAbilities(stats.completedCourses || []);
 
-    if (!stats.hasCompletedTraining) {
+
+    const hasCompletedBasicTraining = stats.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
+
+    if (!hasCompletedBasicTraining) {
         return null;
     }
 

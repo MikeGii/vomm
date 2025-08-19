@@ -55,18 +55,20 @@ export const AuthenticatedHeader: React.FC = () => {
         }
     };
 
-    // Determine if training should be shown in menu
-    const showTraining = playerStats && (
-        playerStats.tutorialProgress.isCompleted ||
-        playerStats.tutorialProgress.currentStep >= 10
-    );
+    // Determine if training should be shown based on actual progress (no tutorial)
+    const showTraining = playerStats?.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
 
+    // Enhanced status text with more detailed progression
     const getStatusText = (): string => {
         if (!playerStats) return '—';
+
+        if (playerStats.completedCourses?.includes('lopueksam')) {
+            return playerStats.rank || 'Politseiametnik';
+        }
         if (playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
             return 'Kadett';
         }
-        if (playerStats.hasCompletedTraining) {
+        if (playerStats.completedCourses?.includes('basic_police_training_abipolitseinik')) {
             return 'Abipolitseinik';
         }
         return 'Töötu';

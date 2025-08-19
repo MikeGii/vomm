@@ -7,11 +7,9 @@ import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { ActiveCourseProgress } from '../components/courses/ActiveCourseProgress';
 import { CourseTabs } from '../components/courses/CourseTabs';
 import { CoursesList } from '../components/courses/CoursesList';
-import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
 import { useAuth } from '../contexts/AuthContext';
 import { PlayerStats, Course } from '../types';
 import { TabType } from '../types/courseTabs.types';
-import { updateTutorialProgress } from '../services/PlayerService';
 import {
     getAvailableCourses,
     enrollInCourse,
@@ -27,6 +25,7 @@ const CoursesPage: React.FC = () => {
     const navigate = useNavigate();
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const lastActiveCourseRef = useRef<string | null>(null);
+    const completionAlertShownRef = useRef<string | null>(null);
 
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
@@ -35,8 +34,6 @@ const CoursesPage: React.FC = () => {
     const [enrolling, setEnrolling] = useState(false);
     const [remainingTime, setRemainingTime] = useState<number>(0);
     const [activeTab, setActiveTab] = useState<TabType>('available');
-    const [showTutorial, setShowTutorial] = useState(false);
-    const completionAlertShownRef = useRef<string | null>(null);
 
     // Calculate courses for each tab
     const coursesForTab = useMemo(() => {
@@ -108,21 +105,6 @@ const CoursesPage: React.FC = () => {
                 // Mark this alert as shown
                 completionAlertShownRef.current = lastActiveCourseRef.current;
 
-                // Check if this was the basic training during tutorial
-                if (completedCourse.id === 'basic_police_training_abipolitseinik' &&
-                    !stats.tutorialProgress.isCompleted &&
-                    stats.tutorialProgress.currentStep === 6 &&
-                    currentUser) {
-                    // Update tutorial progress to step 7
-                    await updateTutorialProgress(currentUser.uid, 7);
-                    setShowTutorial(true);
-                }
-
-                // Switch to completed tab
-                setTimeout(() => {
-                    setActiveTab('completed');
-                }, 500);
-
                 lastActiveCourseRef.current = null;
             }
         }
@@ -134,13 +116,6 @@ const CoursesPage: React.FC = () => {
             lastActiveCourseRef.current = null;
         }
 
-        // Check tutorial - updated to handle new steps
-        if (!stats.tutorialProgress.isCompleted) {
-            if ((stats.tutorialProgress.currentStep >= 3 && stats.tutorialProgress.currentStep <= 6) ||
-                (stats.tutorialProgress.currentStep >= 7 && stats.tutorialProgress.currentStep <= 8)) {
-                setShowTutorial(true);
-            }
-        }
     }, [currentUser]);
 
     // Set up real-time listener for player stats
@@ -204,12 +179,6 @@ const CoursesPage: React.FC = () => {
             }
         };
     }, [playerStats?.activeCourse, currentUser]);
-
-    // Handle tutorial complete
-    const handleTutorialComplete = useCallback(async () => {
-        setShowTutorial(false);
-        // Tutorial completion is handled in TutorialOverlay component
-    }, []);
 
     const handleEnrollCourse = async (courseId: string) => {
         if (!currentUser || enrolling) return;
@@ -284,15 +253,6 @@ const CoursesPage: React.FC = () => {
                     remainingTime={remainingTime}
                     playerStats={playerStats || undefined}
                 />
-
-                {showTutorial && playerStats && currentUser && (
-                    <TutorialOverlay
-                        stats={playerStats}
-                        userId={currentUser.uid}
-                        onTutorialComplete={handleTutorialComplete}
-                        page="courses"
-                    />
-                )}
             </main>
         </div>
     );
