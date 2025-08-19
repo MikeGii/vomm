@@ -151,6 +151,93 @@ export const DebugMenu: React.FC = () => {
         showToast(message, 'success');
     };
 
+    const giveVipItemsToAllPlayers = async () => {
+        const playerStatsCollection = collection(firestore, 'playerStats');
+        const snapshot = await getDocs(playerStatsCollection);
+
+        let playersUpdated = 0;
+
+        for (const docSnapshot of snapshot.docs) {
+            try {
+                const stats = docSnapshot.data() as PlayerStats;
+                const currentInventory = stats.inventory || [];
+
+                // Create the VIP items to add
+                const vipItems = [
+                    {
+                        id: `vip_work_time_booster_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        name: 'Tööaeg 95%',
+                        description: 'Lühendab aktiivset tööaega 95%',
+                        category: 'consumable' as const,
+                        quantity: 1,
+                        shopPrice: 0,
+                        equipped: false,
+                        source: 'event' as const,
+                        obtainedAt: new Date(),
+                        consumableEffect: {
+                            type: 'workTimeReduction' as const,
+                            value: 95
+                        }
+                    },
+                    {
+                        id: `vip_course_time_booster_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        name: 'Kursus 95%',
+                        description: 'Lühendab aktiivset kursust 95%',
+                        category: 'consumable' as const,
+                        quantity: 1,
+                        shopPrice: 0,
+                        equipped: false,
+                        source: 'event' as const,
+                        obtainedAt: new Date(),
+                        consumableEffect: {
+                            type: 'courseTimeReduction' as const,
+                            value: 95
+                        }
+                    }
+                ];
+
+                // Check if player already has these items (to avoid duplicates)
+                const hasWorkBooster = currentInventory.some(item =>
+                    item.consumableEffect?.type === 'workTimeReduction' &&
+                    item.name === 'Tööaeg 95%'
+                );
+                const hasCourseBooster = currentInventory.some(item =>
+                    item.consumableEffect?.type === 'courseTimeReduction' &&
+                    item.name === 'Kursus 95%'
+                );
+
+                const itemsToAdd = [];
+
+                // Only add items if player doesn't have them
+                if (!hasWorkBooster) {
+                    itemsToAdd.push(vipItems[0]);
+                }
+                if (!hasCourseBooster) {
+                    itemsToAdd.push(vipItems[1]);
+                }
+
+                if (itemsToAdd.length > 0) {
+                    const updatedInventory = [...currentInventory, ...itemsToAdd];
+
+                    const statsRef = doc(firestore, 'playerStats', docSnapshot.id);
+                    await updateDoc(statsRef, {
+                        inventory: updatedInventory
+                    });
+
+                    playersUpdated++;
+                }
+            } catch (error) {
+                console.error(`Failed to give VIP items to ${docSnapshot.id}:`, error);
+            }
+        }
+
+        if (playersUpdated === 0) {
+            throw new Error('Ükski mängija ei saanud VIP esemeid (võimalik, et kõigil on juba)');
+        }
+
+        showToast(`${playersUpdated} mängijale anti VIP esemed`, 'success');
+    };
+
     // Get current active course info
     const getActiveCourseInfo = () => {
         if (!playerStats?.activeCourse || playerStats.activeCourse.status !== 'in_progress') {
@@ -258,6 +345,24 @@ export const DebugMenu: React.FC = () => {
                             >
                                 Lõpeta KÕIKIDE mängijate töö
                             </button>
+                        </div>
+
+                        {/* VIP Items Section - Add this after the Training Section */}
+                        <div className="debug-section">
+                            <h4>VIP Esemed</h4>
+                            <button
+                                className="debug-btn debug-btn-danger"
+                                onClick={() => executeDebugAction(
+                                    giveVipItemsToAllPlayers,
+                                    ''
+                                )}
+                                disabled={loading}
+                            >
+                                Anna kõigile mängijatele VIP esemed
+                            </button>
+                            <div className="debug-info-text" style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>
+                                Annab igale mängijale: 1x Tööaeg 95%, 1x Kursus 95%
+                            </div>
                         </div>
 
                         {/* Info Section */}
