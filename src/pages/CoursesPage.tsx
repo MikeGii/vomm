@@ -7,6 +7,8 @@ import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { ActiveCourseProgress } from '../components/courses/ActiveCourseProgress';
 import { CourseTabs } from '../components/courses/CourseTabs';
 import { CoursesList } from '../components/courses/CoursesList';
+import { CourseBoosterPanel } from '../components/courses/CourseBoosterPanel';
+import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { PlayerStats, Course } from '../types';
 import { TabType } from '../types/courseTabs.types';
@@ -43,22 +45,22 @@ const CoursesPage: React.FC = () => {
                 completed: [],
                 abipolitseinik: [],
                 sisekaitseakadeemia: [],
-                advanced: [],
-                specialist: []
+                politsei: []
             };
         }
 
         // Get status-specific courses
         const abipolitseinikCourses = ALL_COURSES.filter(c => c.category === 'abipolitseinik');
         const sisekaitseakadeemiaCourses = ALL_COURSES.filter(c => c.category === 'sisekaitseakadeemia');
+        const politseiCourses = ALL_COURSES.filter(c => c.category === 'politsei');
+
 
         return {
             available: availableCourses,
             completed: completedCourses,
             abipolitseinik: abipolitseinikCourses,
             sisekaitseakadeemia: sisekaitseakadeemiaCourses,
-            advanced: ALL_COURSES.filter(c => c.category === 'advanced'),
-            specialist: ALL_COURSES.filter(c => c.category === 'specialist')
+            politsei: politseiCourses
         };
     }, [availableCourses, completedCourses, playerStats]);
 
@@ -69,8 +71,8 @@ const CoursesPage: React.FC = () => {
             completed: coursesForTab.completed.length,
             abipolitseinik: coursesForTab.abipolitseinik.length,
             sisekaitseakadeemia: coursesForTab.sisekaitseakadeemia.length,
-            advanced: coursesForTab.advanced.length,
-            specialist: coursesForTab.specialist.length
+            politsei: coursesForTab.politsei.length
+
         };
     }, [coursesForTab]);
 
@@ -232,6 +234,22 @@ const CoursesPage: React.FC = () => {
                     <div className="work-in-progress-notice">
                         <p>⚠️ Sa ei saa võtta uut koolitust, kuni töö on lõppenud.</p>
                     </div>
+                )}
+
+                {playerStats?.activeCourse && playerStats.activeCourse.status === 'in_progress' && (
+                    <CourseBoosterPanel
+                        inventory={playerStats.inventory || []}
+                        currentUserId={currentUser!.uid}
+                        activeCourseEndTime={
+                            playerStats.activeCourse.endsAt instanceof Timestamp
+                                ? playerStats.activeCourse.endsAt.toDate()
+                                : new Date(playerStats.activeCourse.endsAt)
+                        }
+                        onBoosterApplied={() => {
+                            // Refresh player stats to show updated course time
+                            window.location.reload(); // Simple approach
+                        }}
+                    />
                 )}
 
                 <CourseTabs

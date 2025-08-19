@@ -109,7 +109,7 @@ export interface Course {
         grantsAbility?: string;
         replacesAbility?: string;
     };
-    category: 'abipolitseinik' | 'sisekaitseakadeemia' | 'basic' | 'advanced' | 'specialist';
+    category: 'abipolitseinik' | 'sisekaitseakadeemia' | 'politsei' ;
 }
 
 // Active course enrollment

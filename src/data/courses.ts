@@ -349,18 +349,36 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
 
 ];
 
+export const POLITSEI_COURSES: Course[] = [
+
+    {
+        id: 'police_ground_leader_course',
+        name: 'Välijuhi koolitus',
+        description: 'Koolitus edukaks välitöö juhtimiseks',
+        duration: 10800,
+        requirements: {
+            level: 35,
+            completedCourses: ['lopueksam'],
+            totalWorkedHours: 50
+        },
+        rewards: {
+            experience: 1000,
+            reputation: 200,
+            money: 2000
+        },
+        category: 'politsei'
+    }
+
+]
+
 // Combine all courses
 export const ALL_COURSES: Course[] = [
     ...ABIPOLITSEINIK_COURSES,
     ...SISEKAITSEAKADEEMIA_COURSES,
+    ...POLITSEI_COURSES
 ];
 
 // Helper function to get course by ID
 export const getCourseById = (courseId: string): Course | undefined => {
     return ALL_COURSES.find(course => course.id === courseId);
-};
-
-// Helper function to get courses by category
-export const getCoursesByCategory = (category: 'abipolitseinik' | 'basic' | 'advanced' | 'specialist'): Course[] => {
-    return ALL_COURSES.filter(course => course.category === category);
 };

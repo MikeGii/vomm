@@ -20,7 +20,7 @@ export interface InventoryItem {
         endurance?: number;
     };
     consumableEffect?: {
-        type: 'trainingClicks' | 'heal' | 'energy' | 'experience' | 'temporary_boost' | 'workTimeReduction';
+        type: 'trainingClicks' | 'heal' | 'energy' | 'experience' | 'temporary_boost' | 'workTimeReduction' | 'courseTimeReduction';
         value: number;
         duration?: number;
     };

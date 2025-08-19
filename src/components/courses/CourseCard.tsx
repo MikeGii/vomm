@@ -126,7 +126,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
         switch(category) {
             case 'abipolitseinik': return 'Abipolitseinik';
             case 'sisekaitseakadeemia': return 'Sisekaitseakadeemia';
-            case 'basic': return 'Baaskoolitus';
+            case 'politsei': return 'Politsei';
             case 'advanced': return 'Edasijõudnud';
             case 'specialist': return 'Spetsialist';
             default: return category;

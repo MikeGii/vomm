@@ -1,5 +1,5 @@
 // src/types/courseTabs.types.ts
-export type TabType = 'available' | 'completed' | 'abipolitseinik' | 'sisekaitseakadeemia' | 'advanced' | 'specialist';
+export type TabType = 'available' | 'completed' | 'abipolitseinik' | 'sisekaitseakadeemia' | 'politsei';
 
 export interface CourseTab {
     id: TabType;
