@@ -1,6 +1,6 @@
 // src/components/profile/ProfileInventory.tsx
 import React from 'react';
-import { InventoryItem } from '../../types/inventory';
+import { InventoryItem } from '../../types';
 import '../../styles/components/profile/ProfileInventory.css';
 
 interface ProfileInventoryProps {
@@ -9,7 +9,7 @@ interface ProfileInventoryProps {
 
 export const ProfileInventory: React.FC<ProfileInventoryProps> = ({ items }) => {
     // Create display groups without modifying the actual category
-    type DisplayGroup = 'equipment' | 'trainingBooster' | 'medical' | 'consumable' | 'misc';
+    type DisplayGroup = 'equipment' | 'trainingBooster' | 'medical' | 'vip' | 'consumable' | 'misc';
 
     // Group items by display category
     const groupedItems = items.reduce((acc, item) => {
@@ -21,6 +21,9 @@ export const ProfileInventory: React.FC<ProfileInventoryProps> = ({ items }) => 
                 displayGroup = 'trainingBooster' as DisplayGroup;
             } else if (item.consumableEffect.type === 'heal') {
                 displayGroup = 'medical' as DisplayGroup;
+            } else if (item.consumableEffect.type === 'workTimeReduction' ||
+                item.consumableEffect.type === 'courseTimeReduction') {
+                displayGroup = 'vip' as DisplayGroup;
             } else {
                 displayGroup = 'consumable';
             }
@@ -42,6 +45,7 @@ export const ProfileInventory: React.FC<ProfileInventoryProps> = ({ items }) => 
             equipment: 'Varustus',
             trainingBooster: 'Sporditarbed',
             medical: 'Meditsiinitarbed',
+            vip: 'VIP Tooted',
             consumable: 'Tarbetarbed',
             misc: 'Muu'
         };
@@ -49,7 +53,7 @@ export const ProfileInventory: React.FC<ProfileInventoryProps> = ({ items }) => 
     };
 
     // Define display order for categories
-    const categoryOrder: DisplayGroup[] = ['equipment', 'trainingBooster', 'medical', 'consumable', 'misc'];
+    const categoryOrder: DisplayGroup[] = ['equipment', 'vip', 'trainingBooster', 'medical', 'consumable', 'misc'];
     const sortedCategories = Object.keys(groupedItems) as DisplayGroup[];
     sortedCategories.sort((a, b) => {
         const indexA = categoryOrder.indexOf(a);
@@ -74,7 +78,7 @@ export const ProfileInventory: React.FC<ProfileInventoryProps> = ({ items }) => 
                 if (!categoryItems || categoryItems.length === 0) return null;
 
                 return (
-                    <div key={category} className="category-section">
+                    <div key={category} className={`category-section ${category === 'vip' ? 'vip-category' : ''}`}>
                         <h3 className="category-header">{getCategoryName(category)}</h3>
                         <table className="inventory-table">
                             <thead>
@@ -107,4 +111,4 @@ export const ProfileInventory: React.FC<ProfileInventoryProps> = ({ items }) => 
             })}
         </div>
     );
-};
+}

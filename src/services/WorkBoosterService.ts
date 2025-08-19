@@ -39,15 +39,25 @@ export const applyWorkTimeBooster = async (
 
         // Find the booster item in inventory
         const inventory = stats.inventory || [];
-        const boosterItem = inventory.find(item =>
+        const boosterIndex = inventory.findIndex(item =>
             item.id === boosterItemId &&
             item.consumableEffect?.type === 'workTimeReduction'
         );
 
-        if (!boosterItem) {
+        if (boosterIndex === -1) {
             return {
                 success: false,
                 message: 'Boosterit ei leitud inventarist!'
+            };
+        }
+
+        const boosterItem = inventory[boosterIndex];
+
+        // Check if player has any items
+        if (boosterItem.quantity < 1) {
+            return {
+                success: false,
+                message: 'Sul pole seda boosterit!'
             };
         }
 
@@ -76,8 +86,18 @@ export const applyWorkTimeBooster = async (
             endsAt: Timestamp.fromDate(finalEndTime)
         };
 
-        // Remove the booster from inventory (manual filtering - works fine)
-        const updatedInventory = inventory.filter(item => item.id !== boosterItemId);
+        // Update inventory - handle quantity properly
+        const updatedInventory = [...inventory];
+        if (boosterItem.quantity === 1) {
+            // Remove item completely if this was the last one
+            updatedInventory.splice(boosterIndex, 1);
+        } else {
+            // Reduce quantity by 1
+            updatedInventory[boosterIndex] = {
+                ...boosterItem,
+                quantity: boosterItem.quantity - 1
+            };
+        }
 
         // Update player stats
         await updateDoc(statsRef, {

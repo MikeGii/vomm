@@ -359,12 +359,29 @@ export const POLITSEI_COURSES: Course[] = [
         requirements: {
             level: 35,
             completedCourses: ['lopueksam'],
-            totalWorkedHours: 50
+            totalWorkedHours: 60
         },
         rewards: {
             experience: 1000,
             reputation: 200,
             money: 2000
+        },
+        category: 'politsei'
+    },
+    {
+        id: 'medical_course_police',
+        name: 'Meditsiini täiendõpe',
+        description: 'Koolitus efektiivseks ja kiireks esmaabi andmiseks',
+        duration: 7200,
+        requirements: {
+            level: 35,
+            completedCourses: ['lopueksam'],
+            totalWorkedHours: 50
+        },
+        rewards: {
+            experience: 800,
+            reputation: 150,
+            money: 1200
         },
         category: 'politsei'
     }
