@@ -69,8 +69,10 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                 return <span className="effect-text">+{consumable.value} klõpsu</span>;
             case 'health':
                 return <span className="effect-text">+{consumable.value === 9999 ? 'Täielik' : consumable.value} HP</span>;
-            case 'workTimeReduction': // Add work time reduction
+            case 'workTimeReduction':
                 return <span className="effect-text vip-effect">-{consumable.value}% tööaeg</span>;
+            case 'courseTimeReduction':
+                return <span className="effect-text vip-effect">-{consumable.value}% kursuse aeg</span>;
             default:
                 return <span>-</span>;
         }

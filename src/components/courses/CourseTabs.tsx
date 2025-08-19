@@ -42,6 +42,13 @@ export const CourseTabs: React.FC<CourseTabsProps> = ({
             requiresStatus: 'Kadett',
             category: 'sisekaitseakadeemia',
             count: courseCounts.sisekaitseakadeemia
+        },
+        {
+            id: 'politsei',
+            label: 'Politsei',
+            requiresStatus: 'Politseiametnik',
+            category: 'politsei',
+            count: courseCounts.politsei
         }
     ];
 
