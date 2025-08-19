@@ -45,19 +45,21 @@ export const CourseTabs: React.FC<CourseTabsProps> = ({
         }
     ];
 
-    // Check which status-based tabs should be unlocked
     const hasStatus = (requiredStatus: string): boolean => {
         if (!playerStats || !requiredStatus) return false;
 
-        // Check if player has the required status
-        // You might need to adjust this based on how status is stored in your PlayerStats
+        // Check if player has the required status based on completed courses
         if (requiredStatus === 'Abipolitseinik') {
-            return playerStats.hasCompletedTraining || false;
+            // Player is Abipolitseinik when they've completed basic training course
+            return playerStats.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
         }
         if (requiredStatus === 'Kadett') {
-            return playerStats.rank === 'Kadett' ||
-                playerStats.rank === 'Nooreminspektor' ||
-                playerStats.department === 'Politsei- ja Piirivalvekolledž';
+            // Player is Kadett when they've entered the academy
+            return playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance') || false;
+        }
+        if (requiredStatus === 'Politseiametnik') {
+            // Player is full officer when they've graduated
+            return playerStats.completedCourses?.includes('lopueksam') || false;
         }
         return false;
     };

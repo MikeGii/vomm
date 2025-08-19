@@ -12,15 +12,6 @@ export interface User {
     createdAt: Date;
 }
 
-// Tutorial progress tracking
-export interface TutorialProgress {
-    isCompleted: boolean;
-    currentStep: number;
-    totalSteps: number;
-    startedAt: Date | null;
-    completedAt: Date | null;
-}
-
 export interface AttributeData {
     level: number;
     experience: number;
@@ -46,7 +37,7 @@ export interface TrainingActivity {
         dexterity?: number;
         intelligence?: number;
         endurance?: number;
-        playerExp: number; // Always 5
+        playerExp: number;
     };
 }
 
@@ -63,17 +54,15 @@ export interface PlayerStats {
     experience: number;
     reputation: number;
     money: number;
-    rank: string | null;  // null when unemployed or abipolitseinik
-    department: string | null;  // Future police department
-    prefecture: string | null;  // Add prefecture (Põhja, Lääne, Lõuna, Ida)
+    rank: string | null;
+    department: string | null;
+    prefecture: string | null;
     badgeNumber: string | null;
     isEmployed: boolean;
-    hasCompletedTraining: boolean;
     abilities?: string[];
     casesCompleted: number;
     criminalsArrested: number;
     totalWorkedHours: number;
-    tutorialProgress: TutorialProgress;
     activeCourse: ActiveCourse | null;
     completedCourses: string[];
     attributes?: PlayerAttributes;
@@ -147,9 +136,8 @@ export interface ActiveWork {
     endsAt: Date | any;
     totalHours: number;
     expectedExp: number;
-    expectedMoney?: number; // For future use
-    status: 'in_progress' | 'pending' | 'completed';
-    isTutorial?: boolean; // For 20-second tutorial work
+    expectedMoney?: number;
+    status: 'in_progress' | 'completed';
     workSessionId?: string;
 }
 

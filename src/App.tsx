@@ -7,7 +7,6 @@ import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
 import CoursesPage from './pages/CoursesPage';
 import TrainingPage from './pages/TrainingPage';
-import { DebugMenu } from "./components/dev/DebugMenu";
 import PatrolPage from "./pages/PatrolPage";
 import { ToastProvider } from './contexts/ToastContext';
 import ProfilePage from './pages/ProfilePage';
@@ -18,7 +17,6 @@ function App() {
         <Router>
             <AuthProvider>
                 <ToastProvider>
-                    <DebugMenu />
                     <Routes>
                         <Route path="/" element={<HomePage />} />
                         <Route

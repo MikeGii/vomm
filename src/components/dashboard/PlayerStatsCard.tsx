@@ -18,6 +18,8 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
     const expPercentage = expProgress.percentage;
     const [healthRecoveryTime, setHealthRecoveryTime] = useState<string>('');
     const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
+    const hasCompletedBasicTraining = stats.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
+
 
     // Calculate health recovery timer
     useEffect(() => {
@@ -209,7 +211,7 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
             </div>
 
             {/* Achievement Stats */}
-            {stats.hasCompletedTraining && (
+            {hasCompletedBasicTraining && (
                 <div className="achievements-section">
                     <h3 className="section-title">Saavutused</h3>
                     <div className="achievements-grid">
@@ -289,7 +291,7 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
             )}
 
             {/* Status Messages */}
-            {!stats.hasCompletedTraining && (
+            {!hasCompletedBasicTraining && (
                 <div className="status-message warning">
                     <span className="status-icon">⚠️</span>
                     <div>

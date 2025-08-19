@@ -26,7 +26,7 @@ export const ActiveWorkProgress: React.FC<ActiveWorkProgressProps> = ({
         return `${minutes}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const totalSeconds = activeWork.isTutorial ? 20 : (activeWork.totalHours * 3600);
+    const totalSeconds = activeWork.totalHours * 3600;
     const progressPercentage = ((totalSeconds - remainingTime) / totalSeconds) * 100;
 
     return (
@@ -60,12 +60,6 @@ export const ActiveWorkProgress: React.FC<ActiveWorkProgressProps> = ({
                     />
                 </div>
             </div>
-
-            {activeWork.isTutorial && (
-                <p className="tutorial-note">
-                    📚 Õpetuse režiim - kiirversioon (20 sekundit)
-                </p>
-            )}
 
             <p className="work-warning">
                 ⚠️ Töö ajal ei saa võtta koolitusi ja treeninguid on piiratud (10 korda tunnis)
