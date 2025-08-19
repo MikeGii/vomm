@@ -9,7 +9,7 @@ export interface User {
     uid: string;
     email: string;
     username: string;
-    createdAt: Date;
+    createdAt: Date | Timestamp | FirestoreTimestamp;
 }
 
 export interface AttributeData {
@@ -180,7 +180,6 @@ export interface LeaderboardEntry {
     rank: string | null;
     badgeNumber: string | null;
     isEmployed: boolean;
-    hasCompletedTraining: boolean;
     completedCourses?: string[];
     attributes?: PlayerAttributes;
     casesCompleted: number;
@@ -188,7 +187,7 @@ export interface LeaderboardEntry {
     totalWorkedHours: number;
 }
 
-export type LeaderboardSortBy = 'level' | 'reputation' | 'money' | 'strength' | 'agility' | 'dexterity' | 'intelligence' | 'endurance' | 'cases' | 'arrests' | 'totalWorkedHours';
+export type LeaderboardSortBy = 'level';
 
 export interface GameUpdate {
     id: string;
@@ -196,6 +195,23 @@ export interface GameUpdate {
     description: string;
     date: string;
     isNew?: boolean;
+}
+
+export interface PlayerProfileModalData {
+    userId: string;
+    username: string;
+    level: number;
+    reputation: number;
+    status: string;
+    money: number;
+    badgeNumber: string | null;
+    attributes?: PlayerAttributes;
+    createdAt?: Date | Timestamp | FirestoreTimestamp;
+}
+
+export interface FirestoreTimestamp {
+    seconds: number;
+    nanoseconds: number;
 }
 
 export * from './events.types';

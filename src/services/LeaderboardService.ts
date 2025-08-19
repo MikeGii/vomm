@@ -28,7 +28,10 @@ export const getLeaderboard = async (
         for (const statsDoc of querySnapshot.docs) {
             const playerData = statsDoc.data();
 
-            if (!playerData.hasCompletedTraining) {
+            // Check if player has completed basic training (is at least Abipolitseinik)
+            const hasCompletedBasicTraining = playerData.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
+
+            if (!hasCompletedBasicTraining) {
                 continue;
             }
 
@@ -66,7 +69,6 @@ export const getLeaderboard = async (
                 rank: playerData.rank || null,
                 badgeNumber: playerData.badgeNumber || null,
                 isEmployed: playerData.isEmployed || false,
-                hasCompletedTraining: playerData.hasCompletedTraining || false,
                 completedCourses: playerData.completedCourses || [],
                 attributes: playerData.attributes,
                 casesCompleted: playerData.casesCompleted || 0,
@@ -75,54 +77,12 @@ export const getLeaderboard = async (
             });
         }
 
-        // Sort in memory based on sortBy parameter
+        // Simple sorting by level (primary) and reputation (secondary)
         leaderboard.sort((a, b) => {
-            switch (sortBy) {
-                case 'level':
-                    if (b.level !== a.level) {
-                        return b.level - a.level;
-                    }
-                    return b.reputation - a.reputation;
-
-                case 'reputation':
-                    if (b.reputation !== a.reputation) {
-                        return b.reputation - a.reputation;
-                    }
-                    return b.level - a.level;
-
-                case 'money':  // ADD THIS CASE
-                    if (b.money !== a.money) {
-                        return b.money - a.money;
-                    }
-                    return b.level - a.level;
-
-                case 'strength':
-                    return (b.attributes?.strength?.level || 0) - (a.attributes?.strength?.level || 0);
-
-                case 'agility':
-                    return (b.attributes?.agility?.level || 0) - (a.attributes?.agility?.level || 0);
-
-                case 'dexterity':
-                    return (b.attributes?.dexterity?.level || 0) - (a.attributes?.dexterity?.level || 0);
-
-                case 'intelligence':
-                    return (b.attributes?.intelligence?.level || 0) - (a.attributes?.intelligence?.level || 0);
-
-                case 'endurance':
-                    return (b.attributes?.endurance?.level || 0) - (a.attributes?.endurance?.level || 0);
-
-                case 'cases':
-                    return b.casesCompleted - a.casesCompleted;
-
-                case 'arrests':
-                    return b.criminalsArrested - a.criminalsArrested;
-
-                case 'totalWorkedHours':
-                    return b.totalWorkedHours - a.totalWorkedHours;
-
-                default:
-                    return b.level - a.level;
+            if (b.level !== a.level) {
+                return b.level - a.level;
             }
+            return b.reputation - a.reputation;
         });
 
         return leaderboard;
