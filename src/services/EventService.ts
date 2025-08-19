@@ -1,223 +1,125 @@
+// Update src/services/EventService.ts
+
 import {
     doc,
-    setDoc,
     getDoc,
     updateDoc,
     collection,
-    addDoc,
     query,
     where,
-    orderBy,
     limit,
     getDocs,
     Timestamp,
-    deleteDoc
+    deleteDoc,
+    setDoc
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
-import {
-    ActiveEvent,
-    EventHistoryEntry,
-    WorkEvent,
-    EventChoice,
-    EventConsequences
-} from '../types/events.types';
-import { PlayerStats } from '../types';
+import { ActiveWork, WorkEvent, EventChoice, PlayerStats } from '../types';
 import { selectRandomEvent } from '../data/events';
+import { completeWork } from './WorkService';
 
-// Create an active event for a work session
-export const createActiveEvent = async (
+// Trigger event for completed work (70% chance)
+export const triggerWorkEvent = async (
     userId: string,
-    workSessionId: string,
-    workActivityId: string,
-    playerLevel: number
-): Promise<ActiveEvent | null> => {
-    // Select random event (70% chance)
-    const selectedEvent = selectRandomEvent(workActivityId, playerLevel);
-    if (!selectedEvent) return null;
+    activeWork: ActiveWork
+): Promise<boolean> => {
+    // 70% chance for event
+    if (Math.random() > 0.7) return false;
 
-    const activeEvent: ActiveEvent = {
+    const statsDoc = await getDoc(doc(firestore, 'playerStats', userId));
+    if (!statsDoc.exists()) return false;
+
+    const stats = statsDoc.data() as PlayerStats;
+    const selectedEvent = selectRandomEvent(activeWork.workId, stats.level);
+
+    if (!selectedEvent) return false;
+
+    // Store active event
+    const eventId = `${userId}_${activeWork.workSessionId}`;
+    const eventRef = doc(firestore, 'activeEvents', eventId);
+
+    await setDoc(eventRef, {
         eventId: selectedEvent.id,
-        userId: userId,
-        workSessionId: workSessionId,
-        triggeredAt: Timestamp.now(),
-        status: 'pending'
-    };
+        userId,
+        workSessionId: activeWork.workSessionId,
+        triggeredAt: Timestamp.now()
+    });
 
-    // Store in activeEvents collection
-    const eventRef = doc(firestore, 'activeEvents', `${userId}_${workSessionId}`);
-    await setDoc(eventRef, activeEvent);
-
-    return activeEvent;
+    return true;
 };
 
-// Get pending event for user
-export const getPendingEvent = async (userId: string): Promise<{
-    activeEvent: ActiveEvent;
-    eventData: WorkEvent;
-    documentId: string; // Add document ID to the return
+// Get active event for user
+export const getActiveEvent = async (userId: string): Promise<{
+    event: WorkEvent;
+    documentId: string;
 } | null> => {
-    try {
-        // Query for pending events
-        const eventsQuery = query(
-            collection(firestore, 'activeEvents'),
-            where('userId', '==', userId),
-            where('status', '==', 'pending'),
-            limit(1)
-        );
+    const eventsQuery = query(
+        collection(firestore, 'activeEvents'),
+        where('userId', '==', userId),
+        limit(1)
+    );
 
-        const snapshot = await getDocs(eventsQuery);
-        if (snapshot.empty) return null;
+    const snapshot = await getDocs(eventsQuery);
+    if (snapshot.empty) return null;
 
-        const doc = snapshot.docs[0];
-        const activeEvent = doc.data() as ActiveEvent;
+    const doc = snapshot.docs[0];
+    const activeEvent = doc.data();
 
-        // Get the event data
-        const { ALL_EVENTS } = await import('../data/events');
-        const eventData = ALL_EVENTS.find(e => e.id === activeEvent.eventId);
+    // Get event data
+    const { ALL_EVENTS } = await import('../data/events');
+    const eventData = ALL_EVENTS.find(e => e.id === activeEvent.eventId);
 
-        if (!eventData) {
-            console.error('Event data not found for:', activeEvent.eventId);
-            return null;
-        }
+    if (!eventData) return null;
 
-        return {
-            activeEvent,
-            eventData,
-            documentId: doc.id // Return the actual document ID
-        };
-    } catch (error) {
-        console.error('Error getting pending event:', error);
-        return null;
-    }
+    return {
+        event: eventData,
+        documentId: doc.id
+    };
 };
 
-// Apply event consequences to player stats
-const applyConsequences = (
-    stats: PlayerStats,
-    consequences: EventConsequences
-): Partial<PlayerStats> => {
-    const updates: Partial<PlayerStats> = {};
-
-    // Apply health change (minimum 0)
-    if (consequences.health !== undefined && stats.health) {
-        const newHealth = Math.max(0, stats.health.current + consequences.health);
-        updates.health = {
-            ...stats.health,
-            current: newHealth
-        };
-    }
-
-    // Apply money change (minimum 0)
-    if (consequences.money !== undefined) {
-        updates.money = Math.max(0, stats.money + consequences.money);
-    }
-
-    // Apply reputation change (minimum 0)
-    if (consequences.reputation !== undefined) {
-        updates.reputation = Math.max(0, stats.reputation + consequences.reputation);
-    }
-
-    // Apply experience change
-    if (consequences.experience !== undefined) {
-        // Ensure total experience never goes below 0
-        updates.experience = Math.max(0, stats.experience + consequences.experience);
-    }
-
-    return updates;
-};
-
-// Process event choice
+// Process player's event choice
 export const processEventChoice = async (
     userId: string,
-    eventDocumentId: string, // Change parameter to accept document ID directly
-    eventData: WorkEvent,
-    choice: EventChoice,
-    workActivityName: string
+    eventDocId: string,
+    choice: EventChoice
 ): Promise<boolean> => {
     try {
-        // Get current player stats
         const statsRef = doc(firestore, 'playerStats', userId);
         const statsDoc = await getDoc(statsRef);
 
-        if (!statsDoc.exists()) {
-            console.error('Player stats not found');
-            return false;
-        }
+        if (!statsDoc.exists()) return false;
 
-        const currentStats = statsDoc.data() as PlayerStats;
+        const stats = statsDoc.data() as PlayerStats;
 
         // Apply consequences
-        const updates = applyConsequences(currentStats, choice.consequences);
+        const updates: any = {};
 
-        // Set lastHealthUpdate when health changes
-        if (choice.consequences.health !== undefined) {
-            updates.lastHealthUpdate = Timestamp.now();
+        if (choice.consequences.health && stats.health) {
+            updates['health.current'] = Math.max(0, Math.min(100,
+                stats.health.current + choice.consequences.health));
         }
 
-        // Update player stats
+        if (choice.consequences.money) {
+            updates.money = Math.max(0, stats.money + choice.consequences.money);
+        }
+
+        if (choice.consequences.reputation) {
+            updates.reputation = Math.max(0,
+                stats.reputation + choice.consequences.reputation);
+        }
+
+        // Apply consequences
         await updateDoc(statsRef, updates);
 
-        // Use the document ID directly
-        const eventRef = doc(firestore, 'activeEvents', eventDocumentId);
+        // Delete the event
+        await deleteDoc(doc(firestore, 'activeEvents', eventDocId));
 
-        // Update the event document
-        await updateDoc(eventRef, {
-            status: 'completed',
-            respondedAt: Timestamp.now(),
-            choiceId: choice.id
-        });
-
-        // Add to event history
-        const historyEntry: EventHistoryEntry = {
-            userId: userId,
-            eventId: eventData.id,
-            eventTitle: eventData.title,
-            choiceId: choice.id,
-            choiceText: choice.text,
-            consequences: choice.consequences,
-            workActivityId: eventDocumentId, // Store document ID for reference
-            workActivityName: workActivityName,
-            completedAt: Timestamp.now()
-        };
-
-        await addDoc(collection(firestore, 'eventHistory'), historyEntry);
-
-        // Clean up the active event
-        await deleteDoc(eventRef);
+        // Complete the work
+        await completeWork(userId);
 
         return true;
     } catch (error) {
-        console.error('Error processing event choice:', error);
+        console.error('Error processing event:', error);
         return false;
     }
-};
-
-// Get event history for user
-export const getEventHistory = async (
-    userId: string,
-    limitCount: number = 10
-): Promise<EventHistoryEntry[]> => {
-    try {
-        const historyQuery = query(
-            collection(firestore, 'eventHistory'),
-            where('userId', '==', userId),
-            orderBy('completedAt', 'desc'),
-            limit(limitCount)
-        );
-
-        const snapshot = await getDocs(historyQuery);
-        return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        } as EventHistoryEntry));
-    } catch (error) {
-        console.error('Error fetching event history:', error);
-        return [];
-    }
-};
-
-// Check if user has pending event (for redirect logic)
-export const checkForPendingEvent = async (userId: string): Promise<boolean> => {
-    const pendingEvent = await getPendingEvent(userId);
-    return pendingEvent !== null;
 };

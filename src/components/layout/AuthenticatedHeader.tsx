@@ -55,21 +55,36 @@ export const AuthenticatedHeader: React.FC = () => {
         }
     };
 
-    // Determine if training should be shown in menu
-    const showTraining = playerStats && (
-        playerStats.tutorialProgress.isCompleted ||
-        playerStats.tutorialProgress.currentStep >= 10
-    );
+    // Determine if training should be shown based on actual progress (no tutorial)
+    const showTraining = playerStats?.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
 
+    // Enhanced status text with more detailed progression
     const getStatusText = (): string => {
         if (!playerStats) return '—';
-        if (playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
-            return 'Kadett';
+
+        // If player has not completed abipolitseinik basic course, show nothing
+        if (!playerStats.completedCourses?.includes('basic_police_training_abipolitseinik')) {
+            return '—';
         }
-        if (playerStats.hasCompletedTraining) {
+
+        // If player has completed abipolitseinik basic course, show Abipolitseinik
+        if (playerStats.completedCourses?.includes('basic_police_training_abipolitseinik') &&
+            !playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
             return 'Abipolitseinik';
         }
-        return 'Töötu';
+
+        // If player has got into Sisekaitseakadeemia, show Kadett
+        if (playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance') &&
+            !playerStats.completedCourses?.includes('lopueksam')) {
+            return 'Kadett';
+        }
+
+        // If player has graduated from sisekaitseakadeemia and completed lopueksam, show Politseiametnik
+        if (playerStats.completedCourses?.includes('lopueksam')) {
+            return 'Politseiametnik';
+        }
+
+        return '—';
     };
 
     return (

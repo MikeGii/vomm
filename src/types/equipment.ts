@@ -1,5 +1,4 @@
 // src/types/equipment.ts
-import { IconType } from 'react-icons';
 
 export type EquipmentSlot =
     | 'head'

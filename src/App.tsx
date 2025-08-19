@@ -7,11 +7,11 @@ import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
 import CoursesPage from './pages/CoursesPage';
 import TrainingPage from './pages/TrainingPage';
-import { DebugMenu } from "./components/dev/DebugMenu";
 import PatrolPage from "./pages/PatrolPage";
 import { ToastProvider } from './contexts/ToastContext';
 import ProfilePage from './pages/ProfilePage';
 import ShopPage from './pages/ShopPage';
+import {DebugMenu} from "./components/dev/DebugMenu";
 
 function App() {
     return (
@@ -80,6 +80,7 @@ function App() {
                         />
                         <Route path="*" element={<Navigate to="/" />} />
                     </Routes>
+                    <DebugMenu />
                 </ToastProvider>
             </AuthProvider>
         </Router>

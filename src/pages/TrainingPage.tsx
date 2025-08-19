@@ -6,7 +6,6 @@ import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { AttributesDisplay } from '../components/training/AttributesDisplay';
 import { TrainingCounter } from '../components/training/TrainingCounter';
 import { ActivitySelector } from '../components/training/ActivitySelector';
-import { TutorialOverlay } from '../components/tutorial/TutorialOverlay';
 import { TrainingMilestones} from "../components/training/TrainingMilestones";
 import { TrainingBoosters } from '../components/training/TrainingBoosters';
 import { getTrainingBoosters } from '../services/TrainingBoosterService';
@@ -31,7 +30,6 @@ const TrainingPage: React.FC = () => {
     const [selectedActivity, setSelectedActivity] = useState<string>('');
     const [isTraining, setIsTraining] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [showTutorial, setShowTutorial] = useState(false);
     const [trainingBoosters, setTrainingBoosters] = useState<InventoryItem[]>([]);
 
     // Set up real-time listener for player stats
@@ -66,13 +64,6 @@ const TrainingPage: React.FC = () => {
                 const activities = getAvailableActivities(stats.level);
                 setAvailableActivities(activities);
 
-                // Check if tutorial should be shown (steps 11-15)
-                if (!stats.tutorialProgress.isCompleted &&
-                    stats.tutorialProgress.currentStep >= 11 &&
-                    stats.tutorialProgress.currentStep <= 15) {
-                    setShowTutorial(true);
-                }
-
                 setLoading(false);
             }
         }, (error) => {
@@ -99,11 +90,6 @@ const TrainingPage: React.FC = () => {
         try {
             await performTraining(currentUser.uid, selectedActivity, activity.rewards);
 
-            // If this is during tutorial step 14, progress to step 15
-            if (playerStats.tutorialProgress.currentStep === 14) {
-                const { updateTutorialProgress } = await import('../services/PlayerService');
-                await updateTutorialProgress(currentUser.uid, 15);
-            }
         } catch (error: any) {
             alert(error.message || 'Treenimine ebaõnnestus');
         } finally {
@@ -111,27 +97,14 @@ const TrainingPage: React.FC = () => {
         }
     }, [currentUser, selectedActivity, isTraining, playerStats]);
 
-    // Handle tutorial complete
-    const handleTutorialComplete = useCallback(() => {
-        setShowTutorial(false);
-    }, []);
-
     // Handle activity selection
     const handleActivitySelect = (activityId: string) => {
         setSelectedActivity(activityId);
 
-        // If tutorial step 13 and activity selected, progress to step 14
-        if (playerStats?.tutorialProgress.currentStep === 13 && activityId && currentUser) {
-            import('../services/PlayerService').then(({ updateTutorialProgress }) => {
-                updateTutorialProgress(currentUser.uid, 14);
-            });
-        }
     };
 
     // Handle booster used callback
     const handleBoosterUsed = () => {
-        // The onSnapshot listener will automatically update the state
-        // This is just a placeholder for any additional logic if needed
     };
 
     if (loading) {
@@ -203,15 +176,6 @@ const TrainingPage: React.FC = () => {
                     onBoosterUsed={handleBoosterUsed}
                 />
 
-                {/* Tutorial overlay */}
-                {showTutorial && currentUser && (
-                    <TutorialOverlay
-                        stats={playerStats}
-                        userId={currentUser.uid}
-                        onTutorialComplete={handleTutorialComplete}
-                        page="training"
-                    />
-                )}
             </main>
         </div>
     );

@@ -2,8 +2,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PlayerStats } from '../../types';
-import { updateTutorialProgress } from '../../services/PlayerService';
-import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/components/QuickActions.css';
 
 interface QuickActionsProps {
@@ -15,100 +13,84 @@ interface ActionItem {
     label: string;
     disabled: boolean;
     action?: () => void;
-    highlighted?: boolean;
-    locked?: boolean;
+    disabledReason?: string;
 }
 
 export const QuickActions: React.FC<QuickActionsProps> = ({ stats }) => {
     const navigate = useNavigate();
-    const { currentUser } = useAuth();
 
-    // Check if we're in tutorial mode and what step we're on
-    const inTutorial = !stats.tutorialProgress?.isCompleted;
-    const tutorialStep = stats.tutorialProgress?.currentStep || 0;
-
-    // Determine what should be locked based on tutorial progress
-    const shouldLockActions = inTutorial && tutorialStep < 3;
-    const shouldLockTraining = inTutorial && tutorialStep < 9;  // Unlock at step 9
-    const shouldLockWork = inTutorial && tutorialStep < 15; // Changed from true to check step 15
-    const shouldLockDepartment = true;  // Always locked in tutorial
+    const hasCompletedBasicTraining = stats.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
+    const hasGraduated = stats.completedCourses?.includes('lopueksam') || false;
+    const hasLevel2OrHigher = stats.level >= 2;
+    const hasPrefecture = !!stats.prefecture;
+    const hasDepartment = !!stats.department;
 
     // Check what features are available based on progress
-    const canTrain = stats.hasCompletedTraining;
-    const canAccessDepartment = stats.isEmployed;
-
-    const handleCoursesClick = async () => {
-        // Update tutorial progress when clicking courses during tutorial
-        if (!stats.tutorialProgress?.isCompleted &&
-            stats.tutorialProgress?.currentStep === 3 &&
-            currentUser) {
-            await updateTutorialProgress(currentUser.uid, 4);
-        }
-        navigate('/courses');
-    };
-
-    const handleTrainingClick = async () => {
-        // Update tutorial progress when clicking training during tutorial
-        if (!stats.tutorialProgress?.isCompleted &&
-            stats.tutorialProgress?.currentStep === 10 &&
-            currentUser) {
-            // This is handled in TutorialOverlay, just navigate
-        }
-        navigate('/training');
-    };
+    const canTrain = hasCompletedBasicTraining;
+    const canWork = hasLevel2OrHigher;
+    const canAccessDepartment = hasGraduated && hasPrefecture && hasDepartment;
 
     const actions: ActionItem[] = [
         {
             icon: '📚',
             label: 'Koolitused',
-            disabled: false,
-            action: handleCoursesClick,
-            highlighted: tutorialStep === 3,
-            locked: false
+            disabled: false, // Always accessible
+            action: () => navigate('/courses')
         },
         {
-            icon: shouldLockTraining ? '🔒' : '🎯',
+            icon: canTrain ? '🎯' : '🔒',
             label: 'Treening',
-            disabled: shouldLockTraining || (!inTutorial && !canTrain),
-            locked: shouldLockTraining,
-            action: handleTrainingClick,
-            highlighted: tutorialStep === 10
+            disabled: !canTrain,
+            action: () => navigate('/training'),
+            disabledReason: !hasCompletedBasicTraining
+                ? 'Lõpeta esmalt abipolitseiniku baaskursus'
+                : undefined
         },
         {
-            icon: shouldLockWork ? '🔒' : '🚓',
+            icon: canWork ? '🚓' : '🔒',
             label: 'Mine tööle',
-            disabled: shouldLockWork || (!inTutorial && !stats.hasCompletedTraining),
-            locked: shouldLockWork,
+            disabled: !canWork,
             action: () => navigate('/patrol'),
-            highlighted: tutorialStep === 16 // Highlight during patrol tutorial
+            disabledReason: !hasCompletedBasicTraining
+                ? 'Lõpeta esmalt abipolitseiniku baaskursus'
+                : !hasLevel2OrHigher
+                    ? 'Jõua tasemele 2 (treeni natuke!)'
+                    : undefined
         },
         {
-            icon: shouldLockDepartment ? '🔒' : '👥',
+            icon: canAccessDepartment ? '👥' : '🔒',
             label: 'Osakond',
-            disabled: shouldLockDepartment || (!inTutorial && !canAccessDepartment),
-            locked: shouldLockDepartment,
-            action: () => navigate('/department')
+            disabled: !canAccessDepartment,
+            action: () => navigate('/department'),
+            disabledReason: !hasGraduated
+                ? 'Lõpeta esmalt Sisekaitseakadeemia'
+                : !hasPrefecture
+                    ? 'Vali esmalt maakond'
+                    : !hasDepartment
+                        ? 'Vali esmalt osakond'
+                        : undefined
         }
     ];
 
     // Determine info text based on player state
     let infoText: string;
-    if (tutorialStep === 16) {
-        infoText = 'Vajuta "Mine tööle" nuppu, et alustada oma esimest patrulli!';
-    } else if (tutorialStep === 10) {
-        infoText = 'Vajuta Treening nuppu, et jätkata õpetusega!';
-    } else if (tutorialStep === 3) {
-        infoText = 'Vajuta Koolitused nuppu, et jätkata õpetusega!';
-    } else if (shouldLockActions) {
-        infoText = 'Järgi õpetust, et avada kõik funktsioonid!';
-    } else if (!stats.hasCompletedTraining) {
-        infoText = 'Alusta abipolitseiniku koolitusega!';
+
+    if (!hasCompletedBasicTraining) {
+        infoText = 'Alusta abipolitseiniku baaskursusega koolituste lehel!';
+    } else if (!hasLevel2OrHigher) {
+        infoText = 'Suurepärane! Nüüd treeni natuke, et jõuda tasemele 2 ja saada tööle minna.';
     } else if (stats.activeWork) {
         infoText = 'Sa juba töötad! Oota kuni praegune töö lõppeb.';
-    } else if (!stats.isEmployed) {
-        infoText = 'Koolitus läbitud! Nüüd saad minna tööle.';
+    } else if (stats.activeCourse) {
+        infoText = 'Sa oled koolituses. Treening on saadaval, töö mitte.';
+    } else if (!hasGraduated) {
+        infoText = 'Jätka koolitustega, et jõuda Sisekaitseakadeemiasse ja lõpuks lõpetada!';
+    } else if (!hasPrefecture) {
+        infoText = 'Vali maakond, kus soovid töötada!';
+    } else if (!hasDepartment) {
+        infoText = 'Vali osakond, kus soovid töötada!';
     } else {
-        infoText = 'Vali tegevus menüüst.';
+        infoText = 'Kõik funktsioonid on avatud! Vali tegevus menüüst.';
     }
 
     return (
@@ -118,19 +100,16 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ stats }) => {
                 {actions.map((action, index) => (
                     <button
                         key={index}
-                        className={`quick-action-button ${action.highlighted ? 'highlighted' : ''} ${action.locked ? 'locked' : ''}`}
+                        className={`quick-action-button ${action.disabled ? 'disabled' : ''}`}
                         disabled={action.disabled}
                         onClick={action.disabled ? undefined : action.action}
-                        title={
-                            action.locked
-                                ? 'Lukustatud - järgi õpetust'
-                                : action.disabled
-                                    ? 'Pole veel kättesaadav'
-                                    : ''
-                        }
+                        title={action.disabledReason || ''}
                     >
                         <span className="action-icon">{action.icon}</span>
                         <span className="action-label">{action.label}</span>
+                        {action.disabled && action.disabledReason && (
+                            <span className="disabled-reason">{action.disabledReason}</span>
+                        )}
                     </button>
                 ))}
             </div>

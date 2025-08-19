@@ -9,10 +9,11 @@ export interface UseBoosterResult {
     message: string;
     clicksAdded?: number;
     newRemainingClicks?: number;
+    itemsUsed?: number;
 }
 
 /**
- * Get all training boosters from player's inventory
+ * Get all training boosters from player's inventory with stacking
  */
 export const getTrainingBoosters = (inventory: InventoryItem[]): InventoryItem[] => {
     return inventory.filter(item =>
@@ -22,11 +23,12 @@ export const getTrainingBoosters = (inventory: InventoryItem[]): InventoryItem[]
 };
 
 /**
- * Use a training booster to restore training clicks
+ * Use training booster(s) to restore training clicks with stacking support
  */
 export const consumeTrainingBooster = async (
     userId: string,
-    boosterId: string
+    boosterId: string,
+    quantity: number = 1
 ): Promise<UseBoosterResult> => {
     try {
         const playerRef = doc(firestore, 'playerStats', userId);
@@ -50,7 +52,7 @@ export const consumeTrainingBooster = async (
             };
         }
 
-        // Determine max clicks based on work status - DYNAMIC!
+        // Determine max clicks based on work status
         const maxClicks = playerData.activeWork ? 10 : 50;
 
         // Find the booster in inventory
@@ -73,15 +75,41 @@ export const consumeTrainingBooster = async (
             };
         }
 
-        // Calculate new clicks using dynamic max
-        const clicksToAdd = booster.consumableEffect.value;
+        // Check if player has enough items
+        if (booster.quantity < quantity) {
+            return {
+                success: false,
+                message: `Pole piisavalt esemeid! Sul on ${booster.quantity}, tahad kasutada ${quantity}`
+            };
+        }
+
+        // If already at max clicks
         const currentClicks = trainingData.remainingClicks || 0;
-        const newClicks = Math.min(currentClicks + clicksToAdd, maxClicks);
+        if (currentClicks >= maxClicks) {
+            return {
+                success: false,
+                message: 'Sul on juba maksimaalne arv treeningklõpse!'
+            };
+        }
+
+        // Calculate clicks restoration
+        const clicksPerItem = booster.consumableEffect.value;
+        const totalClicksToAdd = clicksPerItem * quantity;
+        const newClicks = Math.min(currentClicks + totalClicksToAdd, maxClicks);
         const actualClicksAdded = newClicks - currentClicks;
 
-        // Remove the booster from inventory
+        // Update inventory
         const updatedInventory = [...inventory];
-        updatedInventory.splice(boosterIndex, 1);
+        if (booster.quantity === quantity) {
+            // Remove item completely if using all of them
+            updatedInventory.splice(boosterIndex, 1);
+        } else {
+            // Reduce quantity
+            updatedInventory[boosterIndex] = {
+                ...booster,
+                quantity: booster.quantity - quantity
+            };
+        }
 
         // Update player stats
         await updateDoc(playerRef, {
@@ -92,9 +120,10 @@ export const consumeTrainingBooster = async (
 
         return {
             success: true,
-            message: `Kasutasid ${booster.name}. Taastati ${actualClicksAdded} treeningklõpsu!`,
+            message: `Kasutasid ${quantity}x ${booster.name}. Taastati ${actualClicksAdded} treeningklõpsu!`,
             clicksAdded: actualClicksAdded,
-            newRemainingClicks: newClicks
+            newRemainingClicks: newClicks,
+            itemsUsed: quantity
         };
 
     } catch (error) {

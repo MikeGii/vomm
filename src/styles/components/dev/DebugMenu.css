@@ -84,6 +84,8 @@
     padding: 1rem;
     max-height: 500px;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #444 #1a1a1a;
 }
 
 .debug-section {
@@ -121,17 +123,19 @@
 .debug-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    transform: none !important;
 }
 
 .debug-btn-danger {
-    background-color: #3a1a1a;
-    border-color: #ff6b6b;
-    color: #ff6b6b;
+    background-color: #3a1a1a !important;
+    border-color: #ff6b6b !important;
+    color: #ff6b6b !important;
 }
 
 .debug-btn-danger:hover:not(:disabled) {
-    background-color: #4a1a1a;
-    border-color: #ff5252;
+    background-color: #4a1a1a !important;
+    border-color: #ff5252 !important;
+    color: #ff5252 !important;
 }
 
 .debug-step-buttons {
@@ -168,6 +172,17 @@
     text-align: center;
 }
 
+.debug-info-text {
+    color: #888;
+    font-size: 0.85rem;
+    padding: 0.75rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    text-align: center;
+    font-style: italic;
+}
+
 .debug-info small {
     color: #666;
     font-size: 0.8rem;
@@ -185,4 +200,24 @@
         right: 10px;
         bottom: 10px;
     }
+}
+.debug-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.debug-content::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.debug-content::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 3px;
+}
+
+.debug-content::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
+.debug-section .debug-info-text {
+    margin-bottom: 0.5rem;
 }

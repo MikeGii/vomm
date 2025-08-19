@@ -90,6 +90,51 @@ export const TRAINING_ACTIVITIES: TrainingActivity[] = [
             intelligence: 50,
             playerExp: 5
         }
+    },
+
+    // Level 20 activities - NEW
+    {
+        id: 'intensive_strength_training',
+        name: 'Intensiivne jõutreening',
+        description: 'Treening personaaltreeneriga',
+        requiredLevel: 20,
+        rewards: {
+            strength: 100,
+            endurance: 50,
+            playerExp: 10
+        }
+    },
+    {
+        id: 'stadium_running',
+        name: 'Jooksuharjutused staadionil',
+        description: 'Professionaalsed harjutused staadionil',
+        requiredLevel: 20,
+        rewards: {
+            endurance: 100,
+            agility: 50,
+            playerExp: 10
+        }
+    },
+    {
+        id: 'airsoft_game',
+        name: 'Mängi kolleegidega airsofti',
+        description: 'Intensiivne täpsuse ja osavuse treening',
+        requiredLevel: 20,
+        rewards: {
+            dexterity: 100,
+            agility: 50,
+            playerExp: 10
+        }
+    },
+    {
+        id: 'brain_hunt_competition',
+        name: 'Osale ajujahi konkursil',
+        description: 'Konverents aktiivseks ajutreeninguks',
+        requiredLevel: 20,
+        rewards: {
+            intelligence: 100,
+            playerExp: 10
+        }
     }
 ];
 
