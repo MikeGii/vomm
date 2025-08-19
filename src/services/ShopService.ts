@@ -173,7 +173,6 @@ export const purchaseItem = async (
         // Update player stats
         await updateDoc(playerRef, updateData);
 
-        const currencySymbol = isPollidPurchase ? '💎' : '€';
         const result: PurchaseResult = {
             success: true,
             message: `Ostsid: ${shopItem.name}${quantity > 1 ? ` x${quantity}` : ''}`,

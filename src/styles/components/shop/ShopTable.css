@@ -371,6 +371,7 @@
 }
 
 .buy-button.pollid-buy:disabled {
-    background: #666;
-    border: 1px solid #666;
+    background: #333;
+    color: #666;
+    cursor: not-allowed;
 }
