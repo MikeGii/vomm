@@ -63,14 +63,23 @@ export const DebugMenu: React.FC = () => {
 
         const statsRef = doc(firestore, 'playerStats', currentUser.uid);
 
-        // Set course end time to now to trigger completion
+        // Set course end time to past time to ensure it triggers completion
+        const pastTime = Timestamp.fromMillis(Date.now() - 5000); // 5 seconds ago
+
         await updateDoc(statsRef, {
-            'activeCourse.endsAt': Timestamp.now(),
-            'activeCourse.status': 'completed'
+            'activeCourse.endsAt': pastTime
+            // Don't set status to 'completed' here - let checkCourseCompletion handle it
         });
 
-        // Trigger course completion check
-        await checkCourseCompletion(currentUser.uid);
+        // Add a small delay to ensure the update is written
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Now trigger course completion check
+        const wasCompleted = await checkCourseCompletion(currentUser.uid);
+
+        if (!wasCompleted) {
+            throw new Error('Kursuse lõpetamine ebaõnnestus');
+        }
     };
 
     // 2. Shorten work time to 20 seconds for admin

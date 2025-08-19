@@ -141,6 +141,9 @@ export const completeWork = async (userId: string): Promise<void> => {
     const moneyReward = workActivity.moneyReward || 0;
     const newMoney = stats.money + moneyReward;
 
+    const newTotalWorkedHours = (stats.totalWorkedHours || 0) + stats.activeWork.totalHours;
+
+
     // Add to history
     const historyEntry: WorkHistoryEntry = {
         userId,
@@ -163,6 +166,7 @@ export const completeWork = async (userId: string): Promise<void> => {
         experience: newExp,
         level: newLevel,
         money: newMoney,
+        totalWorkedHours: newTotalWorkedHours,
         'trainingData.isWorking': false,
         'trainingData.remainingClicks': 50
     });
