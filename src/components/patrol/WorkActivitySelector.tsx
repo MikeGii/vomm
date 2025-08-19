@@ -1,7 +1,7 @@
 // src/components/patrol/WorkActivitySelector.tsx
 import React from 'react';
 import { WorkActivity } from '../../types';
-import { calculateWorkRewards } from '../../data/workActivities';
+import {calculateSalaryForOfficer, calculateWorkRewards} from '../../data/workActivities';
 import '../../styles/components/patrol/WorkActivitySelector.css';
 
 interface WorkActivitySelectorProps {
@@ -14,6 +14,7 @@ interface WorkActivitySelectorProps {
     isStarting: boolean;
     isTutorial?: boolean;
     isKadett?: boolean;
+    playerRank?: string | null;
 }
 
 export const WorkActivitySelector: React.FC<WorkActivitySelectorProps> = ({
@@ -25,12 +26,16 @@ export const WorkActivitySelector: React.FC<WorkActivitySelectorProps> = ({
                                                                               onStartWork,
                                                                               isStarting,
                                                                               isTutorial = false,
-                                                                              isKadett = false
+                                                                              isKadett = false,
+                                                                              playerRank = null,
                                                                           }) => {
     const selectedActivityData = activities.find(a => a.id === selectedActivity);
     const expectedRewards = selectedActivityData
-        ? calculateWorkRewards(selectedActivityData, selectedHours)
-        : 0;
+        ? calculateWorkRewards(selectedActivityData, selectedHours, playerRank)
+        : { experience: 0, money: 0 };
+
+    // Check if player is a police officer (has rank)
+    const isPoliceOfficer = playerRank !== null;
 
     return (
         <div className="work-activity-selector">
@@ -93,8 +98,21 @@ export const WorkActivitySelector: React.FC<WorkActivitySelectorProps> = ({
                         <h4>Oodatav tasu:</h4>
                         <div className="reward-item">
                             <span className="reward-label">Kogemus:</span>
-                            <span className="reward-value">+{expectedRewards} XP</span>
+                            <span className="reward-value">+{expectedRewards.experience} XP</span>
                         </div>
+                        {isPoliceOfficer && expectedRewards.money > 0 && (
+                            <div className="reward-item">
+                                <span className="reward-label">Palk:</span>
+                                <span className="reward-value">+{expectedRewards.money}€</span>
+                            </div>
+                        )}
+                        {isPoliceOfficer && (
+                            <div className="salary-info">
+                                <p className="salary-rate">
+                                    Tunnitasu: {calculateSalaryForOfficer(playerRank, 1)}€/tund ({playerRank})
+                                </p>
+                            </div>
+                        )}
                         {!isTutorial && (
                             <p className="reward-note">
                                 Iga järgnev tund annab {(selectedActivityData.expGrowthRate * 100)}% rohkem kogemust

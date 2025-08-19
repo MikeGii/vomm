@@ -208,3 +208,33 @@
         transform: translateY(0);
     }
 }
+
+.salary-info {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: #1a3d1a;
+    border: 1px solid #2d5a2d;
+    border-radius: 4px;
+}
+
+.salary-rate {
+    color: #4ade80;
+    font-size: 0.9rem;
+    margin: 0;
+    font-weight: 500;
+}
+
+.reward-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.reward-label {
+    color: #888;
+}
+
+.reward-value {
+    color: #f0f0f0;
+    font-weight: 500;
+}
