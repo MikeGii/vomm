@@ -11,12 +11,14 @@ import PatrolPage from "./pages/PatrolPage";
 import { ToastProvider } from './contexts/ToastContext';
 import ProfilePage from './pages/ProfilePage';
 import ShopPage from './pages/ShopPage';
+import {DebugMenu} from "./components/dev/DebugMenu";
 
 function App() {
     return (
         <Router>
             <AuthProvider>
                 <ToastProvider>
+                    <DebugMenu />
                     <Routes>
                         <Route path="/" element={<HomePage />} />
                         <Route
@@ -78,6 +80,7 @@ function App() {
                         />
                         <Route path="*" element={<Navigate to="/" />} />
                     </Routes>
+                    <DebugMenu />
                 </ToastProvider>
             </AuthProvider>
         </Router>

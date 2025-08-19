@@ -11,8 +11,7 @@ import {
     where,
     orderBy,
     limit,
-    getDocs,
-    setDoc
+    getDocs
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats, ActiveWork, WorkHistoryEntry } from '../types';

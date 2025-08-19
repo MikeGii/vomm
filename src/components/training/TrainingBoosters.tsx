@@ -1,4 +1,4 @@
-// src/components/training/TrainingBoosters.tsx - Updated with empty state message
+// src/components/training/TrainingBoosters.tsx
 import React, { useState } from 'react';
 import { InventoryItem } from '../../types';
 import { consumeTrainingBooster } from '../../services/TrainingBoosterService';
@@ -24,6 +24,22 @@ export const TrainingBoosters: React.FC<TrainingBoostersProps> = ({
     const { showToast } = useToast();
     const navigate = useNavigate();
     const [isUsing, setIsUsing] = useState(false);
+    const [selectedQuantities, setSelectedQuantities] = useState<Record<string, number>>({});
+
+    const handleQuantityChange = (boosterId: string, quantity: number) => {
+        const booster = boosters.find(b => b.id === boosterId);
+        if (!booster) return;
+
+        const validQuantity = Math.max(1, Math.min(quantity, booster.quantity));
+        setSelectedQuantities(prev => ({
+            ...prev,
+            [boosterId]: validQuantity
+        }));
+    };
+
+    const getSelectedQuantity = (boosterId: string): number => {
+        return selectedQuantities[boosterId] || 1;
+    };
 
     const handleUseBooster = async (booster: InventoryItem) => {
         if (!currentUser || isUsing) return;
@@ -33,13 +49,20 @@ export const TrainingBoosters: React.FC<TrainingBoostersProps> = ({
             return;
         }
 
+        const quantity = getSelectedQuantity(booster.id);
+
         setIsUsing(true);
         try {
-            const result = await consumeTrainingBooster(currentUser.uid, booster.id);
+            const result = await consumeTrainingBooster(currentUser.uid, booster.id, quantity);
 
             if (result.success) {
                 showToast(result.message, 'success');
                 onBoosterUsed();
+                // Reset quantity selection for this item
+                setSelectedQuantities(prev => ({
+                    ...prev,
+                    [booster.id]: 1
+                }));
             } else {
                 showToast(result.message, 'error');
             }
@@ -50,13 +73,17 @@ export const TrainingBoosters: React.FC<TrainingBoostersProps> = ({
         }
     };
 
-    // Always show the container, but with different content
     return (
         <div className="training-boosters">
             <h3 className="boosters-title">Sporditarbed</h3>
 
+            <div className="boosters-info">
+                <p>
+                    Treeningklõpsud: <strong>{currentClicks}/{maxClicks}</strong>
+                </p>
+            </div>
+
             {boosters.length === 0 ? (
-                // Empty state message
                 <div className="boosters-empty-state">
                     <p className="empty-state-message">
                         Treeningkorduste kiiremaks taastamiseks osta poest treeningtarbeid!
@@ -69,32 +96,59 @@ export const TrainingBoosters: React.FC<TrainingBoostersProps> = ({
                     </button>
                 </div>
             ) : (
-                // Show boosters when available
-                <>
-                    <div className="boosters-info">
-                        <p>Praegused treeningklõpsud: <strong>{currentClicks}/{maxClicks}</strong></p>
-                    </div>
-                    <div className="boosters-grid">
-                        {boosters.map(booster => (
+                <div className="boosters-grid">
+                    {boosters.map((booster) => {
+                        const selectedQuantity = getSelectedQuantity(booster.id);
+                        const clicksPerItem = booster.consumableEffect?.value || 0;
+                        const totalClicksPreview = clicksPerItem * selectedQuantity;
+
+                        return (
                             <div key={booster.id} className="booster-card">
                                 <div className="booster-header">
                                     <h4 className="booster-name">{booster.name}</h4>
-                                    <span className="booster-effect">
-                                        +{booster.consumableEffect?.value} klõpsu
-                                    </span>
                                 </div>
+
                                 <p className="booster-description">{booster.description}</p>
+
+                                <div className="booster-quantity-section">
+                                    <div className="quantity-info">
+                                        <span>Kogus: {booster.quantity}</span>
+                                    </div>
+
+                                    <div className="quantity-selector">
+                                        <button
+                                            className="quantity-btn"
+                                            onClick={() => handleQuantityChange(booster.id, selectedQuantity - 1)}
+                                            disabled={selectedQuantity <= 1}
+                                        >
+                                            −
+                                        </button>
+                                        <span className="quantity-display">{selectedQuantity}</span>
+                                        <button
+                                            className="quantity-btn"
+                                            onClick={() => handleQuantityChange(booster.id, selectedQuantity + 1)}
+                                            disabled={selectedQuantity >= booster.quantity}
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+
+                                    <div className="clicks-preview">
+                                        Taastab: +{totalClicksPreview} klõpsu
+                                    </div>
+                                </div>
+
                                 <button
                                     className="booster-use-button"
                                     onClick={() => handleUseBooster(booster)}
                                     disabled={isUsing || currentClicks >= maxClicks}
                                 >
-                                    {currentClicks >= maxClicks ? 'Max klõpsud' : 'Kasuta'}
+                                    {isUsing ? 'Kasutan...' : `Kasuta ${selectedQuantity}x`}
                                 </button>
                             </div>
-                        ))}
-                    </div>
-                </>
+                        );
+                    })}
+                </div>
             )}
         </div>
     );

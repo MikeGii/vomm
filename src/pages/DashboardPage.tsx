@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, deleteDoc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
+import { DebugMenu } from '../components/dev/DebugMenu';
 import { PlayerStatsCard } from '../components/dashboard/PlayerStatsCard';
 import { QuickActions } from '../components/dashboard/QuickActions';
 import { useAuth } from '../contexts/AuthContext';
@@ -225,6 +226,7 @@ function DashboardPage() {
                     </>
                 )}
             </main>
+
         </div>
     );
 }

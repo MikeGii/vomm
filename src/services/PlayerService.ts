@@ -1,5 +1,5 @@
 // src/services/PlayerService.ts
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats, PlayerHealth } from '../types';
 import { initializeAttributes, initializeTrainingData } from './TrainingService';
