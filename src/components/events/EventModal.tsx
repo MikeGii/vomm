@@ -1,5 +1,5 @@
 import React, {JSX, useState} from 'react';
-import { WorkEvent, EventChoice, EventConsequences } from '../../types/events.types';
+import { WorkEvent, EventChoice, EventConsequences } from '../../types';
 import '../../styles/components/events/EventModal.css';
 
 interface EventModalProps {
@@ -16,11 +16,14 @@ export const EventModal: React.FC<EventModalProps> = ({
     const [selectedChoice, setSelectedChoice] = useState<string>('');
     const [showResult, setShowResult] = useState<boolean>(false);
     const [resultText, setResultText] = useState<string>('');
+    const [selectedChoiceData, setSelectedChoiceData] = useState<EventChoice | null>(null);
+
 
     const handleChoiceClick = async (choice: EventChoice) => {
         if (isProcessing || showResult) return;
 
         setSelectedChoice(choice.id);
+        setSelectedChoiceData(choice);
         setResultText(choice.resultText);
         setShowResult(true);
 
@@ -105,9 +108,6 @@ export const EventModal: React.FC<EventModalProps> = ({
                                     >
                                         {choice.text}
                                     </button>
-                                    <div className="choice-consequences">
-                                        {formatConsequences(choice.consequences)}
-                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -116,6 +116,16 @@ export const EventModal: React.FC<EventModalProps> = ({
                     <div className="event-result">
                         <h3>Tulemus</h3>
                         <p>{resultText}</p>
+
+                        {selectedChoiceData && (
+                            <div className="result-consequences">
+                                <h4>Tagajärjed:</h4>
+                                <div className="choice-consequences">
+                                    {formatConsequences(selectedChoiceData.consequences)}
+                                </div>
+                            </div>
+                        )}
+
                         <div className="result-spinner">
                             <div className="spinner"></div>
                             <p>Töö lõpetamine...</p>
