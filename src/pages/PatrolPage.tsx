@@ -15,6 +15,8 @@ import { EventModal } from '../components/events/EventModal';
 import { checkAndApplyHealthRecovery } from '../services/HealthService';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { WorkBoosterPanel } from '../components/patrol/WorkBoosterPanel';
+import { Timestamp } from 'firebase/firestore';
 import { PlayerStats, WorkActivity } from '../types';
 import { WorkEvent, EventChoice } from '../types';
 import {
@@ -370,12 +372,45 @@ const PatrolPage: React.FC = () => {
                 {/* Worked hours display */}
                 <WorkedHoursDisplay totalHours={playerStats.totalWorkedHours || 0} />
 
-                {/* Active work progress */}
+                {/* Active work progress and boosters section */}
                 {playerStats.activeWork && remainingTime > 0 && (
-                    <ActiveWorkProgress
-                        activeWork={playerStats.activeWork}
-                        remainingTime={remainingTime}
-                    />
+                    <div className="active-work-section">
+                        <ActiveWorkProgress
+                            activeWork={playerStats.activeWork}
+                            remainingTime={remainingTime}
+                        />
+
+                        <WorkBoosterPanel
+                            inventory={playerStats.inventory || []}
+                            currentUserId={currentUser!.uid}
+                            activeWorkEndTime={
+                                playerStats.activeWork.endsAt instanceof Timestamp
+                                    ? playerStats.activeWork.endsAt.toDate()
+                                    : new Date(playerStats.activeWork.endsAt)
+                            }
+                            onBoosterApplied={() => {
+                                loadPlayerStats();
+                                // Force immediate check if work might be complete
+                                if (playerStats?.activeWork) {
+                                    const remaining = getRemainingWorkTime(playerStats.activeWork);
+                                    setRemainingTime(remaining);
+
+                                    if (remaining <= 0) {
+                                        checkAndCompleteWork(currentUser!.uid).then(result => {
+                                            if (result.completed) {
+                                                showToast(`Töö on edukalt lõpetatud! Teenitud kogemus: +${playerStats.activeWork?.expectedExp} XP`,
+                                                    'success', 4000);
+                                                Promise.all([
+                                                    loadPlayerStats(),
+                                                    loadWorkHistory()
+                                                ]);
+                                            }
+                                        });
+                                    }
+                                }
+                            }}
+                        />
+                    </div>
                 )}
 
                 {/* Work setup section */}

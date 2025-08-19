@@ -9,6 +9,7 @@ interface ShopTableProps {
         dynamicPrice: number;
     }>;
     playerMoney: number;
+    playerPollid?: number;
     onPurchase: (itemId: string) => void;
     isLoading?: boolean;
 }
@@ -16,6 +17,7 @@ interface ShopTableProps {
 export const ShopTable: React.FC<ShopTableProps> = ({
                                                         items,
                                                         playerMoney,
+                                                        playerPollid = 0,
                                                         onPurchase,
                                                         isLoading = false
                                                     }) => {
@@ -32,7 +34,8 @@ export const ShopTable: React.FC<ShopTableProps> = ({
         const names: { [key: string]: string } = {
             protection: 'Kaitsevahendid',
             trainingBooster: 'Sporditarbed',
-            medical: 'Meditsiinitarbed'
+            medical: 'Meditsiinitarbed',
+            vip: 'VIP Pood'
         };
         return names[category] || category;
     };
@@ -66,6 +69,8 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                 return <span className="effect-text">+{consumable.value} klõpsu</span>;
             case 'health':
                 return <span className="effect-text">+{consumable.value === 9999 ? 'Täielik' : consumable.value} HP</span>;
+            case 'workTimeReduction': // Add work time reduction
+                return <span className="effect-text vip-effect">-{consumable.value}% tööaeg</span>;
             default:
                 return <span>-</span>;
         }
@@ -102,7 +107,10 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                         </thead>
                         <tbody>
                         {categoryItems.map(({ item, currentStock, dynamicPrice }) => {
-                            const canAfford = playerMoney >= dynamicPrice;
+                            const canAfford = item.currency === 'pollid'
+                                ? playerPollid >= (item.pollidPrice || 0)
+                                : playerMoney >= dynamicPrice;
+
                             const hasStock = currentStock > 0;
                             const stockClass = getStockStatus(currentStock, item.maxStock);
                             const priceIncreased = getPriceStatus(item.basePrice, dynamicPrice);
@@ -120,10 +128,19 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                                     </td>
                                     <td>
                                         <div className="price-wrapper">
-                                                <span className={`price ${priceIncreased ? 'price-increased' : ''}`}>
-                                                    €{dynamicPrice.toFixed(2)}
+                                            {item.currency === 'money' && (
+                                                <>
+                                                    <span className={`price money-price ${priceIncreased ? 'price-increased' : ''}`}>
+                                                        €{dynamicPrice.toFixed(2)}
+                                                    </span>
+                                                    {priceIncreased && <span className="price-indicator">↑</span>}
+                                                </>
+                                            )}
+                                            {item.currency === 'pollid' && (
+                                                <span className="price pollid-price">
+                                                    💎 {item.pollidPrice}
                                                 </span>
-                                            {priceIncreased && <span className="price-indicator">↑</span>}
+                                            )}
                                         </div>
                                     </td>
                                     <td>
@@ -139,11 +156,13 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                                     </td>
                                     <td>
                                         <button
-                                            className="buy-button"
+                                            className={`buy-button ${item.currency === 'pollid' ? 'pollid-buy' : ''}`}
                                             onClick={() => onPurchase(item.id)}
                                             disabled={!canAfford || !hasStock}
                                         >
-                                            {!hasStock ? 'Otsas' : !canAfford ? 'Pole raha' : 'Osta'}
+                                            {!hasStock ? 'Otsas' :
+                                                !canAfford ? (item.currency === 'pollid' ? 'Pole Pollide' : 'Pole raha') :
+                                                    'Osta'}
                                         </button>
                                     </td>
                                 </tr>

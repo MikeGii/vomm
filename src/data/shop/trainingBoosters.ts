@@ -8,6 +8,7 @@ export const TRAINING_BOOSTER_ITEMS: ShopItem[] = [
         description: 'Taastab 1 treeningklõpsu',
         category: 'trainingBooster',
         price: 3.50,
+        currency: 'money',
         basePrice: 3.50,
         maxStock: 200,
         consumableEffect: {
@@ -21,6 +22,7 @@ export const TRAINING_BOOSTER_ITEMS: ShopItem[] = [
         description: 'Taastab 2 treeningklõpsu',
         category: 'trainingBooster',
         price: 8.50,
+        currency: 'money',
         basePrice: 8.50,
         maxStock: 200,
         consumableEffect: {
@@ -34,6 +36,7 @@ export const TRAINING_BOOSTER_ITEMS: ShopItem[] = [
         description: 'Taastab 4 treeningklõpsu',
         category: 'trainingBooster',
         price: 50.00,
+        currency: 'money',
         basePrice: 50.00,
         maxStock: 100,
         consumableEffect: {
@@ -47,6 +50,7 @@ export const TRAINING_BOOSTER_ITEMS: ShopItem[] = [
         description: 'Taastab 10 treeningklõpsu',
         category: 'trainingBooster',
         price: 450.00,
+        currency: 'money',
         basePrice: 450.00,
         maxStock: 50,
         consumableEffect: {

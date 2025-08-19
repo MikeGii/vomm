@@ -54,6 +54,7 @@ export interface PlayerStats {
     experience: number;
     reputation: number;
     money: number;
+    pollid?: number;
     rank: string | null;
     department: string | null;
     prefecture: string | null;
