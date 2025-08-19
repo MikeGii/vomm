@@ -74,6 +74,7 @@ export interface PlayerStats {
     lastHealthUpdate?: Timestamp;
     inventory?: InventoryItem[];
     equipment?: CharacterEquipment;
+    fightClubStats?: FightClubStats;
     casinoData?: {
         playsUsed: number;
         lastPlayTime: number;
@@ -212,6 +213,13 @@ export interface PlayerProfileModalData {
 export interface FirestoreTimestamp {
     seconds: number;
     nanoseconds: number;
+}
+
+export interface FightClubStats {
+    wins: number;
+    losses: number;
+    totalFights: number;
+    totalMoneyWon: number;
 }
 
 export * from './events.types';
