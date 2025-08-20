@@ -1,5 +1,6 @@
 // src/components/shop/ShopTable.tsx - UPDATED with notifications
 import React from 'react';
+import { formatMoney } from '../../utils/currencyUtils';
 import '../../styles/components/shop/ShopTable.css';
 
 interface ShopTableProps {
@@ -146,7 +147,7 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                                         priceIncreased ? 'price-increased money-price' : 'money-price'}`}>
                                         {item.currency === 'pollid' ?
                                             `💎${item.pollidPrice}` :
-                                            `€${dynamicPrice.toFixed(2)}`}
+                                            formatMoney(dynamicPrice)}
                                     </span>
                                     {priceIncreased && item.currency !== 'pollid' && (
                                         <span style={{ fontSize: '0.7rem', color: '#f44336' }}>
@@ -216,7 +217,7 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                                     priceIncreased ? 'price-increased money-price' : 'money-price'}`}>
                                     {item.currency === 'pollid' ?
                                         `💎${item.pollidPrice}` :
-                                        `€${dynamicPrice.toFixed(2)}`}
+                                        formatMoney(dynamicPrice)}
                                 </span>
                             </div>
 

@@ -5,6 +5,7 @@ import { signOut } from 'firebase/auth';
 import { auth, firestore } from '../../config/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
+import { formatMoney, formatPollid } from '../../utils/currencyUtils';
 import { PlayerStats } from '../../types';
 import '../../styles/layout/Header.css';
 
@@ -103,11 +104,12 @@ export const AuthenticatedHeader: React.FC = () => {
                             </div>
                             <div className="header-stat-item header-money">
                                 <span className="header-stat-label">Raha</span>
-                                <span className="header-stat-value money">{playerStats.money || 0} €</span>
+                                <span className="header-stat-value money">{formatMoney(playerStats.money || 0)}</span>
                             </div>
+
                             <div className="header-stat-item header-pollid">
                                 <span className="header-stat-label">Pollid</span>
-                                <span className="header-stat-value pollid">💎 {playerStats.pollid || 0}</span>
+                                <span className="header-stat-value pollid">{formatPollid(playerStats.pollid || 0)}</span>
                             </div>
                         </div>
                     )}
