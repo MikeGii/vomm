@@ -4,6 +4,8 @@ import { Course, PlayerAttributes, PlayerStats } from '../../types';
 import { calculateEquipmentBonuses} from "../../services/EquipmentBonusService";
 import '../../styles/components/courses/CourseCard.css';
 import {getCourseById} from "../../data/courses";
+import { ALL_EQUIPMENT } from '../../data/equipment';
+import { ALL_SHOP_ITEMS } from '../../data/shop';
 
 interface CourseCardProps {
     course: Course;
@@ -55,6 +57,33 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                 name: prereqCourse?.name || courseId,
                 isCompleted
             };
+        });
+    };
+
+
+    const getEquipmentNames = (equipmentIds: string[]): string[] => {
+        return equipmentIds.map(id => {
+            const equipment = ALL_EQUIPMENT.find(item => item.id === id);
+            return equipment ? equipment.name : id;
+        });
+    };
+
+
+    const getItemNamesWithQuantities = (items: Array<{itemId: string, quantity: number}>): string[] => {
+        return items.map(item => {
+            // Otsige kõigepealt varustusest
+            const equipment = ALL_EQUIPMENT.find(eq => eq.id === item.itemId);
+            if (equipment) {
+                return item.quantity > 1 ? `${equipment.name} (${item.quantity}x)` : equipment.name;
+            }
+
+            // Seejärel otsige poest
+            const shopItem = ALL_SHOP_ITEMS.find(shop => shop.id === item.itemId);
+            if (shopItem) {
+                return item.quantity > 1 ? `${shopItem.name} (${item.quantity}x)` : shopItem.name;
+            }
+
+            return item.quantity > 1 ? `${item.itemId} (${item.quantity}x)` : item.itemId;
         });
     };
 
@@ -181,6 +210,12 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                         {course.rewards.unlocksStatus && (
                             <li>Staatus: {course.rewards.unlocksStatus}</li>
                         )}
+                        {course.rewards.grantsEquipment && course.rewards.grantsEquipment.length > 0 && (
+                            <li>Saadud varustus: {getEquipmentNames(course.rewards.grantsEquipment).join(', ')}</li>
+                        )}
+                        {course.rewards.grantsItems && course.rewards.grantsItems.length > 0 && (
+                            <li>Annab esemeid: {getItemNamesWithQuantities(course.rewards.grantsItems).join(', ')}</li>
+                        )}
                     </ul>
                 </div>
             </div>
@@ -281,6 +316,12 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                         )}
                         {course.rewards.unlocksStatus && (
                             <li>Avab staatuse: {course.rewards.unlocksStatus}</li>
+                        )}
+                        {course.rewards.grantsEquipment && course.rewards.grantsEquipment.length > 0 && (
+                            <li>Annab varustust: {getEquipmentNames(course.rewards.grantsEquipment).join(', ')}</li>
+                        )}
+                        {course.rewards.grantsItems && course.rewards.grantsItems.length > 0 && (
+                            <li>Saadud esemed: {getItemNamesWithQuantities(course.rewards.grantsItems).join(', ')}</li>
                         )}
                     </ul>
                 </div>
@@ -398,6 +439,12 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                     )}
                     {course.rewards.unlocksStatus && (
                         <li>Avab staatuse: {course.rewards.unlocksStatus}</li>
+                    )}
+                    {course.rewards.grantsEquipment && course.rewards.grantsEquipment.length > 0 && (
+                        <li>Annab varustust: {getEquipmentNames(course.rewards.grantsEquipment).join(', ')}</li>
+                    )}
+                    {course.rewards.grantsItems && course.rewards.grantsItems.length > 0 && (
+                        <li>Annab esemeid: {getItemNamesWithQuantities(course.rewards.grantsItems).join(', ')}</li>
                     )}
                 </ul>
             </div>

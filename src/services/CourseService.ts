@@ -12,7 +12,8 @@ import { Course, ActiveCourse, PlayerStats } from '../types';
 import { ALL_COURSES, getCourseById } from '../data/courses';
 import {calculateLevelFromExp} from "./PlayerService";
 import { ABILITIES} from "../data/abilities";
-import { ABIPOLITSEINIK_UNIFORM, POLITSEI_UNIFORM } from '../data/equipment';
+import { ABIPOLITSEINIK_UNIFORM, POLITSEI_UNIFORM, RIOT_POLICE_EQUIPMENT } from '../data/equipment';
+import {getShopItemById} from "./ShopService";
 
 // Get courses available for player
 export const getAvailableCourses = (playerStats: PlayerStats): Course[] => {
@@ -242,6 +243,51 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
             if (!playerStats.badgeNumber) {
                 updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
             }
+
+        } else if (course.id === 'medical_course_police') {
+            // Grant medical items with quantities
+            const medicalItems = course.rewards.grantsItems?.map(itemReward => {
+                const shopItem = getShopItemById(itemReward.itemId);
+                if (shopItem) {
+                    return {
+                        id: `${itemReward.itemId}_${Date.now()}`,
+                        name: shopItem.name,
+                        description: shopItem.description,
+                        category: shopItem.category === 'medical' ? 'consumable' as const : 'misc' as const,
+                        quantity: itemReward.quantity, // KASUTA ÕIGE KOGUST
+                        equipped: false,
+                        shopPrice: shopItem.price,
+                        source: 'training' as const,
+                        consumableEffect: shopItem.consumableEffect
+                    };
+                }
+                return null;
+            }).filter(item => item !== null) || [];
+
+            // Add items to existing inventory
+            if (medicalItems.length > 0) {
+                updates.inventory = [...(playerStats.inventory || []), ...medicalItems];
+            }
+
+        } else if (course.id === 'riot_police_course') {
+            // Grant riot police equipment
+            const riotEquipmentItems = RIOT_POLICE_EQUIPMENT.map(item => ({
+                id: item.id,
+                name: item.name,
+                description: item.description,
+                category: 'equipment' as const,
+                quantity: 1,
+                equipped: false,
+                equipmentSlot: item.slot,
+                shopPrice: item.shopPrice,
+                stats: item.stats,
+                source: 'training' as const
+            }));
+
+            // Add riot equipment to existing inventory
+            updates.inventory = [...(playerStats.inventory || []), ...riotEquipmentItems];
+
+        } else if (course.rewards.unlocksRank) {
 
         } else if (course.rewards.unlocksRank) {
             updates.rank = course.rewards.unlocksRank;

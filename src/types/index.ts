@@ -109,6 +109,11 @@ export interface Course {
         unlocksStatus?: string;
         grantsAbility?: string;
         replacesAbility?: string;
+        grantsEquipment?: string[];
+        grantsItems?: Array<{
+            itemId: string;
+            quantity: number;
+        }>;
     };
     category: 'abipolitseinik' | 'sisekaitseakadeemia' | 'politsei' ;
 }
