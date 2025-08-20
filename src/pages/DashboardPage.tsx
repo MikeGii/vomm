@@ -16,6 +16,7 @@ import { Leaderboard } from "../components/leaderboard/Leaderboard";
 import { HealthRecoveryManager } from "../components/dashboard/HealthRecoveryManager";
 import { checkCourseCompletion } from '../services/CourseService';
 import { PlayerAbilities } from "../components/dashboard/PlayerAbilities";
+import { InstructionsModal } from '../components/dashboard/InstructionsModal';
 
 import '../styles/pages/Dashboard.css';
 import {getActiveEvent} from "../services/EventService";
@@ -28,6 +29,8 @@ function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [showPrefectureSelection, setShowPrefectureSelection] = useState(false);
     const [showDepartmentSelection, setShowDepartmentSelection] = useState(false);
+    const [showInstructionsModal, setShowInstructionsModal] = useState(false);
+
 
     useEffect(() => {
         const loadPlayerStats = async () => {
@@ -195,6 +198,7 @@ function DashboardPage() {
                         />
                         <QuickActions
                             stats={playerStats}
+                            onShowInstructions={() => setShowInstructionsModal(true)}
                         />
                         <PlayerAbilities
                             stats={playerStats}
@@ -224,6 +228,14 @@ function DashboardPage() {
                         )}
                     </>
                 )}
+
+                {showInstructionsModal && (
+                    <InstructionsModal
+                        isOpen={showInstructionsModal}
+                        onClose={() => setShowInstructionsModal(false)}
+                    />
+                )}
+
             </main>
 
         </div>

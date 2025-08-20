@@ -6,6 +6,7 @@ import '../../styles/components/QuickActions.css';
 
 interface QuickActionsProps {
     stats: PlayerStats;
+    onShowInstructions?: () => void;
 }
 
 interface ActionItem {
@@ -16,7 +17,8 @@ interface ActionItem {
     disabledReason?: string;
 }
 
-export const QuickActions: React.FC<QuickActionsProps> = ({ stats }) => {
+export const QuickActions: React.FC<QuickActionsProps> = ({ stats, onShowInstructions }) => {
+
     const navigate = useNavigate();
 
     const hasCompletedBasicTraining = stats.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
@@ -32,9 +34,15 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ stats }) => {
 
     const actions: ActionItem[] = [
         {
+            icon: '📖',
+            label: 'Õpetus',
+            disabled: false,
+            action: onShowInstructions
+        },
+        {
             icon: '📚',
             label: 'Koolitused',
-            disabled: false, // Always accessible
+            disabled: false,
             action: () => navigate('/courses')
         },
         {
