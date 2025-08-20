@@ -4,114 +4,115 @@ import { firestore } from '../config/firebase';
 import { PlayerStats } from '../types';
 import { CRAFTING_INGREDIENTS } from '../data/shop/craftingIngredients';
 import { InventoryItem } from '../types';
+import { getBaseIdFromInventoryId } from '../utils/inventoryUtils'; // Import from utils!
 
-// Helper function to extract base ID properly
-const getBaseIdFromInventoryId = (inventoryId: string): string => {
-    const parts = inventoryId.split('_');
+// Consolidate items with the same base ID
+const consolidateInventory = (inventory: InventoryItem[]): InventoryItem[] => {
+    const consolidatedMap = new Map<string, InventoryItem>();
 
-    if (parts.length >= 3) {
-        const lastPart = parts[parts.length - 1];
-        const secondLastPart = parts[parts.length - 2];
-
-        if (lastPart.includes('.') && /^\\d+$/.test(secondLastPart)) {
-            return parts.slice(0, -2).join('_');
+    inventory.forEach(item => {
+        if (item.category !== 'crafting') {
+            // Non-crafting items stay as-is
+            consolidatedMap.set(item.id, item);
+            return;
         }
-    }
 
-    return parts[0];
+        const baseId = getBaseIdFromInventoryId(item.id);
+        const correctShopItem = CRAFTING_INGREDIENTS.find(ingredient => ingredient.id === baseId);
+
+        if (!correctShopItem) {
+            // Keep unknown items as-is
+            consolidatedMap.set(item.id, item);
+            return;
+        }
+
+        // Create a key based on the base ID
+        const consolidationKey = `consolidated_${baseId}`;
+
+        if (consolidatedMap.has(consolidationKey)) {
+            // Add quantity to existing consolidated item
+            const existing = consolidatedMap.get(consolidationKey)!;
+            existing.quantity += item.quantity;
+        } else {
+            // Create new consolidated item with correct name/description
+            consolidatedMap.set(consolidationKey, {
+                ...item,
+                id: item.id, // Keep the first item's ID
+                name: correctShopItem.name,
+                description: correctShopItem.description,
+                shopPrice: correctShopItem.basePrice,
+                quantity: item.quantity
+            });
+        }
+    });
+
+    return Array.from(consolidatedMap.values());
 };
 
-// Check if an item needs repair (has incorrect name/description)
-const needsRepair = (item: InventoryItem): boolean => {
-    if (item.category !== 'crafting') return false;
-
-    const baseId = getBaseIdFromInventoryId(item.id);
-    const correctShopItem = CRAFTING_INGREDIENTS.find(ingredient => ingredient.id === baseId);
-
-    if (!correctShopItem) return false;
-
-    // Check if name or description doesn't match
-    return item.name !== correctShopItem.name ||
-        item.description !== correctShopItem.description;
-};
-
-// Repair a single inventory item
-const repairInventoryItem = (item: InventoryItem): InventoryItem => {
-    const baseId = getBaseIdFromInventoryId(item.id);
-    const correctShopItem = CRAFTING_INGREDIENTS.find(ingredient => ingredient.id === baseId);
-
-    if (!correctShopItem) {
-        console.warn(`No shop item found for baseId: ${baseId}`);
-        return item;
-    }
-
-    return {
-        ...item,
-        name: correctShopItem.name,
-        description: correctShopItem.description,
-        shopPrice: correctShopItem.basePrice
-    };
-};
-
-// Repair inventory for a single user
-export const repairUserInventory = async (userId: string): Promise<{
+// Repair and consolidate inventory for a single user
+export const repairAndConsolidateUserInventory = async (userId: string): Promise<{
     success: boolean;
-    repaired: number;
+    itemsConsolidated: number;
+    originalItemCount: number;
+    newItemCount: number;
     message: string;
 }> => {
     try {
         const playerRef = doc(firestore, 'playerStats', userId);
-        const playerDoc = await getDocs(collection(firestore, 'playerStats').withConverter(null));
+        const playerDoc = await getDocs(collection(firestore, 'playerStats'));
 
         const userDoc = playerDoc.docs.find(doc => doc.id === userId);
         if (!userDoc) {
             return {
                 success: false,
-                repaired: 0,
+                itemsConsolidated: 0,
+                originalItemCount: 0,
+                newItemCount: 0,
                 message: 'User not found'
             };
         }
 
         const playerStats = userDoc.data() as PlayerStats;
-        const inventory = playerStats.inventory || [];
+        const originalInventory = playerStats.inventory || [];
+        const consolidatedInventory = consolidateInventory(originalInventory);
 
-        let repairedCount = 0;
-        const repairedInventory = inventory.map(item => {
-            if (needsRepair(item)) {
-                repairedCount++;
-                console.log(`Repairing item: ${item.name} -> ${getBaseIdFromInventoryId(item.id)}`);
-                return repairInventoryItem(item);
-            }
-            return item;
-        });
+        const originalCount = originalInventory.filter(i => i.category === 'crafting').length;
+        const newCount = consolidatedInventory.filter(i => i.category === 'crafting').length;
+        const itemsConsolidated = originalCount - newCount;
 
-        if (repairedCount > 0) {
+        if (itemsConsolidated > 0 || consolidatedInventory.length !== originalInventory.length) {
             await updateDoc(playerRef, {
-                inventory: repairedInventory
+                inventory: consolidatedInventory
             });
+
+            console.log(`User ${userId}: Consolidated ${originalCount} crafting items into ${newCount}`);
         }
 
         return {
             success: true,
-            repaired: repairedCount,
-            message: `Repaired ${repairedCount} items for user ${userId}`
+            itemsConsolidated,
+            originalItemCount: originalCount,
+            newItemCount: newCount,
+            message: `Consolidated ${itemsConsolidated} duplicate items for user ${userId}`
         };
 
     } catch (error) {
         console.error(`Error repairing inventory for user ${userId}:`, error);
         return {
             success: false,
-            repaired: 0,
+            itemsConsolidated: 0,
+            originalItemCount: 0,
+            newItemCount: 0,
             message: `Error: ${error}`
         };
     }
 };
 
-// Repair inventories for all users (admin function)
-export const repairAllUserInventories = async (): Promise<{
+// Repair and consolidate inventories for all users
+export const repairAndConsolidateAllInventories = async (): Promise<{
     success: boolean;
     usersProcessed: number;
-    totalItemsRepaired: number;
+    totalItemsConsolidated: number;
     details: string[];
 }> => {
     try {
@@ -119,35 +120,30 @@ export const repairAllUserInventories = async (): Promise<{
         const querySnapshot = await getDocs(playersCollection);
 
         let usersProcessed = 0;
-        let totalItemsRepaired = 0;
+        let totalItemsConsolidated = 0;
         const details: string[] = [];
 
-        // Use batch operations for better performance
         const batch = writeBatch(firestore);
         let batchOperations = 0;
 
         for (const docSnapshot of querySnapshot.docs) {
             const userId = docSnapshot.id;
             const playerStats = docSnapshot.data() as PlayerStats;
-            const inventory = playerStats.inventory || [];
+            const originalInventory = playerStats.inventory || [];
 
-            let userRepairedCount = 0;
-            const repairedInventory = inventory.map(item => {
-                if (needsRepair(item)) {
-                    const oldName = item.name;
-                    const repairedItem = repairInventoryItem(item);
-                    userRepairedCount++;
+            const consolidatedInventory = consolidateInventory(originalInventory);
 
-                    details.push(`User ${userId}: ${oldName} -> ${repairedItem.name}`);
-                    return repairedItem;
-                }
-                return item;
-            });
+            const originalCraftingCount = originalInventory.filter(i => i.category === 'crafting').length;
+            const newCraftingCount = consolidatedInventory.filter(i => i.category === 'crafting').length;
+            const consolidated = originalCraftingCount - newCraftingCount;
 
-            if (userRepairedCount > 0) {
+            if (consolidated > 0) {
                 const playerRef = doc(firestore, 'playerStats', userId);
-                batch.update(playerRef, { inventory: repairedInventory });
+                batch.update(playerRef, { inventory: consolidatedInventory });
                 batchOperations++;
+
+                details.push(`User ${userId}: ${originalCraftingCount} items -> ${newCraftingCount} items (consolidated ${consolidated})`);
+                totalItemsConsolidated += consolidated;
 
                 // Firestore batch limit is 500 operations
                 if (batchOperations >= 400) {
@@ -157,7 +153,6 @@ export const repairAllUserInventories = async (): Promise<{
             }
 
             usersProcessed++;
-            totalItemsRepaired += userRepairedCount;
         }
 
         // Commit any remaining batch operations
@@ -168,79 +163,99 @@ export const repairAllUserInventories = async (): Promise<{
         return {
             success: true,
             usersProcessed,
-            totalItemsRepaired,
+            totalItemsConsolidated,
             details
         };
 
     } catch (error) {
-        console.error('Error repairing all inventories:', error);
+        console.error('Error consolidating all inventories:', error);
         return {
             success: false,
             usersProcessed: 0,
-            totalItemsRepaired: 0,
+            totalItemsConsolidated: 0,
             details: [`Error: ${error}`]
         };
     }
 };
 
-// Preview what would be repaired without actually doing it
-export const previewInventoryRepairs = async (userId?: string): Promise<{
-    itemsToRepair: { userId: string; oldName: string; newName: string; baseId: string }[];
+// Preview consolidation without making changes
+export const previewConsolidation = async (userId?: string): Promise<{
+    consolidationPreview: {
+        userId: string;
+        baseId: string;
+        itemName: string;
+        currentItems: number;
+        willConsolidateTo: number;
+        totalQuantity: number;
+    }[];
     totalUsers: number;
-    totalItems: number;
+    totalItemsToConsolidate: number;
 }> => {
     try {
         const playersCollection = collection(firestore, 'playerStats');
         const querySnapshot = await getDocs(playersCollection);
 
-        const itemsToRepair: { userId: string; oldName: string; newName: string; baseId: string }[] = [];
+        const consolidationPreview: any[] = [];
         let totalUsers = 0;
-        let totalItems = 0;
+        let totalItemsToConsolidate = 0;
 
         for (const docSnapshot of querySnapshot.docs) {
             const docUserId = docSnapshot.id;
 
-            // If specific user requested, skip others
             if (userId && docUserId !== userId) continue;
 
             const playerStats = docSnapshot.data() as PlayerStats;
             const inventory = playerStats.inventory || [];
 
-            let userHasRepairs = false;
+            // Group items by base ID
+            const itemGroups = new Map<string, InventoryItem[]>();
 
             inventory.forEach(item => {
-                if (needsRepair(item)) {
+                if (item.category === 'crafting') {
                     const baseId = getBaseIdFromInventoryId(item.id);
-                    const correctShopItem = CRAFTING_INGREDIENTS.find(ingredient => ingredient.id === baseId);
-
-                    if (correctShopItem) {
-                        itemsToRepair.push({
-                            userId: docUserId,
-                            oldName: item.name,
-                            newName: correctShopItem.name,
-                            baseId
-                        });
-                        totalItems++;
-                        userHasRepairs = true;
+                    if (!itemGroups.has(baseId)) {
+                        itemGroups.set(baseId, []);
                     }
+                    itemGroups.get(baseId)!.push(item);
                 }
             });
 
-            if (userHasRepairs) totalUsers++;
+            let userHasConsolidation = false;
+
+            itemGroups.forEach((items, baseId) => {
+                if (items.length > 1) {
+                    const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+                    const shopItem = CRAFTING_INGREDIENTS.find(i => i.id === baseId);
+
+                    consolidationPreview.push({
+                        userId: docUserId,
+                        baseId,
+                        itemName: shopItem?.name || items[0].name,
+                        currentItems: items.length,
+                        willConsolidateTo: 1,
+                        totalQuantity
+                    });
+
+                    totalItemsToConsolidate += (items.length - 1);
+                    userHasConsolidation = true;
+                }
+            });
+
+            if (userHasConsolidation) totalUsers++;
         }
 
         return {
-            itemsToRepair,
+            consolidationPreview,
             totalUsers,
-            totalItems
+            totalItemsToConsolidate
         };
 
     } catch (error) {
-        console.error('Error previewing repairs:', error);
+        console.error('Error previewing consolidation:', error);
         return {
-            itemsToRepair: [],
+            consolidationPreview: [],
             totalUsers: 0,
-            totalItems: 0
+            totalItemsToConsolidate: 0
         };
     }
 };

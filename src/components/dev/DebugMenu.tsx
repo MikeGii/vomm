@@ -12,7 +12,10 @@ import { getCourseById } from '../../data/courses';
 import { completeWork } from '../../services/WorkService';
 import { checkCourseCompletion } from '../../services/CourseService';
 import { CRAFTING_INGREDIENTS } from '../../data/shop/craftingIngredients';
-import { previewInventoryRepairs, repairAllUserInventories } from '../../services/InventoryRepairService';
+import {
+    previewConsolidation,
+    repairAndConsolidateAllInventories
+} from '../../services/InventoryRepairService';
 import '../../styles/components/dev/DebugMenu.css';
 
 const ADMIN_USER_ID = 'WUucfDi2DAat9sgDY75mDZ8ct1k2';
@@ -25,6 +28,11 @@ export const DebugMenu: React.FC = () => {
         totalUsers: number;
         totalItems: number;
         items: { userId: string; oldName: string; newName: string; baseId: string }[];
+    } | null>(null);
+    const [consolidationPreview, setConsolidationPreview] = useState<{
+        totalUsers: number;
+        totalItems: number;
+        items: any[];
     } | null>(null);
     const { currentUser } = useAuth();
     const { showToast } = useToast();
@@ -62,17 +70,17 @@ export const DebugMenu: React.FC = () => {
         }
     };
 
-    // Preview inventory repairs
-    const previewRepairs = async () => {
+// Add preview function
+    const previewConsolidationChanges = async () => {
         setLoading(true);
         try {
-            const preview = await previewInventoryRepairs();
-            setRepairPreview({
+            const preview = await previewConsolidation();
+            setConsolidationPreview({
                 totalUsers: preview.totalUsers,
-                totalItems: preview.totalItems,
-                items: preview.itemsToRepair
+                totalItems: preview.totalItemsToConsolidate,
+                items: preview.consolidationPreview
             });
-            showToast(`Leiti ${preview.totalItems} parandamist vajavat eset ${preview.totalUsers} mängijal`, 'info');
+            showToast(`Leiti ${preview.totalItemsToConsolidate} kokku viidavat eset ${preview.totalUsers} mängijal`, 'info');
         } catch (error) {
             console.error('Preview failed:', error);
             showToast('Eelvaate laadimine ebaõnnestus', 'error');
@@ -81,18 +89,16 @@ export const DebugMenu: React.FC = () => {
         }
     };
 
-    // Execute inventory repair for all users
-    const executeInventoryRepair = async () => {
-        const result = await repairAllUserInventories();
+// Add consolidation execution function
+    const executeConsolidation = async () => {
+        const result = await repairAndConsolidateAllInventories();
 
         if (result.success) {
-            setRepairPreview(null); // Clear preview after repair
-            showToast(`Parandati ${result.totalItemsRepaired} eset ${result.usersProcessed} mängijal`, 'success');
-
-            // Log details for admin
-            console.log('Inventory Repair Results:', result.details);
+            setConsolidationPreview(null);
+            showToast(`Kokku viidud ${result.totalItemsConsolidated} eset ${result.usersProcessed} mängijal`, 'success');
+            console.log('Consolidation Results:', result.details);
         } else {
-            throw new Error('Parandamine ebaõnnestus');
+            throw new Error('Kokku viimine ebaõnnestus');
         }
     };
 
@@ -319,49 +325,49 @@ export const DebugMenu: React.FC = () => {
 
                         {/* Inventory Repair Section */}
                         <div className="debug-section">
-                            <h4>Inventari parandamine</h4>
+                            <h4>Inventari kokku viimine (Stack Fix)</h4>
                             <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
                                 <button
                                     className="debug-btn"
-                                    onClick={previewRepairs}
+                                    onClick={previewConsolidationChanges}
                                     disabled={loading}
                                 >
-                                    Vaata parandamist vajavaid esemeid
+                                    Vaata duplikaate
                                 </button>
 
-                                {repairPreview && (
+                                {consolidationPreview && (
                                     <div className="debug-info-text" style={{ fontSize: '0.75rem', padding: '0.5rem', backgroundColor: '#2a2a2a', borderRadius: '4px' }}>
-                                        <strong>Leitud {repairPreview.totalItems} eset {repairPreview.totalUsers} mängijal:</strong>
+                                        <strong>Leitud {consolidationPreview.totalItems} duplikaati {consolidationPreview.totalUsers} mängijal:</strong>
                                         <div style={{ maxHeight: '100px', overflow: 'auto', marginTop: '0.25rem' }}>
-                                            {repairPreview.items.slice(0, 10).map((item, index) => (
+                                            {consolidationPreview.items.slice(0, 10).map((item, index) => (
                                                 <div key={index} style={{ fontSize: '0.7rem' }}>
-                                                    "{item.oldName}" → "{item.newName}"
+                                                    {item.userId}: {item.currentItems}x "{item.itemName}" → 1x (kokku {item.totalQuantity})
                                                 </div>
                                             ))}
-                                            {repairPreview.items.length > 10 && (
+                                            {consolidationPreview.items.length > 10 && (
                                                 <div style={{ fontSize: '0.7rem', fontStyle: 'italic' }}>
-                                                    ...ja veel {repairPreview.items.length - 10} eset
+                                                    ...ja veel {consolidationPreview.items.length - 10} duplikaati
                                                 </div>
                                             )}
                                         </div>
                                     </div>
                                 )}
 
-                                {repairPreview && repairPreview.totalItems > 0 && (
+                                {consolidationPreview && consolidationPreview.totalItems > 0 && (
                                     <button
                                         className="debug-btn debug-btn-danger"
                                         onClick={() => executeDebugAction(
-                                            executeInventoryRepair,
+                                            executeConsolidation,
                                             ''
                                         )}
                                         disabled={loading}
                                     >
-                                        PARANDA KÕIKIDE inventarid
+                                        VII KOKKU kõikide inventarid
                                     </button>
                                 )}
                             </div>
                             <div className="debug-info-text" style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                                Parandab valede nimedega esemed (nt "cleaning" → "Puhastusaine"). Esmalt vaata eelvaade üle!
+                                Viib kokku samade ID-dega esemed (nt 5x "Puhastusaine" → 1x kogusega 5). Esmalt vaata eelvaade üle!
                             </div>
                         </div>
 
