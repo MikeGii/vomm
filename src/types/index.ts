@@ -24,6 +24,9 @@ export interface PlayerAttributes {
     dexterity: AttributeData;
     intelligence: AttributeData;
     endurance: AttributeData;
+    cooking: AttributeData;
+    brewing: AttributeData;
+    chemistry: AttributeData;
 }
 
 export interface TrainingActivity {
@@ -37,8 +40,19 @@ export interface TrainingActivity {
         dexterity?: number;
         intelligence?: number;
         endurance?: number;
+        cooking?: number;
+        brewing?: number;
+        chemistry?: number;
         playerExp: number;
     };
+    requiredItems?: {
+        id: string;
+        quantity: number;
+    }[];
+    producedItems?: {
+        id: string;
+        quantity: number;
+    }[];
 }
 
 export interface TrainingData {
@@ -46,6 +60,12 @@ export interface TrainingData {
     lastResetTime: Date | any;
     totalTrainingsDone: number;
     isWorking?: boolean;
+}
+
+export interface KitchenLabTrainingData {
+    remainingClicks: number;
+    lastResetTime: Date | any;
+    totalTrainingsDone: number;
 }
 
 // Player game stats
@@ -73,6 +93,8 @@ export interface PlayerStats {
     health?: PlayerHealth;
     lastHealthUpdate?: Timestamp;
     inventory?: InventoryItem[];
+    kitchenLabTrainingData?: KitchenLabTrainingData;
+    processedItems?: InventoryItem[];
     equipment?: CharacterEquipment;
     fightClubStats?: FightClubStats;
     casinoData?: {

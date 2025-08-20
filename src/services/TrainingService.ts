@@ -1,7 +1,7 @@
 // src/services/TrainingService.ts
 import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
-import { PlayerStats, PlayerAttributes, AttributeData, TrainingData } from '../types';
+import {PlayerStats, PlayerAttributes, AttributeData, TrainingData, KitchenLabTrainingData} from '../types';
 import {calculateLevelFromExp, calculatePlayerHealth} from "./PlayerService";
 import { getTrainingBonusForAttribute} from "../data/abilities";
 
@@ -26,12 +26,23 @@ export const initializeAttributes = (): PlayerAttributes => {
         agility: createAttribute(),
         dexterity: createAttribute(),
         intelligence: createAttribute(),
-        endurance: createAttribute()
+        endurance: createAttribute(),
+        cooking: createAttribute(),
+        brewing: createAttribute(),
+        chemistry: createAttribute(),
     };
 };
 
 // Initialize training data
 export const initializeTrainingData = (): TrainingData => {
+    return {
+        remainingClicks: 50,
+        lastResetTime: Timestamp.now(),
+        totalTrainingsDone: 0
+    };
+};
+
+export const initializeKitchenLabTrainingData = (): KitchenLabTrainingData => {
     return {
         remainingClicks: 50,
         lastResetTime: Timestamp.now(),
@@ -86,6 +97,51 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
     return trainingData;
 };
 
+export const checkAndResetKitchenLabTrainingClicks = async (userId: string): Promise<KitchenLabTrainingData> => {
+    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsDoc = await getDoc(statsRef);
+
+    if (!statsDoc.exists()) {
+        throw new Error('Player stats not found');
+    }
+
+    const stats = statsDoc.data() as PlayerStats;
+    let kitchenLabTrainingData = stats.kitchenLabTrainingData || initializeKitchenLabTrainingData();
+
+    // Determine max clicks based on work status (same logic as sports)
+    const maxClicks = stats.activeWork ? 10 : 50;
+
+    // Get current time and last reset time
+    const now = new Date();
+    const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
+
+    let lastReset: Date;
+    if (kitchenLabTrainingData.lastResetTime instanceof Timestamp) {
+        lastReset = kitchenLabTrainingData.lastResetTime.toDate();
+    } else if (kitchenLabTrainingData.lastResetTime && typeof kitchenLabTrainingData.lastResetTime === 'object' && 'seconds' in kitchenLabTrainingData.lastResetTime) {
+        lastReset = new Date(kitchenLabTrainingData.lastResetTime.seconds * 1000);
+    } else {
+        lastReset = new Date(kitchenLabTrainingData.lastResetTime);
+    }
+
+    const lastResetHour = new Date(lastReset.getFullYear(), lastReset.getMonth(), lastReset.getDate(), lastReset.getHours());
+
+    // If current hour is different from last reset hour, reset clicks
+    if (currentHour.getTime() > lastResetHour.getTime()) {
+        kitchenLabTrainingData = {
+            remainingClicks: maxClicks,
+            lastResetTime: Timestamp.now(),
+            totalTrainingsDone: kitchenLabTrainingData.totalTrainingsDone
+        };
+
+        await updateDoc(statsRef, {
+            kitchenLabTrainingData: kitchenLabTrainingData
+        });
+    }
+
+    return kitchenLabTrainingData;
+};
+
 // Perform training activity
 export const performTraining = async (
     userId: string,
@@ -96,8 +152,12 @@ export const performTraining = async (
         dexterity?: number;
         intelligence?: number;
         endurance?: number;
+        cooking?: number;
+        brewing?: number;
+        chemistry?: number;
         playerExp: number;
-    }
+    },
+    trainingType: 'sports' | 'kitchen-lab' = 'sports'
 ): Promise<PlayerStats> => {
     const statsRef = doc(firestore, 'playerStats', userId);
     const statsDoc = await getDoc(statsRef);
@@ -109,10 +169,16 @@ export const performTraining = async (
     const stats = statsDoc.data() as PlayerStats;
 
     // Check and reset training clicks if needed
-    const trainingData = await checkAndResetTrainingClicks(userId);
-
-    if (trainingData.remainingClicks <= 0) {
-        throw new Error('Treeningkordi pole enam järel! Oota järgmist täistundi.');
+    if (trainingType === 'sports') {
+        const trainingData = await checkAndResetTrainingClicks(userId);
+        if (trainingData.remainingClicks <= 0) {
+            throw new Error('Treeningkordi pole enam järel! Oota järgmist täistundi.');
+        }
+    } else if (trainingType === 'kitchen-lab') {
+        const kitchenLabData = await checkAndResetKitchenLabTrainingClicks(userId);
+        if (kitchenLabData.remainingClicks <= 0) {
+            throw new Error('Treeningkordi pole enam järel! Oota järgmist täistundi.');
+        }
     }
 
     // Initialize attributes if they don't exist
@@ -138,7 +204,7 @@ export const performTraining = async (
         };
     };
 
-// Apply rewards to attributes WITH BONUSES
+    // Apply rewards to attributes WITH BONUSES
     const applyBonusToReward = (baseReward: number, attribute: 'strength' | 'agility' | 'dexterity' | 'intelligence' | 'endurance'): number => {
         const bonus = getTrainingBonusForAttribute(stats.completedCourses || [], attribute);
         return Math.floor(baseReward * (1 + bonus));
@@ -163,6 +229,15 @@ export const performTraining = async (
     if (rewards.endurance) {
         const bonusedReward = applyBonusToReward(rewards.endurance, 'endurance');
         attributes.endurance = updateAttribute(attributes.endurance, bonusedReward);
+    }
+    if (rewards.cooking) {
+        attributes.cooking = updateAttribute(attributes.cooking, rewards.cooking);
+    }
+    if (rewards.brewing) {
+        attributes.brewing = updateAttribute(attributes.brewing, rewards.brewing);
+    }
+    if (rewards.chemistry) {
+        attributes.chemistry = updateAttribute(attributes.chemistry, rewards.chemistry);
     }
 
     // Recalculate health if strength or endurance changed
@@ -200,24 +275,35 @@ export const performTraining = async (
     const newPlayerExp = stats.experience + rewards.playerExp;
     const newPlayerLevel = calculateLevelFromExp(newPlayerExp);
 
-    // Update training data
-    const updatedTrainingData: TrainingData = {
-        remainingClicks: trainingData.remainingClicks - 1,
-        lastResetTime: trainingData.lastResetTime,
-        totalTrainingsDone: trainingData.totalTrainingsDone + 1,
-        isWorking: !!stats.activeWork
-    };
-
-    // Save to database
-    const updates = {
+    // Update training data based on training type
+    let updates: any = {
         attributes: attributes,
-        trainingData: updatedTrainingData,
         experience: newPlayerExp,
         level: newPlayerLevel,
         health: updatedHealth,
-        ...healthUpdates  // Include lastHealthUpdate if it needs to be cleared
+        ...healthUpdates
     };
 
+    if (trainingType === 'sports') {
+        const trainingData = await checkAndResetTrainingClicks(userId);
+        const updatedTrainingData: TrainingData = {
+            remainingClicks: trainingData.remainingClicks - 1,
+            lastResetTime: trainingData.lastResetTime,
+            totalTrainingsDone: trainingData.totalTrainingsDone + 1,
+            isWorking: !!stats.activeWork
+        };
+        updates.trainingData = updatedTrainingData;
+    } else if (trainingType === 'kitchen-lab') {
+        const kitchenLabData = await checkAndResetKitchenLabTrainingClicks(userId);
+        const updatedKitchenLabData: KitchenLabTrainingData = {
+            remainingClicks: kitchenLabData.remainingClicks - 1,
+            lastResetTime: kitchenLabData.lastResetTime,
+            totalTrainingsDone: kitchenLabData.totalTrainingsDone + 1
+        };
+        updates.kitchenLabTrainingData = updatedKitchenLabData;
+    }
+
+    // Save to database
     await updateDoc(statsRef, updates);
 
     return {
