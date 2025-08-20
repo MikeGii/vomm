@@ -7,26 +7,32 @@ interface LeaderboardTableProps {
     entries: LeaderboardEntry[];
     currentUserId?: string;
     onPlayerClick: (playerData: PlayerProfileModalData) => void;
+    startingRank?: number;
 }
 
 export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                                                                       entries,
                                                                       currentUserId,
-                                                                      onPlayerClick
+                                                                      onPlayerClick,
+                                                                      startingRank = 0
                                                                   }) => {
     const getStatusText = (entry: LeaderboardEntry): string => {
-        // Check if player has completed Sisekaitseakadeemia entrance (is a Kadett)
-        if (entry.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
-            return 'Kadett';
-        }
-        // Check if player has a rank AND is not a Kadett (is a Politseiametnik)
-        if (entry.rank && !entry.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
+        // Check if player has graduated from academy (is a Politseiametnik)
+        if (entry.completedCourses?.includes('lopueksam')) {
             return 'Politseiametnik';
         }
+
+        // Check if player has entered academy but not graduated (is a Kadett)
+        if (entry.completedCourses?.includes('sisekaitseakadeemia_entrance') &&
+            !entry.completedCourses?.includes('lopueksam')) {
+            return 'Kadett';
+        }
+
         // Check if player has completed basic training (is an Abipolitseinik)
         if (entry.completedCourses?.includes('basic_police_training_abipolitseinik')) {
             return 'Abipolitseinik';
         }
+
         return '—';
     };
 
@@ -62,7 +68,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                     <th className="name-column">Nimi</th>
                     <th className="status-column">Staatus</th>
                     <th className="level-column">Tase</th>
-                    <th className="reputation-column">Maine</th>
+                    <th className="reputation-column mobile-hide">Maine</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -72,7 +78,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                         className={entry.userId === currentUserId ? 'current-user' : ''}
                     >
                         <td className="rank-column">
-                            <span className="rank-number">{index + 1}</span>
+                            <span className="rank-number">{startingRank + index + 1}</span>
                         </td>
                         <td className="name-column">
                             <button
@@ -88,7 +94,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                                 </span>
                         </td>
                         <td className="level-column">{entry.level}</td>
-                        <td className="reputation-column">{entry.reputation}</td>
+                        <td className="reputation-column mobile-hide">{entry.reputation}</td>
                     </tr>
                 ))}
                 </tbody>

@@ -81,6 +81,22 @@
     min-width: 120px;
 }
 
+.player-name-button {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: inherit;
+    padding: 0;
+    transition: color 0.3s ease;
+}
+
+.player-name-button:hover {
+    color: #4a90e2;
+    text-decoration: underline;
+}
+
 .status-column {
     min-width: 130px;
 }
@@ -111,15 +127,19 @@
     color: #888;
 }
 
-/* Mobile responsiveness */
+/* Mobile responsiveness - Hide reputation and status columns */
 @media (max-width: 768px) {
+    .mobile-hide {
+        display: none !important;
+    }
+
     .leaderboard-table {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
     }
 
     .leaderboard-table th,
     .leaderboard-table td {
-        padding: 0.5rem 0.75rem;
+        padding: 0.75rem 0.5rem;
     }
 
     .rank-column {
@@ -127,69 +147,40 @@
     }
 
     .rank-number {
-        width: 25px;
-        height: 25px;
-        line-height: 25px;
-        font-size: 0.8rem;
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+        font-size: 0.85rem;
     }
 
     .name-column {
-        min-width: 100px;
+        min-width: auto;
     }
 
-    .status-column {
-        min-width: 110px;
-    }
-
-    .status-badge {
-        font-size: 0.75rem !important;
-        padding: 0.2rem 0.4rem !important;
-    }
-
-    .level-column,
-    .reputation-column {
-        min-width: 70px;
+    .level-column {
+        min-width: 60px;
     }
 }
 
+/* Even smaller screens */
 @media (max-width: 480px) {
     .leaderboard-table {
-        font-size: 0.8rem;
+        font-size: 0.85rem;
     }
 
     .leaderboard-table th,
     .leaderboard-table td {
-        padding: 0.4rem 0.5rem;
+        padding: 0.5rem 0.25rem;
     }
-}
 
-.player-name-button {
-    background: none;
-    border: none;
-    color: #f0f0f0;
-    font-weight: 600;
-    font-size: inherit;
-    cursor: pointer;
-    padding: 0;
-    text-align: left;
-    transition: color 0.3s ease;
-    text-decoration: none;
-}
+    .rank-column {
+        width: 40px;
+    }
 
-.player-name-button:hover {
-    color: #4a90e2;
-    text-decoration: underline;
-}
-
-.player-name-button:focus {
-    outline: 2px solid #4a90e2;
-    outline-offset: 2px;
-    border-radius: 2px;
-}
-
-/* Mobile adjustments */
-@media (max-width: 768px) {
-    .player-name-button {
-        font-size: 0.85rem;
+    .rank-number {
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        font-size: 0.8rem;
     }
 }
