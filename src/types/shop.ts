@@ -26,6 +26,7 @@ export type ShopCategory =
     | 'trainingBooster'
     | 'medical'
     | 'vip'
+    | 'crafting'
 
 export interface ConsumableEffect {
     type: 'trainingClicks' | 'heal' | 'energy' | 'experience' | 'temporary_boost' | 'workTimeReduction' | 'courseTimeReduction';
@@ -66,6 +67,11 @@ export const SHOP_CATEGORIES: Record<ShopCategory, ShopCategoryInfo> = {
         id: 'vip',
         name: 'VIP Pood',
         description: 'Eksklusiivesed, mida saab osta ainult Pollidega',
+    },
+    crafting: {
+        id: 'crafting',
+        name: 'Erinevate toodete valmistamise toorained',
+        description: 'Koostisosad toidu, jookide ja keemia valmistamiseks',
     }
 };
 

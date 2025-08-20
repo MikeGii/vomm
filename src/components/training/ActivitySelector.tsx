@@ -3,6 +3,7 @@ import React from 'react';
 import { TrainingActivity, PlayerStats } from '../../types';
 import { calculateEquipmentBonuses } from '../../services/EquipmentBonusService';
 import '../../styles/components/training/ActivitySelector.css';
+import { ALL_SHOP_ITEMS } from '../../data/shop';
 
 interface ActivitySelectorProps {
     activities: TrainingActivity[];
@@ -12,6 +13,7 @@ interface ActivitySelectorProps {
     isTraining: boolean;
     canTrain: boolean;
     playerStats: PlayerStats | null;
+    trainingType?: 'sports' | 'kitchen-lab'; // NEW: Specify training type
 }
 
 export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
@@ -21,7 +23,8 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                                                                       onTrain,
                                                                       isTraining,
                                                                       canTrain,
-                                                                      playerStats
+                                                                      playerStats,
+                                                                      trainingType = 'sports' // NEW: Default to sports
                                                                   }) => {
     const selectedActivityData = activities.find(a => a.id === selectedActivity);
 
@@ -31,8 +34,10 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
     // Get player's actual level (not attribute levels)
     const playerLevel = playerStats?.level || 1;
 
-    // Get remaining training clicks
-    const remainingClicks = playerStats?.trainingData?.remainingClicks || 0;
+    // Get remaining training clicks based on training type
+    const remainingClicks = trainingType === 'sports'
+        ? (playerStats?.trainingData?.remainingClicks || 0)
+        : (playerStats?.kitchenLabTrainingData?.remainingClicks || 0);
 
     // Check if player can train this activity based on their main level
     const canTrainActivity = (activity: TrainingActivity): boolean => {
@@ -55,9 +60,91 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
         .map(Number)
         .sort((a, b) => a - b);
 
+    // Get title based on training type
+    const getSelectorTitle = (): string => {
+        return trainingType === 'sports' ? 'Vali treening' : 'Vali köök/labor tegevus';
+    };
+
+    // Render rewards based on training type
+    const renderRewards = (activity: TrainingActivity) => {
+        if (trainingType === 'sports') {
+            return (
+                <>
+                    {activity.rewards.strength && (
+                        <li>💪 Jõud: +{activity.rewards.strength}</li>
+                    )}
+                    {activity.rewards.agility && (
+                        <li>🏃 Kiirus: +{activity.rewards.agility}</li>
+                    )}
+                    {activity.rewards.dexterity && (
+                        <li>🎯 Osavus: +{activity.rewards.dexterity}</li>
+                    )}
+                    {activity.rewards.intelligence && (
+                        <li>🧠 Intelligentsus: +{activity.rewards.intelligence}</li>
+                    )}
+                    {activity.rewards.endurance && (
+                        <li>🏋️ Vastupidavus: +{activity.rewards.endurance}</li>
+                    )}
+                </>
+            );
+        } else {
+            return (
+                <>
+                    {activity.rewards.cooking && (
+                        <li>🍳 Toidu valmistamine: +{activity.rewards.cooking}</li>
+                    )}
+                    {activity.rewards.brewing && (
+                        <li>🥤 Joogi valmistamine: +{activity.rewards.brewing}</li>
+                    )}
+                    {activity.rewards.chemistry && (
+                        <li>🧪 Keemia valmistamine: +{activity.rewards.chemistry}</li>
+                    )}
+                </>
+            );
+        }
+    };
+
+    const getItemName = (itemId: string): string => {
+        const shopItem = ALL_SHOP_ITEMS.find(item => item.id === itemId);
+        return shopItem?.name || itemId;
+    };
+
+
+    // Render required/produced items for kitchen/lab activities
+    const renderCraftingInfo = (activity: TrainingActivity) => {
+        if (trainingType !== 'kitchen-lab' || !activity.requiredItems || !activity.producedItems) {
+            return null;
+        }
+
+        return (
+            <div className="crafting-info">
+                <div className="required-items">
+                    <h4>Vajalikud materjalid:</h4>
+                    <ul>
+                        {activity.requiredItems.map((item, index) => (
+                            <li key={index}>
+                                {item.quantity}x {getItemName(item.id)}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+                <div className="produced-items">
+                    <h4>Toodeti:</h4>
+                    <ul>
+                        {activity.producedItems.map((item, index) => (
+                            <li key={index}>
+                                {item.quantity}x {getItemName(item.id)}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="activity-selector">
-            <h3 className="selector-title">Vali treening</h3>
+            <h3 className="selector-title">{getSelectorTitle()}</h3>
 
             {/* Show player's current level */}
             <div className="player-level-info">
@@ -111,8 +198,8 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                         </div>
                     )}
 
-                    {/* Show active equipment bonuses for attributes */}
-                    {equipmentBonuses && Object.values(equipmentBonuses).some(v => v > 0) && (
+                    {/* Show active equipment bonuses for attributes (only for sports) */}
+                    {trainingType === 'sports' && equipmentBonuses && Object.values(equipmentBonuses).some(v => v > 0) && (
                         <div className="equipment-bonus-info">
                             <span className="bonus-label">📦 Varustuse boonused:</span>
                             <div className="bonus-details">
@@ -134,24 +221,13 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
 
                     <p className="activity-description">{selectedActivityData.description}</p>
 
+                    {/* Show crafting info for kitchen/lab activities */}
+                    {renderCraftingInfo(selectedActivityData)}
+
                     <div className="activity-rewards">
                         <h4>Tasu:</h4>
                         <ul>
-                            {selectedActivityData.rewards.strength && (
-                                <li>💪 Jõud: +{selectedActivityData.rewards.strength}</li>
-                            )}
-                            {selectedActivityData.rewards.agility && (
-                                <li>🏃 Kiirus: +{selectedActivityData.rewards.agility}</li>
-                            )}
-                            {selectedActivityData.rewards.dexterity && (
-                                <li>🎯 Osavus: +{selectedActivityData.rewards.dexterity}</li>
-                            )}
-                            {selectedActivityData.rewards.intelligence && (
-                                <li>🧠 Intelligentsus: +{selectedActivityData.rewards.intelligence}</li>
-                            )}
-                            {selectedActivityData.rewards.endurance && (
-                                <li>🏋️ Vastupidavus: +{selectedActivityData.rewards.endurance}</li>
-                            )}
+                            {renderRewards(selectedActivityData)}
                             <li className="exp-reward">⭐ Kogemus: +{selectedActivityData.rewards.playerExp}</li>
                         </ul>
                     </div>
@@ -165,7 +241,9 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                             !canTrainActivity(selectedActivityData) ? `Nõutav tase ${selectedActivityData.requiredLevel}` :
                                 remainingClicks === 0 ? 'Treeningud otsas' :
                                     <>
-                                        <span className="button-text">Treeni</span>
+                                        <span className="button-text">
+                                            {trainingType === 'sports' ? 'Treeni' : 'Valmista'}
+                                        </span>
                                         <span className="clicks-badge">{remainingClicks}</span>
                                     </>
                         }

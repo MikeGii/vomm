@@ -74,3 +74,34 @@
         margin-bottom: 1.5rem;
     }
 }
+
+.tab-placeholder {
+    text-align: center;
+    padding: 3rem 2rem;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.tab-placeholder h2 {
+    color: #f0f0f0;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.tab-placeholder p {
+    color: #888;
+    font-size: 1rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .tab-placeholder {
+        padding: 2rem 1rem;
+    }
+
+    .tab-placeholder h2 {
+        font-size: 1.3rem;
+    }
+}

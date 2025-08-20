@@ -4,13 +4,15 @@ import { PROTECTION_ITEMS } from './equipment';
 import { TRAINING_BOOSTER_ITEMS } from './trainingBoosters';
 import { MEDICAL_ITEMS } from './medicalItems';
 import {VIP_ITEMS} from "./vipItems";
+import { CRAFTING_INGREDIENTS } from './craftingIngredients';
 
 // Combine all shop items
 export const ALL_SHOP_ITEMS: ShopItem[] = [
     ...PROTECTION_ITEMS,
     ...TRAINING_BOOSTER_ITEMS,
     ...MEDICAL_ITEMS,
-    ...VIP_ITEMS
+    ...VIP_ITEMS,
+    ...CRAFTING_INGREDIENTS
 ];
 
 // Get items by category
