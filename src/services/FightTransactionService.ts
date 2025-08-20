@@ -45,9 +45,9 @@ export const processFightResult = async (
                 throw new Error('Sul pole piisavalt tervist võitlemiseks! Vajalik vähemalt 5 HP.');
             }
 
-            // Calculate new health (ALWAYS reduce by 5 for fight initiator)
-            // Now TypeScript knows health exists because we checked above
-            const newHealth = Math.max(0, player1Stats.health.current - 5);
+            // Calculate health damage based on fight outcome
+            const healthDamage = fightResult.winner === 'player1' ? 5 : 15;
+            const newHealth = Math.max(0, player1Stats.health.current - healthDamage);
 
             // Prepare updates for fight initiator
             const player1Updates: any = {
@@ -56,19 +56,18 @@ export const processFightResult = async (
             };
 
             // Start recovery timer if health dropped below max
-            // Add null check here too
             if (player1Stats.health && player1Stats.health.current >= player1Stats.health.max && newHealth < player1Stats.health.max) {
                 player1Updates.lastHealthUpdate = Timestamp.now();
             }
 
             // Handle money and win/loss stats based on fight result
             if (fightResult.winner === 'player1') {
-                // INITIATOR WON - gets money
+                // INITIATOR WON - gets money, loses 5 HP
                 player1Updates.money = (player1Stats.money || 0) + fightResult.moneyWon;
                 player1Updates['fightClubStats.wins'] = (player1Stats.fightClubStats?.wins || 0) + 1;
                 player1Updates['fightClubStats.totalMoneyWon'] = (player1Stats.fightClubStats?.totalMoneyWon || 0) + fightResult.moneyWon;
             } else {
-                // INITIATOR LOST - no money change, just record loss
+                // INITIATOR LOST - no money change, loses 15 HP, record loss
                 player1Updates['fightClubStats.losses'] = (player1Stats.fightClubStats?.losses || 0) + 1;
             }
 
@@ -81,7 +80,7 @@ export const processFightResult = async (
                 winnerId: fightResult.winner === 'player1' ? player1Id : player2Id,
                 loserId: fightResult.winner === 'player1' ? player2Id : player1Id,
                 moneyTransferred: fightResult.winner === 'player1' ? fightResult.moneyWon : 0,
-                healthCost: 5
+                healthCost: healthDamage
             };
         });
 
@@ -104,14 +103,14 @@ export const processFightResult = async (
 
         return {
             success: true,
-            message: `Võitlus lõppes. -5 HP.`
+            message: `Võitlus lõppes. Tervise kaotus: ${result.healthCost} HP`
         };
 
     } catch (error: any) {
-        console.error('Error processing fight result:', error);
+        console.error('Fight processing error:', error);
         return {
             success: false,
-            message: error.message || 'Viga võitluse tulemuse töötlemisel'
+            message: error.message || 'Viga võitluse läbiviimisel'
         };
     }
 };

@@ -61,21 +61,6 @@
     font-weight: bold;
 }
 
-.leaderboard-table tbody tr:nth-child(1) .rank-number {
-    background-color: #ffd700;
-    color: #1a1a1a;
-}
-
-.leaderboard-table tbody tr:nth-child(2) .rank-number {
-    background-color: #c0c0c0;
-    color: #1a1a1a;
-}
-
-.leaderboard-table tbody tr:nth-child(3) .rank-number {
-    background-color: #cd7f32;
-    color: #1a1a1a;
-}
-
 .name-column {
     font-weight: 600;
     min-width: 120px;

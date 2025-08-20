@@ -93,11 +93,12 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
                 result
             );
 
+            // In the handleFight function - update the toast messages:
             if (transactionResult.success) {
                 // Refresh player stats to show updated health and money
                 await onFightComplete(result);
 
-                // Show result toast with health cost included
+                // Show result toast with dynamic health cost
                 if (result.winner === 'player1') {
                     showToast(
                         `🏆 Võitsid ${opponent.username} vastu! +${result.moneyWon}€ | -5 HP`,
@@ -105,7 +106,7 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
                     );
                 } else {
                     showToast(
-                        `😞 Kaotasid ${opponent.username} vastu. | -5 HP`,
+                        `😞 Kaotasid ${opponent.username} vastu. | -15 HP`,
                         'error'
                     );
                 }
@@ -151,7 +152,7 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
                     <div className="warning-content">
                         <strong>Madal tervis!</strong>
                         <p>Sul on {playerStats.health.current}/{playerStats.health.max} HP</p>
-                        <p>Iga võitlus maksab 5 HP (vajalik vähemalt 5 HP)</p>
+                        <p>Võit: -5 HP | Kaotus: -15 HP (vajalik vähemalt 5 HP)</p>
                         <p>Tervis taastub 5 HP tunnis või kasuta meditsiinivarustust.</p>
                     </div>
                 </div>
@@ -213,8 +214,8 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
                                         <div className="fight-cost">
                                             <span className="cost-label">Vigastus:</span>
                                             <span className={`cost-value ${!hasEnoughHealth ? 'insufficient' : ''}`}>
-                                            -5 HP
-                                        </span>
+                                                5-15 HP
+                                            </span>
                                         </div>
                                     </div>
 
