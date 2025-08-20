@@ -127,7 +127,7 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
         ]
     },
     {
-        id: 'make_cleaning_solution',
+        id: 'cleaning_solution',
         name: 'Valmista puhastusaine',
         description: 'Valmistad võimsat puhastusainet, mis sobib ideaalselt kontorite ja sõidukite puhastamiseks',
         requiredLevel: 5,
@@ -145,7 +145,7 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
         ]
     },
     {
-        id: 'make_strong_antiseptic',
+        id: 'antiseptic_solution',
         name: 'Valmista antiseptikut',
         description: 'Valmistad tugevat antiseptikut, mis hävitab baktereid ja sobib meditsiiniliseks kasutamiseks',
         requiredLevel: 10,
