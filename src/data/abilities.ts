@@ -152,6 +152,17 @@ export const ABILITIES: Ability[] = [
         requiredCourse: 'law_studies_curriculum',
         trainingBonuses: [
             { attribute: 'intelligence', percentage: 0.10 }
+        ],
+        replacedBy: 'law_advanced_police'
+    },
+    {
+        id: 'law_advanced_police',
+        name: 'Süüteomenetluse põhjalikud teadmised',
+        description: 'Oled omandanud süüteomenetluses täiendavad teadmised ja oskad viia läbi kõiki menetlusliike.',
+        icon: GoLaw,
+        requiredCourse: 'enhanced_law_studies',
+        trainingBonuses: [
+            { attribute: 'intelligence', percentage: 0.15 }
         ]
     },
     {
