@@ -1,6 +1,6 @@
 // src/components/shop/ShopTable.tsx - UPDATED with notifications
 import React from 'react';
-import { formatMoney, formatPollid } from '../../utils/currencyUtils';
+import { formatMoney } from '../../utils/currencyUtils';
 import '../../styles/components/shop/ShopTable.css';
 
 interface ShopTableProps {
