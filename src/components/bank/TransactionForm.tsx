@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { searchPlayerByBadgeNumber, processTransaction } from '../../services/BankService';
 import { PlayerSearchResult } from '../../types';
+import { formatMoney } from '../../utils/currencyUtils';
 import { useToast } from '../../contexts/ToastContext';
 import '../../styles/components/bank/TransactionForm.css';
 
@@ -139,7 +140,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                         disabled={isProcessing}
                     />
                     <div className="balance-info">
-                        Sinu saldo: {playerMoney}€
+                        Sinu saldo: {formatMoney(playerMoney)}
                     </div>
                 </div>
 

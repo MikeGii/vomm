@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import { PlayerProfileModalData, FirestoreTimestamp } from '../../types';
+import { formatMoney } from '../../utils/currencyUtils';
 import '../../styles/components/leaderboard/PlayerProfileModal.css';
 
 interface PlayerProfileModalProps {
