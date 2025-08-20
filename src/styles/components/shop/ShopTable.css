@@ -295,7 +295,7 @@
     }
 
     .mobile-item-name {
-        color: #f0f0f0;
+        color: #f0f0f0 !important;
         font-size: 1rem;
         font-weight: 600;
         margin: 0;
@@ -474,5 +474,78 @@
     .mobile-vip-effect {
         font-size: 0.7rem;
         padding: 0.1rem 0.3rem;
+    }
+}
+
+.stock-type-indicator {
+    display: inline-block;
+    padding: 0.15rem 0.4rem;
+    border-radius: 8px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-left: 0.4rem;
+    vertical-align: middle;
+}
+
+.auto-replenish-indicator {
+    background-color: rgba(76, 175, 80, 0.15);
+    color: #4caf50;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.player-made-indicator {
+    background-color: rgba(255, 152, 0, 0.15);
+    color: #ff9800;
+    border: 1px solid rgba(255, 152, 0, 0.3);
+}
+
+/* Eemalda vanad suuremad märgid */
+.player-dependent-badge,
+.auto-replenish-badge {
+    display: none;
+}
+
+/* Vähenda hoiatuse suurust */
+.player-dependent-warning {
+    background-color: rgba(255, 152, 0, 0.08);
+    border: 1px solid rgba(255, 152, 0, 0.2);
+    border-radius: 4px;
+    padding: 0.4rem;
+    margin-top: 0.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.player-dependent-warning-icon {
+    color: #ff9800;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.player-dependent-warning-text {
+    color: #ff9800;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+/* Mobile sõbralik */
+@media (max-width: 768px) {
+    .stock-type-indicator {
+        font-size: 0.55rem;
+        padding: 0.1rem 0.3rem;
+        margin-left: 0.3rem;
+    }
+
+    .player-dependent-warning {
+        padding: 0.3rem;
+        margin-top: 0.2rem;
+    }
+
+    .player-dependent-warning-text {
+        font-size: 0.7rem;
     }
 }

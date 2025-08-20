@@ -10,7 +10,7 @@ export const TRAINING_BOOSTER_ITEMS: ShopItem[] = [
         price: 3.50,
         currency: 'money',
         basePrice: 3.50,
-        maxStock: 200,
+        maxStock: 500,
         consumableEffect: {
             type: 'trainingClicks',
             value: 1
@@ -24,7 +24,7 @@ export const TRAINING_BOOSTER_ITEMS: ShopItem[] = [
         price: 8.50,
         currency: 'money',
         basePrice: 8.50,
-        maxStock: 200,
+        maxStock: 400,
         consumableEffect: {
             type: 'trainingClicks',
             value: 2
@@ -38,7 +38,7 @@ export const TRAINING_BOOSTER_ITEMS: ShopItem[] = [
         price: 50.00,
         currency: 'money',
         basePrice: 50.00,
-        maxStock: 100,
+        maxStock: 150,
         consumableEffect: {
             type: 'trainingClicks',
             value: 4
@@ -52,7 +52,7 @@ export const TRAINING_BOOSTER_ITEMS: ShopItem[] = [
         price: 450.00,
         currency: 'money',
         basePrice: 450.00,
-        maxStock: 50,
+        maxStock: 100,
         consumableEffect: {
             type: 'trainingClicks',
             value: 10

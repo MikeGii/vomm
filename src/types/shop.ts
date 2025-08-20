@@ -1,4 +1,4 @@
-// src/types/shop.ts
+// src/types/shop.ts - UPDATED VERSION
 export interface ShopItem {
     id: string;
     name: string;
@@ -39,7 +39,8 @@ export interface PurchaseResult {
     message: string;
     newBalance?: number;
     newPollidBalance?: number;
-    failureReason?: 'insufficient_funds' | 'insufficient_pollid' | 'requirements_not_met' | 'out_of_stock' | 'inventory_full';}
+    failureReason?: 'insufficient_funds' | 'insufficient_pollid' | 'requirements_not_met' | 'out_of_stock' | 'inventory_full';
+}
 
 export interface ShopCategoryInfo {
     id: ShopCategory;
@@ -79,4 +80,6 @@ export interface ShopStock {
     itemId: string;
     currentStock: number;
     lastRestockTime: Date;
+    stockSource?: 'auto' | 'player_sold';
+    playerSoldStock?: number;
 }
