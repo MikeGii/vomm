@@ -275,3 +275,129 @@
         font-size: 1rem;
     }
 }
+
+/* Username input container */
+.username-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+/* Username validation indicator */
+.username-validation-indicator {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+.validation-checking {
+    font-size: 1.2rem;
+    animation: pulse 1.5s infinite;
+}
+
+.validation-icon {
+    font-size: 1.2rem;
+    transition: opacity 0.3s ease;
+}
+
+.validation-icon.available {
+    color: #4caf50;
+}
+
+.validation-icon.unavailable {
+    color: #ff6b6b;
+}
+
+/* Username input states */
+.modal-input.username-checking {
+    border-color: #ff9800;
+    background-color: #2a2a2a;
+}
+
+.modal-input.username-available {
+    border-color: #4caf50;
+    background-color: #2a2a2a;
+}
+
+.modal-input.username-unavailable {
+    border-color: #ff6b6b;
+    background-color: #2a2a2a;
+}
+
+/* Username validation message */
+.username-validation-message {
+    font-size: 11px;
+    margin: 2px 0 0 4px;
+    text-align: left;
+    padding: 0;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.3s ease;
+    /* Remove any background, border, or container styling */
+    background: none;
+    border: none;
+    box-shadow: none;
+}
+
+.username-validation-message.success {
+    color: #4caf50;
+    background: none;
+    border: none;
+}
+
+.username-validation-message.error {
+    color: #ff6b6b;
+    background: none;
+    border: none;
+}
+
+.username-validation-message:not(.modal-error) {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+/* Pulse animation for loading indicator */
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Adjust username input padding to make room for indicator */
+.username-input-container .modal-input {
+    padding-right: 40px;
+}
+
+/* Make sure validation indicator doesn't interfere with input */
+.username-input-container:focus-within .username-validation-indicator {
+    opacity: 0.8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .username-validation-indicator {
+        right: 8px;
+    }
+
+    .username-input-container .modal-input {
+        padding-right: 35px;
+    }
+
+    .validation-checking,
+    .validation-icon {
+        font-size: 1rem;
+    }
+}

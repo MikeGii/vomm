@@ -9,6 +9,7 @@ export interface User {
     uid: string;
     email: string;
     username: string;
+    usernameLower: string;
     createdAt: Date | Timestamp | FirestoreTimestamp;
 }
 

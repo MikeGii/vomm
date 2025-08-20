@@ -1,15 +1,28 @@
 // src/components/auth/RegisterModal.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, firestore } from '../../config/firebase';
 import { User } from '../../types';
+import { validateUsername } from '../../services/UserValidationService';
 import '../../styles/layout/Modal.css';
 
 interface RegisterModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+}
+
+// Debounce utility function
+function debounce<T extends (...args: any[]) => any>(
+    func: T,
+    wait: number
+): (...args: Parameters<T>) => void {
+    let timeout: NodeJS.Timeout;
+    return (...args: Parameters<T>) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+    };
 }
 
 export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSuccess }) => {
@@ -21,6 +34,58 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [passwordStrength, setPasswordStrength] = useState(0);
+
+    // New states for username validation
+    const [usernameValidation, setUsernameValidation] = useState<{
+        isValid: boolean;
+        isAvailable: boolean;
+        message: string;
+        isChecking: boolean;
+    }>({
+        isValid: false,
+        isAvailable: false,
+        message: '',
+        isChecking: false
+    });
+
+    // Debounced username validation
+    const validateUsernameDebounced = useCallback(
+        debounce(async (usernameToCheck: string) => {
+            if (usernameToCheck.length < 3) {
+                setUsernameValidation({
+                    isValid: false,
+                    isAvailable: false,
+                    message: '',
+                    isChecking: false
+                });
+                return;
+            }
+
+            setUsernameValidation(prev => ({ ...prev, isChecking: true }));
+
+            const result = await validateUsername(usernameToCheck);
+
+            setUsernameValidation({
+                isValid: result.isValid,
+                isAvailable: result.isAvailable,
+                message: result.message,
+                isChecking: false
+            });
+        }, 500),
+        []
+    );
+
+    // Username change handler
+    const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newUsername = e.target.value;
+        setUsername(newUsername);
+
+        // Clear form-level errors when user starts typing
+        if (error) setError('');
+
+        // Trigger debounced validation
+        validateUsernameDebounced(newUsername);
+    };
 
     useEffect(() => {
         const handleEscKey = (event: KeyboardEvent) => {
@@ -48,6 +113,12 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
             setError('');
             setShowPassword(false);
             setPasswordStrength(0);
+            setUsernameValidation({
+                isValid: false,
+                isAvailable: false,
+                message: '',
+                isChecking: false
+            });
         }
     }, [isOpen]);
 
@@ -65,18 +136,12 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
     if (!isOpen) return null;
 
     const validateForm = (): boolean => {
-        if (username.length < 3) {
-            setError('Kasutajanimi peab olema vähemalt 3 tähemärki pikk');
+        // Check username validation first
+        if (!usernameValidation.isValid || !usernameValidation.isAvailable) {
+            setError('Kasutajanimi ei ole kehtiv või on juba kasutusel');
             return false;
         }
-        if (username.length > 20) {
-            setError('Kasutajanimi ei tohi olla pikem kui 20 tähemärki');
-            return false;
-        }
-        if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-            setError('Kasutajanimi tohib sisaldada ainult tähti, numbreid ja alakriipsu');
-            return false;
-        }
+
         if (password.length < 6) {
             setError('Parool peab olema vähemalt 6 tähemärki pikk');
             return false;
@@ -105,6 +170,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                 uid: user.uid,
                 email: user.email!,
                 username,
+                usernameLower: username.toLowerCase(),
                 createdAt: new Date()
             };
 
@@ -124,6 +190,23 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
         } finally {
             setLoading(false);
         }
+    };
+
+    // Get username input styling based on validation state
+    const getUsernameInputClass = () => {
+        let baseClass = 'modal-input';
+
+        if (username.length >= 3) {
+            if (usernameValidation.isChecking) {
+                baseClass += ' username-checking';
+            } else if (usernameValidation.isAvailable) {
+                baseClass += ' username-available';
+            } else if (!usernameValidation.isValid || !usernameValidation.isAvailable) {
+                baseClass += ' username-unavailable';
+            }
+        }
+
+        return baseClass;
     };
 
     const getPasswordStrengthText = () => {
@@ -147,17 +230,35 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                 <button className="modal-close" onClick={onClose}>×</button>
                 <h2 className="modal-title">Alusta karjääri</h2>
                 <form onSubmit={handleRegister} className="modal-form">
-                    <input
-                        type="text"
-                        placeholder="Kasutajanimi (3-20 tähemärki)"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                        className="modal-input"
-                        disabled={loading}
-                        autoComplete="username"
-                        maxLength={20}
-                    />
+                    <div className="username-input-container">
+                        <input
+                            type="text"
+                            placeholder="Kasutajanimi (3-20 tähemärki)"
+                            value={username}
+                            onChange={handleUsernameChange}
+                            required
+                            className={getUsernameInputClass()}
+                            disabled={loading}
+                            autoComplete="username"
+                            maxLength={20}
+                        />
+                        <div className="username-validation-indicator">
+                            {usernameValidation.isChecking && (
+                                <span className="validation-checking">⏳</span>
+                            )}
+                            {!usernameValidation.isChecking && username.length >= 3 && (
+                                <span className={`validation-icon ${usernameValidation.isAvailable ? 'available' : 'unavailable'}`}>
+                                    {usernameValidation.isAvailable ? '✅' : '❌'}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                    {username.length >= 3 && usernameValidation.message && (
+                        <p className={`username-validation-message ${usernameValidation.isAvailable ? 'success' : 'error'}`}>
+                            {usernameValidation.message}
+                        </p>
+                    )}
+
                     <input
                         type="email"
                         placeholder="E-posti aadress"
@@ -223,7 +324,15 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                     <button
                         type="submit"
                         className="modal-button"
-                        disabled={loading || !email || !password || !username || !confirmPassword}
+                        disabled={
+                            loading ||
+                            !email ||
+                            !password ||
+                            !username ||
+                            !confirmPassword ||
+                            !usernameValidation.isAvailable ||
+                            usernameValidation.isChecking
+                        }
                     >
                         {loading ? 'Registreerin...' : 'Loo konto'}
                     </button>
