@@ -2,7 +2,7 @@
 import { IconType } from 'react-icons';
 import { GiPistolGun, GiElectric, GiPoliceCar, GiMachineGunMagazine } from 'react-icons/gi';
 import { MdSpeed } from 'react-icons/md';
-import { FaTabletAlt } from 'react-icons/fa';
+import { FaTabletAlt, FaMedkit } from 'react-icons/fa';
 import { FaComputer, FaPeopleGroup } from 'react-icons/fa6';
 import { GoLaw } from 'react-icons/go';
 
@@ -163,6 +163,17 @@ export const ABILITIES: Ability[] = [
         trainingBonuses: [
             { attribute: 'strength', percentage: 0.10 },
             { attribute: 'dexterity', percentage: 0.10 }
+        ]
+    },
+    {
+        id: 'police_medical_officer',
+        name: 'Esmaabi andmise oskus',
+        description: 'Oled omandanud teadmised ja oskused efektiivseks esmaabi andmiseks välitöös',
+        icon: FaMedkit,
+        requiredCourse: 'medical_course_police',
+        trainingBonuses: [
+            { attribute: 'intelligence', percentage: 0.05 },
+            { attribute: 'endurance', percentage: 0.05 }
         ]
     }
 ];

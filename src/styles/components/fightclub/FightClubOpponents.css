@@ -254,26 +254,32 @@
 .fight-cost {
     margin-top: 0.5rem;
     padding: 0.4rem 0.5rem;
-    background: rgba(255, 0, 0, 0.1);
+    background: rgba(255, 87, 34, 0.1);
     border-radius: 4px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 0.85rem;
-}
-
-.cost-label {
-    color: #999;
+    border-left: 3px solid #ff5722;
 }
 
 .cost-value {
-    color: #ff6b6b;
+    color: #ff7043;
     font-weight: 600;
+    font-size: 0.9rem;
 }
 
 .cost-value.insufficient {
     color: #ff3333;
     font-weight: bold;
+    animation: pulse 1.5s infinite;
+}
+
+/* Pulse animation for insufficient health */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
 }
 
 /* Disabled button styling */
@@ -286,4 +292,10 @@
 .fight-button:disabled:hover {
     background-color: #555;
     transform: none;
+}
+
+/* Updated health warning for new damage system */
+.health-warning p:nth-child(3) {
+    color: #ff7043;
+    font-weight: 500;
 }

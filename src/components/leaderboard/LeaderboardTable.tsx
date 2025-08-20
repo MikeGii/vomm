@@ -36,6 +36,19 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
         return '—';
     };
 
+    const getMedalStyle = (globalRank: number) => {
+        switch (globalRank) {
+            case 1:
+                return { backgroundColor: '#ffd700', color: '#1a1a1a' }; // Gold
+            case 2:
+                return { backgroundColor: '#c0c0c0', color: '#1a1a1a' }; // Silver
+            case 3:
+                return { backgroundColor: '#cd7f32', color: '#1a1a1a' }; // Bronze
+            default:
+                return { backgroundColor: '#333', color: '#f0f0f0' }; // Default
+        }
+    };
+
     const handlePlayerClick = (entry: LeaderboardEntry) => {
         const playerData: PlayerProfileModalData = {
             userId: entry.userId,
@@ -72,31 +85,41 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                 </tr>
                 </thead>
                 <tbody>
-                {entries.map((entry, index) => (
-                    <tr
-                        key={entry.userId}
-                        className={entry.userId === currentUserId ? 'current-user' : ''}
-                    >
-                        <td className="rank-column">
-                            <span className="rank-number">{startingRank + index + 1}</span>
-                        </td>
-                        <td className="name-column">
-                            <button
-                                className="player-name-button"
-                                onClick={() => handlePlayerClick(entry)}
-                            >
-                                {entry.username}
-                            </button>
-                        </td>
-                        <td className="status-column">
-                                <span className="status-badge">
-                                    {getStatusText(entry)}
-                                </span>
-                        </td>
-                        <td className="level-column">{entry.level}</td>
-                        <td className="reputation-column mobile-hide">{entry.reputation}</td>
-                    </tr>
-                ))}
+                {entries.map((entry, index) => {
+                    const globalRank = startingRank + index + 1;
+                    const medalStyle = getMedalStyle(globalRank);
+
+                    return (
+                        <tr
+                            key={entry.userId}
+                            className={entry.userId === currentUserId ? 'current-user' : ''}
+                        >
+                            <td className="rank-column">
+                                    <span
+                                        className="rank-number"
+                                        style={medalStyle}
+                                    >
+                                        {globalRank}
+                                    </span>
+                            </td>
+                            <td className="name-column">
+                                <button
+                                    className="player-name-button"
+                                    onClick={() => handlePlayerClick(entry)}
+                                >
+                                    {entry.username}
+                                </button>
+                            </td>
+                            <td className="status-column">
+                                    <span className="status-badge">
+                                        {getStatusText(entry)}
+                                    </span>
+                            </td>
+                            <td className="level-column">{entry.level}</td>
+                            <td className="reputation-column mobile-hide">{entry.reputation}</td>
+                        </tr>
+                    );
+                })}
                 </tbody>
             </table>
         </div>
