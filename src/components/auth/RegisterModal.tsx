@@ -49,32 +49,28 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
     });
 
     // Debounced username validation
-    const validateUsernameDebounced = useCallback(
-        debounce(async (usernameToCheck: string) => {
-            if (usernameToCheck.length < 3) {
-                setUsernameValidation({
-                    isValid: false,
-                    isAvailable: false,
-                    message: '',
-                    isChecking: false
-                });
-                return;
-            }
-
-            setUsernameValidation(prev => ({ ...prev, isChecking: true }));
-
-            const result = await validateUsername(usernameToCheck);
-
+    const validateUsernameDebounced = debounce(async (usernameToCheck: string) => {
+        if (usernameToCheck.length < 3) {
             setUsernameValidation({
-                isValid: result.isValid,
-                isAvailable: result.isAvailable,
-                message: result.message,
+                isValid: false,
+                isAvailable: false,
+                message: '',
                 isChecking: false
             });
-        }, 500),
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        []
-    );
+            return;
+        }
+
+        setUsernameValidation(prev => ({ ...prev, isChecking: true }));
+
+        const result = await validateUsername(usernameToCheck);
+
+        setUsernameValidation({
+            isValid: result.isValid,
+            isAvailable: result.isAvailable,
+            message: result.message,
+            isChecking: false
+        });
+    }, 500);
 
     // Username change handler
     const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
