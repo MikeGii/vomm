@@ -2,6 +2,7 @@
 import React, {useState} from 'react';
 import { InventoryItem } from '../../types';
 import { CRAFTING_INGREDIENTS } from '../../data/shop/craftingIngredients';
+import { getBaseIdFromInventoryId } from '../../utils/inventoryUtils';
 import '../../styles/components/training/CraftingInventory.css';
 
 interface CraftingInventoryProps {
@@ -14,29 +15,8 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
     const [sellQuantities, setSellQuantities] = useState<{ [key: string]: number }>({});
     const [sellLoading, setSellLoading] = useState<{ [key: string]: boolean }>({});
 
-    // Helper function to extract base ID properly
-    const getBaseIdFromInventoryId = (inventoryId: string): string => {
-        const parts = inventoryId.split('_');
-
-        // For timestamped IDs like "cleaning_solution_1234567890_0.123"
-        // Remove the last 2 parts (timestamp and random) but keep the original base ID
-        if (parts.length >= 3) {
-            const lastPart = parts[parts.length - 1];
-            const secondLastPart = parts[parts.length - 2];
-
-            // If last part is decimal and second-to-last is all digits (timestamp)
-            if (lastPart.includes('.') && /^\\d+$/.test(secondLastPart)) {
-                return parts.slice(0, -2).join('_');
-            }
-        }
-
-        // Fallback to first part if pattern doesn't match
-        return parts[0];
-    };
-
     // Get item details from CRAFTING_INGREDIENTS
     const getItemDetails = (item: InventoryItem) => {
-        // Extract base ID from timestamped inventory ID - FIXED
         const baseId = getBaseIdFromInventoryId(item.id);
         return CRAFTING_INGREDIENTS.find(ingredient => ingredient.id === baseId);
     };
@@ -45,23 +25,25 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
     const canSellItem = (item: InventoryItem) => {
         const details = getItemDetails(item);
         if (!details) return false;
-
-        // Basic ingredients (with maxStock > 0) cannot be sold back
-        // Only produced items (with maxStock = 0) can be sold
         return details.maxStock === 0;
     };
 
     // Filter only crafting category items and sort alphabetically
     const craftingItems = inventory
         .filter(item => item.category === 'crafting')
-        .map(item => ({
-            ...item,
-            baseId: getBaseIdFromInventoryId(item.id), // FIXED
-            details: getItemDetails(item)
-        }))
+        .map(item => {
+            const baseId = getBaseIdFromInventoryId(item.id);
+            const details = getItemDetails(item);
+            return {
+                ...item,
+                baseId: baseId,
+                details: details,
+                displayName: item.name || details?.name || baseId // Add displayName
+            };
+        })
         .sort((a, b) => {
-            const nameA = a.details?.name || a.baseId;
-            const nameB = b.details?.name || b.baseId;
+            const nameA = a.displayName;
+            const nameB = b.displayName;
             return nameA.localeCompare(nameB, 'et');
         });
 
@@ -84,7 +66,6 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
 
         try {
             await onSellItem(item.id, quantity);
-            // Reset quantity after successful sell
             setSellQuantities(prev => ({ ...prev, [item.id]: 1 }));
         } catch (error) {
             console.error('Müük ebaõnnestus:', error);
@@ -121,7 +102,7 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
                     {craftingItems.map(item => (
                         <tr key={item.id}>
                             <td className="item-name">
-                                {item.details?.name || item.baseId}
+                                {item.displayName}
                                 {canSellItem(item) && (
                                     <span className="sellable-badge">Müüdav</span>
                                 )}

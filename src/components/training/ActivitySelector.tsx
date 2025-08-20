@@ -3,6 +3,7 @@ import React from 'react';
 import { TrainingActivity, PlayerStats } from '../../types';
 import { calculateEquipmentBonuses } from '../../services/EquipmentBonusService';
 import { CRAFTING_INGREDIENTS } from '../../data/shop/craftingIngredients';
+import { getBaseIdFromInventoryId } from '../../utils/inventoryUtils';
 import '../../styles/components/training/ActivitySelector.css';
 import { ALL_SHOP_ITEMS } from '../../data/shop';
 
@@ -16,22 +17,6 @@ interface ActivitySelectorProps {
     playerStats: PlayerStats | null;
     trainingType?: 'sports' | 'kitchen-lab';
 }
-
-// At the top of ActivitySelector.tsx, add the helper function:
-const getBaseIdFromInventoryId = (inventoryId: string): string => {
-    const parts = inventoryId.split('_');
-
-    if (parts.length >= 3) {
-        const lastPart = parts[parts.length - 1];
-        const secondLastPart = parts[parts.length - 2];
-
-        if (lastPart.includes('.') && /^\\d+$/.test(secondLastPart)) {
-            return parts.slice(0, -2).join('_');
-        }
-    }
-
-    return parts[0];
-};
 
 export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                                                                       activities,
@@ -113,6 +98,11 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
     };
 
     const getItemName = (itemId: string): string => {
+        // First try to find in CRAFTING_INGREDIENTS
+        const craftingItem = CRAFTING_INGREDIENTS.find(item => item.id === itemId);
+        if (craftingItem) return craftingItem.name;
+
+        // Fallback to ALL_SHOP_ITEMS
         const shopItem = ALL_SHOP_ITEMS.find(item => item.id === itemId);
         return shopItem?.name || itemId;
     };

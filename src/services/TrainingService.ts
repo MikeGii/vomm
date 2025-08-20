@@ -7,27 +7,8 @@ import { getTrainingBonusForAttribute} from "../data/abilities";
 import { getKitchenLabActivityById } from '../data/kitchenLabActivities';
 import { CRAFTING_INGREDIENTS } from '../data/shop/craftingIngredients';
 import { InventoryItem } from '../types';
+import { getBaseIdFromInventoryId, createTimestampedId } from '../utils/inventoryUtils'; // ADD THIS
 
-
-// Helper function to extract base ID properly from inventory items
-const getBaseIdFromInventoryId = (inventoryId: string): string => {
-    const parts = inventoryId.split('_');
-
-    // For timestamped IDs like "cleaning_solution_1234567890_0.123"
-    // Remove the last 2 parts (timestamp and random) but keep the original base ID
-    if (parts.length >= 3) {
-        const lastPart = parts[parts.length - 1];
-        const secondLastPart = parts[parts.length - 2];
-
-        // If last part is decimal and second-to-last is all digits (timestamp)
-        if (lastPart.includes('.') && /^\\d+$/.test(secondLastPart)) {
-            return parts.slice(0, -2).join('_');
-        }
-    }
-
-    // Fallback to first part if pattern doesn't match
-    return parts[0];
-};
 
 // Calculate experience needed for next attribute level
 export const calculateExpForNextLevel = (currentLevel: number): number => {
@@ -114,10 +95,10 @@ const createInventoryItemFromId = (itemId: string, quantity: number): InventoryI
     }
 
     return {
-        id: `${itemId}_${Date.now()}_${Math.random()}`, // Use complex ID like shop does
+        id: createTimestampedId(itemId), // Use the utility function
         name: shopItem.name,
         description: shopItem.description,
-        category: 'crafting', // Changed from 'misc' to 'crafting'
+        category: 'crafting',
         quantity: quantity,
         shopPrice: shopItem.basePrice,
         source: 'training',
