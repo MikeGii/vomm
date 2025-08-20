@@ -10,6 +10,7 @@ import { ShopItem, PurchaseResult } from '../types/shop';
 import { InventoryItem } from '../types';
 import { PlayerStats } from '../types';
 import { ALL_SHOP_ITEMS } from '../data/shop';
+import { createTimestampedId } from '../utils/inventoryUtils';
 import {
     getItemStock,
     calculateDynamicPrice,
@@ -28,7 +29,7 @@ export const getShopItemById = (itemId: string): ShopItem | undefined => {
  */
 const shopItemToInventoryItem = (shopItem: ShopItem): InventoryItem => {
     const inventoryItem: InventoryItem = {
-        id: `${shopItem.id}_${Date.now()}`,
+        id: createTimestampedId(shopItem.id),
         name: shopItem.name,
         description: shopItem.description,
         category: shopItem.category === 'crafting' ? 'crafting' :
@@ -152,7 +153,7 @@ export const purchaseItem = async (
             const newItem = shopItemToInventoryItem(shopItem);
             newItem.quantity = quantity;
             newItem.shopPrice = isPollidPurchase ? (shopItem.pollidPrice || 0) : totalCost / quantity;
-            newItem.id = `${shopItem.id}_${Date.now()}_${Math.random()}`;
+            newItem.id = createTimestampedId(shopItem.id);
             updatedInventory.push(newItem);
         }
 
