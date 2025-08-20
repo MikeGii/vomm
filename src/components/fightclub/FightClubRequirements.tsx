@@ -1,5 +1,6 @@
 // src/components/fightclub/FightClubRequirements.tsx
 import React from 'react';
+import '../../styles/components/fightclub/FightClubRequirements.css';
 import { PlayerStats } from '../../types';
 
 interface FightClubRequirementsProps {

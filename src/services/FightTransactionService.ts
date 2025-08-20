@@ -2,6 +2,7 @@
 import { doc, runTransaction, collection, addDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { FightResult } from './FightService';
+import {PlayerStats} from "../types";
 
 export interface FightRecord {
     fightId: string;
@@ -21,61 +22,66 @@ export interface FightRecord {
 
 // Process fight result and handle money/stats updates
 export const processFightResult = async (
-    player1Id: string,
+    player1Id: string,  // This is ALWAYS the fight initiator
     player1Username: string,
-    player2Id: string,
+    player2Id: string,  // This is the opponent (NPC)
     player2Username: string,
     fightResult: FightResult
 ): Promise<{ success: boolean; message: string }> => {
     try {
         const result = await runTransaction(firestore, async (transaction) => {
-            // Get both players' current stats
+            // Get player stats (only player1 is the real player initiating)
             const player1Ref = doc(firestore, 'playerStats', player1Id);
-            const player2Ref = doc(firestore, 'playerStats', player2Id);
-
             const player1Doc = await transaction.get(player1Ref);
-            const player2Doc = await transaction.get(player2Ref);
 
-            if (!player1Doc.exists() || !player2Doc.exists()) {
-                throw new Error('Mängija andmeid ei leitud');
+            if (!player1Doc.exists()) {
+                throw new Error('Mängija andmed puuduvad');
             }
 
-            const player1Stats = player1Doc.data();
-            const player2Stats = player2Doc.data();
+            const player1Stats = player1Doc.data() as PlayerStats;
 
-            // Determine winner and loser
-            const winnerId = fightResult.winner === 'player1' ? player1Id : player2Id;
-            const loserId = fightResult.winner === 'player1' ? player2Id : player1Id;
-            const winnerStats = fightResult.winner === 'player1' ? player1Stats : player2Stats;
-            const loserStats = fightResult.winner === 'player1' ? player2Stats : player1Stats;
-            const winnerRef = fightResult.winner === 'player1' ? player1Ref : player2Ref;
-            const loserRef = fightResult.winner === 'player1' ? player2Ref : player1Ref;
+            // HEALTH CHECK - Fight initiator needs at least 5 HP
+            if (!player1Stats.health || player1Stats.health.current < 5) {
+                throw new Error('Sul pole piisavalt tervist võitlemiseks! Vajalik vähemalt 5 HP.');
+            }
 
-            // Check if loser has enough money (optional - for betting system)
-            const moneyToTransfer = fightResult.moneyWon;
+            // Calculate new health (ALWAYS reduce by 5 for fight initiator)
+            // Now TypeScript knows health exists because we checked above
+            const newHealth = Math.max(0, player1Stats.health.current - 5);
 
-            // Update winner stats
-            const winnerUpdates: any = {
-                money: (winnerStats.money || 0) + moneyToTransfer,
-                'fightClubStats.wins': (winnerStats.fightClubStats?.wins || 0) + 1,
-                'fightClubStats.totalFights': (winnerStats.fightClubStats?.totalFights || 0) + 1,
-                'fightClubStats.totalMoneyWon': (winnerStats.fightClubStats?.totalMoneyWon || 0) + moneyToTransfer
+            // Prepare updates for fight initiator
+            const player1Updates: any = {
+                'health.current': newHealth,
+                'fightClubStats.totalFights': (player1Stats.fightClubStats?.totalFights || 0) + 1
             };
 
-            // Update loser stats (no money loss for now, just record the fight)
-            const loserUpdates: any = {
-                'fightClubStats.losses': (loserStats.fightClubStats?.losses || 0) + 1,
-                'fightClubStats.totalFights': (loserStats.fightClubStats?.totalFights || 0) + 1
-            };
+            // Start recovery timer if health dropped below max
+            // Add null check here too
+            if (player1Stats.health && player1Stats.health.current >= player1Stats.health.max && newHealth < player1Stats.health.max) {
+                player1Updates.lastHealthUpdate = Timestamp.now();
+            }
 
-            // Apply updates
-            transaction.update(winnerRef, winnerUpdates);
-            transaction.update(loserRef, loserUpdates);
+            // Handle money and win/loss stats based on fight result
+            if (fightResult.winner === 'player1') {
+                // INITIATOR WON - gets money
+                player1Updates.money = (player1Stats.money || 0) + fightResult.moneyWon;
+                player1Updates['fightClubStats.wins'] = (player1Stats.fightClubStats?.wins || 0) + 1;
+                player1Updates['fightClubStats.totalMoneyWon'] = (player1Stats.fightClubStats?.totalMoneyWon || 0) + fightResult.moneyWon;
+            } else {
+                // INITIATOR LOST - no money change, just record loss
+                player1Updates['fightClubStats.losses'] = (player1Stats.fightClubStats?.losses || 0) + 1;
+            }
+
+            // Apply updates ONLY to fight initiator
+            transaction.update(player1Ref, player1Updates);
+
+            // Note: We do NOT update player2 (opponent) stats at all - they're just NPCs
 
             return {
-                winnerId,
-                loserId,
-                moneyTransferred: moneyToTransfer
+                winnerId: fightResult.winner === 'player1' ? player1Id : player2Id,
+                loserId: fightResult.winner === 'player1' ? player2Id : player1Id,
+                moneyTransferred: fightResult.winner === 'player1' ? fightResult.moneyWon : 0,
+                healthCost: 5
             };
         });
 
@@ -98,7 +104,7 @@ export const processFightResult = async (
 
         return {
             success: true,
-            message: `Fight completed successfully. Money transferred: ${result.moneyTransferred}€`
+            message: `Võitlus lõppes. -5 HP.`
         };
 
     } catch (error: any) {
