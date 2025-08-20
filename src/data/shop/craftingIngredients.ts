@@ -11,16 +11,16 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 3,
         currency: 'money',
         basePrice: 3,
-        maxStock: 1000
+        maxStock: 2000
     },
     {
         id: 'porrige',
         name: 'Kaerahelbepuder',
         description: 'Tervislik kaerahelbepuder',
         category: 'crafting',
-        price: 12,
+        price: 15,
         currency: 'money',
-        basePrice: 12,
+        basePrice: 15,
         maxStock: 0
     },
     {
@@ -31,7 +31,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 2,
         currency: 'money',
         basePrice: 2,
-        maxStock: 1000
+        maxStock: 2000
     },
     {
         id: 'syrup',
@@ -41,16 +41,16 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 3,
         currency: 'money',
         basePrice: 3,
-        maxStock: 600
+        maxStock: 1200
     },
     {
         id: 'juice',
         name: 'Mahl',
         description: 'Magus mahl valmistatud veest ja siirupist',
         category: 'crafting',
-        price: 10,
+        price: 12,
         currency: 'money',
-        basePrice: 10,
+        basePrice: 12,
         maxStock: 0
     },
     // Chemistry ingredients
@@ -62,16 +62,16 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 15,
         currency: 'money',
         basePrice: 15,
-        maxStock: 600
+        maxStock: 1200
     },
     {
         id: 'disinfectant',
         name: 'Desinfitseerimisvahend',
         description: 'Aine desinfitseerimiseks',
         category: 'crafting',
-        price: 20,
+        price: 24,
         currency: 'money',
-        basePrice: 20,
+        basePrice: 24,
         maxStock: 0
     }
 ];
