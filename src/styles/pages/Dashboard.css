@@ -18,3 +18,43 @@
         padding: 1rem;
     }
 }
+
+.instructions-section {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: center;
+}
+
+.instructions-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
+}
+
+.instructions-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(74, 144, 226, 0.4);
+    background: linear-gradient(135deg, #5ba0f2, #4a90e2);
+}
+
+.instructions-button:active {
+    transform: translateY(0);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .instructions-button {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+    }
+}
