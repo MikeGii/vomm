@@ -18,20 +18,6 @@ export const getPlayerProfileData = async (userId: string): Promise<PlayerProfil
         const userData = userDoc.data() as User;
         const playerStats = statsDoc.data() as PlayerStats;
 
-        // Determine status
-        const getStatusText = (): string => {
-            if (playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
-                return 'Kadett';
-            }
-            if (playerStats.rank && !playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
-                return 'Politseiametnik';
-            }
-            if (playerStats.completedCourses?.includes('basic_police_training_abipolitseinik')) {
-                return 'Abipolitseinik';
-            }
-            return '—';
-        };
-
         // Convert Firestore Timestamp to Date if necessary
         let createdAtDate: Date | undefined;
         if (userData.createdAt) {
@@ -59,11 +45,11 @@ export const getPlayerProfileData = async (userId: string): Promise<PlayerProfil
             username: userData.username,
             level: playerStats.level,
             reputation: playerStats.reputation,
-            status: getStatusText(),
             money: playerStats.money,
             badgeNumber: playerStats.badgeNumber,
             attributes: playerStats.attributes,
-            createdAt: createdAtDate
+            createdAt: createdAtDate,
+            completedCourses: playerStats.completedCourses || []
         };
     } catch (error) {
         console.error('Error fetching player profile data:', error);

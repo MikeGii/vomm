@@ -55,11 +55,11 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             username: entry.username,
             level: entry.level,
             reputation: entry.reputation,
-            status: getStatusText(entry),
             money: entry.money,
             badgeNumber: entry.badgeNumber,
             attributes: entry.attributes,
-            createdAt: undefined
+            createdAt: undefined,
+            completedCourses: entry.completedCourses // ADD THIS LINE
         };
         onPlayerClick(playerData);
     };
