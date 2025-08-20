@@ -231,11 +231,11 @@ export interface PlayerProfileModalData {
     username: string;
     level: number;
     reputation: number;
-    status: string;
     money: number;
     badgeNumber: string | null;
     attributes?: PlayerAttributes;
     createdAt?: Date | Timestamp | FirestoreTimestamp;
+    completedCourses?: string[];
 }
 
 export interface FirestoreTimestamp {

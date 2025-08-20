@@ -6,14 +6,36 @@ import '../../styles/components/leaderboard/PlayerProfileModal.css';
 
 interface PlayerProfileModalProps {
     isOpen: boolean;
-    playerData: PlayerProfileModalData | null;
     onClose: () => void;
+    playerData: PlayerProfileModalData | null;
+    loading?: boolean;
 }
+
+const getPlayerStatus = (completedCourses: string[] = []): string => {
+    // If player has graduated from academy (completed lopueksam), show Politseiametnik
+    if (completedCourses.includes('lopueksam')) {
+        return 'Politseiametnik';
+    }
+
+    // If player has entered academy but not graduated, show Kadett
+    if (completedCourses.includes('sisekaitseakadeemia_entrance') &&
+        !completedCourses.includes('lopueksam')) {
+        return 'Kadett';
+    }
+
+    // If player has completed basic training, show Abipolitseinik
+    if (completedCourses.includes('basic_police_training_abipolitseinik')) {
+        return 'Abipolitseinik';
+    }
+
+    return '—';
+};
 
 export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
                                                                           isOpen,
+                                                                          onClose,
                                                                           playerData,
-                                                                          onClose
+                                                                          loading = false
                                                                       }) => {
     useEffect(() => {
         const handleEscKey = (event: KeyboardEvent) => {
@@ -69,7 +91,12 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
     };
 
     const formatMoney = (amount: number): string => {
-        return `€${amount.toFixed(2)}`;
+        return new Intl.NumberFormat('et-EE', {
+            style: 'currency',
+            currency: 'EUR',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(amount);
     };
 
     return (
@@ -96,7 +123,9 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
                     {/* Status */}
                     <div className="profile-field">
                         <label>Staatus:</label>
-                        <span className="status-badge">{playerData.status}</span>
+                        <span className="status-badge">
+                                {getPlayerStatus(playerData.completedCourses)}
+                            </span>
                     </div>
 
                     {/* Level */}
@@ -128,30 +157,48 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
                         <div className="attributes-section">
                             <h3 className="section-title">Atribuudid</h3>
                             <div className="attributes-compact-grid">
+                                {/* Physical Attributes */}
                                 <div className="attribute-compact">
                                     <span className="attribute-emoji">💪</span>
                                     <span className="attribute-name">Jõud</span>
-                                    <span className="attribute-value">{playerData.attributes.strength.level}</span>
+                                    <span className="attribute-value">{playerData.attributes.strength?.level || 0}</span>
                                 </div>
                                 <div className="attribute-compact">
                                     <span className="attribute-emoji">🏃</span>
                                     <span className="attribute-name">Kiirus</span>
-                                    <span className="attribute-value">{playerData.attributes.agility.level}</span>
+                                    <span className="attribute-value">{playerData.attributes.agility?.level || 0}</span>
                                 </div>
                                 <div className="attribute-compact">
                                     <span className="attribute-emoji">🎯</span>
                                     <span className="attribute-name">Osavus</span>
-                                    <span className="attribute-value">{playerData.attributes.dexterity.level}</span>
+                                    <span className="attribute-value">{playerData.attributes.dexterity?.level || 0}</span>
                                 </div>
                                 <div className="attribute-compact">
                                     <span className="attribute-emoji">🧠</span>
                                     <span className="attribute-name">Int.</span>
-                                    <span className="attribute-value">{playerData.attributes.intelligence.level}</span>
+                                    <span className="attribute-value">{playerData.attributes.intelligence?.level || 0}</span>
                                 </div>
                                 <div className="attribute-compact">
                                     <span className="attribute-emoji">🏋️</span>
                                     <span className="attribute-name">Vast.</span>
-                                    <span className="attribute-value">{playerData.attributes.endurance.level}</span>
+                                    <span className="attribute-value">{playerData.attributes.endurance?.level || 0}</span>
+                                </div>
+
+                                {/* New Kitchen/Lab Skills */}
+                                <div className="attribute-compact">
+                                    <span className="attribute-emoji">🍳</span>
+                                    <span className="attribute-name">Söök</span>
+                                    <span className="attribute-value">{playerData.attributes.cooking?.level || 0}</span>
+                                </div>
+                                <div className="attribute-compact">
+                                    <span className="attribute-emoji">🥤</span>
+                                    <span className="attribute-name">Jook</span>
+                                    <span className="attribute-value">{playerData.attributes.brewing?.level || 0}</span>
+                                </div>
+                                <div className="attribute-compact">
+                                    <span className="attribute-emoji">🧪</span>
+                                    <span className="attribute-name">Keem.</span>
+                                    <span className="attribute-value">{playerData.attributes.chemistry?.level || 0}</span>
                                 </div>
                             </div>
                         </div>
