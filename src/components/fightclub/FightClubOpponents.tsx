@@ -8,7 +8,9 @@ import { processFightResult } from '../../services/FightTransactionService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { doc, getDoc } from 'firebase/firestore';
+import { calculatePotentialReward} from "../../services/FightService";
 import { firestore } from '../../config/firebase';
+import '../../styles/components/fightclub/FightClubOpponents.css';
 
 interface FightClubOpponentsProps {
     playerStats: PlayerStats;
@@ -23,8 +25,8 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
                                                                           loadingPlayers,
                                                                           onFightComplete
                                                                       }) => {
-    const { currentUser } = useAuth();
-    const { showToast } = useToast();
+    const {currentUser} = useAuth();
+    const {showToast} = useToast();
     const [fightingWith, setFightingWith] = useState<string | null>(null);
     const [showHistory, setShowHistory] = useState(false);
 
@@ -45,6 +47,12 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
 
     const handleFight = async (opponent: EligiblePlayer) => {
         if (!playerStats || !currentUser || fightingWith) return;
+
+        // Check if player has enough health (5 HP required)
+        if (playerStats.health && playerStats.health.current < 5) {
+            showToast('❤️ Sul pole piisavalt tervist võitlemiseks! Vajalik vähemalt 5 HP.', 'error');
+            return;
+        }
 
         setFightingWith(opponent.userId);
 
@@ -70,13 +78,13 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
                 userId: opponent.userId,
                 username: opponent.username,
                 level: opponent.level,
-                attributes: opponent.attributes // Now we have real attributes!
+                attributes: opponent.attributes
             };
 
             // Calculate the fight
             const result = calculateFight(player1, player2);
 
-            // Process the transaction (money, stats, history)
+            // Process the transaction (money, stats, history, AND health reduction)
             const transactionResult = await processFightResult(
                 currentUser.uid,
                 currentUsername,
@@ -86,21 +94,34 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
             );
 
             if (transactionResult.success) {
-                onFightComplete(result);
+                // Refresh player stats to show updated health and money
+                await onFightComplete(result);
 
-                // Show result toast
+                // Show result toast with health cost included
                 if (result.winner === 'player1') {
-                    showToast(`🏆 Võitsid ${opponent.username} vastu! +${result.moneyWon}€`, 'success');
+                    showToast(
+                        `🏆 Võitsid ${opponent.username} vastu! +${result.moneyWon}€ | -5 HP`,
+                        'success'
+                    );
                 } else {
-                    showToast(`😞 Kaotasid ${opponent.username} vastu.`, 'error');
+                    showToast(
+                        `😞 Kaotasid ${opponent.username} vastu. | -5 HP`,
+                        'error'
+                    );
                 }
             } else {
                 showToast(`Viga: ${transactionResult.message}`, 'error');
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Fight error:', error);
-            showToast('Viga võitluse läbiviimisel!', 'error');
+
+            // Show more specific error messages
+            if (error.message && error.message.includes('tervist')) {
+                showToast(error.message, 'error');
+            } else {
+                showToast('Viga võitluse läbiviimisel!', 'error');
+            }
         } finally {
             setFightingWith(null);
         }
@@ -123,6 +144,19 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
                 </div>
             </div>
 
+            {/* Health warning if health is low */}
+            {playerStats.health && playerStats.health.current < 20 && (
+                <div className="health-warning">
+                    <span className="warning-icon">⚠️</span>
+                    <div className="warning-content">
+                        <strong>Madal tervis!</strong>
+                        <p>Sul on {playerStats.health.current}/{playerStats.health.max} HP</p>
+                        <p>Iga võitlus maksab 5 HP (vajalik vähemalt 5 HP)</p>
+                        <p>Tervis taastub 5 HP tunnis või kasuta meditsiinivarustust.</p>
+                    </div>
+                </div>
+            )}
+
             <div className="opponents-section">
                 <h3>Võimalikud vastased:</h3>
 
@@ -135,24 +169,67 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
                     </div>
                 ) : (
                     <div className="opponents-list">
-                        {eligiblePlayers.map(player => (
-                            <div key={player.userId} className="opponent-card">
-                                <div className="opponent-info">
-                                    <div className="opponent-header">
-                                        <span className="opponent-name">{player.username}</span>
-                                        <span className="opponent-level">Tase {player.level}</span>
-                                    </div>
-                                </div>
+                        {eligiblePlayers.map(player => {
+                            const hasEnoughHealth = playerStats.health && playerStats.health.current >= 5;
+                            const potentialReward = calculatePotentialReward(playerStats.level, player.level);
+                            const levelDiff = player.level - playerStats.level;
 
-                                <button
-                                    className="fight-button"
-                                    onClick={() => handleFight(player)}
-                                    disabled={fightingWith === player.userId}
-                                >
-                                    {fightingWith === player.userId ? 'Võitleb...' : 'Võitle'}
-                                </button>
-                            </div>
-                        ))}
+                            return (
+                                <div key={player.userId} className="opponent-card">
+                                    <div className="opponent-info">
+                                        <div className="opponent-header">
+                                            <span className="opponent-name">{player.username}</span>
+                                            <span className={`opponent-level ${
+                                                levelDiff > 0 ? 'higher-level' :
+                                                    levelDiff < 0 ? 'lower-level' :
+                                                        'same-level'
+                                            }`}>
+                                            Tase {player.level}
+                                                {levelDiff !== 0 && (
+                                                    <span className="level-diff">
+                                                    {levelDiff > 0 ? `(+${levelDiff})` : `(${levelDiff})`}
+                                                </span>
+                                                )}
+                                        </span>
+                                        </div>
+
+                                        {/* Reward preview section */}
+                                        <div className="reward-preview">
+                                            <span className="reward-label">Võimalik võit:</span>
+                                            <span className={`reward-amount ${
+                                                levelDiff > 0 ? 'bonus-reward' :
+                                                    levelDiff < -5 ? 'penalty-reward' : ''
+                                            }`}>
+                                            ~{potentialReward.reward}€
+                                                {levelDiff !== 0 && (
+                                                    <span className="reward-percentage">
+                                                    ({potentialReward.percentage})
+                                                </span>
+                                                )}
+                                        </span>
+                                        </div>
+
+                                        {/* Health cost indicator */}
+                                        <div className="fight-cost">
+                                            <span className="cost-label">Vigastus:</span>
+                                            <span className={`cost-value ${!hasEnoughHealth ? 'insufficient' : ''}`}>
+                                            -5 HP
+                                        </span>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        className="fight-button"
+                                        onClick={() => handleFight(player)}
+                                        disabled={fightingWith === player.userId || !hasEnoughHealth}
+                                        title={!hasEnoughHealth ? 'Vajalik vähemalt 5 HP võitlemiseks' : ''}
+                                    >
+                                        {fightingWith === player.userId ? '⚔️ Võitleb...' :
+                                            !hasEnoughHealth ? '❤️ Liiga vähe HP' : '⚔️ Võitle'}
+                                    </button>
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
             </div>
@@ -163,4 +240,4 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
             />
         </div>
     );
-};
+}

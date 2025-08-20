@@ -41,8 +41,32 @@ export const calculateFight = (
     const maxRounds = 5; // Best of 5 rounds
     const minRounds = 3; // Minimum 3 rounds
 
-    // Calculate base money reward (based on levels)
-    const moneyWon = Math.floor((player1.level + player2.level) * 2.5 + Math.random() * 50);
+    // NEW PROGRESSIVE MONEY REWARD SYSTEM
+    const baseReward = 500; // Base reward amount
+    const levelDifference = player2.level - player1.level; // Negative if opponent is lower level
+
+    let moneyWon: number;
+
+    if (levelDifference < 0) {
+        // Fighting lower level opponent - decrease reward by 10% per level
+        const decreasePercentage = Math.abs(levelDifference) * 0.10;
+        // Minimum 5% of base reward (never go to absolute 0)
+        const multiplier = Math.max(0.05, 1 - decreasePercentage);
+        moneyWon = Math.floor(baseReward * multiplier);
+    } else if (levelDifference > 0) {
+        // Fighting higher level opponent - increase reward by 10% per level
+        const increasePercentage = levelDifference * 0.10;
+        // Cap at 200% increase (3x base reward)
+        const multiplier = Math.min(3, 1 + increasePercentage);
+        moneyWon = Math.floor(baseReward * multiplier);
+    } else {
+        // Same level - base reward
+        moneyWon = baseReward;
+    }
+
+    // Add small random variation (±10%)
+    const randomVariation = 0.9 + (Math.random() * 0.2);
+    moneyWon = Math.floor(moneyWon * randomVariation);
 
     for (let roundNum = 1; roundNum <= maxRounds; roundNum++) {
         const round = simulateRound(roundNum, player1, player2);
@@ -71,6 +95,35 @@ export const calculateFight = (
         totalRounds: rounds.length,
         moneyWon
     };
+};
+
+// Add a helper function to calculate and display potential reward
+export const calculatePotentialReward = (
+    playerLevel: number,
+    opponentLevel: number
+): { reward: number; percentage: string } => {
+    const baseReward = 500;
+    const levelDifference = opponentLevel - playerLevel;
+
+    let reward: number;
+    let percentage: string;
+
+    if (levelDifference < 0) {
+        const decreasePercentage = Math.abs(levelDifference) * 0.10;
+        const multiplier = Math.max(0.05, 1 - decreasePercentage);
+        reward = Math.floor(baseReward * multiplier);
+        percentage = `${Math.floor(multiplier * 100)}%`;
+    } else if (levelDifference > 0) {
+        const increasePercentage = levelDifference * 0.10;
+        const multiplier = Math.min(3, 1 + increasePercentage);
+        reward = Math.floor(baseReward * multiplier);
+        percentage = `${Math.floor(multiplier * 100)}%`;
+    } else {
+        reward = baseReward;
+        percentage = "100%";
+    }
+
+    return { reward, percentage };
 };
 
 // Simulate a single round

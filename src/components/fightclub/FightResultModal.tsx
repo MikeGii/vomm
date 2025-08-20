@@ -1,6 +1,7 @@
 // src/components/fightclub/FightResultModal.tsx
 import React from 'react';
 import { FightResult } from '../../services/FightService';
+import '../../styles/components/fightclub/FightModal.css';
 
 interface FightResultModalProps {
     isOpen: boolean;

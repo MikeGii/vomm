@@ -1,7 +1,8 @@
 // src/components/fightclub/FightHistory.tsx
-import React, {useState, useEffect, useCallback} from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getPlayerFightHistory, FightRecord } from '../../services/FightTransactionService';
+import '../../styles/components/fightclub/FightHistory.css';
 
 interface FightHistoryProps {
     isOpen: boolean;
@@ -10,22 +11,33 @@ interface FightHistoryProps {
 
 export const FightHistory: React.FC<FightHistoryProps> = ({ isOpen, onClose }) => {
     const { currentUser } = useAuth();
-    const [fightHistory, setFightHistory] = useState<FightRecord[]>([]);
+    const [allFightHistory, setAllFightHistory] = useState<FightRecord[]>([]); // Store ALL fights
+    const [displayedFights, setDisplayedFights] = useState<FightRecord[]>([]); // Current page fights
     const [loading, setLoading] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const fightsPerPage = 20;
 
     const loadFightHistory = useCallback(async () => {
         if (!currentUser) return;
 
         setLoading(true);
         try {
-            const history = await getPlayerFightHistory(currentUser.uid, 20);
-            setFightHistory(history);
+            // Load all fights (or a reasonable maximum like 500)
+            const history = await getPlayerFightHistory(currentUser.uid, 500);
+            setAllFightHistory(history);
+
+            // Set first page
+            const startIndex = 0;
+            const endIndex = fightsPerPage;
+            setDisplayedFights(history.slice(startIndex, endIndex));
+            setCurrentPage(1);
         } catch (error) {
             console.error('Error loading fight history:', error);
         } finally {
             setLoading(false);
         }
-    }, [currentUser]); // Dependencies: only currentUser
+    }, [currentUser]);
 
     useEffect(() => {
         if (isOpen && currentUser) {
@@ -33,15 +45,36 @@ export const FightHistory: React.FC<FightHistoryProps> = ({ isOpen, onClose }) =
         }
     }, [isOpen, currentUser, loadFightHistory]);
 
+    const handlePageChange = (page: number) => {
+        const startIndex = (page - 1) * fightsPerPage;
+        const endIndex = startIndex + fightsPerPage;
+        setDisplayedFights(allFightHistory.slice(startIndex, endIndex));
+        setCurrentPage(page);
+    };
+
     const formatDate = (timestamp: any) => {
         const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-        return date.toLocaleDateString('et-EE', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        const now = new Date();
+        const diffTime = Math.abs(now.getTime() - date.getTime());
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+
+        // More compact format for mobile
+        if (diffMinutes < 60) {
+            return `${diffMinutes} min tagasi`;
+        } else if (diffHours < 24) {
+            return `${diffHours}h tagasi`;
+        } else if (diffDays === 1) {
+            return 'Eile';
+        } else if (diffDays < 7) {
+            return `${diffDays}p tagasi`;
+        } else {
+            return date.toLocaleDateString('et-EE', {
+                day: '2-digit',
+                month: '2-digit'
+            });
+        }
     };
 
     const getOpponentName = (fight: FightRecord): string => {
@@ -52,13 +85,10 @@ export const FightHistory: React.FC<FightHistoryProps> = ({ isOpen, onClose }) =
         return fight.winnerId === currentUser?.uid;
     };
 
-    const getPlayerScore = (fight: FightRecord): string => {
-        if (fight.player1Id === currentUser?.uid) {
-            return `${fight.player1Score} - ${fight.player2Score}`;
-        } else {
-            return `${fight.player2Score} - ${fight.player1Score}`;
-        }
-    };
+    // Calculate TOTAL stats from ALL fights
+    const totalWins = allFightHistory.filter(f => isWinner(f)).length;
+    const totalLosses = allFightHistory.filter(f => !isWinner(f)).length;
+    const totalPages = Math.ceil(allFightHistory.length / fightsPerPage);
 
     if (!isOpen) return null;
 
@@ -75,76 +105,118 @@ export const FightHistory: React.FC<FightHistoryProps> = ({ isOpen, onClose }) =
                 <div className="fight-history-content">
                     {loading ? (
                         <div className="loading">Laadin ajalugu...</div>
-                    ) : fightHistory.length === 0 ? (
+                    ) : allFightHistory.length === 0 ? (
                         <div className="no-history">
                             <p>Sul pole veel ühtegi võitlust tehtud.</p>
                             <p>Mine tagasi ja kutsu keegi võitlusele!</p>
                         </div>
                     ) : (
-                        <div className="history-list">
-                            {fightHistory.map((fight, index) => (
-                                <div key={fight.fightId || index} className={`history-item ${isWinner(fight) ? 'won' : 'lost'}`}>
-                                    <div className="fight-basic-info">
-                                        <div className="fight-opponent">
-                                            <span className="result-icon">
-                                                {isWinner(fight) ? '🏆' : '😞'}
-                                            </span>
-                                            <span className="opponent-name">
-                                                vs {getOpponentName(fight)}
-                                            </span>
-                                        </div>
+                        <>
+                            {/* Compact table for desktop and mobile */}
+                            <div className="history-table-container">
+                                <table className="history-table">
+                                    <thead>
+                                    <tr>
+                                        <th className="th-result">TULEMUS</th>
+                                        <th className="th-opponent">VASTANE</th>
+                                        <th className="th-reward">VÕIT</th>
+                                        <th className="th-time">AEG</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {displayedFights.map((fight, index) => {
+                                        const won = isWinner(fight);
+                                        const opponentName = getOpponentName(fight);
 
-                                        <div className="fight-details">
-                                            <span className="fight-score">{getPlayerScore(fight)}</span>
-                                            <span className="fight-rounds">({fight.rounds} voorud)</span>
-                                        </div>
+                                        return (
+                                            <tr key={fight.fightId || index} className={won ? 'row-won' : 'row-lost'}>
+                                                <td className="td-result">
+                                                        <span className={`result-badge ${won ? 'badge-won' : 'badge-lost'}`}>
+                                                            {won ? 'V' : 'K'}
+                                                        </span>
+                                                </td>
+                                                <td className="td-opponent">
+                                                    <span className="opponent-name-compact">{opponentName}</span>
+                                                </td>
+                                                <td className="td-reward">
+                                                    {won && fight.moneyTransferred > 0 ? (
+                                                        <span className="money-amount">+{fight.moneyTransferred}€</span>
+                                                    ) : (
+                                                        <span className="money-none">-</span>
+                                                    )}
+                                                </td>
+                                                <td className="td-time">
+                                                    <span className="time-text">{formatDate(fight.fightTimestamp)}</span>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                    </tbody>
+                                </table>
+                            </div>
 
-                                        <div className="fight-meta">
-                                            {isWinner(fight) && fight.moneyTransferred > 0 && (
-                                                <span className="money-won">+{fight.moneyTransferred}€</span>
-                                            )}
-                                            <span className="fight-date">{formatDate(fight.fightTimestamp)}</span>
-                                        </div>
-                                    </div>
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="pagination">
+                                    <button
+                                        className="page-btn"
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                    >
+                                        ‹
+                                    </button>
 
-                                    <div className="fight-result">
-                                        <span className={`result-text ${isWinner(fight) ? 'won' : 'lost'}`}>
-                                            {isWinner(fight) ? 'VÕIT' : 'KAOTUS'}
-                                        </span>
-                                    </div>
+                                    {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                                        let pageNum: number;
+
+                                        if (totalPages <= 5) {
+                                            pageNum = i + 1;
+                                        } else if (currentPage <= 3) {
+                                            pageNum = i + 1;
+                                        } else if (currentPage >= totalPages - 2) {
+                                            pageNum = totalPages - 4 + i;
+                                        } else {
+                                            pageNum = currentPage - 2 + i;
+                                        }
+
+                                        return (
+                                            <button
+                                                key={i}
+                                                className={`page-btn ${pageNum === currentPage ? 'active' : ''}`}
+                                                onClick={() => handlePageChange(pageNum)}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    })}
+
+                                    <button
+                                        className="page-btn"
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        ›
+                                    </button>
                                 </div>
-                            ))}
-                        </div>
+                            )}
+                        </>
                     )}
                 </div>
 
-                {fightHistory.length > 0 && (
-                    <div className="fight-history-footer">
-                        <div className="fight-stats">
-                            <div className="stat-item">
-                                <span className="stat-label">Kokku võitlusi:</span>
-                                <span className="stat-value">{fightHistory.length}</span>
-                            </div>
-                            <div className="stat-item">
-                                <span className="stat-label">Võite:</span>
-                                <span className="stat-value won">
-                                    {fightHistory.filter(f => isWinner(f)).length}
-                                </span>
-                            </div>
-                            <div className="stat-item">
-                                <span className="stat-label">Kaotusi:</span>
-                                <span className="stat-value lost">
-                                    {fightHistory.filter(f => !isWinner(f)).length}
-                                </span>
-                            </div>
-                            <div className="stat-item">
-                                <span className="stat-label">Võidumäär:</span>
-                                <span className="stat-value">
-                                    {fightHistory.length > 0
-                                        ? Math.round((fightHistory.filter(f => isWinner(f)).length / fightHistory.length) * 100)
-                                        : 0}%
-                                </span>
-                            </div>
+                {/* Summary stats - shows TOTAL stats from ALL fights */}
+                {allFightHistory.length > 0 && (
+                    <div className="fight-history-stats">
+                        <div className="stat-compact">
+                            <span className="stat-label">VÕITE:</span>
+                            <span className="stat-value won">{totalWins}</span>
+                        </div>
+                        <div className="stat-compact">
+                            <span className="stat-label">KAOTUSI:</span>
+                            <span className="stat-value lost">{totalLosses}</span>
+                        </div>
+                        <div className="stat-compact">
+                            <span className="stat-label">LEHEKÜLG:</span>
+                            <span className="stat-value">{currentPage}/{totalPages}</span>
                         </div>
                     </div>
                 )}
