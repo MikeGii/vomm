@@ -406,6 +406,23 @@ export const POLITSEI_COURSES: Course[] = [
 
         },
         category: 'politsei'
+    },
+    {
+        id: 'enhanced_law_studies',
+        name: 'Süüteomenetluse täiendkoolitus',
+        description: 'Koolitus põhjalikumaks süüteomenetluse läbiviimiseks',
+        duration: 10800,
+        requirements: {
+            level: 40,
+            completedCourses: ['lopueksam'],
+            totalWorkedHours: 60
+        },
+        rewards: {
+            experience: 1500,
+            reputation: 150,
+            money: 1500,
+        },
+        category: 'politsei'
     }
 
 ]
