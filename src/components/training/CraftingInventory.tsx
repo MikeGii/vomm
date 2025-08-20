@@ -10,22 +10,23 @@ interface CraftingInventoryProps {
 
 export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory }) => {
     // Get item details from CRAFTING_INGREDIENTS
-    const getItemDetails = (itemId: string) => {
-        return CRAFTING_INGREDIENTS.find(ingredient => ingredient.id === itemId);
+    const getItemDetails = (item: InventoryItem) => {
+        // Extract base ID from timestamped inventory ID
+        const baseId = item.id.split('_')[0];
+        return CRAFTING_INGREDIENTS.find(ingredient => ingredient.id === baseId);
     };
 
     // Filter only crafting category items and sort alphabetically
     const craftingItems = inventory
-        .filter(item => {
-            return CRAFTING_INGREDIENTS.some(ingredient => ingredient.id === item.id);
-        })
+        .filter(item => item.category === 'crafting')
         .map(item => ({
             ...item,
-            details: getItemDetails(item.id)
+            baseId: item.id.split('_')[0],
+            details: getItemDetails(item)
         }))
         .sort((a, b) => {
-            const nameA = a.details?.name || a.id;
-            const nameB = b.details?.name || b.id;
+            const nameA = a.details?.name || a.baseId;
+            const nameB = b.details?.name || b.baseId;
             return nameA.localeCompare(nameB, 'et');
         });
 
@@ -56,7 +57,7 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory 
                     {craftingItems.map(item => (
                         <tr key={item.id}>
                             <td className="item-name">
-                                {item.details?.name || item.id}
+                                {item.details?.name || item.baseId}
                             </td>
                             <td className="item-quantity">
                                 {item.quantity}

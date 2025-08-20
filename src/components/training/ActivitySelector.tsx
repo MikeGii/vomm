@@ -1,6 +1,6 @@
 // src/components/training/ActivitySelector.tsx - UUENDUS
 import React from 'react';
-import { TrainingActivity, PlayerStats, InventoryItem } from '../../types';
+import { TrainingActivity, PlayerStats } from '../../types';
 import { calculateEquipmentBonuses } from '../../services/EquipmentBonusService';
 import { CRAFTING_INGREDIENTS } from '../../data/shop/craftingIngredients';
 import '../../styles/components/training/ActivitySelector.css';
@@ -49,13 +49,18 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
         const missing: string[] = [];
 
         for (const required of activity.requiredItems) {
-            const inventoryItem = playerStats.inventory.find(item => item.id === required.id);
-            const currentQuantity = inventoryItem?.quantity || 0;
+            // Sum quantities of all items with matching base ID (same logic as TrainingService)
+            const totalQuantity = playerStats.inventory
+                .filter(item => {
+                    const baseId = item.id.split('_')[0];
+                    return baseId === required.id && item.category === 'crafting';
+                })
+                .reduce((sum, item) => sum + item.quantity, 0);
 
-            if (currentQuantity < required.quantity) {
+            if (totalQuantity < required.quantity) {
                 const shopItem = CRAFTING_INGREDIENTS.find(item => item.id === required.id);
                 const itemName = shopItem?.name || required.id;
-                missing.push(`${itemName} (${currentQuantity}/${required.quantity})`);
+                missing.push(`${itemName} (${totalQuantity}/${required.quantity})`);
             }
         }
 
@@ -107,8 +112,16 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                     <h4>Vajalikud materjalid:</h4>
                     <ul>
                         {activity.requiredItems.map((item, index) => {
-                            const inventoryItem = playerStats?.inventory?.find(inv => inv.id === item.id);
-                            const currentQuantity = inventoryItem?.quantity || 0;
+                            // Sum quantities using base ID extraction (same logic as hasRequiredMaterials)
+                            const currentQuantity = playerStats?.inventory
+                                ? playerStats.inventory
+                                    .filter(invItem => {
+                                        const baseId = invItem.id.split('_')[0];
+                                        return baseId === item.id && invItem.category === 'crafting';
+                                    })
+                                    .reduce((sum, invItem) => sum + invItem.quantity, 0)
+                                : 0;
+
                             const hasEnough = currentQuantity >= item.quantity;
 
                             return (
@@ -140,6 +153,7 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
             </div>
         );
     };
+
 
     // Rest of component remains the same...
     const groupedActivities = activities.reduce((groups, activity) => {

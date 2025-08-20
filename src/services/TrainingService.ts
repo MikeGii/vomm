@@ -61,14 +61,19 @@ const hasRequiredMaterials = (
     const missing: { id: string; needed: number; has: number }[] = [];
 
     for (const required of requiredItems) {
-        const inventoryItem = inventory.find(item => item.id === required.id);
-        const currentQuantity = inventoryItem?.quantity || 0;
+        // Sum quantities of all items with matching base ID
+        const totalQuantity = inventory
+            .filter(item => {
+                const baseId = item.id.split('_')[0];
+                return baseId === required.id && item.category === 'crafting';
+            })
+            .reduce((sum, item) => sum + item.quantity, 0);
 
-        if (currentQuantity < required.quantity) {
+        if (totalQuantity < required.quantity) {
             missing.push({
                 id: required.id,
                 needed: required.quantity,
-                has: currentQuantity
+                has: totalQuantity
             });
         }
     }
@@ -88,10 +93,10 @@ const createInventoryItemFromId = (itemId: string, quantity: number): InventoryI
     }
 
     return {
-        id: itemId,
+        id: `${itemId}_${Date.now()}_${Math.random()}`, // Use complex ID like shop does
         name: shopItem.name,
         description: shopItem.description,
-        category: 'misc',
+        category: 'crafting', // Changed from 'misc' to 'crafting'
         quantity: quantity,
         shopPrice: shopItem.basePrice,
         source: 'training',
@@ -107,27 +112,36 @@ const updateInventoryForCrafting = (
 ): InventoryItem[] => {
     let updatedInventory = [...inventory];
 
-    // Remove required materials
+    // Remove required materials by base ID
     requiredItems.forEach(required => {
-        const itemIndex = updatedInventory.findIndex(item => item.id === required.id);
-        if (itemIndex >= 0) {
-            const currentQuantity = updatedInventory[itemIndex].quantity;
-            const newQuantity = currentQuantity - required.quantity;
+        let remainingToRemove = required.quantity;
 
-            if (newQuantity <= 0) {
-                updatedInventory.splice(itemIndex, 1);
-            } else {
-                updatedInventory[itemIndex] = {
-                    ...updatedInventory[itemIndex],
-                    quantity: newQuantity
-                };
+        for (let i = updatedInventory.length - 1; i >= 0 && remainingToRemove > 0; i--) {
+            const item = updatedInventory[i];
+            const baseId = item.id.split('_')[0];
+
+            if (baseId === required.id && item.category === 'crafting') {
+                if (item.quantity <= remainingToRemove) {
+                    remainingToRemove -= item.quantity;
+                    updatedInventory.splice(i, 1);
+                } else {
+                    updatedInventory[i] = {
+                        ...item,
+                        quantity: item.quantity - remainingToRemove
+                    };
+                    remainingToRemove = 0;
+                }
             }
         }
     });
 
     // Add produced items
     producedItems.forEach(produced => {
-        const existingIndex = updatedInventory.findIndex(item => item.id === produced.id);
+        // Check if item already exists by base ID
+        const existingIndex = updatedInventory.findIndex(item => {
+            const baseId = item.id.split('_')[0];
+            return baseId === produced.id && item.category === 'crafting';
+        });
 
         if (existingIndex >= 0) {
             updatedInventory[existingIndex] = {

@@ -11,6 +11,7 @@ import { PlayerStats } from '../../types';
 import { getCourseById } from '../../data/courses';
 import { completeWork } from '../../services/WorkService';
 import { checkCourseCompletion } from '../../services/CourseService';
+import { migrateCraftingItems} from "../../services/InventoryMigrationService";
 import '../../styles/components/dev/DebugMenu.css';
 
 const ADMIN_USER_ID = 'WUucfDi2DAat9sgDY75mDZ8ct1k2';
@@ -149,6 +150,21 @@ export const DebugMenu: React.FC = () => {
             : `${completedCount} mängija töö lõpetatud`;
 
         showToast(message, 'success');
+    };
+
+    const handleMigrateCrafting = async () => {
+        if (!currentUser) {
+            showToast('User not logged in', 'error');
+            return;
+        }
+
+        try {
+            await migrateCraftingItems(currentUser.uid);
+            showToast('Crafting items migrated successfully', 'success');
+        } catch (error) {
+            console.error('Migration error:', error);
+            showToast('Migration failed', 'error');
+        }
     };
 
     const giveVipItemsToAllPlayers = async () => {
@@ -346,6 +362,10 @@ export const DebugMenu: React.FC = () => {
                                 Lõpeta KÕIKIDE mängijate töö
                             </button>
                         </div>
+
+                        <button onClick={handleMigrateCrafting}>
+                            Migrate Crafting Items
+                        </button>
 
                         {/* VIP Items Section - Add this after the Training Section */}
                         <div className="debug-section">
