@@ -166,6 +166,21 @@ export const POLITSEI_UNIFORM: EquipmentItem[] = [
     }
 ];
 
+export const RIOT_POLICE_EQUIPMENT: EquipmentItem[] = [
+    {
+        id: 'riot_helmet',
+        name: 'Massiohje kiiver',
+        description: 'Tugev kaitsevarustus massirahutuste jaoks',
+        slot: 'head',
+        shopPrice: 0,
+        stats: {
+            strength: 3,
+            endurance: 2
+        },
+        equipped: false
+    }
+];
+
 export const getEquipmentSet = (setId: string): EquipmentItem[] => {
     switch(setId) {
         case 'abipolitseinik_uniform':
@@ -180,5 +195,6 @@ export const getEquipmentSet = (setId: string): EquipmentItem[] => {
 // All available equipment items
 export const ALL_EQUIPMENT: EquipmentItem[] = [
     ...ABIPOLITSEINIK_UNIFORM,
-    ...POLITSEI_UNIFORM
+    ...POLITSEI_UNIFORM,
+    ...RIOT_POLICE_EQUIPMENT
 ];

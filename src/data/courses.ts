@@ -381,7 +381,29 @@ export const POLITSEI_COURSES: Course[] = [
         rewards: {
             experience: 800,
             reputation: 150,
-            money: 1200
+            money: 1200,
+            grantsItems: [
+                { itemId: 'medical_kit', quantity: 3 }
+            ]
+        },
+        category: 'politsei'
+    },
+    {
+        id: 'riot_police_course',
+        name: 'Massiohje koolitus',
+        description: 'Koolitus teadmiste omandamiseks ja tegutsemiseks massirahutuste korral',
+        duration: 10800,
+        requirements: {
+            level: 40,
+            completedCourses: ['medical_course_police'],
+            totalWorkedHours: 60
+        },
+        rewards: {
+            experience: 1500,
+            reputation: 150,
+            money: 1500,
+            grantsEquipment: ['riot_helmet']
+
         },
         category: 'politsei'
     }
