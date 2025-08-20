@@ -17,6 +17,26 @@ export interface SellResult {
     newBalance?: number;
 }
 
+// Helper function to extract base ID properly from inventory items
+const getBaseIdFromInventoryId = (inventoryId: string): string => {
+    const parts = inventoryId.split('_');
+
+    // For timestamped IDs like "cleaning_solution_1234567890_0.123"
+    // Remove the last 2 parts (timestamp and random) but keep the original base ID
+    if (parts.length >= 3) {
+        const lastPart = parts[parts.length - 1];
+        const secondLastPart = parts[parts.length - 2];
+
+        // If last part is decimal and second-to-last is all digits (timestamp)
+        if (lastPart.includes('.') && /^\\d+$/.test(secondLastPart)) {
+            return parts.slice(0, -2).join('_');
+        }
+    }
+
+    // Fallback to first part if pattern doesn't match
+    return parts[0];
+};
+
 /**
  * Sell crafted item back to shop
  */
@@ -57,8 +77,8 @@ export const sellCraftedItem = async (
             };
         }
 
-        // Get base item ID and shop item details
-        const baseId = inventoryItem.id.split('_')[0];
+        // Get base item ID and shop item details - FIXED
+        const baseId = getBaseIdFromInventoryId(inventoryItem.id);
         const shopItem = CRAFTING_INGREDIENTS.find(item => item.id === baseId);
 
         if (!shopItem) {

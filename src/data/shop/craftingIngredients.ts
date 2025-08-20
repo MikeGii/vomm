@@ -74,7 +74,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         maxStock: 0
     },
     {
-        id: 'mega_sandwich',
+        id: 'sandwich',
         name: 'Megaleib',
         description: 'Rammumehe võileib, mis koosneb värskest rukkileivast ja tummisest pudrust',
         category: 'crafting',

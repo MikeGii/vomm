@@ -8,6 +8,27 @@ import { getKitchenLabActivityById } from '../data/kitchenLabActivities';
 import { CRAFTING_INGREDIENTS } from '../data/shop/craftingIngredients';
 import { InventoryItem } from '../types';
 
+
+// Helper function to extract base ID properly from inventory items
+const getBaseIdFromInventoryId = (inventoryId: string): string => {
+    const parts = inventoryId.split('_');
+
+    // For timestamped IDs like "cleaning_solution_1234567890_0.123"
+    // Remove the last 2 parts (timestamp and random) but keep the original base ID
+    if (parts.length >= 3) {
+        const lastPart = parts[parts.length - 1];
+        const secondLastPart = parts[parts.length - 2];
+
+        // If last part is decimal and second-to-last is all digits (timestamp)
+        if (lastPart.includes('.') && /^\\d+$/.test(secondLastPart)) {
+            return parts.slice(0, -2).join('_');
+        }
+    }
+
+    // Fallback to first part if pattern doesn't match
+    return parts[0];
+};
+
 // Calculate experience needed for next attribute level
 export const calculateExpForNextLevel = (currentLevel: number): number => {
     if (currentLevel === 0) return 100;
@@ -61,10 +82,10 @@ const hasRequiredMaterials = (
     const missing: { id: string; needed: number; has: number }[] = [];
 
     for (const required of requiredItems) {
-        // Sum quantities of all items with matching base ID
+        // Sum quantities of all items with matching base ID - FIXED
         const totalQuantity = inventory
             .filter(item => {
-                const baseId = item.id.split('_')[0];
+                const baseId = getBaseIdFromInventoryId(item.id);
                 return baseId === required.id && item.category === 'crafting';
             })
             .reduce((sum, item) => sum + item.quantity, 0);
@@ -118,7 +139,7 @@ const updateInventoryForCrafting = (
 
         for (let i = updatedInventory.length - 1; i >= 0 && remainingToRemove > 0; i--) {
             const item = updatedInventory[i];
-            const baseId = item.id.split('_')[0];
+            const baseId = getBaseIdFromInventoryId(item.id); // FIXED
 
             if (baseId === required.id && item.category === 'crafting') {
                 if (item.quantity <= remainingToRemove) {
@@ -137,9 +158,9 @@ const updateInventoryForCrafting = (
 
     // Add produced items
     producedItems.forEach(produced => {
-        // Check if item already exists by base ID
+        // Check if item already exists by base ID - FIXED
         const existingIndex = updatedInventory.findIndex(item => {
-            const baseId = item.id.split('_')[0];
+            const baseId = getBaseIdFromInventoryId(item.id);
             return baseId === produced.id && item.category === 'crafting';
         });
 

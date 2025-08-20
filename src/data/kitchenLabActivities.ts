@@ -58,7 +58,7 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
     // BREWING ACTIVITIES
     {
         id: 'basic_brewing_01',
-        name: 'Valmista siirupit',
+        name: 'Valmista mahla',
         description: 'Valmistad mahedat siirupijooki',
         requiredLevel: 1,
         rewards: {
@@ -127,7 +127,7 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
         ]
     },
     {
-        id: 'make_cleaning_solution',
+        id: 'cleaning_solution',
         name: 'Valmista puhastusaine',
         description: 'Valmistad võimsat puhastusainet, mis sobib ideaalselt kontorite ja sõidukite puhastamiseks',
         requiredLevel: 5,
@@ -145,7 +145,7 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
         ]
     },
     {
-        id: 'make_strong_antiseptic',
+        id: 'antiseptic_solution',
         name: 'Valmista antiseptikut',
         description: 'Valmistad tugevat antiseptikut, mis hävitab baktereid ja sobib meditsiiniliseks kasutamiseks',
         requiredLevel: 10,
