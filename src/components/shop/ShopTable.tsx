@@ -1,4 +1,4 @@
-// src/components/shop/ShopTable.tsx - UPDATED with notifications
+// src/components/shop/ShopTable.tsx - UPDATED with pagination
 import React from 'react';
 import { formatMoney } from '../../utils/currencyUtils';
 import '../../styles/components/shop/ShopTable.css';
@@ -13,6 +13,9 @@ interface ShopTableProps {
     playerPollid?: number;
     onPurchase: (itemId: string) => void;
     isLoading?: boolean;
+    currentPage: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
 }
 
 export const ShopTable: React.FC<ShopTableProps> = ({
@@ -20,7 +23,10 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                                                         playerMoney,
                                                         playerPollid = 0,
                                                         onPurchase,
-                                                        isLoading = false
+                                                        isLoading = false,
+                                                        currentPage,
+                                                        totalPages,
+                                                        onPageChange
                                                     }) => {
 
     // Check if item is player-dependent (produced items with maxStock = 0)
@@ -85,6 +91,30 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                 <div className="no-items-message">
                     <p>Selles kategoorias pole hetkel esemeid saadaval.</p>
                 </div>
+                {/* Show pagination even when no items, if there are multiple pages */}
+                {totalPages > 1 && (
+                    <div className="pagination-container">
+                        <button
+                            className="pagination-btn"
+                            onClick={() => onPageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                        >
+                            ← Eelmine
+                        </button>
+
+                        <div className="pagination-info">
+                            Lehekülg {currentPage} / {totalPages}
+                        </div>
+
+                        <button
+                            className="pagination-btn"
+                            onClick={() => onPageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                        >
+                            Järgmine →
+                        </button>
+                    </div>
+                )}
             </div>
         );
     }
@@ -286,6 +316,65 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                     );
                 })}
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="pagination-container">
+                    <button
+                        className="pagination-btn"
+                        onClick={() => onPageChange(1)}
+                        disabled={currentPage === 1}
+                    >
+                        ««
+                    </button>
+                    <button
+                        className="pagination-btn"
+                        onClick={() => onPageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                    >
+                        ‹
+                    </button>
+
+                    <div className="pagination-numbers">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter(page => {
+                                // Show first, last, current, and adjacent pages
+                                return page === 1 ||
+                                    page === totalPages ||
+                                    Math.abs(page - currentPage) <= 1;
+                            })
+                            .map((page, index, array) => (
+                                <React.Fragment key={page}>
+                                    {index > 0 && array[index - 1] !== page - 1 && (
+                                        <span className="pagination-ellipsis">...</span>
+                                    )}
+                                    <button
+                                        className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                                        onClick={() => onPageChange(page)}
+                                    >
+                                        {page}
+                                    </button>
+                                </React.Fragment>
+                            ))
+                        }
+                    </div>
+
+                    <button
+                        className="pagination-btn"
+                        onClick={() => onPageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                    >
+                        ›
+                    </button>
+                    <button
+                        className="pagination-btn"
+                        onClick={() => onPageChange(totalPages)}
+                        disabled={currentPage === totalPages}
+                    >
+                        »»
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
