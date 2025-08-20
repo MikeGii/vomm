@@ -92,7 +92,11 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 16, // (9+3) * 1.35 = 16.2 → 16
         currency: 'money',
         basePrice: 16,
-        maxStock: 0
+        maxStock: 0,
+        consumableEffect: {
+            type: 'trainingClicks',
+            value: 1
+        }
     },
     {
         id: 'power_smoothie',

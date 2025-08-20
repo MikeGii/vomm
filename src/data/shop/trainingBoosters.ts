@@ -3,8 +3,8 @@ import { ShopItem } from '../../types/shop';
 
 export const TRAINING_BOOSTER_ITEMS: ShopItem[] = [
     {
-        id: 'energy_drink',
-        name: 'Energiajook',
+        id: 'protein_bar',
+        name: 'Proteiinibatoon',
         description: 'Taastab 1 treeningklõpsu',
         category: 'trainingBooster',
         price: 3.50,
