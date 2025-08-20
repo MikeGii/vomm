@@ -1,5 +1,5 @@
 // src/components/auth/RegisterModal.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, firestore } from '../../config/firebase';
