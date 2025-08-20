@@ -72,6 +72,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
                 isChecking: false
             });
         }, 500),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         []
     );
 
