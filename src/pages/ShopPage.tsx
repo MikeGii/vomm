@@ -1,4 +1,4 @@
-// src/pages/ShopPage.tsx - Updated version
+// src/pages/ShopPage.tsx - Updated with pagination
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,6 +20,8 @@ import {
 } from '../services/ShopStockService';
 import '../styles/pages/Shop.css';
 
+const ITEMS_PER_PAGE = 10; // Add pagination constant
+
 const ShopPage: React.FC = () => {
     const navigate = useNavigate();
     const {currentUser} = useAuth();
@@ -39,6 +41,7 @@ const ShopPage: React.FC = () => {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState<string>('crafting');
     const [searchQuery, setSearchQuery] = useState<string>('');
+    const [currentPage, setCurrentPage] = useState(1); // Add pagination state
 
     // Create tabs from SHOP_CATEGORIES
     const tabs = [
@@ -49,21 +52,53 @@ const ShopPage: React.FC = () => {
         { id: 'vip', label: SHOP_CATEGORIES.vip.name }
     ];
 
-    const filteredItems = itemsWithStock
-        .filter(({ item }) => item.category === activeTab)
-        .filter(({ item }) =>
-            searchQuery === '' ||
-            item.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        .sort(({ item: a, currentStock: stockA }, { item: b, currentStock: stockB }) => {
-            // Out of stock items go to bottom
-            if (stockA === 0 && stockB > 0) return 1;
-            if (stockB === 0 && stockA > 0) return -1;
+    // Reset to page 1 when tab changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab]);
 
-            // Alphabetical sorting for items with same stock status
-            return a.name.localeCompare(b.name, 'et');
-        });
+    // Reset to page 1 when search changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery]);
 
+    // Update filteredItems to use pagination
+    const getFilteredItems = useCallback(() => {
+        let filtered = itemsWithStock
+            .filter(({ item }) => item.category === activeTab)
+            .filter(({ item }) =>
+                searchQuery === '' ||
+                item.name.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            .sort(({ item: a, currentStock: stockA }, { item: b, currentStock: stockB }) => {
+                // Out of stock items go to bottom
+                if (stockA === 0 && stockB > 0) return 1;
+                if (stockB === 0 && stockA > 0) return -1;
+
+                // Alphabetical sorting for items with same stock status
+                return a.name.localeCompare(b.name, 'et');
+            });
+
+        // Calculate pagination
+        const totalItems = filtered.length;
+        const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        const endIndex = startIndex + ITEMS_PER_PAGE;
+        const paginatedItems = filtered.slice(startIndex, endIndex);
+
+        return {
+            items: paginatedItems,
+            totalPages,
+            totalItems
+        };
+    }, [itemsWithStock, activeTab, searchQuery, currentPage]);
+
+    const { items: filteredItems, totalPages } = getFilteredItems();
+
+    // Add page change handler
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
 
     // Initialize shop stock on first load
     useEffect(() => {
@@ -191,7 +226,6 @@ const ShopPage: React.FC = () => {
                     isRefreshing={isRefreshing}
                 />
 
-                {/* ADD THIS: Tab Navigation */}
                 <TabNavigation
                     tabs={tabs}
                     activeTab={activeTab}
@@ -222,6 +256,9 @@ const ShopPage: React.FC = () => {
                     playerPollid={playerPollid}
                     onPurchase={handlePurchase}
                     isLoading={isRefreshing}
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
                 />
 
                 <ShopPurchaseModal

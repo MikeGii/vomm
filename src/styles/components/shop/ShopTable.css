@@ -1,4 +1,4 @@
-/* src/styles/components/shop/ShopTable.css - Updated for tab system */
+/* src/styles/components/shop/ShopTable.css - Updated for tab system with Leaderboard-style pagination */
 
 /* Container */
 .shop-table-container {
@@ -246,6 +246,85 @@
     box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
 }
 
+/* Pagination styling - Updated to match Leaderboard style */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    padding: 1rem;
+}
+
+.pagination-btn {
+    background-color: #2a2a2a;
+    color: #f0f0f0;
+    border: 1px solid #444;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    min-width: 36px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #333;
+    border-color: #4a90e2;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pagination-numbers {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.pagination-number {
+    background-color: #2a2a2a;
+    color: #f0f0f0;
+    border: 1px solid #444;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    min-width: 36px;
+    text-align: center;
+}
+
+.pagination-number:hover:not(.active) {
+    background-color: #333;
+    border-color: #4a90e2;
+}
+
+.pagination-number.active {
+    background-color: #4a90e2;
+    border-color: #4a90e2;
+    color: white;
+    font-weight: 600;
+}
+
+.pagination-ellipsis {
+    color: #666;
+    padding: 0 0.5rem;
+}
+
+/* No items message */
+.no-items-message {
+    text-align: center;
+    color: #888;
+    padding: 3rem;
+    font-size: 1.1rem;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+}
+
 /* Mobile Cards - Hidden on desktop */
 .mobile-shop-list {
     display: none;
@@ -443,6 +522,20 @@
     .mobile-buy-button.pollid-buy:hover:not(:disabled) {
         box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
     }
+
+    /* Mobile pagination */
+    .pagination-container {
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        padding: 0.5rem;
+    }
+
+    .pagination-btn,
+    .pagination-number {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.9rem;
+        min-width: 32px;
+    }
 }
 
 /* Extra small mobile devices */
@@ -501,13 +594,13 @@
     border: 1px solid rgba(255, 152, 0, 0.3);
 }
 
-/* Eemalda vanad suuremad märgid */
+/* Remove old larger badges */
 .player-dependent-badge,
 .auto-replenish-badge {
     display: none;
 }
 
-/* Vähenda hoiatuse suurust */
+/* Reduce warning size */
 .player-dependent-warning {
     background-color: rgba(255, 152, 0, 0.08);
     border: 1px solid rgba(255, 152, 0, 0.2);
@@ -532,7 +625,7 @@
     line-height: 1.2;
 }
 
-/* Mobile sõbralik */
+/* Mobile friendly stock indicators */
 @media (max-width: 768px) {
     .stock-type-indicator {
         font-size: 0.55rem;
