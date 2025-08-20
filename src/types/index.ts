@@ -74,7 +74,7 @@ export interface PlayerStats {
     level: number;
     experience: number;
     reputation: number;
-    money: number;
+    money: 150,
     pollid?: number;
     rank: string | null;
     department: string | null;
