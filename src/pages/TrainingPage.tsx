@@ -1,4 +1,4 @@
-// src/pages/TrainingPage.tsx - Updated version
+// src/pages/TrainingPage.tsx - Updated version with sell functionality
 import React, { useState, useEffect, useCallback } from 'react';
 import {doc, onSnapshot, updateDoc} from 'firebase/firestore';
 import { firestore } from '../config/firebase';
@@ -21,9 +21,11 @@ import {
     checkAndResetKitchenLabTrainingClicks,
     performTraining,
     initializeAttributes,
-    initializeTrainingData, initializeKitchenLabTrainingData
+    initializeTrainingData,
+    initializeKitchenLabTrainingData
 } from '../services/TrainingService';
 import { getAvailableActivities, getActivityById } from '../data/trainingActivities';
+import { sellCraftedItem } from '../services/SellService'; // NEW: Import sell service
 import '../styles/pages/Training.css';
 
 const TrainingPage: React.FC = () => {
@@ -179,12 +181,34 @@ const TrainingPage: React.FC = () => {
     // Handle activity selection
     const handleActivitySelect = (activityId: string) => {
         setSelectedActivity(activityId);
-
     };
 
     // Handle booster used callback
     const handleBoosterUsed = () => {
+        // Functionality can be added here if needed
     };
+
+    // NEW: Handle selling crafted items
+    const handleSellItem = useCallback(async (itemId: string, quantity: number) => {
+        if (!currentUser) {
+            throw new Error('Kasutaja ei ole sisse logitud');
+        }
+
+        try {
+            const result = await sellCraftedItem(currentUser.uid, itemId, quantity);
+
+            if (result.success) {
+                // Show success message
+                alert(result.message);
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error: any) {
+            // Show error message and re-throw so CraftingInventory can handle loading states
+            alert(error.message || 'Müük ebaõnnestus');
+            throw error;
+        }
+    }, [currentUser]);
 
     if (loading) {
         return (
@@ -221,7 +245,7 @@ const TrainingPage: React.FC = () => {
 
                 <h1 className="training-title">Treeningkeskus</h1>
 
-                {/* NEW: Tab Navigation */}
+                {/* Tab Navigation */}
                 <TabNavigation
                     tabs={tabs}
                     activeTab={activeTab}
@@ -271,7 +295,7 @@ const TrainingPage: React.FC = () => {
                     </>
                 )}
 
-                {/* Placeholder content for other tabs */}
+                {/* Kitchen & Lab content */}
                 {activeTab === 'food' && (
                     <>
                         {/* Reuse existing TrainingCounter */}
@@ -309,10 +333,11 @@ const TrainingPage: React.FC = () => {
                             trainingType="kitchen-lab"
                         />
 
+                        {/* UPDATED: CraftingInventory with sell functionality */}
                         <CraftingInventory
                             inventory={playerStats.inventory || []}
+                            onSellItem={handleSellItem}
                         />
-
                     </>
                 )}
 

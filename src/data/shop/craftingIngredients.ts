@@ -11,7 +11,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 3,
         currency: 'money',
         basePrice: 3,
-        maxStock: 500
+        maxStock: 1000
     },
     {
         id: 'porrige',
@@ -41,7 +41,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 3,
         currency: 'money',
         basePrice: 3,
-        maxStock: 500
+        maxStock: 600
     },
     {
         id: 'juice',
@@ -62,7 +62,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 15,
         currency: 'money',
         basePrice: 15,
-        maxStock: 300
+        maxStock: 600
     },
     {
         id: 'disinfectant',
