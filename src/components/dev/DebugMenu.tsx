@@ -11,6 +11,7 @@ import { PlayerStats } from '../../types';
 import { getCourseById } from '../../data/courses';
 import { completeWork } from '../../services/WorkService';
 import { checkCourseCompletion } from '../../services/CourseService';
+import { getRecentPurchases, getSuspiciousPurchases } from '../../services/ShopLoggingService';
 import { CRAFTING_INGREDIENTS } from '../../data/shop/craftingIngredients';
 import {
     previewConsolidation,
@@ -24,11 +25,8 @@ export const DebugMenu: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
-    const [repairPreview, setRepairPreview] = useState<{
-        totalUsers: number;
-        totalItems: number;
-        items: { userId: string; oldName: string; newName: string; baseId: string }[];
-    } | null>(null);
+    const [purchaseLogs, setPurchaseLogs] = useState<any[]>([]);
+    const [showLogs, setShowLogs] = useState(false);
     const [consolidationPreview, setConsolidationPreview] = useState<{
         totalUsers: number;
         totalItems: number;
@@ -196,6 +194,39 @@ export const DebugMenu: React.FC = () => {
             : `${completedCount} mängija töö lõpetatud`;
 
         showToast(message, 'success');
+    };
+
+    // Add functions
+    const loadPurchaseLogs = async () => {
+        setLoading(true);
+        try {
+            const logs = await getRecentPurchases(50);
+            setPurchaseLogs(logs);
+            setShowLogs(true);
+            showToast(`Laaditud ${logs.length} viimast ostu`, 'info');
+        } catch (error) {
+            showToast('Logide laadimine ebaõnnestus', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadSuspiciousActivity = async () => {
+        setLoading(true);
+        try {
+            const logs = await getSuspiciousPurchases(50); // 50+ items at once
+            setPurchaseLogs(logs);
+            setShowLogs(true);
+            if (logs.length > 0) {
+                showToast(`⚠️ Leitud ${logs.length} kahtlast ostu!`, 'warning');
+            } else {
+                showToast('Kahtlasi oste ei leitud', 'success');
+            }
+        } catch (error) {
+            showToast('Logide laadimine ebaõnnestus', 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const refillAllCraftingStocks = async (): Promise<void> => {
@@ -368,6 +399,64 @@ export const DebugMenu: React.FC = () => {
                             </div>
                             <div className="debug-info-text" style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>
                                 Viib kokku samade ID-dega esemed (nt 5x "Puhastusaine" → 1x kogusega 5). Esmalt vaata eelvaade üle!
+                            </div>
+                        </div>
+
+                        <div className="debug-section">
+                            <h4>Poe ostude logi</h4>
+                            <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
+                                <button
+                                    className="debug-btn"
+                                    onClick={loadPurchaseLogs}
+                                    disabled={loading}
+                                >
+                                    Vaata viimased 50 ostu
+                                </button>
+
+                                <button
+                                    className="debug-btn"
+                                    onClick={loadSuspiciousActivity}
+                                    disabled={loading}
+                                >
+                                    Vaata kahtlasi oste (50+ tk)
+                                </button>
+
+                                {showLogs && purchaseLogs.length > 0 && (
+                                    <div className="debug-info-text" style={{
+                                        fontSize: '0.7rem',
+                                        maxHeight: '200px',
+                                        overflow: 'auto',
+                                        backgroundColor: '#2a2a2a',
+                                        padding: '0.5rem',
+                                        borderRadius: '4px'
+                                    }}>
+                                        {purchaseLogs.map((log, index) => (
+                                            <div key={index} style={{
+                                                borderBottom: '1px solid #444',
+                                                paddingBottom: '0.25rem',
+                                                marginBottom: '0.25rem'
+                                            }}>
+                                                <strong>{log.username}</strong> ostis {log.quantity}x {log.itemName}<br/>
+                                                Hind: {log.currency === 'pollid' ? '💎' : '€'}{log.totalCost.toFixed(2)}<br/>
+                                                Laoseis: {log.stockBefore} → {log.stockAfter}<br/>
+                                                <small>{new Date(log.timestamp.seconds * 1000).toLocaleString('et-EE')}</small>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {showLogs && (
+                                    <button
+                                        className="debug-btn"
+                                        onClick={() => {
+                                            setShowLogs(false);
+                                            setPurchaseLogs([]);
+                                        }}
+                                        style={{ fontSize: '0.75rem' }}
+                                    >
+                                        Sulge logid
+                                    </button>
+                                )}
                             </div>
                         </div>
 

@@ -17,7 +17,6 @@ export interface UseBoosterResult {
  */
 export const getTrainingBoosters = (inventory: InventoryItem[]): InventoryItem[] => {
     return inventory.filter(item =>
-        item.category === 'consumable' &&
         item.consumableEffect?.type === 'trainingClicks'
     );
 };

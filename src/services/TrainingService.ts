@@ -94,8 +94,8 @@ const createInventoryItemFromId = (itemId: string, quantity: number): InventoryI
         throw new Error(`Item ${itemId} not found in crafting ingredients`);
     }
 
-    return {
-        id: createTimestampedId(itemId), // Use the utility function
+    const inventoryItem: InventoryItem = {
+        id: createTimestampedId(itemId),
         name: shopItem.name,
         description: shopItem.description,
         category: 'crafting',
@@ -104,6 +104,13 @@ const createInventoryItemFromId = (itemId: string, quantity: number): InventoryI
         source: 'training',
         obtainedAt: new Date()
     };
+
+    // Copy consumableEffect if it exists
+    if (shopItem.consumableEffect) {
+        inventoryItem.consumableEffect = shopItem.consumableEffect;
+    }
+
+    return inventoryItem;
 };
 
 // Helper function to update inventory after crafting
