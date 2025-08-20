@@ -4,13 +4,21 @@ import { GameUpdate } from '../types';
 export const gameUpdates: GameUpdate[] = [
 
     {
-        id: '4',
+        id: '5',
         title: 'Uuenduste süsteem',
+        description: 'Uus funktsioon - Võitlusklubi. Mängijatel on võimalik end proovile panna võitlusringis valides vastaseks' +
+            ' teisi mängijaid. Lisatud koolitusi juurde politseiametniku staatuses mängijatele.',
+        date: '2025-08-19',
+        isNew: true
+    },
+    {
+        id: '4',
+        title: 'Uuenduste süsteem + vea pranadused',
         description: 'Mängijatel on nüüd võimalus lõpetada Sisekaitseakadeemia ja saavad politseiametniku staatuse. Lisatud uued lehed ' +
             'nagu: KASIINO ja PANK. Mängijad saavad nüüd proovida õnne kasiinos ja saata üksteisele raha läbi panga. Lisatud juurde' +
             'auastmetele paguni pilt. Sisekaitseakadeemia koolitused nüüd täisutavad abipolitseiniku kursustelt saadud oskuseid.',
         date: '2025-08-19',
-        isNew: true
+
     },
     {
         id: '3',
