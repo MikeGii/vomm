@@ -6,7 +6,7 @@ import {
     Timestamp
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
-import { InventoryItem, PlayerStats } from '../types';
+import { PlayerStats } from '../types';
 import { CRAFTING_INGREDIENTS } from '../data/shop/craftingIngredients';
 import { updateStockAfterSell } from './ShopStockService';
 
