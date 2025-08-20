@@ -11,7 +11,7 @@ import { PlayerStats } from '../../types';
 import { getCourseById } from '../../data/courses';
 import { completeWork } from '../../services/WorkService';
 import { checkCourseCompletion } from '../../services/CourseService';
-import { migrateCraftingItems} from "../../services/InventoryMigrationService";
+import { CRAFTING_INGREDIENTS } from '../../data/shop/craftingIngredients';
 import '../../styles/components/dev/DebugMenu.css';
 
 const ADMIN_USER_ID = 'WUucfDi2DAat9sgDY75mDZ8ct1k2';
@@ -152,107 +152,36 @@ export const DebugMenu: React.FC = () => {
         showToast(message, 'success');
     };
 
-    const handleMigrateCrafting = async () => {
-        if (!currentUser) {
-            showToast('User not logged in', 'error');
-            return;
-        }
+    const refillAllCraftingStocks = async (): Promise<void> => {
+        const stockCollection = collection(firestore, 'shopStock');
+        const stockSnapshot = await getDocs(stockCollection);
 
-        try {
-            await migrateCraftingItems(currentUser.uid);
-            showToast('Crafting items migrated successfully', 'success');
-        } catch (error) {
-            console.error('Migration error:', error);
-            showToast('Migration failed', 'error');
-        }
-    };
+        let refillCount = 0;
 
-    const giveVipItemsToAllPlayers = async () => {
-        const playerStatsCollection = collection(firestore, 'playerStats');
-        const snapshot = await getDocs(playerStatsCollection);
+        for (const stockDoc of stockSnapshot.docs) {
+            const stockData = stockDoc.data();
+            const itemId = stockData.itemId;
 
-        let playersUpdated = 0;
+            // Find the corresponding crafting ingredient
+            const craftingItem = CRAFTING_INGREDIENTS.find(item => item.id === itemId);
 
-        for (const docSnapshot of snapshot.docs) {
-            try {
-                const stats = docSnapshot.data() as PlayerStats;
-                const currentInventory = stats.inventory || [];
-
-                // Create the VIP items to add
-                const vipItems = [
-                    {
-                        id: `vip_work_time_booster_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                        name: 'Tööaeg 95%',
-                        description: 'Lühendab aktiivset tööaega 95%',
-                        category: 'consumable' as const,
-                        quantity: 1,
-                        shopPrice: 0,
-                        equipped: false,
-                        source: 'event' as const,
-                        obtainedAt: new Date(),
-                        consumableEffect: {
-                            type: 'workTimeReduction' as const,
-                            value: 95
-                        }
-                    },
-                    {
-                        id: `vip_course_time_booster_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                        name: 'Kursus 95%',
-                        description: 'Lühendab aktiivset kursust 95%',
-                        category: 'consumable' as const,
-                        quantity: 1,
-                        shopPrice: 0,
-                        equipped: false,
-                        source: 'event' as const,
-                        obtainedAt: new Date(),
-                        consumableEffect: {
-                            type: 'courseTimeReduction' as const,
-                            value: 95
-                        }
-                    }
-                ];
-
-                // Check if player already has these items (to avoid duplicates)
-                const hasWorkBooster = currentInventory.some(item =>
-                    item.consumableEffect?.type === 'workTimeReduction' &&
-                    item.name === 'Tööaeg 95%'
-                );
-                const hasCourseBooster = currentInventory.some(item =>
-                    item.consumableEffect?.type === 'courseTimeReduction' &&
-                    item.name === 'Kursus 95%'
-                );
-
-                const itemsToAdd = [];
-
-                // Only add items if player doesn't have them
-                if (!hasWorkBooster) {
-                    itemsToAdd.push(vipItems[0]);
-                }
-                if (!hasCourseBooster) {
-                    itemsToAdd.push(vipItems[1]);
-                }
-
-                if (itemsToAdd.length > 0) {
-                    const updatedInventory = [...currentInventory, ...itemsToAdd];
-
-                    const statsRef = doc(firestore, 'playerStats', docSnapshot.id);
-                    await updateDoc(statsRef, {
-                        inventory: updatedInventory
-                    });
-
-                    playersUpdated++;
-                }
-            } catch (error) {
-                console.error(`Failed to give VIP items to ${docSnapshot.id}:`, error);
+            // Only refill crafting ingredients with maxStock > 0 (basic ingredients)
+            if (craftingItem && craftingItem.maxStock > 0) {
+                await updateDoc(stockDoc.ref, {
+                    currentStock: craftingItem.maxStock,
+                    lastRestockTime: Timestamp.now()
+                });
+                refillCount++;
             }
         }
 
-        if (playersUpdated === 0) {
-            throw new Error('Ükski mängija ei saanud VIP esemeid (võimalik, et kõigil on juba)');
+        if (refillCount === 0) {
+            throw new Error('Ühtegi koostisosa laovaru ei täiendatud');
         }
 
-        showToast(`${playersUpdated} mängijale anti VIP esemed`, 'success');
+        showToast(`${refillCount} koostisosa laovaru täiendatud maksimumini`, 'success');
     };
+
 
     // Get current active course info
     const getActiveCourseInfo = () => {
@@ -363,25 +292,21 @@ export const DebugMenu: React.FC = () => {
                             </button>
                         </div>
 
-                        <button onClick={handleMigrateCrafting}>
-                            Migrate Crafting Items
-                        </button>
-
-                        {/* VIP Items Section - Add this after the Training Section */}
+                        {/* Shop Stock Section */}
                         <div className="debug-section">
-                            <h4>VIP Esemed</h4>
+                            <h4>Poe laovaru</h4>
                             <button
-                                className="debug-btn debug-btn-danger"
+                                className="debug-btn"
                                 onClick={() => executeDebugAction(
-                                    giveVipItemsToAllPlayers,
+                                    refillAllCraftingStocks,
                                     ''
                                 )}
                                 disabled={loading}
                             >
-                                Anna kõigile mängijatele VIP esemed
+                                Täienda kõik koostisosade varud
                             </button>
                             <div className="debug-info-text" style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                                Annab igale mängijale: 1x Tööaeg 95%, 1x Kursus 95%
+                                Täidab kõik algmaterjali varud (kaerahelbed, vesi, siirup, alkohol) maksimumini. Ei mõjuta mängijate toodetud esemeid.
                             </div>
                         </div>
 
