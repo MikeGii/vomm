@@ -27,8 +27,16 @@
 
 /* Mobile responsive */
 @media (max-width: 768px) {
+    .tab-navigation {
+        overflow-x: auto;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+        margin-bottom: 1rem;
+    }
+
     .tab-button {
-        padding: 0.75rem 1rem;
-        font-size: 0.9rem;
+        flex-shrink: 0;
+        min-width: 120px;
     }
 }

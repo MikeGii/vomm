@@ -10,7 +10,7 @@ import { TrainingMilestones} from "../components/training/TrainingMilestones";
 import { TrainingBoosters } from '../components/training/TrainingBoosters';
 import { getTrainingBoosters } from '../services/TrainingBoosterService';
 import { TabNavigation } from '../components/ui/TabNavigation';
-import { ProcessedItemsDisplay } from '../components/training/ProcessedItemsDisplay';
+import { CraftingInventory} from "../components/training/CraftingInventory";
 import { getAvailableKitchenLabActivities, getKitchenLabActivityById } from '../data/kitchenLabActivities';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -309,10 +309,10 @@ const TrainingPage: React.FC = () => {
                             trainingType="kitchen-lab"
                         />
 
-                        {/* NEW: Processed Items Display */}
-                        <ProcessedItemsDisplay
-                            items={playerStats.processedItems || []}
+                        <CraftingInventory
+                            inventory={playerStats.inventory || []}
                         />
+
                     </>
                 )}
 

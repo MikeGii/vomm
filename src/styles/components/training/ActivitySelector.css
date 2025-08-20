@@ -521,3 +521,53 @@ select option:disabled {
         font-size: 0.8rem;
     }
 }
+
+/* Material availability indicators */
+.material-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.material-item.available {
+    background-color: rgba(76, 175, 80, 0.1);
+    border-left: 3px solid #4caf50;
+}
+
+.material-item.missing {
+    background-color: rgba(244, 67, 54, 0.1);
+    border-left: 3px solid #f44336;
+}
+
+.material-status-icon {
+    font-size: 0.9rem;
+}
+
+.material-details {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.material-count {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    font-weight: 500;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .material-item {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .materials-warning {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+    }
+}
