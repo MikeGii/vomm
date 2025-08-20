@@ -121,3 +121,32 @@
     font-size: 0.875rem;
     font-weight: 600;
 }
+
+.attribute-category {
+    margin-bottom: 2rem;
+}
+
+.attribute-category:last-child {
+    margin-bottom: 0;
+}
+
+.category-title {
+    color: #4a90e2;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #444;
+}
+
+/* Mobile responsiveness for categories */
+@media (max-width: 768px) {
+    .attribute-category {
+        margin-bottom: 1.5rem;
+    }
+
+    .category-title {
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+}

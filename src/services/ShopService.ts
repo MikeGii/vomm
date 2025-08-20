@@ -31,8 +31,9 @@ const shopItemToInventoryItem = (shopItem: ShopItem): InventoryItem => {
         id: `${shopItem.id}_${Date.now()}`,
         name: shopItem.name,
         description: shopItem.description,
-        category: shopItem.category === 'protection' ? 'equipment' :
-            (shopItem.category === 'trainingBooster' || shopItem.category === 'medical' || shopItem.category === 'vip') ? 'consumable' : 'misc',
+        category: shopItem.category === 'crafting' ? 'crafting' :
+            (shopItem.category === 'protection' ? 'equipment' :
+                (shopItem.category === 'trainingBooster' || shopItem.category === 'medical' || shopItem.category === 'vip') ? 'consumable' : 'misc'),
         quantity: 1,
         shopPrice: shopItem.currency === 'pollid' ? (shopItem.pollidPrice || 0) : shopItem.price,
         equipped: false,

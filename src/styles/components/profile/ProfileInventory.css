@@ -1,4 +1,6 @@
 /* src/styles/components/profile/ProfileInventory.css */
+
+/* Main container */
 .profile-inventory-simple {
     background: #2a2a2a;
     border: 1px solid #333;
@@ -13,6 +15,7 @@
     margin-bottom: 1rem;
 }
 
+/* Empty state */
 .no-items {
     color: #888;
     font-style: italic;
@@ -20,22 +23,23 @@
     padding: 2rem;
 }
 
+/* Tab-based category section */
 .category-section {
-    margin-bottom: 1.5rem;
-}
-
-.category-section:last-child {
     margin-bottom: 0;
 }
 
-.category-header {
-    color: #4a90e2;
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
-    padding-bottom: 0.25rem;
-    border-bottom: 1px solid #444;
+/* Spacing between tab navigation and content */
+.tab-navigation + .category-section,
+.tab-navigation + .no-items {
+    margin-top: 1.5rem;
 }
 
+/* Remove old category header since we use tabs now */
+.category-header {
+    display: none;
+}
+
+/* Inventory table */
 .inventory-table {
     width: 100%;
     border-collapse: collapse;
@@ -43,7 +47,7 @@
     border: 1px solid #333;
     border-radius: 4px;
     overflow: hidden;
-    table-layout: fixed; /* Force consistent column widths */
+    table-layout: fixed;
 }
 
 .inventory-table thead {
@@ -60,29 +64,30 @@
     border-bottom: 1px solid #444;
 }
 
-/* Define consistent column widths for all tables */
+/* Column widths */
 .inventory-table th:nth-child(1),
 .inventory-table td:nth-child(1) {
-    width: 25%; /* Item name column */
+    width: 25%;
 }
 
 .inventory-table th:nth-child(2),
 .inventory-table td:nth-child(2) {
-    width: 45%; /* Description column */
+    width: 45%;
 }
 
 .inventory-table th:nth-child(3),
 .inventory-table td:nth-child(3) {
-    width: 15%; /* Quantity column */
+    width: 15%;
     text-align: center;
 }
 
 .inventory-table th:nth-child(4),
 .inventory-table td:nth-child(4) {
-    width: 15%; /* Status column */
+    width: 15%;
     text-align: center;
 }
 
+/* Table body */
 .inventory-table tbody tr {
     border-bottom: 1px solid #2a2a2a;
     transition: background 0.2s ease;
@@ -100,9 +105,10 @@
     padding: 0.5rem;
     font-size: 0.875rem;
     color: #f0f0f0;
-    vertical-align: middle; /* Ensure vertical alignment */
+    vertical-align: middle;
 }
 
+/* Item styling */
 .item-name {
     font-weight: 500;
     color: #4a90e2;
@@ -138,64 +144,7 @@
     display: inline-block;
 }
 
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-    .inventory-table {
-        font-size: 0.75rem;
-    }
-
-    .inventory-table th,
-    .inventory-table td {
-        padding: 0.25rem;
-        font-size: 0.7rem;
-    }
-
-    /* Adjust column widths for mobile */
-    .inventory-table th:nth-child(1),
-    .inventory-table td:nth-child(1) {
-        width: 30%; /* Item name */
-    }
-
-    /* Hide description column on very small screens */
-    @media (max-width: 480px) {
-        .inventory-table th:nth-child(2),
-        .inventory-table td:nth-child(2) {
-            display: none;
-        }
-
-        .inventory-table th:nth-child(1),
-        .inventory-table td:nth-child(1) {
-            width: 40%;
-        }
-
-        .inventory-table th:nth-child(3),
-        .inventory-table td:nth-child(3) {
-            width: 30%;
-        }
-
-        .inventory-table th:nth-child(4),
-        .inventory-table td:nth-child(4) {
-            width: 30%;
-        }
-    }
-
-    .item-name {
-        font-size: 0.75rem;
-    }
-
-    .item-description {
-        font-size: 0.7rem;
-    }
-}
-
 /* VIP category special styling */
-.vip-category .category-header {
-    color: #ff6b35 !important;
-    font-weight: 600;
-    text-shadow: 0 0 8px rgba(255, 107, 53, 0.3);
-}
-
-/* VIP items styling */
 .vip-category .item-name {
     color: #ff6b35;
     font-weight: 600;
@@ -208,4 +157,72 @@
 
 .vip-category .inventory-table thead {
     background: linear-gradient(135deg, #2a2a2a, #3a2a2a);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .profile-inventory-simple {
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .inventory-title {
+        font-size: 1.1rem;
+    }
+
+    .inventory-table {
+        font-size: 0.75rem;
+    }
+
+    .inventory-table th,
+    .inventory-table td {
+        padding: 0.25rem;
+        font-size: 0.7rem;
+    }
+
+    .inventory-table th:nth-child(1),
+    .inventory-table td:nth-child(1) {
+        width: 30%;
+    }
+
+    .item-name {
+        font-size: 0.75rem;
+    }
+
+    .item-description {
+        font-size: 0.7rem;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+    .profile-inventory-simple {
+        padding: 0.75rem;
+    }
+
+    /* Hide description column on very small screens */
+    .inventory-table th:nth-child(2),
+    .inventory-table td:nth-child(2) {
+        display: none;
+    }
+
+    .inventory-table th:nth-child(1),
+    .inventory-table td:nth-child(1) {
+        width: 40%;
+    }
+
+    .inventory-table th:nth-child(3),
+    .inventory-table td:nth-child(3) {
+        width: 30%;
+    }
+
+    .inventory-table th:nth-child(4),
+    .inventory-table td:nth-child(4) {
+        width: 30%;
+    }
+
+    .no-items {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
 }

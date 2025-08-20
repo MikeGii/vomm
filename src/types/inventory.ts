@@ -4,7 +4,7 @@ export interface InventoryItem {
     id: string;
     name: string;
     description: string;
-    category: 'equipment' | 'consumable' | 'misc';
+    category: 'equipment' | 'consumable' | 'misc' | 'crafting';
     quantity: number;
     shopPrice: number;
     marketPrice?: number;

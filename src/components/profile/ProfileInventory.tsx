@@ -1,6 +1,7 @@
-// src/components/profile/ProfileInventory.tsx
-import React from 'react';
+// src/components/profile/ProfileInventory.tsx - Updated with tabs
+import React, { useState } from 'react';
 import { InventoryItem } from '../../types';
+import { TabNavigation } from '../ui/TabNavigation';
 import '../../styles/components/profile/ProfileInventory.css';
 
 interface ProfileInventoryProps {
@@ -8,15 +9,17 @@ interface ProfileInventoryProps {
 }
 
 export const ProfileInventory: React.FC<ProfileInventoryProps> = ({ items }) => {
-    // Create display groups without modifying the actual category
-    type DisplayGroup = 'equipment' | 'trainingBooster' | 'medical' | 'vip' | 'consumable' | 'misc';
+    type DisplayGroup = 'equipment' | 'trainingBooster' | 'medical' | 'vip' | 'consumable' | 'misc' | 'crafting';
+
+    const [activeTab, setActiveTab] = useState<DisplayGroup>('crafting');
 
     // Group items by display category
     const groupedItems = items.reduce((acc, item) => {
         let displayGroup: DisplayGroup = item.category;
 
-        // Determine display group for consumables based on effect type
-        if (item.category === 'consumable' && item.consumableEffect) {
+        if (item.category === 'crafting') {
+            displayGroup = 'crafting';
+        } else if (item.category === 'consumable' && item.consumableEffect) {
             if (item.consumableEffect.type === 'trainingClicks') {
                 displayGroup = 'trainingBooster' as DisplayGroup;
             } else if (item.consumableEffect.type === 'heal') {
@@ -47,19 +50,29 @@ export const ProfileInventory: React.FC<ProfileInventoryProps> = ({ items }) => 
             medical: 'Meditsiinitarbed',
             vip: 'VIP Tooted',
             consumable: 'Tarbetarbed',
-            misc: 'Muu'
+            misc: 'Muu',
+            crafting: 'Materjalid & Toidukaubad'
         };
         return names[category] || category;
     };
 
-    // Define display order for categories
-    const categoryOrder: DisplayGroup[] = ['equipment', 'vip', 'trainingBooster', 'medical', 'consumable', 'misc'];
-    const sortedCategories = Object.keys(groupedItems) as DisplayGroup[];
-    sortedCategories.sort((a, b) => {
-        const indexA = categoryOrder.indexOf(a);
-        const indexB = categoryOrder.indexOf(b);
-        return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
-    });
+    // Create tabs only for categories that have items, prioritize crafting first
+    const categoryOrder: DisplayGroup[] = ['crafting', 'equipment', 'vip', 'trainingBooster', 'medical', 'consumable', 'misc'];
+    const availableCategories = categoryOrder.filter(category =>
+        groupedItems[category] && groupedItems[category].length > 0
+    );
+
+    const tabs = availableCategories.map(category => ({
+        id: category,
+        label: getCategoryName(category)
+    }));
+
+    // Set first available category as default if current tab has no items
+    React.useEffect(() => {
+        if (availableCategories.length > 0 && !availableCategories.includes(activeTab)) {
+            setActiveTab(availableCategories[0]);
+        }
+    }, [availableCategories, activeTab]);
 
     if (!items || items.length === 0) {
         return (
@@ -70,45 +83,52 @@ export const ProfileInventory: React.FC<ProfileInventoryProps> = ({ items }) => 
         );
     }
 
+    const currentCategoryItems = groupedItems[activeTab] || [];
+
     return (
         <div className="profile-inventory-simple">
             <h2 className="inventory-title">Inventaar</h2>
-            {sortedCategories.map((category) => {
-                const categoryItems = groupedItems[category];
-                if (!categoryItems || categoryItems.length === 0) return null;
 
-                return (
-                    <div key={category} className={`category-section ${category === 'vip' ? 'vip-category' : ''}`}>
-                        <h3 className="category-header">{getCategoryName(category)}</h3>
-                        <table className="inventory-table">
-                            <thead>
-                            <tr>
-                                <th>Ese</th>
-                                <th>Kirjeldus</th>
-                                <th>Kogus</th>
-                                <th>Staatus</th>
+            <TabNavigation
+                tabs={tabs}
+                activeTab={activeTab}
+                onTabChange={(tabId) => setActiveTab(tabId as DisplayGroup)}
+            />
+
+            {currentCategoryItems.length > 0 ? (
+                <div className={`category-section ${activeTab === 'vip' ? 'vip-category' : ''}`}>
+                    <table className="inventory-table">
+                        <thead>
+                        <tr>
+                            <th>Ese</th>
+                            <th>Kirjeldus</th>
+                            <th>Kogus</th>
+                            <th>Staatus</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {currentCategoryItems.map(item => (
+                            <tr key={item.id} className="inventory-row">
+                                <td className="item-name">{item.name}</td>
+                                <td className="item-description">{item.description}</td>
+                                <td className="item-quantity">{item.quantity}</td>
+                                <td className="item-status">
+                                    {item.equipped ? (
+                                        <span className="status-equipped">Varustatud</span>
+                                    ) : (
+                                        <span className="status-available">Saadaval</span>
+                                    )}
+                                </td>
                             </tr>
-                            </thead>
-                            <tbody>
-                            {categoryItems.map(item => (
-                                <tr key={item.id} className="inventory-row">
-                                    <td className="item-name">{item.name}</td>
-                                    <td className="item-description">{item.description}</td>
-                                    <td className="item-quantity">{item.quantity}</td>
-                                    <td className="item-status">
-                                        {item.equipped ? (
-                                            <span className="status-equipped">Varustatud</span>
-                                        ) : (
-                                            <span className="status-available">Saadaval</span>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                            </tbody>
-                        </table>
-                    </div>
-                );
-            })}
+                        ))}
+                        </tbody>
+                    </table>
+                </div>
+            ) : (
+                <div className="no-items">
+                    <p>Selles kategoorias pole esemeid.</p>
+                </div>
+            )}
         </div>
     );
-}
+};

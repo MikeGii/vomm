@@ -4,6 +4,9 @@ import { firestore } from '../config/firebase';
 import {PlayerStats, PlayerAttributes, AttributeData, TrainingData, KitchenLabTrainingData} from '../types';
 import {calculateLevelFromExp, calculatePlayerHealth} from "./PlayerService";
 import { getTrainingBonusForAttribute} from "../data/abilities";
+import { getKitchenLabActivityById } from '../data/kitchenLabActivities';
+import { CRAFTING_INGREDIENTS } from '../data/shop/craftingIngredients';
+import { InventoryItem } from '../types';
 
 // Calculate experience needed for next attribute level
 export const calculateExpForNextLevel = (currentLevel: number): number => {
@@ -50,7 +53,111 @@ export const initializeKitchenLabTrainingData = (): KitchenLabTrainingData => {
     };
 };
 
-// Check if training clicks should reset (every full hour) - KEEP ONLY THIS ONE
+// Helper function to check if player has required materials
+const hasRequiredMaterials = (
+    inventory: InventoryItem[],
+    requiredItems: { id: string; quantity: number }[]
+): { hasAll: boolean; missing: { id: string; needed: number; has: number }[] } => {
+    const missing: { id: string; needed: number; has: number }[] = [];
+
+    for (const required of requiredItems) {
+        // Sum quantities of all items with matching base ID
+        const totalQuantity = inventory
+            .filter(item => {
+                const baseId = item.id.split('_')[0];
+                return baseId === required.id && item.category === 'crafting';
+            })
+            .reduce((sum, item) => sum + item.quantity, 0);
+
+        if (totalQuantity < required.quantity) {
+            missing.push({
+                id: required.id,
+                needed: required.quantity,
+                has: totalQuantity
+            });
+        }
+    }
+
+    return {
+        hasAll: missing.length === 0,
+        missing
+    };
+};
+
+// Helper function to create proper InventoryItem from shop data
+const createInventoryItemFromId = (itemId: string, quantity: number): InventoryItem => {
+    const shopItem = CRAFTING_INGREDIENTS.find(item => item.id === itemId);
+
+    if (!shopItem) {
+        throw new Error(`Item ${itemId} not found in crafting ingredients`);
+    }
+
+    return {
+        id: `${itemId}_${Date.now()}_${Math.random()}`, // Use complex ID like shop does
+        name: shopItem.name,
+        description: shopItem.description,
+        category: 'crafting', // Changed from 'misc' to 'crafting'
+        quantity: quantity,
+        shopPrice: shopItem.basePrice,
+        source: 'training',
+        obtainedAt: new Date()
+    };
+};
+
+// Helper function to update inventory after crafting
+const updateInventoryForCrafting = (
+    inventory: InventoryItem[],
+    requiredItems: { id: string; quantity: number }[],
+    producedItems: { id: string; quantity: number }[]
+): InventoryItem[] => {
+    let updatedInventory = [...inventory];
+
+    // Remove required materials by base ID
+    requiredItems.forEach(required => {
+        let remainingToRemove = required.quantity;
+
+        for (let i = updatedInventory.length - 1; i >= 0 && remainingToRemove > 0; i--) {
+            const item = updatedInventory[i];
+            const baseId = item.id.split('_')[0];
+
+            if (baseId === required.id && item.category === 'crafting') {
+                if (item.quantity <= remainingToRemove) {
+                    remainingToRemove -= item.quantity;
+                    updatedInventory.splice(i, 1);
+                } else {
+                    updatedInventory[i] = {
+                        ...item,
+                        quantity: item.quantity - remainingToRemove
+                    };
+                    remainingToRemove = 0;
+                }
+            }
+        }
+    });
+
+    // Add produced items
+    producedItems.forEach(produced => {
+        // Check if item already exists by base ID
+        const existingIndex = updatedInventory.findIndex(item => {
+            const baseId = item.id.split('_')[0];
+            return baseId === produced.id && item.category === 'crafting';
+        });
+
+        if (existingIndex >= 0) {
+            updatedInventory[existingIndex] = {
+                ...updatedInventory[existingIndex],
+                quantity: updatedInventory[existingIndex].quantity + produced.quantity
+            };
+        } else {
+            const newItem = createInventoryItemFromId(produced.id, produced.quantity);
+            updatedInventory.push(newItem);
+        }
+    });
+
+    return updatedInventory;
+};
+
+// Check if training clicks should reset (every full hour)
 export const checkAndResetTrainingClicks = async (userId: string): Promise<TrainingData> => {
     const statsRef = doc(firestore, 'playerStats', userId);
     const statsDoc = await getDoc(statsRef);
@@ -62,10 +169,7 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
     const stats = statsDoc.data() as PlayerStats;
     let trainingData = stats.trainingData || initializeTrainingData();
 
-    // Determine max clicks based on work status
     const maxClicks = stats.activeWork ? 10 : 50;
-
-    // Get current time and last reset time
     const now = new Date();
     const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
 
@@ -80,7 +184,6 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
 
     const lastResetHour = new Date(lastReset.getFullYear(), lastReset.getMonth(), lastReset.getDate(), lastReset.getHours());
 
-    // If current hour is different from last reset hour, reset clicks
     if (currentHour.getTime() > lastResetHour.getTime()) {
         trainingData = {
             remainingClicks: maxClicks,
@@ -108,10 +211,7 @@ export const checkAndResetKitchenLabTrainingClicks = async (userId: string): Pro
     const stats = statsDoc.data() as PlayerStats;
     let kitchenLabTrainingData = stats.kitchenLabTrainingData || initializeKitchenLabTrainingData();
 
-    // Determine max clicks based on work status (same logic as sports)
     const maxClicks = stats.activeWork ? 10 : 50;
-
-    // Get current time and last reset time
     const now = new Date();
     const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
 
@@ -126,7 +226,6 @@ export const checkAndResetKitchenLabTrainingClicks = async (userId: string): Pro
 
     const lastResetHour = new Date(lastReset.getFullYear(), lastReset.getMonth(), lastReset.getDate(), lastReset.getHours());
 
-    // If current hour is different from last reset hour, reset clicks
     if (currentHour.getTime() > lastResetHour.getTime()) {
         kitchenLabTrainingData = {
             remainingClicks: maxClicks,
@@ -142,7 +241,7 @@ export const checkAndResetKitchenLabTrainingClicks = async (userId: string): Pro
     return kitchenLabTrainingData;
 };
 
-// Perform training activity
+// Main training function with material checking and crafting
 export const performTraining = async (
     userId: string,
     activityId: string,
@@ -168,7 +267,7 @@ export const performTraining = async (
 
     const stats = statsDoc.data() as PlayerStats;
 
-    // Check and reset training clicks if needed
+    // Check training clicks
     if (trainingType === 'sports') {
         const trainingData = await checkAndResetTrainingClicks(userId);
         if (trainingData.remainingClicks <= 0) {
@@ -178,6 +277,22 @@ export const performTraining = async (
         const kitchenLabData = await checkAndResetKitchenLabTrainingClicks(userId);
         if (kitchenLabData.remainingClicks <= 0) {
             throw new Error('Treeningkordi pole enam järel! Oota järgmist täistundi.');
+        }
+
+        // NEW: Check materials for kitchen/lab activities
+        const activity = getKitchenLabActivityById(activityId);
+        if (activity && activity.requiredItems) {
+            const materialCheck = hasRequiredMaterials(stats.inventory || [], activity.requiredItems);
+
+            if (!materialCheck.hasAll) {
+                const missingItems = materialCheck.missing.map(missing => {
+                    const shopItem = CRAFTING_INGREDIENTS.find(item => item.id === missing.id);
+                    const itemName = shopItem?.name || missing.id;
+                    return `${itemName}: vajad ${missing.needed}, sul on ${missing.has}`;
+                }).join(', ');
+
+                throw new Error(`Sul puuduvad materjalid: ${missingItems}`);
+            }
         }
     }
 
@@ -190,7 +305,6 @@ export const performTraining = async (
         let newLevel = attr.level;
         let expForNext = attr.experienceForNextLevel;
 
-        // Check for level up
         while (newExp >= expForNext) {
             newExp -= expForNext;
             newLevel++;
@@ -204,7 +318,6 @@ export const performTraining = async (
         };
     };
 
-    // Apply rewards to attributes WITH BONUSES
     const applyBonusToReward = (baseReward: number, attribute: 'strength' | 'agility' | 'dexterity' | 'intelligence' | 'endurance'): number => {
         const bonus = getTrainingBonusForAttribute(stats.completedCourses || [], attribute);
         return Math.floor(baseReward * (1 + bonus));
@@ -240,7 +353,7 @@ export const performTraining = async (
         attributes.chemistry = updateAttribute(attributes.chemistry, rewards.chemistry);
     }
 
-    // Recalculate health if strength or endurance changed
+    // Handle health updates
     let updatedHealth = stats.health;
     let healthUpdates: any = {};
 
@@ -248,34 +361,30 @@ export const performTraining = async (
         const oldMaxHealth = stats.health?.max || 100;
         const oldCurrentHealth = stats.health?.current || 100;
 
-        // Calculate new max health
         const newHealthData = calculatePlayerHealth(
             attributes.strength.level,
             attributes.endurance.level
         );
 
-        // When max health increases, increase current health by the same amount (not to full)
         const healthIncrease = newHealthData.max - oldMaxHealth;
 
         updatedHealth = {
-            ...newHealthData,  // This includes max, baseHealth, strengthBonus, enduranceBonus
-            current: oldCurrentHealth + healthIncrease  // Add the increase to current, don't set to max
+            ...newHealthData,
+            current: oldCurrentHealth + healthIncrease
         };
 
-        // Make sure current doesn't exceed max
         updatedHealth.current = Math.min(updatedHealth.current, updatedHealth.max);
 
-        // If now at max health, clear recovery timer
         if (updatedHealth.current >= updatedHealth.max) {
             healthUpdates.lastHealthUpdate = null;
         }
     }
 
-    // Update player main experience and level
+    // Update player experience and level
     const newPlayerExp = stats.experience + rewards.playerExp;
     const newPlayerLevel = calculateLevelFromExp(newPlayerExp);
 
-    // Update training data based on training type
+    // Prepare updates object
     let updates: any = {
         attributes: attributes,
         experience: newPlayerExp,
@@ -284,6 +393,20 @@ export const performTraining = async (
         ...healthUpdates
     };
 
+    // Handle inventory updates for kitchen/lab activities
+    if (trainingType === 'kitchen-lab') {
+        const activity = getKitchenLabActivityById(activityId);
+        if (activity && activity.requiredItems && activity.producedItems) {
+            const updatedInventory = updateInventoryForCrafting(
+                stats.inventory || [],
+                activity.requiredItems,
+                activity.producedItems
+            );
+            updates.inventory = updatedInventory;
+        }
+    }
+
+    // Update training data
     if (trainingType === 'sports') {
         const trainingData = await checkAndResetTrainingClicks(userId);
         const updatedTrainingData: TrainingData = {

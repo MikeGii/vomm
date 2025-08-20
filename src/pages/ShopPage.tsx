@@ -12,6 +12,8 @@ import { ShopPurchaseModal } from '../components/shop/ShopPurchaseModal';
 import { ShopItem } from '../types/shop';
 import { PlayerStats } from '../types';
 import { purchaseItem } from '../services/ShopService';
+import { TabNavigation } from '../components/ui/TabNavigation';
+import { SHOP_CATEGORIES } from '../types/shop';
 import {
     initializeShopStock,
     getAllItemsWithStock
@@ -35,6 +37,33 @@ const ShopPage: React.FC = () => {
     const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [activeTab, setActiveTab] = useState<string>('crafting');
+    const [searchQuery, setSearchQuery] = useState<string>('');
+
+    // Create tabs from SHOP_CATEGORIES
+    const tabs = [
+        { id: 'crafting', label: SHOP_CATEGORIES.crafting.name },
+        { id: 'trainingBooster', label: SHOP_CATEGORIES.trainingBooster.name },
+        { id: 'medical', label: SHOP_CATEGORIES.medical.name },
+        { id: 'protection', label: SHOP_CATEGORIES.protection.name },
+        { id: 'vip', label: SHOP_CATEGORIES.vip.name }
+    ];
+
+    const filteredItems = itemsWithStock
+        .filter(({ item }) => item.category === activeTab)
+        .filter(({ item }) =>
+            searchQuery === '' ||
+            item.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .sort(({ item: a, currentStock: stockA }, { item: b, currentStock: stockB }) => {
+            // Out of stock items go to bottom
+            if (stockA === 0 && stockB > 0) return 1;
+            if (stockB === 0 && stockA > 0) return -1;
+
+            // Alphabetical sorting for items with same stock status
+            return a.name.localeCompare(b.name, 'et');
+        });
+
 
     // Initialize shop stock on first load
     useEffect(() => {
@@ -162,8 +191,33 @@ const ShopPage: React.FC = () => {
                     isRefreshing={isRefreshing}
                 />
 
+                {/* ADD THIS: Tab Navigation */}
+                <TabNavigation
+                    tabs={tabs}
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                />
+
+                <div className="search-container">
+                    <input
+                        type="text"
+                        placeholder="Otsi esemeid..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="search-input"
+                    />
+                    {searchQuery && (
+                        <button
+                            onClick={() => setSearchQuery('')}
+                            className="clear-search"
+                        >
+                            ✕
+                        </button>
+                    )}
+                </div>
+
                 <ShopTable
-                    items={itemsWithStock}
+                    items={filteredItems}
                     playerMoney={playerMoney}
                     playerPollid={playerPollid}
                     onPurchase={handlePurchase}
