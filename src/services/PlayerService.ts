@@ -107,6 +107,7 @@ export const initializePlayerStats = async (userId: string): Promise<PlayerStats
         // Initialize money if not present
         if (stats.money === undefined) {
             stats.money = 0;
+            await updateDoc(statsRef, { money: 0 });
         }
 
         if (stats.pollid === undefined) {
@@ -136,7 +137,7 @@ export const initializePlayerStats = async (userId: string): Promise<PlayerStats
         level: 1,
         experience: 0,
         reputation: 0,
-        money: 0,
+        money: 150,
         rank: null,
         department: null,
         prefecture: null,
