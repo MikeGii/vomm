@@ -58,7 +58,7 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
     // BREWING ACTIVITIES
     {
         id: 'basic_brewing_01',
-        name: 'Valmista siirupit',
+        name: 'Valmista mahla',
         description: 'Valmistad mahedat siirupijooki',
         requiredLevel: 1,
         rewards: {

@@ -17,6 +17,22 @@ interface ActivitySelectorProps {
     trainingType?: 'sports' | 'kitchen-lab';
 }
 
+// At the top of ActivitySelector.tsx, add the helper function:
+const getBaseIdFromInventoryId = (inventoryId: string): string => {
+    const parts = inventoryId.split('_');
+
+    if (parts.length >= 3) {
+        const lastPart = parts[parts.length - 1];
+        const secondLastPart = parts[parts.length - 2];
+
+        if (lastPart.includes('.') && /^\\d+$/.test(secondLastPart)) {
+            return parts.slice(0, -2).join('_');
+        }
+    }
+
+    return parts[0];
+};
+
 export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                                                                       activities,
                                                                       selectedActivity,
@@ -49,10 +65,10 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
         const missing: string[] = [];
 
         for (const required of activity.requiredItems) {
-            // Sum quantities of all items with matching base ID (same logic as TrainingService)
+            // Sum quantities of all items with matching base ID - FIXED
             const totalQuantity = playerStats.inventory
                 .filter(item => {
-                    const baseId = item.id.split('_')[0];
+                    const baseId = getBaseIdFromInventoryId(item.id);
                     return baseId === required.id && item.category === 'crafting';
                 })
                 .reduce((sum, item) => sum + item.quantity, 0);
@@ -112,11 +128,11 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                     <h4>Vajalikud materjalid:</h4>
                     <ul>
                         {activity.requiredItems.map((item, index) => {
-                            // Sum quantities using base ID extraction (same logic as hasRequiredMaterials)
+                            // Sum quantities using base ID extraction - FIXED
                             const currentQuantity = playerStats?.inventory
                                 ? playerStats.inventory
                                     .filter(invItem => {
-                                        const baseId = invItem.id.split('_')[0];
+                                        const baseId = getBaseIdFromInventoryId(invItem.id); // FIXED
                                         return baseId === item.id && invItem.category === 'crafting';
                                     })
                                     .reduce((sum, invItem) => sum + invItem.quantity, 0)
@@ -129,23 +145,30 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                                 <span className="material-status-icon">
                                     {hasEnough ? '✅' : '❌'}
                                 </span>
-                                    <span className="material-details">
-                                    {item.quantity}x {getItemName(item.id)}
-                                        <span className="material-count">
-                                        ({currentQuantity}/{item.quantity})
-                                    </span>
+                                    <span className="material-name">
+                                    {getItemName(item.id)}
+                                </span>
+                                    <span className="material-quantity">
+                                    {currentQuantity}/{item.quantity}
                                 </span>
                                 </li>
                             );
                         })}
                     </ul>
                 </div>
+
                 <div className="produced-items">
-                    <h4>Toodeti:</h4>
+                    <h4>Toodetakse:</h4>
                     <ul>
                         {activity.producedItems.map((item, index) => (
-                            <li key={index}>
-                                {item.quantity}x {getItemName(item.id)}
+                            <li key={index} className="produced-item">
+                                <span className="produced-icon">🏭</span>
+                                <span className="produced-name">
+                                {getItemName(item.id)}
+                            </span>
+                                <span className="produced-quantity">
+                                x{item.quantity}
+                            </span>
                             </li>
                         ))}
                     </ul>
