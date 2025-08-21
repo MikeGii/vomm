@@ -1,5 +1,7 @@
 // src/utils/rankUtils.ts
 
+import {PlayerStats} from "../types";
+
 export const getRankImagePath = (rank: string | null): string | null => {
     if (!rank) return null;
 
@@ -16,4 +18,46 @@ export const getRankImagePath = (rank: string | null): string | null => {
     // Convert to lowercase for case-insensitive matching
     const normalizedRank = rank.toLowerCase();
     return rankImageMap[normalizedRank] || null;
+};
+
+/**
+ * Automatically updates player rank based on current level and graduation status
+ * @param playerStats - Current player stats
+ * @returns Updated rank if promotion is needed, current rank if no change
+ */
+export const getCorrectRank = (playerStats: PlayerStats): string | null => {
+    const hasGraduated = playerStats.completedCourses?.includes('lopueksam') || false;
+
+    // If not graduated, no rank
+    if (!hasGraduated) {
+        return null;
+    }
+
+    const currentLevel = playerStats.level || 1;
+
+    // Determine correct rank based on level
+    if (currentLevel >= 60) {
+        return 'Üleminspektor';
+    } else if (currentLevel >= 40) {
+        return 'Vaneminspektor';
+    } else {
+        // Default rank after graduation
+        return 'Inspektor';
+    }
+};
+
+/**
+ * Checks if player rank needs updating and returns the correct rank
+ * @param playerStats - Current player stats
+ * @returns New rank if update needed, null if current rank is correct
+ */
+export const checkRankUpdate = (playerStats: PlayerStats): string | null => {
+    const correctRank = getCorrectRank(playerStats);
+
+    // If the correct rank is different from current rank, return the new rank
+    if (correctRank !== playerStats.rank) {
+        return correctRank;
+    }
+
+    return null; // No update needed
 };

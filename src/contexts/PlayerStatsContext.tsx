@@ -1,10 +1,11 @@
 // src/contexts/PlayerStatsContext.tsx
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import { doc, onSnapshot, updateDoc, getDoc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats } from '../types';
 import { useAuth } from './AuthContext';
 import { initializePlayerStats } from '../services/PlayerService';
+import { checkRankUpdate } from '../utils/rankUtils';
 
 interface PlayerStatsContextType {
     playerStats: PlayerStats | null;
@@ -28,17 +29,32 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Manual refresh function if needed
-    const refreshStats = async () => {
+    // Track last level to only check rank when level changes
+    const lastLevelRef = useRef<number | null>(null);
+    const isUpdatingRankRef = useRef<boolean>(false);
+    const unsubscribeRef = useRef<(() => void) | null>(null);
+
+    // Manual refresh function - simplified to avoid loops
+    const refreshStats = useCallback(async () => {
         if (!currentUser) return;
 
         try {
-            const stats = await initializePlayerStats(currentUser.uid);
-            setPlayerStats(stats);
+            // Just fetch the current data without triggering updates
+            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+            const statsDoc = await getDoc(statsRef);
+
+            if (statsDoc.exists()) {
+                const stats = statsDoc.data() as PlayerStats;
+                // Don't set state here if we have an active listener
+                // The listener will handle the update
+                if (!unsubscribeRef.current) {
+                    setPlayerStats(stats);
+                }
+            }
         } catch (err) {
             console.error('Error refreshing stats:', err);
         }
-    };
+    }, [currentUser]);
 
     useEffect(() => {
         if (!currentUser) {
@@ -46,8 +62,6 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
             setLoading(false);
             return;
         }
-
-        let unsubscribe: (() => void) | undefined;
 
         const setupListener = async () => {
             try {
@@ -57,13 +71,34 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
                 // Set up the real-time listener
                 const statsRef = doc(firestore, 'playerStats', currentUser.uid);
 
-                unsubscribe = onSnapshot(
+                const unsubscribe = onSnapshot(
                     statsRef,
-                    (doc) => {
-                        if (doc.exists()) {
-                            const stats = doc.data() as PlayerStats;
+                    async (docSnapshot) => {
+                        if (docSnapshot.exists()) {
+                            const stats = docSnapshot.data() as PlayerStats;
                             setPlayerStats(stats);
                             setError(null);
+
+                            // Only check rank if level changed and we're not already updating
+                            const currentLevel = stats.level || 1;
+                            if (!isUpdatingRankRef.current &&
+                                (lastLevelRef.current === null || lastLevelRef.current !== currentLevel)) {
+
+                                lastLevelRef.current = currentLevel;
+
+                                const newRank = checkRankUpdate(stats);
+                                if (newRank !== null && newRank !== stats.rank) {
+                                    isUpdatingRankRef.current = true;
+                                    try {
+                                        await updateDoc(statsRef, { rank: newRank });
+                                        console.log(`Auastme uuendus: ${stats.rank || 'puudub'} → ${newRank}`);
+                                    } catch (error) {
+                                        console.error('Error updating rank:', error);
+                                    } finally {
+                                        isUpdatingRankRef.current = false;
+                                    }
+                                }
+                            }
                         } else {
                             setPlayerStats(null);
                         }
@@ -75,6 +110,8 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
                         setLoading(false);
                     }
                 );
+
+                unsubscribeRef.current = unsubscribe;
             } catch (err) {
                 console.error('Failed to setup stats listener:', err);
                 setError(err instanceof Error ? err.message : 'Unknown error');
@@ -85,8 +122,9 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setupListener();
 
         return () => {
-            if (unsubscribe) {
-                unsubscribe();
+            if (unsubscribeRef.current) {
+                unsubscribeRef.current();
+                unsubscribeRef.current = null;
             }
         };
     }, [currentUser]);
