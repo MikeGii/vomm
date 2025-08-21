@@ -65,8 +65,12 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
         const setupListener = async () => {
             try {
+
+                const userDoc = await getDoc(doc(firestore, 'users', currentUser.uid));
+                const username = userDoc.exists() ? userDoc.data().username : 'Tundmatu';
+
                 // Initialize stats first (creates document if needed for new users)
-                await initializePlayerStats(currentUser.uid);
+                await initializePlayerStats(currentUser.uid, username);
 
                 // Set up the real-time listener
                 const statsRef = doc(firestore, 'playerStats', currentUser.uid);

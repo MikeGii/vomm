@@ -97,7 +97,7 @@ const createInitialVipItems = (): InventoryItem[] => {
     ];
 };
 
-export const initializePlayerStats = async (userId: string): Promise<PlayerStats> => {
+export const initializePlayerStats = async (userId: string, username: string): Promise<PlayerStats> => {
     const statsRef = doc(firestore, 'playerStats', userId);
     const statsDoc = await getDoc(statsRef);
 
@@ -134,6 +134,7 @@ export const initializePlayerStats = async (userId: string): Promise<PlayerStats
 
     // Create initial stats for new player - starts unemployed and without training
     const initialStats: PlayerStats = {
+        username,
         level: 1,
         experience: 0,
         reputation: 0,

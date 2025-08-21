@@ -71,6 +71,8 @@ export interface KitchenLabTrainingData {
 
 // Player game stats
 export interface PlayerStats {
+    username?: string;
+    excludeFromLeaderboard?: boolean;
     level: number;
     experience: number;
     reputation: number;
