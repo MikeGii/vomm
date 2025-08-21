@@ -12,6 +12,7 @@ import { getCourseById } from '../../data/courses';
 import { completeWork } from '../../services/WorkService';
 import { checkCourseCompletion } from '../../services/CourseService';
 import { CRAFTING_INGREDIENTS } from '../../data/shop/craftingIngredients';
+
 import '../../styles/components/dev/DebugMenu.css';
 
 const ADMIN_USER_ID = 'WUucfDi2DAat9sgDY75mDZ8ct1k2';
