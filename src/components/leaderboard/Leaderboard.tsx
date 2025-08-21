@@ -1,5 +1,5 @@
 // src/components/leaderboard/Leaderboard.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { LeaderboardTable } from './LeaderboardTable';
 import { PlayerProfileModal } from './PlayerProfileModal';
 import { getLeaderboard } from '../../services/LeaderboardService';
@@ -10,6 +10,11 @@ import '../../styles/components/leaderboard/Leaderboard.css';
 interface LeaderboardProps {
     currentUserId?: string;
 }
+
+// Cache edetabeli andmed 5 minutiks
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutit
+let cachedData: LeaderboardEntry[] | null = null;
+let cacheTimestamp: number = 0;
 
 export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId }) => {
     const [allEntries, setAllEntries] = useState<LeaderboardEntry[]>([]);
@@ -22,23 +27,46 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId }) => {
 
     // Pagination settings
     const entriesPerPage = 10;
-    const totalPages = Math.ceil(allEntries.length / entriesPerPage);
 
-    // Calculate current page entries
-    const indexOfLastEntry = currentPage * entriesPerPage;
-    const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
-    const currentEntries = allEntries.slice(indexOfFirstEntry, indexOfLastEntry);
+    // Optimeeri kalkulatsioonid useMemo'ga
+    const { currentEntries, totalPages, userRank, userPage, indexOfFirstEntry, indexOfLastEntry } = useMemo(() => {
+        const total = Math.ceil(allEntries.length / entriesPerPage);
+        const indexOfLastEntry = currentPage * entriesPerPage;
+        const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
+        const entries = allEntries.slice(indexOfFirstEntry, indexOfLastEntry);
+        const rank = allEntries.findIndex(entry => entry.userId === currentUserId) + 1;
+        const page = rank > 0 ? Math.ceil(rank / entriesPerPage) : 0;
 
-    // Find user's rank position
-    const userRank = allEntries.findIndex(entry => entry.userId === currentUserId) + 1;
-    const userPage = userRank > 0 ? Math.ceil(userRank / entriesPerPage) : 0;
+        return {
+            currentEntries: entries,
+            totalPages: total,
+            userRank: rank,
+            userPage: page,
+            indexOfFirstEntry,
+            indexOfLastEntry
+        };
+    }, [allEntries, currentPage, currentUserId, entriesPerPage]);
 
-    const loadLeaderboard = useCallback(async () => {
+    const loadLeaderboard = useCallback(async (forceRefresh = false) => {
+        // Kontrolli cache'i
+        const now = Date.now();
+        if (!forceRefresh && cachedData && (now - cacheTimestamp < CACHE_DURATION)) {
+            setAllEntries(cachedData);
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
         try {
-            const data = await getLeaderboard('level', 100);
+            // Uuendatud funktsioonikutse - enam ei kasuta sortBy parameetrit
+            const data = await getLeaderboard(100);
+
+            // Salvesta cache'i
+            cachedData = data;
+            cacheTimestamp = now;
+
             setAllEntries(data);
         } catch (err) {
             console.error('Error loading leaderboard:', err);
@@ -52,24 +80,25 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId }) => {
         loadLeaderboard();
     }, [loadLeaderboard]);
 
+    // Lisa värskendamise funktsioon
+    const handleRefresh = () => {
+        loadLeaderboard(true); // Force refresh
+    };
+
     const handlePlayerClick = async (playerData: PlayerProfileModalData) => {
         setIsLoadingProfile(true);
 
         try {
-            // Fetch complete player profile data including creation date
             const completeProfile = await getPlayerProfileData(playerData.userId);
-
             if (completeProfile) {
                 setSelectedPlayer(completeProfile);
                 setIsModalOpen(true);
             } else {
-                // Fallback to basic data if fetch fails
                 setSelectedPlayer(playerData);
                 setIsModalOpen(true);
             }
         } catch (error) {
             console.error('Error loading player profile:', error);
-            // Use basic data as fallback
             setSelectedPlayer(playerData);
             setIsModalOpen(true);
         } finally {
@@ -84,7 +113,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId }) => {
 
     const handlePageChange = (pageNumber: number) => {
         setCurrentPage(pageNumber);
-        // Scroll to top of leaderboard
         document.querySelector('.leaderboard-container')?.scrollIntoView({
             behavior: 'smooth',
             block: 'start'
@@ -102,14 +130,25 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId }) => {
             <div className="leaderboard-container">
                 <div className="leaderboard-header">
                     <h3 className="leaderboard-title">Edetabel</h3>
-                    {userRank > 0 && userPage !== currentPage && (
-                        <button
-                            className="go-to-position-btn"
-                            onClick={handleGoToMyPosition}
-                        >
-                            Minu positsioon (#{userRank})
-                        </button>
-                    )}
+                    <div className="leaderboard-actions">
+                        {userRank > 0 && userPage !== currentPage && (
+                            <button
+                                className="go-to-position-btn"
+                                onClick={handleGoToMyPosition}
+                            >
+                                Minu positsioon (#{userRank})
+                            </button>
+                        )}
+                        {!loading && (
+                            <button
+                                className="refresh-btn"
+                                onClick={handleRefresh}
+                                title="Värskenda edetabelit"
+                            >
+                                ↻
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {loading && (
@@ -121,7 +160,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId }) => {
                 {error && (
                     <div className="leaderboard-error">
                         <p>{error}</p>
-                        <button onClick={loadLeaderboard}>Proovi uuesti</button>
+                        <button onClick={() => loadLeaderboard(true)}>Proovi uuesti</button>
                     </div>
                 )}
 

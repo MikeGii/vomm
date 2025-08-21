@@ -1,9 +1,11 @@
 // src/components/dev/DebugMenu.tsx
 import React, { useState, useEffect } from 'react';
-import {doc, updateDoc, collection, getDocs, Timestamp, onSnapshot,     query,
+import {
+    doc, updateDoc, collection, getDocs, Timestamp, onSnapshot, query,
     where,
     limit,
-    deleteDoc } from 'firebase/firestore';
+    deleteDoc,
+} from 'firebase/firestore';
 import { firestore } from '../../config/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -277,8 +279,6 @@ export const DebugMenu: React.FC = () => {
                                 Täida treeningu klikid (50/50)
                             </button>
                         </div>
-
-
 
                         {/* Global Actions Section */}
                         <div className="debug-section">

@@ -3,18 +3,15 @@ import {
     collection,
     query,
     limit,
-    getDocs,
-    doc,
-    getDoc
+    getDocs
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
-import { LeaderboardEntry, LeaderboardSortBy } from '../types';
+import { LeaderboardEntry } from '../types';
 
-const EXCLUDED_EMAILS = ['cjmike12@gmail.com'];
+const EXCLUDED_USERNAMES = ['L22ne13'];
 
 export const getLeaderboard = async (
-    sortBy: LeaderboardSortBy = 'level',
-    limitCount: number = 50
+    limitCount: number = 100
 ): Promise<LeaderboardEntry[]> => {
     try {
         const statsQuery = query(
@@ -25,43 +22,25 @@ export const getLeaderboard = async (
         const querySnapshot = await getDocs(statsQuery);
         const leaderboard: LeaderboardEntry[] = [];
 
-        for (const statsDoc of querySnapshot.docs) {
+        querySnapshot.docs.forEach((statsDoc) => {
             const playerData = statsDoc.data();
 
-            // Check if player has completed basic training (is at least Abipolitseinik)
             const hasCompletedBasicTraining = playerData.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
-
             if (!hasCompletedBasicTraining) {
-                continue;
+                return; // Skip
             }
 
-            // Get user data to check email
-            let username = 'Tundmatu';
-            let shouldExclude = false;
-
-            try {
-                const userDoc = await getDoc(doc(firestore, 'users', statsDoc.id));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    username = userData.username || 'Tundmatu';
-
-                    // Check if this user should be excluded
-                    if (userData.email && EXCLUDED_EMAILS.includes(userData.email)) {
-                        shouldExclude = true;
-                    }
-                }
-            } catch (error) {
-                console.error('Error fetching username for', statsDoc.id, error);
+            if (playerData.username && EXCLUDED_USERNAMES.includes(playerData.username)) {
+                return; // Skip this user
             }
 
-            // Skip if user should be excluded
-            if (shouldExclude) {
-                continue;
+            if (playerData.excludeFromLeaderboard === true) {
+                return;
             }
 
             leaderboard.push({
                 userId: statsDoc.id,
-                username,
+                username: playerData.username || 'Tundmatu',
                 level: playerData.level || 1,
                 experience: playerData.experience || 0,
                 reputation: playerData.reputation || 0,
@@ -75,9 +54,8 @@ export const getLeaderboard = async (
                 criminalsArrested: playerData.criminalsArrested || 0,
                 totalWorkedHours: playerData.totalWorkedHours || 0
             });
-        }
+        });
 
-        // Simple sorting by level (primary) and reputation (secondary)
         leaderboard.sort((a, b) => {
             if (b.level !== a.level) {
                 return b.level - a.level;
