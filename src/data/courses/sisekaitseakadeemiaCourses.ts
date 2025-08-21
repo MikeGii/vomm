@@ -1,125 +1,5 @@
-// src/data/courses.ts
-import { Course } from '../types';
-
-export const ABIPOLITSEINIK_COURSES: Course[] = [
-    {
-        id: 'basic_police_training_abipolitseinik',
-        name: 'Abipolitseiniku baaskursus',
-        description: 'Põhiline koolitus kõigile uutele liikmetele. Õpid seadusi, protseduure ja ohutustehnikaid.',
-        duration: 10,
-        requirements: {
-            level: 1,
-            totalWorkedHours: 0
-
-        },
-        rewards: {
-            experience: 50,
-            reputation: 10,
-        },
-        category: 'abipolitseinik'
-    },
-    {
-        id: 'firearm_training_abipolitseinik',
-        name: 'Tulirelva koolitus',
-        description: 'Omanda tulirelva käsitsemise oskused ja ohutusnõuded. Õpid relva hooldust, laskmistehnikaid ja taktikalist relvakasutust.',
-        duration: 300,
-        requirements: {
-            level: 5,
-            completedCourses: ['basic_police_training_abipolitseinik'],
-            totalWorkedHours: 1
-        },
-        rewards: {
-            experience: 50,
-            reputation: 20
-        },
-        category: 'abipolitseinik'
-    },
-    {
-      id: 'electrical_shock_weapon_abipolitseinik',
-      name: 'Elektrišokirelva koolitus',
-      description: 'Omanda elektrišokirelva käsitsemise oskused ja ohutusnõuded. Õpid taseri hooldust, laskmistehnikaid ja elektrirelva kasutust.',
-      duration: 600,
-      requirements: {
-          level: 5,
-          completedCourses: ['basic_police_training_abipolitseinik'],
-          totalWorkedHours: 2
-      },
-      rewards: {
-          experience: 75,
-          reputation: 30,
-      },
-      category: 'abipolitseinik'
-    },
-    {
-      id: 'police_apollo_usage_abipolitseinik',
-      name: 'E-Politsei kasutamise õigus',
-      description: 'Omanda baasteadmised ja kasutusõigus e-politsei rakenduse "Apollo" jaoks.',
-      duration: 900,
-      requirements: {
-          level: 7,
-          completedCourses: ['basic_police_training_abipolitseinik', 'firearm_training_abipolitseinik'],
-          totalWorkedHours: 4
-      },
-      rewards: {
-        experience: 100,
-        reputation: 50,
-      },
-      category: 'abipolitseinik'
-    },
-    {
-      id: 'police_car_training_abipolitseinik',
-      name: 'Alarmsõiduki juhtimise koolitus',
-      description: 'Omanda teadmised ja oskused ohutuks ja efektiivseks alarmsõiduki juhtimiseks.',
-      duration: 1200,
-      requirements: {
-          level: 9,
-          completedCourses: ['basic_police_training_abipolitseinik', 'firearm_training_abipolitseinik'],
-          totalWorkedHours: 10
-      },
-      rewards: {
-          experience: 150,
-          reputation: 50,
-      },
-      category: "abipolitseinik"
-    },
-    {
-        id: 'speed_measurement_abipolitseinik',
-        name: 'Kiirusmõõtja pädevus',
-        description: 'Spetsialiseeritud koolitus liikluskiiruse mõõtmise seadmete kasutamiseks ja liiklusrikkumiste dokumenteerimiseks.',
-        duration: 1200,
-        requirements: {
-            level: 10,
-            completedCourses: ['basic_police_training_abipolitseinik', 'firearm_training_abipolitseinik'],
-            totalWorkedHours: 10
-        },
-        rewards: {
-            experience: 150,
-            reputation: 50,
-        },
-        category: 'abipolitseinik'
-    },
-    {
-        id: 'independent_competence_abipolitseinik',
-        name: 'Iseseisva pädevuse koolitus (IPAP)',
-        description: 'Põhjalik koolitus iseseisva tööülesannete täitmiseks. Omandad oskused iseseisvaks patrullimiseks ja otsuste tegemiseks.',
-        duration: 7200,
-        requirements: {
-            level: 15,
-            completedCourses: ['basic_police_training_abipolitseinik', 'firearm_training_abipolitseinik', 'speed_measurement_abipolitseinik', 'police_apollo_usage_abipolitseinik', 'police_car_training_abipolitseinik'],
-            totalWorkedHours: 10,
-            attributes: {
-                intelligence: 5,
-                strength: 5,
-                endurance: 5,
-            }
-        },
-        rewards: {
-            experience: 300,
-            reputation: 100,
-        },
-        category: 'abipolitseinik'
-    }
-];
+// src/data/courses/sisekaitseakadeemiaCourses.ts
+import { Course } from '../../types';
 
 export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
     {
@@ -265,7 +145,7 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
         id: 'response_training',
         name: 'Avaliku korra praktika',
         description: 'Kursuse läbides oskad reageerida ja lahendada lihtsamaid väljakutseid ning koostada vajalikke protokolle',
-        duration: 10800, // 2 hours
+        duration: 10800, // 3 hours
         requirements: {
             completedCourses: ['sisekaitseakadeemia_entrance', 'self-defence_training', 'law_studies_curriculum', 'firearm_handling_glock'],
             totalWorkedHours: 20,
@@ -285,7 +165,7 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
     {
         id: 'medical_training',
         name: 'Meditsiini koolitus',
-        description: 'Omanda baasteadmised ja oskused, kuidas anda sündmuskohal elupäästvat esmaabi erinevate traumade puhul. Õpid ohutut patsiendi käsitlemist ning stabiliseerimist. Tunned ära erinevad traumad ja haigusseisundid. ',
+        description: 'Omanda baasteadmised ja oskused, kuidas anda sündmuskohal elupäästvat esmaabi erinevate traumade puhul. Õpid ohutut patsiendi käsitlemist ning stabiliseerimist. Tunned ära erinevad traumad ja haigusseisundid.',
         duration: 10800,
         requirements: {
             completedCourses: ['sisekaitseakadeemia_entrance'],
@@ -343,98 +223,4 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
         },
         category: 'sisekaitseakadeemia'
     }
-
-
-
-
 ];
-
-export const POLITSEI_COURSES: Course[] = [
-
-    {
-        id: 'police_ground_leader_course',
-        name: 'Välijuhi koolitus',
-        description: 'Koolitus edukaks välitöö juhtimiseks',
-        duration: 10800,
-        requirements: {
-            level: 35,
-            completedCourses: ['lopueksam'],
-            totalWorkedHours: 60
-        },
-        rewards: {
-            experience: 1000,
-            reputation: 200,
-            money: 2000
-        },
-        category: 'politsei'
-    },
-    {
-        id: 'medical_course_police',
-        name: 'Meditsiini täiendõpe',
-        description: 'Koolitus efektiivseks ja kiireks esmaabi andmiseks',
-        duration: 7200,
-        requirements: {
-            level: 35,
-            completedCourses: ['lopueksam'],
-            totalWorkedHours: 50
-        },
-        rewards: {
-            experience: 800,
-            reputation: 150,
-            money: 1200,
-            grantsItems: [
-                { itemId: 'medical_kit', quantity: 3 }
-            ]
-        },
-        category: 'politsei'
-    },
-    {
-        id: 'riot_police_course',
-        name: 'Massiohje koolitus',
-        description: 'Koolitus teadmiste omandamiseks ja tegutsemiseks massirahutuste korral',
-        duration: 10800,
-        requirements: {
-            level: 40,
-            completedCourses: ['medical_course_police'],
-            totalWorkedHours: 60
-        },
-        rewards: {
-            experience: 1500,
-            reputation: 150,
-            money: 1500,
-            grantsEquipment: ['riot_helmet']
-
-        },
-        category: 'politsei'
-    },
-    {
-        id: 'enhanced_law_studies',
-        name: 'Süüteomenetluse täiendkoolitus',
-        description: 'Koolitus põhjalikumaks süüteomenetluse läbiviimiseks',
-        duration: 10800,
-        requirements: {
-            level: 40,
-            completedCourses: ['lopueksam'],
-            totalWorkedHours: 60
-        },
-        rewards: {
-            experience: 1500,
-            reputation: 150,
-            money: 1500,
-        },
-        category: 'politsei'
-    }
-
-]
-
-// Combine all courses
-export const ALL_COURSES: Course[] = [
-    ...ABIPOLITSEINIK_COURSES,
-    ...SISEKAITSEAKADEEMIA_COURSES,
-    ...POLITSEI_COURSES
-];
-
-// Helper function to get course by ID
-export const getCourseById = (courseId: string): Course | undefined => {
-    return ALL_COURSES.find(course => course.id === courseId);
-};

@@ -79,6 +79,7 @@ export interface PlayerStats {
     money: number,
     pollid?: number;
     rank: string | null;
+    departmentUnit: string | null;
     department: string | null;
     prefecture: string | null;
     badgeNumber: string | null;

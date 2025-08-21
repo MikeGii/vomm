@@ -234,6 +234,7 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
             updates.rank = 'Inspektor'; // Promote to Inspektor
             updates.isEmployed = true;
             updates.hasCompletedTraining = true;
+            updates.departmentUnit = 'patrol';
 
             // Reset prefecture and department - player needs to choose again
             updates.prefecture = null;

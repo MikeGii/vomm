@@ -141,6 +141,7 @@ export const initializePlayerStats = async (userId: string, username: string): P
         money: 150,
         rank: null,
         department: null,
+        departmentUnit: null,
         prefecture: null,
         badgeNumber: null,
         isEmployed: false,
