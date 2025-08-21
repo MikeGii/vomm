@@ -14,11 +14,13 @@ import { TabNavigation } from '../components/ui/TabNavigation';
 import { SHOP_CATEGORIES } from '../types/shop';
 import {
     initializeShopStock,
-    getAllItemsWithStock
+    getAllItemsWithStock,
+    clearAllStockCaches // NEW IMPORT
 } from '../services/ShopStockService';
 import '../styles/pages/Shop.css';
 
 const ITEMS_PER_PAGE = 10;
+const REFRESH_INTERVAL = 120000; // CHANGED: From 30 seconds to 120 seconds (2 minutes)
 
 const ShopPage: React.FC = () => {
     const navigate = useNavigate();
@@ -26,7 +28,6 @@ const ShopPage: React.FC = () => {
     const { showToast } = useToast();
     const { playerStats, loading: statsLoading, refreshStats } = usePlayerStats();
 
-    // REMOVED: Individual state for playerMoney and playerPollid
     const [itemsWithStock, setItemsWithStock] = useState<Array<{
         item: any;
         currentStock: number;
@@ -41,6 +42,7 @@ const ShopPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [currentPage, setCurrentPage] = useState(1);
     const [stockInitialized, setStockInitialized] = useState(false);
+    const [lastRefreshTime, setLastRefreshTime] = useState<number>(0); // NEW STATE
 
     // Get money values from playerStats
     const playerMoney = playerStats?.money || 0;
@@ -110,14 +112,25 @@ const ShopPage: React.FC = () => {
         initStock();
     }, [stockInitialized]);
 
-    // REMOVED: onSnapshot listener for playerStats (now using context)
+    // OPTIMIZED: Load items with smart caching
+    const loadItemsWithStock = useCallback(async (forceRefresh: boolean = false) => {
+        // NEW: Prevent too frequent refreshes (minimum 5 seconds between refreshes)
+        const now = Date.now();
+        if (!forceRefresh && now - lastRefreshTime < 5000) {
+            console.log('Skipping refresh - too soon');
+            return;
+        }
 
-    // Load items with stock
-    const loadItemsWithStock = useCallback(async () => {
         setIsRefreshing(true);
         try {
+            // If forcing refresh, clear cache first
+            if (forceRefresh) {
+                clearAllStockCaches();
+            }
+
             const items = await getAllItemsWithStock();
             setItemsWithStock(items);
+            setLastRefreshTime(now);
         } catch (error) {
             console.error('Error loading items:', error);
             showToast('Viga esemete laadimisel', 'error');
@@ -125,16 +138,39 @@ const ShopPage: React.FC = () => {
             setIsLoading(false);
             setIsRefreshing(false);
         }
-    }, [showToast]);
+    }, [showToast, lastRefreshTime]);
 
-    // Load items on mount and set up periodic refresh
+    // OPTIMIZED: Smart refresh on mount and periodic updates
     useEffect(() => {
-        loadItemsWithStock();
+        // Initial load
+        loadItemsWithStock(false);
 
-        // Refresh stock every 30 seconds for real-time stock updates
-        const interval = setInterval(loadItemsWithStock, 30000);
-        return () => clearInterval(interval);
-    }, [loadItemsWithStock]);
+        // CHANGED: Less frequent automatic refresh (2 minutes instead of 30 seconds)
+        const interval = setInterval(() => {
+            // Only refresh if the page is visible
+            if (document.visibilityState === 'visible') {
+                loadItemsWithStock(false);
+            }
+        }, REFRESH_INTERVAL);
+
+        // NEW: Refresh when tab becomes visible after being hidden
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                const timeSinceLastRefresh = Date.now() - lastRefreshTime;
+                // Only refresh if it's been more than 30 seconds
+                if (timeSinceLastRefresh > 30000) {
+                    loadItemsWithStock(false);
+                }
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [loadItemsWithStock, lastRefreshTime]);
 
     const handlePurchase = async (itemId: string) => {
         const itemData = itemsWithStock.find(i => i.item.id === itemId);
@@ -157,10 +193,11 @@ const ShopPage: React.FC = () => {
             setSelectedItem(null);
             setSelectedItemStock(0);
 
-            // Reload items to update stock and refresh player stats
+            // OPTIMIZED: Force refresh after purchase to show updated stock
+            // The cache will be cleared automatically by the purchase
             await Promise.all([
-                loadItemsWithStock(),
-                refreshStats() // Update player money through context
+                loadItemsWithStock(true), // Force refresh to get fresh data
+                refreshStats()
             ]);
         } else {
             showToast(result.message, 'error');
@@ -172,6 +209,11 @@ const ShopPage: React.FC = () => {
         setSelectedItem(null);
         setSelectedItemStock(0);
     };
+
+    // NEW: Manual refresh handler for the refresh button
+    const handleManualRefresh = useCallback(async () => {
+        await loadItemsWithStock(true); // Force refresh with cache clear
+    }, [loadItemsWithStock]);
 
     // Combined loading state
     if (isLoading || statsLoading) {
@@ -205,7 +247,7 @@ const ShopPage: React.FC = () => {
                 <ShopHeader
                     playerMoney={playerMoney}
                     playerPollid={playerPollid}
-                    onRefresh={loadItemsWithStock}
+                    onRefresh={handleManualRefresh} // CHANGED: Use manual refresh handler
                     isRefreshing={isRefreshing}
                 />
 

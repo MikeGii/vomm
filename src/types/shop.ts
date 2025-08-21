@@ -1,4 +1,6 @@
 // src/types/shop.ts - UPDATED VERSION
+import {Timestamp} from "firebase/firestore";
+
 export interface ShopItem {
     id: string;
     name: string;
@@ -79,7 +81,7 @@ export const SHOP_CATEGORIES: Record<ShopCategory, ShopCategoryInfo> = {
 export interface ShopStock {
     itemId: string;
     currentStock: number;
-    lastRestockTime: Date;
+    lastRestockTime: Date | Timestamp;
     stockSource?: 'auto' | 'player_sold';
     playerSoldStock?: number;
 }
