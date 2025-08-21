@@ -11,12 +11,7 @@ import { PlayerStats } from '../../types';
 import { getCourseById } from '../../data/courses';
 import { completeWork } from '../../services/WorkService';
 import { checkCourseCompletion } from '../../services/CourseService';
-import { getRecentPurchases, getSuspiciousPurchases } from '../../services/ShopLoggingService';
 import { CRAFTING_INGREDIENTS } from '../../data/shop/craftingIngredients';
-import {
-    previewConsolidation,
-    repairAndConsolidateAllInventories
-} from '../../services/InventoryRepairService';
 import '../../styles/components/dev/DebugMenu.css';
 
 const ADMIN_USER_ID = 'WUucfDi2DAat9sgDY75mDZ8ct1k2';
@@ -25,13 +20,6 @@ export const DebugMenu: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
-    const [purchaseLogs, setPurchaseLogs] = useState<any[]>([]);
-    const [showLogs, setShowLogs] = useState(false);
-    const [consolidationPreview, setConsolidationPreview] = useState<{
-        totalUsers: number;
-        totalItems: number;
-        items: any[];
-    } | null>(null);
     const { currentUser } = useAuth();
     const { showToast } = useToast();
 
@@ -65,38 +53,6 @@ export const DebugMenu: React.FC = () => {
             showToast(`Viga: ${errorMessage}`, 'error');
         } finally {
             setLoading(false);
-        }
-    };
-
-// Add preview function
-    const previewConsolidationChanges = async () => {
-        setLoading(true);
-        try {
-            const preview = await previewConsolidation();
-            setConsolidationPreview({
-                totalUsers: preview.totalUsers,
-                totalItems: preview.totalItemsToConsolidate,
-                items: preview.consolidationPreview
-            });
-            showToast(`Leiti ${preview.totalItemsToConsolidate} kokku viidavat eset ${preview.totalUsers} mängijal`, 'info');
-        } catch (error) {
-            console.error('Preview failed:', error);
-            showToast('Eelvaate laadimine ebaõnnestus', 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-// Add consolidation execution function
-    const executeConsolidation = async () => {
-        const result = await repairAndConsolidateAllInventories();
-
-        if (result.success) {
-            setConsolidationPreview(null);
-            showToast(`Kokku viidud ${result.totalItemsConsolidated} eset ${result.usersProcessed} mängijal`, 'success');
-            console.log('Consolidation Results:', result.details);
-        } else {
-            throw new Error('Kokku viimine ebaõnnestus');
         }
     };
 
@@ -194,39 +150,6 @@ export const DebugMenu: React.FC = () => {
             : `${completedCount} mängija töö lõpetatud`;
 
         showToast(message, 'success');
-    };
-
-    // Add functions
-    const loadPurchaseLogs = async () => {
-        setLoading(true);
-        try {
-            const logs = await getRecentPurchases(50);
-            setPurchaseLogs(logs);
-            setShowLogs(true);
-            showToast(`Laaditud ${logs.length} viimast ostu`, 'info');
-        } catch (error) {
-            showToast('Logide laadimine ebaõnnestus', 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const loadSuspiciousActivity = async () => {
-        setLoading(true);
-        try {
-            const logs = await getSuspiciousPurchases(50); // 50+ items at once
-            setPurchaseLogs(logs);
-            setShowLogs(true);
-            if (logs.length > 0) {
-                showToast(`⚠️ Leitud ${logs.length} kahtlast ostu!`, 'warning');
-            } else {
-                showToast('Kahtlasi oste ei leitud', 'success');
-            }
-        } catch (error) {
-            showToast('Logide laadimine ebaõnnestus', 'error');
-        } finally {
-            setLoading(false);
-        }
     };
 
     const refillAllCraftingStocks = async (): Promise<void> => {
@@ -354,111 +277,7 @@ export const DebugMenu: React.FC = () => {
                             </button>
                         </div>
 
-                        {/* Inventory Repair Section */}
-                        <div className="debug-section">
-                            <h4>Inventari kokku viimine (Stack Fix)</h4>
-                            <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
-                                <button
-                                    className="debug-btn"
-                                    onClick={previewConsolidationChanges}
-                                    disabled={loading}
-                                >
-                                    Vaata duplikaate
-                                </button>
 
-                                {consolidationPreview && (
-                                    <div className="debug-info-text" style={{ fontSize: '0.75rem', padding: '0.5rem', backgroundColor: '#2a2a2a', borderRadius: '4px' }}>
-                                        <strong>Leitud {consolidationPreview.totalItems} duplikaati {consolidationPreview.totalUsers} mängijal:</strong>
-                                        <div style={{ maxHeight: '100px', overflow: 'auto', marginTop: '0.25rem' }}>
-                                            {consolidationPreview.items.slice(0, 10).map((item, index) => (
-                                                <div key={index} style={{ fontSize: '0.7rem' }}>
-                                                    {item.userId}: {item.currentItems}x "{item.itemName}" → 1x (kokku {item.totalQuantity})
-                                                </div>
-                                            ))}
-                                            {consolidationPreview.items.length > 10 && (
-                                                <div style={{ fontSize: '0.7rem', fontStyle: 'italic' }}>
-                                                    ...ja veel {consolidationPreview.items.length - 10} duplikaati
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {consolidationPreview && consolidationPreview.totalItems > 0 && (
-                                    <button
-                                        className="debug-btn debug-btn-danger"
-                                        onClick={() => executeDebugAction(
-                                            executeConsolidation,
-                                            ''
-                                        )}
-                                        disabled={loading}
-                                    >
-                                        VII KOKKU kõikide inventarid
-                                    </button>
-                                )}
-                            </div>
-                            <div className="debug-info-text" style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                                Viib kokku samade ID-dega esemed (nt 5x "Puhastusaine" → 1x kogusega 5). Esmalt vaata eelvaade üle!
-                            </div>
-                        </div>
-
-                        <div className="debug-section">
-                            <h4>Poe ostude logi</h4>
-                            <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
-                                <button
-                                    className="debug-btn"
-                                    onClick={loadPurchaseLogs}
-                                    disabled={loading}
-                                >
-                                    Vaata viimased 50 ostu
-                                </button>
-
-                                <button
-                                    className="debug-btn"
-                                    onClick={loadSuspiciousActivity}
-                                    disabled={loading}
-                                >
-                                    Vaata kahtlasi oste (50+ tk)
-                                </button>
-
-                                {showLogs && purchaseLogs.length > 0 && (
-                                    <div className="debug-info-text" style={{
-                                        fontSize: '0.7rem',
-                                        maxHeight: '200px',
-                                        overflow: 'auto',
-                                        backgroundColor: '#2a2a2a',
-                                        padding: '0.5rem',
-                                        borderRadius: '4px'
-                                    }}>
-                                        {purchaseLogs.map((log, index) => (
-                                            <div key={index} style={{
-                                                borderBottom: '1px solid #444',
-                                                paddingBottom: '0.25rem',
-                                                marginBottom: '0.25rem'
-                                            }}>
-                                                <strong>{log.username}</strong> ostis {log.quantity}x {log.itemName}<br/>
-                                                Hind: {log.currency === 'pollid' ? '💎' : '€'}{log.totalCost.toFixed(2)}<br/>
-                                                Laoseis: {log.stockBefore} → {log.stockAfter}<br/>
-                                                <small>{new Date(log.timestamp.seconds * 1000).toLocaleString('et-EE')}</small>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {showLogs && (
-                                    <button
-                                        className="debug-btn"
-                                        onClick={() => {
-                                            setShowLogs(false);
-                                            setPurchaseLogs([]);
-                                        }}
-                                        style={{ fontSize: '0.75rem' }}
-                                    >
-                                        Sulge logid
-                                    </button>
-                                )}
-                            </div>
-                        </div>
 
                         {/* Global Actions Section */}
                         <div className="debug-section">
