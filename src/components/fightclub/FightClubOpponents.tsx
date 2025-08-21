@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { PlayerStats } from '../../types';
 import { EligiblePlayer } from '../../services/FightClubService';
 import { FightResult, FightParticipant, executeFight } from '../../services/FightService';
-import { FightHistory } from './FightHistory';
 import { processFightResult } from '../../services/FightTransactionService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -28,7 +27,6 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
     const {currentUser} = useAuth();
     const {showToast} = useToast();
     const [fightingWith, setFightingWith] = useState<string | null>(null);
-    const [showHistory, setShowHistory] = useState(false);
 
     // Get current user's username
     const getCurrentUsername = async (): Promise<string> => {
@@ -91,9 +89,7 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
             // Process the transaction (money, stats, history, AND health reduction)
             const transactionResult = await processFightResult(
                 currentUser.uid,
-                currentUsername,
                 opponent.userId,
-                opponent.username,
                 result
             );
 
@@ -138,15 +134,6 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
                 <span className="welcome-icon">🏆</span>
                 <h2>Tere tulemast võitlusklubisse!</h2>
                 <p>Sa vastad kõikidele nõuetele. Vali vastane ja alusta võitlust!</p>
-
-                <div className="welcome-actions">
-                    <button
-                        className="history-button"
-                        onClick={() => setShowHistory(true)}
-                    >
-                        📊 Vaata võitluste ajalugu
-                    </button>
-                </div>
             </div>
 
             {/* Health warning if health is low */}
@@ -238,11 +225,6 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
                     </div>
                 )}
             </div>
-
-            <FightHistory
-                isOpen={showHistory}
-                onClose={() => setShowHistory(false)}
-            />
         </div>
     );
 }

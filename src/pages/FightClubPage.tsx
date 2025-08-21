@@ -18,7 +18,6 @@ const FightClubPage: React.FC = () => {
     const { currentUser } = useAuth();
     const { playerStats, loading, refreshStats } = usePlayerStats();
     const { showToast } = useToast();
-
     const [eligiblePlayers, setEligiblePlayers] = useState<EligiblePlayer[]>([]);
     const [loadingPlayers, setLoadingPlayers] = useState(false);
     const [fightResult, setFightResult] = useState<FightResult | null>(null);
