@@ -1,11 +1,9 @@
 // src/pages/CasinoPage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { firestore } from '../config/firebase';
-import { PlayerStats } from '../types';
+import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { CasinoCounter } from '../components/casino/CasinoCounter';
 import { SlotMachine } from '../components/casino/SlotMachine';
@@ -16,22 +14,10 @@ const CasinoPage: React.FC = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     const { showToast } = useToast();
-    const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
+    const { playerStats, loading, refreshStats } = usePlayerStats();
     const [isPlaying, setIsPlaying] = useState(false);
 
-    // Listen to player stats
-    useEffect(() => {
-        if (!currentUser) return;
-
-        const statsRef = doc(firestore, 'playerStats', currentUser.uid);
-        const unsubscribe = onSnapshot(statsRef, (doc) => {
-            if (doc.exists()) {
-                setPlayerStats(doc.data() as PlayerStats);
-            }
-        });
-
-        return () => unsubscribe();
-    }, [currentUser]);
+    // REMOVED: useEffect with onSnapshot listener
 
     const handleSlotPlay = async (betAmount: number): Promise<SlotResult> => {
         if (!currentUser || !playerStats) {
@@ -49,6 +35,7 @@ const CasinoPage: React.FC = () => {
                 showToast(`😞 Kaotasid ${betAmount}€. Maine -5`, 'warning');
             }
 
+            await refreshStats(); // Update stats after play
             return gameResult;
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Viga mängimisel';
@@ -58,6 +45,19 @@ const CasinoPage: React.FC = () => {
             setIsPlaying(false);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="page">
+                <AuthenticatedHeader />
+                <div className="page-content">
+                    <div className="casino-container">
+                        <div className="loading">Laadin kasiinot...</div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     const remainingPlays = playerStats ? getRemainingCasinoPlays(playerStats) : 5;
     const canPlay = remainingPlays > 0 && !isPlaying;

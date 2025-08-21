@@ -191,7 +191,6 @@ const TrainingPage: React.FC = () => {
             const trainingType = activeTab === 'sports' ? 'sports' : 'kitchen-lab';
             await performTraining(currentUser.uid, activityId, activity.rewards, trainingType);
             await refreshStats(); // Update stats after training
-            showToast('Treening edukas!', 'success');
         } catch (error: any) {
             showToast(error.message || 'Treenimine ebaõnnestus', 'error');
         } finally {
