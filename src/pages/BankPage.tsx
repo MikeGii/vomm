@@ -1,44 +1,22 @@
 // app/pages/BankPage.tsx
-import React, {useState, useEffect, useCallback} from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { firestore } from '../config/firebase';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { TransactionForm } from '../components/bank/TransactionForm';
 import { TransactionList } from '../components/bank/TransactionList';
 import { useAuth } from '../contexts/AuthContext';
+import { usePlayerStats } from '../contexts/PlayerStatsContext'; // NEW IMPORT
 import { getPlayerTransactions } from '../services/BankService';
-import { PlayerStats, BankTransaction } from '../types';
+import { BankTransaction } from '../types';
+import { formatMoney } from '../utils/currencyUtils';
 import '../styles/pages/Bank.css';
 
 const BankPage: React.FC = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
-    const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
+    const { playerStats, loading } = usePlayerStats(); // CHANGED: Using context
     const [transactions, setTransactions] = useState<BankTransaction[]>([]);
-    const [loading, setLoading] = useState(true);
     const [transactionsLoading, setTransactionsLoading] = useState(true);
-
-    // Load player stats
-    useEffect(() => {
-        if (!currentUser) return;
-
-        const unsubscribe = onSnapshot(
-            doc(firestore, 'playerStats', currentUser.uid),
-            (doc) => {
-                if (doc.exists()) {
-                    setPlayerStats(doc.data() as PlayerStats);
-                }
-                setLoading(false);
-            },
-            (error) => {
-                console.error('Error loading player stats:', error);
-                setLoading(false);
-            }
-        );
-
-        return () => unsubscribe();
-    }, [currentUser]);
 
     // Load transactions
     const loadTransactions = useCallback(async () => {
@@ -62,6 +40,7 @@ const BankPage: React.FC = () => {
     // Handle transaction completion
     const handleTransactionComplete = () => {
         loadTransactions(); // Reload transactions after successful transaction
+        // Player stats will auto-update through context
     };
 
     if (loading) {
@@ -106,7 +85,7 @@ const BankPage: React.FC = () => {
                         </div>
                         <div className="balance-info">
                             <span className="balance-label">Saldo:</span>
-                            <span className="balance-amount">{playerStats.money || 0}€</span>
+                            <span className="balance-amount">{formatMoney(playerStats.money || 0)}</span>
                         </div>
                     </div>
                 </div>

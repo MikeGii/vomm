@@ -8,8 +8,9 @@ import { PlayerStatsCard } from '../components/dashboard/PlayerStatsCard';
 import { QuickActions } from '../components/dashboard/QuickActions';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { PlayerStats, ActiveCourse } from '../types';
-import { initializePlayerStats, getPlayerStats } from '../services/PlayerService';
+import { usePlayerStats } from '../contexts/PlayerStatsContext'; // NEW IMPORT
+import { ActiveCourse } from '../types';
+import { getPlayerStats } from '../services/PlayerService';
 import { PrefectureSelectionModal } from '../components/dashboard/PrefectureSelectionModal';
 import { DepartmentSelectionModal } from '../components/dashboard/DepartmentSelectionModal';
 import { Leaderboard } from "../components/leaderboard/Leaderboard";
@@ -17,125 +18,119 @@ import { HealthRecoveryManager } from "../components/dashboard/HealthRecoveryMan
 import { checkCourseCompletion } from '../services/CourseService';
 import { PlayerAbilities } from "../components/dashboard/PlayerAbilities";
 import { InstructionsModal } from '../components/dashboard/InstructionsModal';
+import { getActiveEvent } from "../services/EventService";
 
 import '../styles/pages/Dashboard.css';
-import {getActiveEvent} from "../services/EventService";
 
 function DashboardPage() {
     const { currentUser, userData } = useAuth();
     const navigate = useNavigate();
     const { showToast } = useToast();
-    const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { playerStats, loading, refreshStats } = usePlayerStats(); // CHANGED: Using context
     const [showPrefectureSelection, setShowPrefectureSelection] = useState(false);
     const [showDepartmentSelection, setShowDepartmentSelection] = useState(false);
     const [showInstructionsModal, setShowInstructionsModal] = useState(false);
+    const [initializationDone, setInitializationDone] = useState(false);
 
-
+    // ONE-TIME INITIALIZATION (runs once when component mounts)
     useEffect(() => {
-        const loadPlayerStats = async () => {
-            if (currentUser) {
-                setLoading(true);
-                try {
-                    // First initialize player stats (creates document if it doesn't exist for new users)
-                    let stats = await initializePlayerStats(currentUser.uid);
+        const initializeDashboard = async () => {
+            if (!currentUser || initializationDone) return;
 
-                    // Check for completed courses in activeCourses collection
-                    const activeCoursesRef = collection(firestore, 'activeCourses');
-                    const q = query(
-                        activeCoursesRef,
-                        where('userId', '==', currentUser.uid),
-                        where('status', '==', 'completed')
-                    );
-                    const querySnapshot = await getDocs(q);
+            try {
+                // Check for completed courses in activeCourses collection
+                const activeCoursesRef = collection(firestore, 'activeCourses');
+                const q = query(
+                    activeCoursesRef,
+                    where('userId', '==', currentUser.uid),
+                    where('status', '==', 'completed')
+                );
+                const querySnapshot = await getDocs(q);
 
-                    // Process completed courses from activeCourses collection
-                    for (const docSnapshot of querySnapshot.docs) {
-                        const activeCourse = docSnapshot.data() as ActiveCourse;
-                        try {
-                            // Use checkCourseCompletion to complete the course
-                            await checkCourseCompletion(currentUser.uid);
-                            await deleteDoc(docSnapshot.ref);
+                // Process completed courses from activeCourses collection
+                for (const docSnapshot of querySnapshot.docs) {
+                    const activeCourse = docSnapshot.data() as ActiveCourse;
+                    try {
+                        await checkCourseCompletion(currentUser.uid);
+                        await deleteDoc(docSnapshot.ref);
 
-                            // Check if it was the final exam
-                            if (activeCourse.courseId === 'lopueksam') {
+                        if (activeCourse.courseId === 'lopueksam') {
+                            showToast('Õnnitleme! Oled lõpetanud Sisekaitseakadeemia!', 'success');
+                        } else {
+                            showToast('Kursus lõpetatud!', 'success');
+                        }
+
+                        await refreshStats(); // Refresh stats after course completion
+                    } catch (error) {
+                        console.error('Error checking course completion:', error);
+                    }
+                }
+
+                // Check for timer-based course completion
+                if (playerStats?.activeCourse) {
+                    const timerBasedCompletion = await checkCourseCompletion(currentUser.uid);
+                    if (timerBasedCompletion) {
+                        const tempStats = await getPlayerStats(currentUser.uid);
+                        if (tempStats?.completedCourses) {
+                            const lastCompletedCourse = tempStats.completedCourses[tempStats.completedCourses.length - 1];
+                            if (lastCompletedCourse === 'lopueksam') {
                                 showToast('Õnnitleme! Oled lõpetanud Sisekaitseakadeemia!', 'success');
                             } else {
                                 showToast('Kursus lõpetatud!', 'success');
                             }
-                        } catch (error) {
-                            console.error('Error checking course completion:', error);
                         }
+                        await refreshStats(); // Refresh stats after completion
                     }
+                }
 
-                    // Also check for course completion using the timer-based method
-                    // Only if stats exist and have an active course (prevents error for new users)
-                    if (stats && stats.activeCourse) {
-                        const timerBasedCompletion = await checkCourseCompletion(currentUser.uid);
-                        if (timerBasedCompletion) {
-                            const tempStats = await getPlayerStats(currentUser.uid);
-                            if (tempStats?.completedCourses) {
-                                const lastCompletedCourse = tempStats.completedCourses[tempStats.completedCourses.length - 1];
-                                if (lastCompletedCourse === 'lopueksam') {
-                                    showToast('Õnnitleme! Oled lõpetanud Sisekaitseakadeemia!', 'success');
-                                } else {
-                                    showToast('Kursus lõpetatud!', 'success');
-                                }
-                            }
-                            // Reload stats after course completion
-                            stats = await initializePlayerStats(currentUser.uid);
-                        }
-                    }
-
-                    // Set the player stats
-                    setPlayerStats(stats);
-
-                    // Check if there's an active event that needs to be handled
-                    try {
-                        const activeEvent = await getActiveEvent(currentUser.uid);
-                        if (activeEvent) {
-                            // Redirect to patrol page to handle the event
-                            navigate('/patrol');
-                            return;
-                        }
-                    } catch (error) {
-                        console.error('Error checking for active events:', error);
-                    }
-
-                    // Check if prefecture selection is needed after graduation
-                    if (stats.completedCourses?.includes('lopueksam') && !stats.prefecture) {
-                        setShowPrefectureSelection(true);
-                    }
-                    // Check if department selection is needed after prefecture selection (for graduated officers)
-                    else if (stats.completedCourses?.includes('lopueksam') && stats.prefecture && !stats.department) {
-                        setShowDepartmentSelection(true);
-                    }
-                    // FIXED: Check if prefecture selection is needed for abipolitseinik (after basic training)
-                    else if (stats.completedCourses?.includes('basic_police_training_abipolitseinik') &&
-                        !stats.prefecture &&
-                        !stats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
-                        setShowPrefectureSelection(true);
+                // Check if there's an active event
+                try {
+                    const activeEvent = await getActiveEvent(currentUser.uid);
+                    if (activeEvent) {
+                        navigate('/patrol');
+                        return;
                     }
                 } catch (error) {
-                    console.error('Viga mängija andmete laadimisel:', error);
-                } finally {
-                    setLoading(false);
+                    console.error('Error checking for active events:', error);
                 }
+
+                setInitializationDone(true);
+            } catch (error) {
+                console.error('Dashboard initialization error:', error);
             }
         };
 
-        loadPlayerStats();
-    }, [currentUser, navigate, showToast]);
+        initializeDashboard();
+    }, [currentUser, initializationDone, showToast, navigate, refreshStats, playerStats]);
 
-    // RESTORED: Handler for when health is updated from the modal
+    // REACT TO STATS CHANGES (runs when playerStats updates)
+    useEffect(() => {
+        if (!playerStats || loading) return;
+
+        // Check if prefecture selection is needed after graduation
+        if (playerStats.completedCourses?.includes('lopueksam') && !playerStats.prefecture) {
+            setShowPrefectureSelection(true);
+        }
+        // Check if department selection is needed after prefecture selection
+        else if (playerStats.completedCourses?.includes('lopueksam') &&
+            playerStats.prefecture &&
+            !playerStats.department) {
+            setShowDepartmentSelection(true);
+        }
+        // Check if prefecture selection is needed for abipolitseinik
+        else if (playerStats.completedCourses?.includes('basic_police_training_abipolitseinik') &&
+            !playerStats.prefecture &&
+            !playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
+            setShowPrefectureSelection(true);
+        }
+    }, [playerStats, loading]);
+
+    // Handler for when health is updated from the modal
     const handleHealthUpdate = async () => {
         if (currentUser) {
             try {
-                const updatedStats = await getPlayerStats(currentUser.uid);
-                if (updatedStats) {
-                    setPlayerStats(updatedStats);
-                    showToast('Tervis taastatud!', 'success');
-                }
+                await refreshStats(); // Use context refresh instead of manual fetch
+                showToast('Tervis taastatud!', 'success');
             } catch (error) {
                 console.error('Error updating health:', error);
                 showToast('Viga tervise uuendamisel', 'error');
@@ -143,32 +138,22 @@ function DashboardPage() {
         }
     };
 
-    // UPDATED: Handler for prefecture selection complete
+    // Handler for prefecture selection complete
     const handlePrefectureComplete = async () => {
         setShowPrefectureSelection(false);
-        if (currentUser) {
-            const stats = await getPlayerStats(currentUser.uid);
-            if (stats) {
-                setPlayerStats(stats);
+        await refreshStats(); // Refresh stats from context
 
-                // NEW: If graduated (has completed lopueksam), show department selection next
-                if (stats.completedCourses?.includes('lopueksam')) {
-                    setShowDepartmentSelection(true);
-                }
-            }
+        // If graduated (has completed lopueksam), show department selection next
+        if (playerStats?.completedCourses?.includes('lopueksam')) {
+            setShowDepartmentSelection(true);
         }
     };
 
-    // NEW: Handler for department selection complete
+    // Handler for department selection complete
     const handleDepartmentSelection = async () => {
         setShowDepartmentSelection(false);
-        if (currentUser) {
-            const stats = await getPlayerStats(currentUser.uid);
-            if (stats) {
-                setPlayerStats(stats);
-                showToast('Oled määratud oma osakonda! Võid alustada patrullimist.', 'success');
-            }
-        }
+        await refreshStats(); // Refresh stats from context
+        showToast('Oled määratud oma osakonda! Võid alustada patrullimist.', 'success');
     };
 
     if (loading) {
