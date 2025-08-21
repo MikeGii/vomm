@@ -16,6 +16,7 @@ import CasinoPage from './pages/CasinoPage';
 import BankPage from "./pages/BankPage";
 import FightClubPage from './pages/FightClubPage';
 import { PlayerStatsProvider } from './contexts/PlayerStatsContext';
+import DepartmentPage from "./pages/DepartmentPage";
 
 function App() {
     return (
@@ -99,11 +100,7 @@ function App() {
                             path="/department"
                             element={
                                 <ProtectedRoute>
-                                    <div className="page">
-                                        <div className="page-content">
-                                            <h1>Osakond - Tulekul</h1>
-                                        </div>
-                                    </div>
+                                    <DepartmentPage />
                                 </ProtectedRoute>
                             }
                         />
