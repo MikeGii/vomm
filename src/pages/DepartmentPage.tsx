@@ -33,7 +33,7 @@ const DepartmentPage: React.FC = () => {
     }
 
     // Check if player has graduated (completed lopueksam)
-    const hasGraduated = playerStats.completedCourses?.includes('lopueksam');
+    const hasGraduated = ['patrullpolitseinik', 'grupijuht', 'talituse_juht'].includes(playerStats.policePosition || '');
 
     if (!hasGraduated) {
         return (

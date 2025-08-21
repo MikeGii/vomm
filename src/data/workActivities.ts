@@ -12,7 +12,7 @@ const PATROL_ACTIVITIES: WorkActivity[] = [
         baseExpPerHour: 50,
         expGrowthRate: 0.15,
         maxHours: 12,
-        allowedFor: ['abipolitseinik']
+        allowedFor: ['abipolitseinik'],
     },
     {
         id: 'patrol_second_member',
@@ -34,7 +34,7 @@ const PATROL_ACTIVITIES: WorkActivity[] = [
         baseExpPerHour: 250,
         expGrowthRate: 0.10,
         maxHours: 12,
-        allowedFor: ['politseiametnik']
+        allowedFor: ['patrullpolitseinik']  // Changed from 'politseiametnik'
     },
     {
         id: 'patrol_car_chief',
@@ -45,7 +45,7 @@ const PATROL_ACTIVITIES: WorkActivity[] = [
         baseExpPerHour: 350,
         expGrowthRate: 0.10,
         maxHours: 12,
-        allowedFor: ['politseiametnik']
+        allowedFor: ['patrullpolitseinik']  // Changed from 'politseiametnik'
     }
 ];
 
@@ -81,44 +81,34 @@ export const WORK_ACTIVITIES: WorkActivity[] = [
     ...ACADEMY_ACTIVITIES
 ];
 
-// Helper function to determine player status
-type PlayerStatus = 'kadett' | 'abipolitseinik' | 'politseiametnik' | 'unknown';
+// Helper function to determine player status - NOW USES POLICE POSITION
+type PlayerStatus = 'kadett' | 'abipolitseinik' | 'patrullpolitseinik' | 'unknown';
 
 const getPlayerStatus = (
-    completedCourses: string[],
-    rank: string | null
+    policePosition: string | null | undefined
 ): PlayerStatus => {
-    // Check if player graduated from academy
-    if (completedCourses.includes('lopueksam')) {
-        return 'politseiametnik';
-    }
+    if (!policePosition) return 'unknown';
 
-    // Check if player is a Kadett (in academy but not graduated)
-    if (completedCourses.includes('sisekaitseakadeemia_entrance') &&
-        !completedCourses.includes('lopueksam')) {
-        return 'kadett';
-    }
+    // Direct mapping for basic positions
+    if (policePosition === 'abipolitseinik') return 'abipolitseinik';
+    if (policePosition === 'kadett') return 'kadett';
+    if (policePosition === 'patrullpolitseinik') return 'patrullpolitseinik';
 
-    // Check if player is an Abipolitseinik
-    if (completedCourses.includes('basic_police_training_abipolitseinik') && !rank) {
-        return 'abipolitseinik';
-    }
-
-    // Check if player has a rank (graduated officer)
-    if (rank) {
-        return 'politseiametnik';
+    // Higher positions (grupijuht, talituse_juht) work as patrullpolitseinik
+    if (policePosition === 'grupijuht' || policePosition === 'talituse_juht') {
+        return 'patrullpolitseinik';
     }
 
     return 'unknown';
 };
 
-// Updated helper function to get available work activities
+// Updated helper function to get available work activities - NOW USES POLICE POSITION
 export const getAvailableWorkActivities = (
     playerLevel: number,
     completedCourses: string[],
-    rank: string | null = null
+    policePosition?: string | null  // Changed: Now uses policePosition instead of rank
 ): WorkActivity[] => {
-    const playerStatus = getPlayerStatus(completedCourses, rank);
+    const playerStatus = getPlayerStatus(policePosition);  // Changed: Uses position
 
     // If player status is unknown, return empty array
     if (playerStatus === 'unknown') {
@@ -166,7 +156,7 @@ export const calculateWorkRewards = (
         totalExp += Math.floor(hourExp);
     }
 
-    // Calculate money for police officers
+    // Calculate money for police officers (using rank for salary)
     const money = playerRank ? calculateSalaryForOfficer(playerRank, hours) : 0;
 
     return {

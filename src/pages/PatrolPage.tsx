@@ -55,13 +55,12 @@ const PatrolPage: React.FC = () => {
     const playerStatus = React.useMemo(() => {
         if (!playerStats) return { isAbipolitseinik: false, isKadett: false, isPolitseiametnik: false };
 
-        const courses = playerStats.completedCourses || [];
         return {
-            isAbipolitseinik: courses.includes('basic_police_training_abipolitseinik') &&
-                !courses.includes('sisekaitseakadeemia_entrance'),
-            isKadett: courses.includes('sisekaitseakadeemia_entrance') &&
-                !courses.includes('lopueksam'),
-            isPolitseiametnik: courses.includes('lopueksam')
+            isAbipolitseinik: playerStats.policePosition === 'abipolitseinik',
+            isKadett: playerStats.policePosition === 'kadett',
+            isPolitseiametnik: playerStats.policePosition === 'patrullpolitseinik' ||
+                playerStats.policePosition === 'grupijuht' ||
+                playerStats.policePosition === 'talituse_juht'
         };
     }, [playerStats]);
 
@@ -109,7 +108,7 @@ const PatrolPage: React.FC = () => {
         const activities = getAvailableWorkActivities(
             playerStats.level,
             playerStats.completedCourses || [],
-            playerStats.rank
+            playerStats.policePosition
         );
         setAvailableActivities(activities);
 

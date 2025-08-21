@@ -14,7 +14,7 @@ export interface DepartmentUnit {
 export const DEPARTMENT_UNITS: DepartmentUnit[] = [
     {
         id: 'patrol',
-        name: 'Patrulltalitus',
+        name: 'Patrullitalitus',
         description: 'Avaliku korra tagamine ja patrullteenuse osutamine',
         isDefault: true
     },

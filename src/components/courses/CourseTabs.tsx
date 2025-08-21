@@ -55,18 +55,14 @@ export const CourseTabs: React.FC<CourseTabsProps> = ({
     const hasStatus = (requiredStatus: string): boolean => {
         if (!playerStats || !requiredStatus) return false;
 
-        // Check if player has the required status based on completed courses
         if (requiredStatus === 'Abipolitseinik') {
-            // Player is Abipolitseinik when they've completed basic training course
-            return playerStats.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
+            return playerStats.policePosition === 'abipolitseinik';
         }
         if (requiredStatus === 'Kadett') {
-            // Player is Kadett when they've entered the academy
-            return playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance') || false;
+            return playerStats.policePosition === 'kadett';
         }
         if (requiredStatus === 'Politseiametnik') {
-            // Player is full officer when they've graduated
-            return playerStats.completedCourses?.includes('lopueksam') || false;
+            return ['patrullpolitseinik', 'grupijuht', 'talituse_juht'].includes(playerStats.policePosition || '');
         }
         return false;
     };

@@ -47,6 +47,7 @@ export const getPlayerProfileData = async (userId: string): Promise<PlayerProfil
             reputation: playerStats.reputation,
             money: playerStats.money,
             badgeNumber: playerStats.badgeNumber,
+            policePosition: playerStats.policePosition,
             attributes: playerStats.attributes,
             createdAt: createdAtDate,
             completedCourses: playerStats.completedCourses || []
