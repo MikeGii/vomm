@@ -10,7 +10,6 @@ import { ShopItem, PurchaseResult } from '../types/shop';
 import { InventoryItem } from '../types';
 import { PlayerStats } from '../types';
 import { ALL_SHOP_ITEMS } from '../data/shop';
-import { logPurchase } from './ShopLoggingService';
 import { createTimestampedId } from '../utils/inventoryUtils';
 import {
     getItemStock,
@@ -157,18 +156,6 @@ export const purchaseItem = async (
             newItem.id = createTimestampedId(shopItem.id);
             updatedInventory.push(newItem);
         }
-
-        await logPurchase(
-            userId,
-            playerStats.badgeNumber || 'Unknown',
-            itemId,
-            shopItem.name,
-            quantity,
-            totalCost,
-            isPollidPurchase ? 'pollid' : 'money',
-            currentStock,
-            currentStock - quantity
-        );
 
         // UPDATE STOCK
         await updateStockAfterPurchase(itemId, quantity);

@@ -135,6 +135,50 @@ export const TRAINING_ACTIVITIES: TrainingActivity[] = [
             intelligence: 100,
             playerExp: 10
         }
+    },
+    // Level 40 activities - NEW
+    {
+        id: 'advanced_strength_training',
+        name: 'Jõutrenn profisportlastega',
+        description: 'Treening kogenud ja tugevate jõusaalihuntidega',
+        requiredLevel: 40,
+        rewards: {
+            strength: 200,
+            endurance: 100,
+            playerExp: 20
+        }
+    },
+    {
+        id: 'advanced_stadium_running',
+        name: 'Jooksutrenn tippjooksjatega',
+        description: 'Treening tipptasemel maratoni jooksjatega',
+        requiredLevel: 40,
+        rewards: {
+            endurance: 200,
+            agility: 100,
+            playerExp: 20
+        }
+    },
+    {
+        id: 'advanced_weapon_technics',
+        name: 'Harjutused koos kiirreageerijatega harjutusväljakul',
+        description: 'Harjutused reaalsete tulirelvadega lasketiirus koos kiirreageerijatega',
+        requiredLevel: 40,
+        rewards: {
+            dexterity: 200,
+            agility: 100,
+            playerExp: 20
+        }
+    },
+    {
+        id: 'advanced_intelligence_training',
+        name: 'Osale male meistrivõistlustel',
+        description: 'Tugev ajutrenn koos tipptasemel malemängijatega',
+        requiredLevel: 40,
+        rewards: {
+            intelligence: 200,
+            playerExp: 20
+        }
     }
 ];
 

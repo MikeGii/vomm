@@ -4,12 +4,21 @@ import { GameUpdate } from '../types';
 export const gameUpdates: GameUpdate[] = [
 
     {
+        id: '6',
+        title: 'Uuenduste süsteem',
+        description: 'Lisatud uued oskused ja tegevused Köögi & Labori osas treeningu lehe all. Nüüd mängijatel võimalus ' +
+            'ise toota uusi asju. Loodud dünaamilne poe süsteem, kus mängijad peavad ise tekitama turgu läbi enda tehtud toodete.' +
+            ' Level 40 sporditegevused lisaks. Loodud mängule kiirjuhend töölauale.',
+        date: '2025-08-20',
+        isNew: true
+    },
+    {
         id: '5',
         title: 'Uuenduste süsteem',
         description: 'Uus funktsioon - Võitlusklubi. Mängijatel on võimalik end proovile panna võitlusringis valides vastaseks' +
             ' teisi mängijaid. Lisatud koolitusi juurde politseiametniku staatuses mängijatele.',
         date: '2025-08-19',
-        isNew: true
+
     },
     {
         id: '4',

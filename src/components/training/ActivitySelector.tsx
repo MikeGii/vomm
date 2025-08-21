@@ -178,7 +178,27 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
         return groups;
     }, {} as Record<number, TrainingActivity[]>);
 
-    const sortedLevels = Object.keys(groupedActivities).map(Number).sort((a, b) => a - b);
+    // NEW: Filter for sports - show only last 2 unlocked levels
+    const getFilteredLevels = () => {
+        const allLevels = Object.keys(groupedActivities).map(Number).sort((a, b) => a - b);
+
+        if (trainingType !== 'sports') {
+            // Kitchen/lab shows all levels
+            return allLevels;
+        }
+
+        // For sports: show only last 2 unlocked levels
+        const unlockedLevels = allLevels.filter(level => level <= playerLevel);
+
+        if (unlockedLevels.length <= 2) {
+            return unlockedLevels;
+        }
+
+        // Take last 2 unlocked levels
+        return unlockedLevels.slice(-2);
+    };
+
+    const sortedLevels = getFilteredLevels();
 
     // NEW: Enhanced button logic
     const getButtonState = () => {
