@@ -75,11 +75,9 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
     };
 
     // Check player status
-    const isKadett = stats.completedCourses?.includes('sisekaitseakadeemia_entrance') &&
-        !stats.completedCourses?.includes('lopueksam');
-    const hasGraduated = stats.completedCourses?.includes('lopueksam');
-    const isAbipolitseinik = stats.completedCourses?.includes('basic_police_training_abipolitseinik') &&
-        !stats.completedCourses?.includes('sisekaitseakadeemia_entrance');
+    const isKadett = stats.policePosition === 'kadett';
+    const hasGraduated = ['patrullpolitseinik', 'grupijuht', 'talituse_juht'].includes(stats.policePosition || '');
+    const isAbipolitseinik = stats.policePosition === 'abipolitseinik';
 
     // Get prefecture display
     const getPrefectureDisplay = () => {

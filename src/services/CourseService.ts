@@ -1,4 +1,4 @@
-// src/services/CourseService.ts (updated version with proper timestamp handling)
+// src/services/CourseService.ts
 import {
     doc,
     setDoc,
@@ -102,7 +102,7 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
 
     const now = Timestamp.now();
 
-    // Handle endsAt timestamp (same as before)
+    // Handle endsAt timestamp
     let endsAtMillis: number;
     if (playerStats.activeCourse.endsAt instanceof Timestamp) {
         endsAtMillis = playerStats.activeCourse.endsAt.toMillis();
@@ -179,13 +179,22 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
 
         updates.abilities = finalAbilities;
 
-        // Handle special course completions (same as before)
-        if (course.id === 'basic_police_training_abipolitseinik') {
+        // HANDLE POSITION-GRANTING COURSES
+        // Position progression: null -> abipolitseinik -> kadett -> patrullpolitseinik
+        if (course.id === 'basic_police_training_abipolitseinik' || course.id === 'abipolitseiniku_baaskursus') {
+            // Grant abipolitseinik position (only if player doesn't have a position yet)
+            if (!playerStats.policePosition) {
+                updates.policePosition = 'abipolitseinik';
+                // No rank for abipolitseinik
+                updates.rank = null;
+            }
             updates.hasCompletedTraining = true;
             updates.isEmployed = true;
-            updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
+            if (!playerStats.badgeNumber) {
+                updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
+            }
 
-            // ADD THIS: Grant uniform items to inventory
+            // Grant uniform items to inventory
             const uniformItems = ABIPOLITSEINIK_UNIFORM.map(item => ({
                 id: item.id,
                 name: item.name,
@@ -199,39 +208,46 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
                 source: 'training' as const
             }));
 
-            // Add uniform items to existing inventory
             updates.inventory = [...(playerStats.inventory || []), ...uniformItems];
 
         } else if (course.id === 'sisekaitseakadeemia_entrance') {
-                updates.rank = course.rewards.unlocksRank || 'Nooreminspektor';
-                updates.isEmployed = true;
-                updates.hasCompletedTraining = true;
-                updates.prefecture = 'Sisekaitseakadeemia';
-                updates.department = 'Politsei- ja Piirivalvekolledž';
-                if (!playerStats.badgeNumber) {
-                    updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
-                }
+            // Grant kadett position (only if player is abipolitseinik or has no position)
+            if (!playerStats.policePosition || playerStats.policePosition === 'abipolitseinik') {
+                updates.policePosition = 'kadett';
+                updates.rank = 'Nooreminspektor'; // Automatic rank for kadett
+            }
+            updates.isEmployed = true;
+            updates.hasCompletedTraining = true;
+            updates.prefecture = 'Sisekaitseakadeemia';
+            updates.department = 'Politsei- ja Piirivalvekolledž';
+            if (!playerStats.badgeNumber) {
+                updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
+            }
 
-                // Grant Police uniform items to inventory
-                const policeUniformItems = POLITSEI_UNIFORM.map(item => ({
-                    id: item.id,
-                    name: item.name,
-                    description: item.description,
-                    category: 'equipment' as const,
-                    quantity: 1,
-                    equipped: false,
-                    equipmentSlot: item.slot,
-                    shopPrice: item.shopPrice,
-                    stats: item.stats,
-                    source: 'training' as const
-                }));
+            // Grant Police uniform items to inventory
+            const policeUniformItems = POLITSEI_UNIFORM.map(item => ({
+                id: item.id,
+                name: item.name,
+                description: item.description,
+                category: 'equipment' as const,
+                quantity: 1,
+                equipped: false,
+                equipmentSlot: item.slot,
+                shopPrice: item.shopPrice,
+                stats: item.stats,
+                source: 'training' as const
+            }));
 
-                // Add police uniform items to existing inventory
-                updates.inventory = [...(playerStats.inventory || []), ...policeUniformItems];
+            updates.inventory = [...(playerStats.inventory || []), ...policeUniformItems];
 
         } else if (course.id === 'lopueksam') {
-            // Graduate from academy
-            updates.rank = 'Inspektor'; // Promote to Inspektor
+            // Grant patrullpolitseinik position (only if player is kadett or lower)
+            if (playerStats.policePosition === 'kadett' ||
+                playerStats.policePosition === 'abipolitseinik' ||
+                !playerStats.policePosition) {
+                updates.policePosition = 'patrullpolitseinik';
+                updates.rank = 'Inspektor'; // Automatic rank for patrullpolitseinik
+            }
             updates.isEmployed = true;
             updates.hasCompletedTraining = true;
             updates.departmentUnit = 'patrol';
@@ -240,7 +256,6 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
             updates.prefecture = null;
             updates.department = null;
 
-            // Update status from Kadett to Politseiametnik
             if (!playerStats.badgeNumber) {
                 updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
             }
@@ -255,7 +270,7 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
                         name: shopItem.name,
                         description: shopItem.description,
                         category: shopItem.category === 'medical' ? 'consumable' as const : 'misc' as const,
-                        quantity: itemReward.quantity, // KASUTA ÕIGE KOGUST
+                        quantity: itemReward.quantity,
                         equipped: false,
                         shopPrice: shopItem.price,
                         source: 'training' as const,
@@ -265,7 +280,6 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
                 return null;
             }).filter(item => item !== null) || [];
 
-            // Add items to existing inventory
             if (medicalItems.length > 0) {
                 updates.inventory = [...(playerStats.inventory || []), ...medicalItems];
             }
@@ -285,21 +299,7 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
                 source: 'training' as const
             }));
 
-            // Add riot equipment to existing inventory
             updates.inventory = [...(playerStats.inventory || []), ...riotEquipmentItems];
-
-        } else if (course.rewards.unlocksRank) {
-
-        } else if (course.rewards.unlocksRank) {
-            updates.rank = course.rewards.unlocksRank;
-            updates.isEmployed = true;
-            updates.hasCompletedTraining = true;
-            if (!playerStats.department) {
-                updates.department = 'Patrulltalitus';
-            }
-            if (!playerStats.badgeNumber) {
-                updates.badgeNumber = Math.floor(10000 + Math.random() * 90000).toString();
-            }
         }
 
         await updateDoc(playerStatsRef, updates);

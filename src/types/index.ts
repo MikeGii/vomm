@@ -164,7 +164,7 @@ export interface WorkActivity {
     baseExpPerHour: number;
     expGrowthRate: number; // percentage as decimal (0.15 for 15%)
     maxHours: number;
-    allowedFor?: ('kadett' | 'abipolitseinik' | 'politseiametnik')[];
+    allowedFor?: ('kadett' | 'abipolitseinik' | 'patrullpolitseinik')[];
     moneyReward?: number;
 }
 
