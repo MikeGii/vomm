@@ -1,20 +1,22 @@
-// src/pages/TrainingPage.tsx - Updated version with sell functionality
+// src/pages/TrainingPage.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import {doc, onSnapshot, updateDoc} from 'firebase/firestore';
+import { updateDoc, doc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { AttributesDisplay } from '../components/training/AttributesDisplay';
 import { TrainingCounter } from '../components/training/TrainingCounter';
 import { ActivitySelector } from '../components/training/ActivitySelector';
-import { TrainingMilestones} from "../components/training/TrainingMilestones";
+import { TrainingMilestones } from "../components/training/TrainingMilestones";
 import { TrainingBoosters } from '../components/training/TrainingBoosters';
-import { getTrainingBoosters } from '../services/TrainingBoosterService';
+import { CraftingInventory } from "../components/training/CraftingInventory";
 import { TabNavigation } from '../components/ui/TabNavigation';
-import { CraftingInventory} from "../components/training/CraftingInventory";
+import { getTrainingBoosters } from '../services/TrainingBoosterService';
 import { getAvailableKitchenLabActivities, getKitchenLabActivityById } from '../data/kitchenLabActivities';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
+import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { useNavigate } from 'react-router-dom';
-import {PlayerAttributes, PlayerStats, TrainingActivity} from '../types';
+import { PlayerAttributes, TrainingActivity } from '../types';
 import { InventoryItem } from '../types';
 import {
     checkAndResetTrainingClicks,
@@ -25,22 +27,24 @@ import {
     initializeKitchenLabTrainingData
 } from '../services/TrainingService';
 import { getAvailableActivities, getActivityById } from '../data/trainingActivities';
-import { sellCraftedItem } from '../services/SellService'; // NEW: Import sell service
+import { sellCraftedItem } from '../services/SellService';
 import '../styles/pages/Training.css';
 
 const TrainingPage: React.FC = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
-    const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
+    const { showToast } = useToast();
+    const { playerStats, loading, refreshStats } = usePlayerStats();
+
     const [availableActivities, setAvailableActivities] = useState<TrainingActivity[]>([]);
     const [selectedActivity, setSelectedActivity] = useState<string>('');
     const [isTraining, setIsTraining] = useState(false);
-    const [loading, setLoading] = useState(true);
     const [trainingBoosters, setTrainingBoosters] = useState<InventoryItem[]>([]);
     const [activeTab, setActiveTab] = useState<string>('sports');
     const [kitchenLabActivities, setKitchenLabActivities] = useState<TrainingActivity[]>([]);
     const [selectedKitchenLabActivity, setSelectedKitchenLabActivity] = useState<string>('');
     const [isKitchenLabTraining, setIsKitchenLabTraining] = useState(false);
+    const [initializationDone, setInitializationDone] = useState(false);
 
     const tabs = [
         { id: 'sports', label: 'Sporditreening' },
@@ -48,84 +52,96 @@ const TrainingPage: React.FC = () => {
         { id: 'handcraft', label: 'Käsitöö' }
     ];
 
-    // Set up real-time listener for player stats
+    // One-time initialization for missing attributes
     useEffect(() => {
-        if (!currentUser) return;
+        if (!currentUser || !playerStats || initializationDone) return;
 
-        const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+        const initializeIfNeeded = async () => {
+            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+            let needsUpdate = false;
+            const updates: any = {};
 
-        const unsubscribe = onSnapshot(statsRef, async (doc) => {
-            if (doc.exists()) {
-                const stats = doc.data() as PlayerStats;
-                let needsUpdate = false;
+            // Check and initialize attributes
+            if (!playerStats.attributes) {
+                updates.attributes = initializeAttributes();
+                needsUpdate = true;
+            } else {
+                // Ensure all attributes exist
+                const defaultAttributes = initializeAttributes();
+                const currentAttributes = { ...playerStats.attributes };
+                let attributesUpdated = false;
 
-                if (!stats.attributes) {
-                    stats.attributes = initializeAttributes();
-                    needsUpdate = true;
-                } else {
-                    // Ensure all attributes exist (including new kitchen/lab ones for existing players)
-                    const defaultAttributes = initializeAttributes();
-                    Object.keys(defaultAttributes).forEach(key => {
-                        if (!stats.attributes![key as keyof PlayerAttributes]) {
-                            stats.attributes![key as keyof PlayerAttributes] = defaultAttributes[key as keyof PlayerAttributes];
-                            needsUpdate = true;
-                        }
-                    });
-                }
-
-                // Initialize training data if it doesn't exist
-                if (!stats.trainingData) {
-                    stats.trainingData = initializeTrainingData();
-                    needsUpdate = true;
-                }
-
-                if (!stats.kitchenLabTrainingData) {
-                    stats.kitchenLabTrainingData = initializeKitchenLabTrainingData();
-                    needsUpdate = true;
-                }
-
-                // Update database if new attributes were added
-                if (needsUpdate) {
-                    try {
-                        await updateDoc(statsRef, {
-                            attributes: stats.attributes,
-                            trainingData: stats.trainingData,
-                            kitchenLabTrainingData: stats.kitchenLabTrainingData
-                        });
-                    } catch (error) {
-                        console.error('Error updating player stats:', error);
+                Object.keys(defaultAttributes).forEach(key => {
+                    if (!currentAttributes[key as keyof PlayerAttributes]) {
+                        currentAttributes[key as keyof PlayerAttributes] =
+                            defaultAttributes[key as keyof PlayerAttributes];
+                        attributesUpdated = true;
                     }
+                });
+
+                if (attributesUpdated) {
+                    updates.attributes = currentAttributes;
+                    needsUpdate = true;
                 }
-
-                // Check and reset training clicks if needed
-                const updatedTrainingData = await checkAndResetTrainingClicks(currentUser.uid);
-                stats.trainingData = updatedTrainingData;
-
-                const updatedKitchenLabTrainingData = await checkAndResetKitchenLabTrainingClicks(currentUser.uid);
-                stats.kitchenLabTrainingData = updatedKitchenLabTrainingData;
-
-                setPlayerStats(stats);
-
-                // Get training boosters from inventory
-                const boosters = getTrainingBoosters(stats.inventory || []);
-                setTrainingBoosters(boosters);
-
-                // Get available activities based on player level
-                const activities = getAvailableActivities(stats.level);
-                setAvailableActivities(activities);
-
-                const kitchenActivities = getAvailableKitchenLabActivities(stats.level);
-                setKitchenLabActivities(kitchenActivities);
-
-                setLoading(false);
             }
-        }, (error) => {
-            console.error('Error listening to player stats:', error);
-            setLoading(false);
-        });
 
-        return () => unsubscribe();
-    }, [currentUser]);
+            // Initialize training data if missing
+            if (!playerStats.trainingData) {
+                updates.trainingData = initializeTrainingData();
+                needsUpdate = true;
+            }
+
+            if (!playerStats.kitchenLabTrainingData) {
+                updates.kitchenLabTrainingData = initializeKitchenLabTrainingData();
+                needsUpdate = true;
+            }
+
+            // Update database if needed
+            if (needsUpdate) {
+                try {
+                    await updateDoc(statsRef, updates);
+                    await refreshStats();
+                } catch (error) {
+                    console.error('Error initializing training data:', error);
+                    showToast('Viga treeningandmete initsialiseerimisel', 'error');
+                }
+            }
+
+            setInitializationDone(true);
+        };
+
+        initializeIfNeeded();
+    }, [currentUser, playerStats, initializationDone, refreshStats, showToast]);
+
+    // Update derived state when playerStats changes
+    useEffect(() => {
+        if (!playerStats || !currentUser) return;
+
+        // Check and reset training clicks
+        const updateClicksIfNeeded = async () => {
+            const updatedTraining = await checkAndResetTrainingClicks(currentUser.uid);
+            const updatedKitchenLab = await checkAndResetKitchenLabTrainingClicks(currentUser.uid);
+
+            // Only refresh if clicks were reset
+            if (updatedTraining || updatedKitchenLab) {
+                await refreshStats();
+            }
+        };
+
+        updateClicksIfNeeded();
+
+        // Update training boosters
+        const boosters = getTrainingBoosters(playerStats.inventory || []);
+        setTrainingBoosters(boosters);
+
+        // Update available activities
+        const activities = getAvailableActivities(playerStats.level);
+        setAvailableActivities(activities);
+
+        const kitchenActivities = getAvailableKitchenLabActivities(playerStats.level);
+        setKitchenLabActivities(kitchenActivities);
+
+    }, [playerStats, currentUser, refreshStats]);
 
     // Handle training action
     const handleTrain = useCallback(async () => {
@@ -140,20 +156,26 @@ const TrainingPage: React.FC = () => {
         }
 
         if (!hasClicks) {
-            alert('Treeningkordi pole enam järel! Oota järgmist täistundi.');
+            showToast('Treeningkordi pole enam järel! Oota järgmist täistundi.', 'warning');
             return;
         }
 
         let activityId = '';
         let activity = null;
 
-        // Determine which activity to use based on active tab
+        // Determine which activity to use
         if (activeTab === 'sports') {
-            if (!selectedActivity) return;
+            if (!selectedActivity) {
+                showToast('Vali esmalt treeningtegevus!', 'warning');
+                return;
+            }
             activityId = selectedActivity;
             activity = getActivityById(selectedActivity);
         } else if (activeTab === 'food') {
-            if (!selectedKitchenLabActivity) return;
+            if (!selectedKitchenLabActivity) {
+                showToast('Vali esmalt köök & labor tegevus!', 'warning');
+                return;
+            }
             activityId = selectedKitchenLabActivity;
             activity = getKitchenLabActivityById(selectedKitchenLabActivity);
         }
@@ -168,27 +190,18 @@ const TrainingPage: React.FC = () => {
         try {
             const trainingType = activeTab === 'sports' ? 'sports' : 'kitchen-lab';
             await performTraining(currentUser.uid, activityId, activity.rewards, trainingType);
+            await refreshStats(); // Update stats after training
+            showToast('Treening edukas!', 'success');
         } catch (error: any) {
-            alert(error.message || 'Treenimine ebaõnnestus');
+            showToast(error.message || 'Treenimine ebaõnnestus', 'error');
         } finally {
             setIsTraining(false);
-            if (activeTab === 'food') {
-                setIsKitchenLabTraining(false);
-            }
+            setIsKitchenLabTraining(false);
         }
-    }, [currentUser, selectedActivity, selectedKitchenLabActivity, activeTab, isTraining, playerStats]);
+    }, [currentUser, selectedActivity, selectedKitchenLabActivity, activeTab,
+        isTraining, playerStats, refreshStats, showToast]);
 
-    // Handle activity selection
-    const handleActivitySelect = (activityId: string) => {
-        setSelectedActivity(activityId);
-    };
-
-    // Handle booster used callback
-    const handleBoosterUsed = () => {
-        // Functionality can be added here if needed
-    };
-
-    // NEW: Handle selling crafted items
+    // Handle selling crafted items
     const handleSellItem = useCallback(async (itemId: string, quantity: number) => {
         if (!currentUser) {
             throw new Error('Kasutaja ei ole sisse logitud');
@@ -198,24 +211,28 @@ const TrainingPage: React.FC = () => {
             const result = await sellCraftedItem(currentUser.uid, itemId, quantity);
 
             if (result.success) {
-                // Show success message
-                alert(result.message);
+                showToast(result.message, 'success');
+                await refreshStats();
             } else {
                 throw new Error(result.message);
             }
         } catch (error: any) {
-            // Show error message and re-throw so CraftingInventory can handle loading states
-            alert(error.message || 'Müük ebaõnnestus');
+            showToast(error.message || 'Müük ebaõnnestus', 'error');
             throw error;
         }
-    }, [currentUser]);
+    }, [currentUser, refreshStats, showToast]);
+
+    // Handle booster used
+    const handleBoosterUsed = useCallback(async () => {
+        await refreshStats();
+    }, [refreshStats]);
 
     if (loading) {
         return (
             <div className="page">
                 <AuthenticatedHeader />
                 <main className="training-container">
-                    <div className="loading">Laadin...</div>
+                    <div className="loading">Laadin treeningkeskust...</div>
                 </main>
             </div>
         );
@@ -245,14 +262,13 @@ const TrainingPage: React.FC = () => {
 
                 <h1 className="training-title">Treeningkeskus</h1>
 
-                {/* Tab Navigation */}
                 <TabNavigation
                     tabs={tabs}
                     activeTab={activeTab}
                     onTabChange={setActiveTab}
                 />
 
-                {/* Show existing training content only when sports tab is active */}
+                {/* Sports Training Tab */}
                 {activeTab === 'sports' && (
                     <>
                         <TrainingCounter
@@ -271,14 +287,12 @@ const TrainingPage: React.FC = () => {
                             ]}
                         />
 
-                        <TrainingMilestones
-                            currentLevel={playerStats.level}
-                        />
+                        <TrainingMilestones currentLevel={playerStats.level} />
 
                         <ActivitySelector
                             activities={availableActivities}
                             selectedActivity={selectedActivity}
-                            onActivitySelect={handleActivitySelect}
+                            onActivitySelect={setSelectedActivity}
                             onTrain={handleTrain}
                             isTraining={isTraining}
                             canTrain={(playerStats.trainingData?.remainingClicks || 0) > 0}
@@ -295,17 +309,15 @@ const TrainingPage: React.FC = () => {
                     </>
                 )}
 
-                {/* Kitchen & Lab content */}
+                {/* Kitchen & Lab Tab */}
                 {activeTab === 'food' && (
                     <>
-                        {/* Reuse existing TrainingCounter */}
                         <TrainingCounter
                             remainingClicks={playerStats.kitchenLabTrainingData?.remainingClicks || 0}
                             label="Köök & Labor klikke jäänud"
                             lastResetTime={playerStats.kitchenLabTrainingData?.lastResetTime}
                         />
 
-                        {/* Kitchen/Lab Attributes Display */}
                         <AttributesDisplay
                             attributes={playerStats.attributes || initializeAttributes()}
                             title="Sinu köök & labor oskused"
@@ -316,12 +328,8 @@ const TrainingPage: React.FC = () => {
                             ]}
                         />
 
-                        {/* Kitchen/Lab Milestones */}
-                        <TrainingMilestones
-                            currentLevel={playerStats.level}
-                        />
+                        <TrainingMilestones currentLevel={playerStats.level} />
 
-                        {/* Kitchen/Lab Activity Selector */}
                         <ActivitySelector
                             activities={kitchenLabActivities}
                             selectedActivity={selectedKitchenLabActivity}
@@ -333,7 +341,6 @@ const TrainingPage: React.FC = () => {
                             trainingType="kitchen-lab"
                         />
 
-                        {/* UPDATED: CraftingInventory with sell functionality */}
                         <CraftingInventory
                             inventory={playerStats.inventory || []}
                             onSellItem={handleSellItem}
@@ -341,13 +348,13 @@ const TrainingPage: React.FC = () => {
                     </>
                 )}
 
+                {/* Handcraft Tab */}
                 {activeTab === 'handcraft' && (
                     <div className="tab-placeholder">
                         <h2>Käsitöö</h2>
                         <p>See sektsioon on veel arendamisel...</p>
                     </div>
                 )}
-
             </main>
         </div>
     );
