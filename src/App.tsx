@@ -17,6 +17,7 @@ import BankPage from "./pages/BankPage";
 import FightClubPage from './pages/FightClubPage';
 import { PlayerStatsProvider } from './contexts/PlayerStatsContext';
 import DepartmentPage from "./pages/DepartmentPage";
+import FeedbackPage from "./pages/FeedbackPage";
 
 function App() {
     return (
@@ -101,6 +102,15 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <DepartmentPage />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/feedback"
+                            element={
+                                <ProtectedRoute>
+                                    <FeedbackPage />
                                 </ProtectedRoute>
                             }
                         />
