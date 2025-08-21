@@ -1,9 +1,7 @@
-// Update src/pages/PatrolPage.tsx
-
-import React, { useState, useEffect, useCallback } from 'react';
+// src/pages/PatrolPage.tsx
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
-import { firestore } from '../config/firebase';
+import { Timestamp } from 'firebase/firestore';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { HealthDisplay } from '../components/patrol/HealthDisplay';
 import { DepartmentSelector } from '../components/patrol/DepartmentSelector';
@@ -12,13 +10,12 @@ import { ActiveWorkProgress } from '../components/patrol/ActiveWorkProgress';
 import { WorkHistory } from '../components/patrol/WorkHistory';
 import { WorkedHoursDisplay } from "../components/patrol/WorkedHoursDisplay";
 import { EventModal } from '../components/events/EventModal';
+import { WorkBoosterPanel } from '../components/patrol/WorkBoosterPanel';
 import { checkAndApplyHealthRecovery } from '../services/HealthService';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { WorkBoosterPanel } from '../components/patrol/WorkBoosterPanel';
-import { Timestamp } from 'firebase/firestore';
-import { PlayerStats, WorkActivity } from '../types';
-import { WorkEvent, EventChoice } from '../types';
+import { usePlayerStats } from '../contexts/PlayerStatsContext';
+import { WorkActivity, WorkEvent, EventChoice } from '../types';
 import {
     startWork,
     checkAndCompleteWork,
@@ -33,9 +30,13 @@ const PatrolPage: React.FC = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     const { showToast } = useToast();
+    const { playerStats, loading, refreshStats } = usePlayerStats();
+
+    // Refs for interval management
+    const workCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const lastWorkCheckRef = useRef<number>(0);
 
     // State
-    const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const [availableActivities, setAvailableActivities] = useState<WorkActivity[]>([]);
     const [selectedDepartment, setSelectedDepartment] = useState<string>('');
     const [selectedActivity, setSelectedActivity] = useState<string>('');
@@ -43,25 +44,24 @@ const PatrolPage: React.FC = () => {
     const [isStartingWork, setIsStartingWork] = useState(false);
     const [remainingTime, setRemainingTime] = useState<number>(0);
     const [workHistory, setWorkHistory] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
     const [pendingEvent, setPendingEvent] = useState<WorkEvent | null>(null);
     const [eventDocumentId, setEventDocumentId] = useState<string | null>(null);
     const [isProcessingEvent, setIsProcessingEvent] = useState(false);
+    const [healthCheckDone, setHealthCheckDone] = useState(false);
 
-    // Player status checks - Updated logic
-    const isAbipolitseinik = Boolean(
-        playerStats?.completedCourses?.includes('basic_police_training_abipolitseinik') &&
-        !playerStats?.completedCourses?.includes('sisekaitseakadeemia_entrance')
-    );
+    // Player status checks - Memoized
+    const playerStatus = React.useMemo(() => {
+        if (!playerStats) return { isAbipolitseinik: false, isKadett: false, isPolitseiametnik: false };
 
-    const isKadett = Boolean(
-        playerStats?.completedCourses?.includes('sisekaitseakadeemia_entrance') &&
-        !playerStats?.completedCourses?.includes('lopueksam')
-    );
-
-    const isPolitseiametnik = Boolean(
-        playerStats?.completedCourses?.includes('lopueksam')
-    );
+        const courses = playerStats.completedCourses || [];
+        return {
+            isAbipolitseinik: courses.includes('basic_police_training_abipolitseinik') &&
+                !courses.includes('sisekaitseakadeemia_entrance'),
+            isKadett: courses.includes('sisekaitseakadeemia_entrance') &&
+                !courses.includes('lopueksam'),
+            isPolitseiametnik: courses.includes('lopueksam')
+        };
+    }, [playerStats]);
 
     // Load work history
     const loadWorkHistory = useCallback(async () => {
@@ -75,27 +75,12 @@ const PatrolPage: React.FC = () => {
         }
     }, [currentUser]);
 
-    // Load player stats
-    const loadPlayerStats = useCallback(async () => {
-        if (!currentUser) return;
-
-        try {
-            const statsDoc = await getDoc(doc(firestore, 'playerStats', currentUser.uid));
-            if (statsDoc.exists()) {
-                setPlayerStats(statsDoc.data() as PlayerStats);
-            }
-        } catch (error) {
-            console.error('Error loading player stats:', error);
-        }
-    }, [currentUser]);
-
     // Check for active events
     const checkForEvents = useCallback(async () => {
         if (!currentUser) return;
 
         try {
             const eventData = await getActiveEvent(currentUser.uid);
-
             if (eventData) {
                 setPendingEvent(eventData.event);
                 setEventDocumentId(eventData.documentId);
@@ -108,48 +93,52 @@ const PatrolPage: React.FC = () => {
         }
     }, [currentUser]);
 
-    // Process stats update
-    const processStatsUpdate = useCallback((stats: PlayerStats) => {
-        // Update available activities
+    // Update available activities when stats change
+    useEffect(() => {
+        if (!playerStats) return;
+
         const activities = getAvailableWorkActivities(
-            stats.level,
-            stats.completedCourses || [],
-            stats.rank
+            playerStats.level,
+            playerStats.completedCourses || [],
+            playerStats.rank
         );
         setAvailableActivities(activities);
 
         // Update remaining time if working
-        if (stats.activeWork) {
-            const remaining = getRemainingWorkTime(stats.activeWork);
+        if (playerStats.activeWork) {
+            const remaining = getRemainingWorkTime(playerStats.activeWork);
             setRemainingTime(remaining);
         } else {
             setRemainingTime(0);
         }
-    }, []);
+    }, [playerStats]);
+
+    // One-time health recovery check on mount
+    useEffect(() => {
+        if (!currentUser || healthCheckDone) return;
+
+        checkAndApplyHealthRecovery(currentUser.uid).then(result => {
+            if (result.recovered && result.amountRecovered > 0) {
+                showToast(`Tervis taastus +${result.amountRecovered} HP`, 'success');
+                refreshStats();
+            }
+            setHealthCheckDone(true);
+        });
+    }, [currentUser, healthCheckDone, showToast, refreshStats]);
 
     // Handle event choice
     const handleEventChoice = useCallback(async (choice: EventChoice) => {
-        if (!currentUser || !eventDocumentId) return;
+        if (!currentUser || !eventDocumentId || isProcessingEvent) return;
 
         setIsProcessingEvent(true);
-
         try {
-            const success = await processEventChoice(
-                currentUser.uid,
-                eventDocumentId,
-                choice
-            );
+            const success = await processEventChoice(currentUser.uid, eventDocumentId, choice);
 
             if (success) {
                 showToast('Töö on edukalt lõpetatud!', 'success');
                 setPendingEvent(null);
                 setEventDocumentId(null);
-
-                // Reload data
-                await Promise.all([
-                    loadPlayerStats(),
-                    loadWorkHistory()
-                ]);
+                await Promise.all([refreshStats(), loadWorkHistory()]);
             } else {
                 showToast('Viga sündmuse töötlemisel!', 'error');
             }
@@ -159,18 +148,18 @@ const PatrolPage: React.FC = () => {
         } finally {
             setIsProcessingEvent(false);
         }
-    }, [currentUser, eventDocumentId, showToast, loadPlayerStats, loadWorkHistory]);
+    }, [currentUser, eventDocumentId, isProcessingEvent, showToast, refreshStats, loadWorkHistory]);
 
-    // Handle start work
+    // Handle start work - Optimized
     const handleStartWork = useCallback(async () => {
         if (!currentUser || !playerStats || isStartingWork) return;
 
-        const departmentToUse = isPolitseiametnik
+        const departmentToUse = playerStatus.isPolitseiametnik
             ? playerStats.department
             : selectedDepartment;
 
         if (!departmentToUse || !selectedActivity || selectedHours < 1) {
-            if (isPolitseiametnik && !playerStats.department) {
+            if (playerStatus.isPolitseiametnik && !playerStats.department) {
                 showToast('Su osakond pole määratud! Võta ühendust administraatoriga.', 'error');
             } else {
                 showToast('Palun vali osakond, tegevus ja tunnid!', 'warning');
@@ -179,17 +168,14 @@ const PatrolPage: React.FC = () => {
         }
 
         setIsStartingWork(true);
-
         try {
             // Check health recovery first
             const recoveryResult = await checkAndApplyHealthRecovery(currentUser.uid);
             if (recoveryResult.recovered && recoveryResult.amountRecovered > 0) {
                 showToast(`Tervis taastus +${recoveryResult.amountRecovered} HP`, 'success');
+                await refreshStats();
 
-                // Reload stats after recovery
-                await loadPlayerStats();
-
-                // Check if health is still too low (safe check with optional chaining)
+                // Re-check health after refresh
                 if (!playerStats.health || playerStats.health.current < 50) {
                     showToast('Su tervis on ikka liiga madal töötamiseks!', 'error');
                     setIsStartingWork(false);
@@ -197,7 +183,6 @@ const PatrolPage: React.FC = () => {
                 }
             }
 
-            // Start work
             await startWork(
                 currentUser.uid,
                 selectedActivity,
@@ -207,81 +192,51 @@ const PatrolPage: React.FC = () => {
             );
 
             showToast('Töö alustatud!', 'success');
+            await refreshStats();
         } catch (error: any) {
             showToast(error.message || 'Tööle asumine ebaõnnestus', 'error');
         } finally {
             setIsStartingWork(false);
         }
     }, [currentUser, playerStats, isStartingWork, selectedDepartment, selectedActivity,
-        selectedHours, showToast, loadPlayerStats, isPolitseiametnik]);
+        selectedHours, showToast, refreshStats, playerStatus.isPolitseiametnik]);
 
-    // Listen to player stats
+    // Optimized work completion checking
     useEffect(() => {
-        if (!currentUser) return;
-
-        // Check health recovery on mount
-        checkAndApplyHealthRecovery(currentUser.uid).then(result => {
-            if (result.recovered && result.amountRecovered > 0) {
-                showToast(`Tervis taastus +${result.amountRecovered} HP`, 'success');
+        if (!currentUser || !playerStats?.activeWork) {
+            if (workCheckIntervalRef.current) {
+                clearInterval(workCheckIntervalRef.current);
+                workCheckIntervalRef.current = null;
             }
-        });
-
-        // Subscribe to stats changes
-        const unsubscribe = onSnapshot(
-            doc(firestore, 'playerStats', currentUser.uid),
-            (doc) => {
-                if (doc.exists()) {
-                    const stats = doc.data() as PlayerStats;
-                    setPlayerStats(stats);
-                    processStatsUpdate(stats);
-                    setLoading(false);
-                }
-            },
-            (error) => {
-                console.error('Error listening to player stats:', error);
-                setLoading(false);
-            }
-        );
-
-        return () => unsubscribe();
-    }, [currentUser, processStatsUpdate, showToast]);
-
-    // Check for work completion and events
-    useEffect(() => {
-        if (!currentUser || !playerStats?.activeWork) return;
+            return;
+        }
 
         const checkWork = async () => {
+            // Prevent duplicate checks
+            const now = Date.now();
+            if (now - lastWorkCheckRef.current < 500) return;
+            lastWorkCheckRef.current = now;
+
             const result = await checkAndCompleteWork(currentUser.uid);
 
             if (result.hasEvent) {
-                // Event triggered, check for it
                 await checkForEvents();
             } else if (result.completed) {
-                // Work completed without event - safe access to activeWork
-                const activeWork = playerStats.activeWork;
-                if (activeWork) {
-                    showToast(`Töö on edukalt lõpetatud! Teenitud kogemus: +${activeWork.expectedExp} XP`,
-                        'success', 4000);
-                }
-
-                // Reload data
-                await Promise.all([
-                    loadPlayerStats(),
-                    loadWorkHistory()
-                ]);
+                const exp = playerStats.activeWork?.expectedExp || 0;
+                showToast(`Töö on edukalt lõpetatud! Teenitud kogemus: +${exp} XP`, 'success', 4000);
+                await Promise.all([refreshStats(), loadWorkHistory()]);
             }
         };
 
-        // Check immediately if time is up
+        // Initial check if time is up
         if (remainingTime <= 0) {
             checkWork();
         }
 
-        // Set up interval to check every second
-        const interval = setInterval(() => {
-            const activeWork = playerStats.activeWork;
-            if (activeWork) {
-                const remaining = getRemainingWorkTime(activeWork);
+        // Set up optimized interval
+        workCheckIntervalRef.current = setInterval(() => {
+            if (playerStats.activeWork) {
+                const remaining = getRemainingWorkTime(playerStats.activeWork);
                 setRemainingTime(remaining);
 
                 if (remaining <= 0) {
@@ -290,11 +245,16 @@ const PatrolPage: React.FC = () => {
             }
         }, 1000);
 
-        return () => clearInterval(interval);
-    }, [currentUser, playerStats?.activeWork, remainingTime, checkForEvents, showToast,
-        loadPlayerStats, loadWorkHistory]);
+        return () => {
+            if (workCheckIntervalRef.current) {
+                clearInterval(workCheckIntervalRef.current);
+                workCheckIntervalRef.current = null;
+            }
+        };
+    }, [currentUser, playerStats?.activeWork, remainingTime, checkForEvents,
+        showToast, refreshStats, loadWorkHistory]);
 
-    // Check for pending events on mount and when stats change
+    // Check for pending events
     useEffect(() => {
         if (currentUser && !loading) {
             checkForEvents();
@@ -306,21 +266,33 @@ const PatrolPage: React.FC = () => {
         loadWorkHistory();
     }, [loadWorkHistory]);
 
-    // getPageTitle function
+    // Handle booster applied
+    const handleBoosterApplied = useCallback(async () => {
+        await refreshStats();
+        showToast('Kiirendaja rakendatud!', 'success');
+
+        // Force immediate work check
+        if (playerStats?.activeWork) {
+            const remaining = getRemainingWorkTime(playerStats.activeWork);
+            setRemainingTime(remaining);
+
+            if (remaining <= 0) {
+                const result = await checkAndCompleteWork(currentUser!.uid);
+                if (result.completed) {
+                    const exp = playerStats.activeWork?.expectedExp || 0;
+                    showToast(`Töö on edukalt lõpetatud! Teenitud kogemus: +${exp} XP`, 'success', 4000);
+                    await Promise.all([refreshStats(), loadWorkHistory()]);
+                }
+            }
+        }
+    }, [currentUser, playerStats, showToast, refreshStats, loadWorkHistory]);
+
+    // Get page title
     const getPageTitle = (): string => {
         if (!playerStats) return 'Patrullteenistus';
-
-        // If player is currently a Kadett (in academy but not graduated)
-        if (playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance') &&
-            !playerStats.completedCourses?.includes('lopueksam')) {
-            return 'Praktika ja tööamps';
-        }
-
-        // For everyone else (Abipolitseinik and Politseiametnik)
-        return 'Patrullteenistus';
+        return playerStatus.isKadett ? 'Praktika ja tööamps' : 'Patrullteenistus';
     };
 
-    // Loading state
     if (loading) {
         return (
             <div className="page">
@@ -332,7 +304,6 @@ const PatrolPage: React.FC = () => {
         );
     }
 
-    // Error state
     if (!playerStats) {
         return (
             <div className="page">
@@ -344,13 +315,13 @@ const PatrolPage: React.FC = () => {
         );
     }
 
-    // Check if player can work - Updated logic without hasCompletedTraining
-    const hasBasicTraining = playerStats?.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
-    const healthOk = playerStats?.health && playerStats?.health.current >= 50;
-    const notInCourse = !playerStats?.activeCourse || playerStats?.activeCourse.status !== 'in_progress';
-
+    // Can work checks
+    const hasBasicTraining = playerStats.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
+    const healthOk = playerStats.health && playerStats.health.current >= 50;
+    const notInCourse = !playerStats.activeCourse || playerStats.activeCourse.status !== 'in_progress';
     const canWork = hasBasicTraining && healthOk && notInCourse;
 
+    // Rest of JSX remains exactly the same...
     return (
         <div className="page">
             <AuthenticatedHeader />
@@ -364,22 +335,15 @@ const PatrolPage: React.FC = () => {
 
                 <h1 className="patrol-title">{getPageTitle()}</h1>
 
-                {/* Health display - safe access */}
-                {playerStats.health && (
-                    <HealthDisplay health={playerStats.health} />
-                )}
-
-                {/* Worked hours display */}
+                {playerStats.health && <HealthDisplay health={playerStats.health} />}
                 <WorkedHoursDisplay totalHours={playerStats.totalWorkedHours || 0} />
 
-                {/* Active work progress and boosters section */}
                 {playerStats.activeWork && remainingTime > 0 && (
                     <div className="active-work-section">
                         <ActiveWorkProgress
                             activeWork={playerStats.activeWork}
                             remainingTime={remainingTime}
                         />
-
                         <WorkBoosterPanel
                             inventory={playerStats.inventory || []}
                             currentUserId={currentUser!.uid}
@@ -388,52 +352,29 @@ const PatrolPage: React.FC = () => {
                                     ? playerStats.activeWork.endsAt.toDate()
                                     : new Date(playerStats.activeWork.endsAt)
                             }
-                            onBoosterApplied={() => {
-                                loadPlayerStats();
-                                // Force immediate check if work might be complete
-                                if (playerStats?.activeWork) {
-                                    const remaining = getRemainingWorkTime(playerStats.activeWork);
-                                    setRemainingTime(remaining);
-
-                                    if (remaining <= 0) {
-                                        checkAndCompleteWork(currentUser!.uid).then(result => {
-                                            if (result.completed) {
-                                                showToast(`Töö on edukalt lõpetatud! Teenitud kogemus: +${playerStats.activeWork?.expectedExp} XP`,
-                                                    'success', 4000);
-                                                Promise.all([
-                                                    loadPlayerStats(),
-                                                    loadWorkHistory()
-                                                ]);
-                                            }
-                                        });
-                                    }
-                                }
-                            }}
+                            onBoosterApplied={handleBoosterApplied}
                         />
                     </div>
                 )}
 
-                {/* Work setup section */}
-                {!playerStats?.activeWork && canWork && (
+                {!playerStats.activeWork && canWork && (
                     <div className="work-setup">
-                        {/* Department selector - Only show for Abipolitseinik and Kadett */}
-                        {(isAbipolitseinik || isKadett) && (
+                        {(playerStatus.isAbipolitseinik || playerStatus.isKadett) && (
                             <DepartmentSelector
-                                prefecture={playerStats?.prefecture || ''}
-                                isAbipolitseinik={isAbipolitseinik}
-                                currentDepartment={playerStats?.department}
+                                prefecture={playerStats.prefecture || ''}
+                                isAbipolitseinik={playerStatus.isAbipolitseinik}
+                                currentDepartment={playerStats.department}
                                 selectedDepartment={selectedDepartment}
                                 onDepartmentSelect={setSelectedDepartment}
-                                isKadett={isKadett}
+                                isKadett={playerStatus.isKadett}
                             />
                         )}
 
-                        {/* For graduated officers (Politseiametnik), show locked department */}
-                        {isPolitseiametnik && (
+                        {playerStatus.isPolitseiametnik && (
                             <div className="department-selector">
                                 <h3>Tööpiirkond</h3>
                                 <div className="department-locked">
-                                    <p>Sinu tööpiirkond: <strong>{playerStats?.department || 'Määramata'}</strong></p>
+                                    <p>Sinu tööpiirkond: <strong>{playerStats.department || 'Määramata'}</strong></p>
                                     <p className="info-text">Politseiametnikuna oled määratud konkreetsesse osakonda.</p>
                                 </div>
                             </div>
@@ -447,31 +388,24 @@ const PatrolPage: React.FC = () => {
                             onHoursSelect={setSelectedHours}
                             onStartWork={handleStartWork}
                             isStarting={isStartingWork}
-                            isKadett={isKadett}
-                            playerRank={playerStats?.rank}
+                            isKadett={playerStatus.isKadett}
+                            playerRank={playerStats.rank}
                         />
                     </div>
                 )}
 
-                {/* Work unavailable messages */}
-                {!playerStats?.activeWork && !canWork && (
+                {!playerStats.activeWork && !canWork && (
                     <div className="work-unavailable">
-                        {!hasBasicTraining && (
-                            <p>Pead esmalt läbima abipolitseiniku koolituse!</p>
-                        )}
-                        {(!playerStats?.health || playerStats.health.current < 50) && (
-                            <p>Su tervis on liiga madal töötamiseks! Minimaalne tervis on 50.</p>
-                        )}
-                        {playerStats?.activeCourse && playerStats.activeCourse.status === 'in_progress' && (
-                            <p>Sa ei saa alustada uut tööd koolituse ajal!</p>
-                        )}
+                        {!hasBasicTraining && <p>Pead esmalt läbima abipolitseiniku koolituse!</p>}
+                        {(!playerStats.health || playerStats.health.current < 50) &&
+                            <p>Su tervis on liiga madal töötamiseks! Minimaalne tervis on 50.</p>}
+                        {playerStats.activeCourse?.status === 'in_progress' &&
+                            <p>Sa ei saa alustada uut tööd koolituse ajal!</p>}
                     </div>
                 )}
 
-                {/* Work history */}
                 <WorkHistory history={workHistory} />
 
-                {/* Event Modal */}
                 {pendingEvent && (
                     <EventModal
                         event={pendingEvent}

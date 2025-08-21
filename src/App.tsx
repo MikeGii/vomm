@@ -15,11 +15,13 @@ import {DebugMenu} from "./components/dev/DebugMenu";
 import CasinoPage from './pages/CasinoPage';
 import BankPage from "./pages/BankPage";
 import FightClubPage from './pages/FightClubPage';
+import { PlayerStatsProvider } from './contexts/PlayerStatsContext';
 
 function App() {
     return (
         <Router>
             <AuthProvider>
+                <PlayerStatsProvider>
                 <ToastProvider>
                     <DebugMenu />
                     <Routes>
@@ -109,6 +111,7 @@ function App() {
                     </Routes>
                     <DebugMenu />
                 </ToastProvider>
+                </PlayerStatsProvider>
             </AuthProvider>
         </Router>
     );

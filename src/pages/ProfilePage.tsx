@@ -1,15 +1,13 @@
 // src/pages/ProfilePage.tsx
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { firestore } from '../config/firebase';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { ProfileAttributes } from '../components/profile/ProfileAttributes';
 import { ProfileSkills } from '../components/profile/ProfileSkills';
 import { useAuth } from '../contexts/AuthContext';
-import { PlayerStats } from '../types';
+import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { initializeAttributes } from '../services/TrainingService';
-import { ProfileInventory} from "../components/profile/ProfileInventory";
+import { ProfileInventory } from "../components/profile/ProfileInventory";
 import { CharacterEquipment } from '../components/profile/CharacterEquipment';
 import { equipItem, unequipItem } from '../services/EquipmentService';
 import '../styles/pages/Profile.css';
@@ -17,28 +15,10 @@ import '../styles/pages/Profile.css';
 const ProfilePage: React.FC = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
-    const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { playerStats, loading } = usePlayerStats();
+
     const inventory = playerStats?.inventory || [];
     const equipment = playerStats?.equipment || {};
-
-    useEffect(() => {
-        if (!currentUser) return;
-
-        const statsRef = doc(firestore, 'playerStats', currentUser.uid);
-        const unsubscribe = onSnapshot(statsRef, (doc) => {
-            if (doc.exists()) {
-                const stats = doc.data() as PlayerStats;
-                setPlayerStats(stats);
-            }
-            setLoading(false);
-        }, (error) => {
-            console.error('Error loading player stats:', error);
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, [currentUser]);
 
     if (loading) {
         return (
@@ -79,7 +59,7 @@ const ProfilePage: React.FC = () => {
 
                 <ProfileAttributes
                     attributes={playerStats.attributes || initializeAttributes()}
-                    equipment={playerStats.equipment}  // ADD this prop
+                    equipment={playerStats.equipment}
                 />
                 <ProfileSkills abilityIds={abilities} />
                 <ProfileInventory items={inventory} />
@@ -93,7 +73,7 @@ const ProfilePage: React.FC = () => {
                         if (item) {
                             try {
                                 await equipItem(currentUser.uid, slot, item);
-                                // The real-time listener will update the UI automatically
+                                // The context listener will update the UI automatically
                             } catch (error) {
                                 console.error('Failed to equip item:', error);
                             }
@@ -106,7 +86,7 @@ const ProfilePage: React.FC = () => {
                         if (item) {
                             try {
                                 await unequipItem(currentUser.uid, slot, item);
-                                // The real-time listener will update the UI automatically
+                                // The context listener will update the UI automatically
                             } catch (error) {
                                 console.error('Failed to unequip item:', error);
                             }

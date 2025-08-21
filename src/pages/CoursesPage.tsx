@@ -1,8 +1,6 @@
 // src/pages/CoursesPage.tsx
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { firestore } from '../config/firebase';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { ActiveCourseProgress } from '../components/courses/ActiveCourseProgress';
 import { CourseTabs } from '../components/courses/CourseTabs';
@@ -10,7 +8,9 @@ import { CoursesList } from '../components/courses/CoursesList';
 import { CourseBoosterPanel } from '../components/courses/CourseBoosterPanel';
 import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
-import { PlayerStats, Course } from '../types';
+import { usePlayerStats } from '../contexts/PlayerStatsContext';
+import { useToast } from '../contexts/ToastContext';
+import { Course } from '../types';
 import { TabType } from '../types/courseTabs.types';
 import {
     getAvailableCourses,
@@ -25,19 +25,20 @@ import '../styles/pages/Courses.css';
 const CoursesPage: React.FC = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
+    const { showToast } = useToast();
+    const { playerStats, loading, refreshStats } = usePlayerStats();
+
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const lastActiveCourseRef = useRef<string | null>(null);
     const completionAlertShownRef = useRef<string | null>(null);
 
-    const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
     const [completedCourses, setCompletedCourses] = useState<Course[]>([]);
-    const [loading, setLoading] = useState(true);
     const [enrolling, setEnrolling] = useState(false);
     const [remainingTime, setRemainingTime] = useState<number>(0);
     const [activeTab, setActiveTab] = useState<TabType>('available');
 
-    // Calculate courses for each tab
+    // Memoize course filtering more efficiently
     const coursesForTab = useMemo(() => {
         if (!playerStats) {
             return {
@@ -49,100 +50,74 @@ const CoursesPage: React.FC = () => {
             };
         }
 
-        // Get status-specific courses
-        const abipolitseinikCourses = ALL_COURSES.filter(c => c.category === 'abipolitseinik');
-        const sisekaitseakadeemiaCourses = ALL_COURSES.filter(c => c.category === 'sisekaitseakadeemia');
-        const politseiCourses = ALL_COURSES.filter(c => c.category === 'politsei');
-
-
+        // Cache these filters to avoid recalculation
         return {
             available: availableCourses,
             completed: completedCourses,
-            abipolitseinik: abipolitseinikCourses,
-            sisekaitseakadeemia: sisekaitseakadeemiaCourses,
-            politsei: politseiCourses
+            abipolitseinik: ALL_COURSES.filter(c => c.category === 'abipolitseinik'),
+            sisekaitseakadeemia: ALL_COURSES.filter(c => c.category === 'sisekaitseakadeemia'),
+            politsei: ALL_COURSES.filter(c => c.category === 'politsei')
         };
     }, [availableCourses, completedCourses, playerStats]);
 
     // Calculate course counts for tabs
-    const courseCounts = useMemo(() => {
-        return {
-            available: coursesForTab.available.length,
-            completed: coursesForTab.completed.length,
-            abipolitseinik: coursesForTab.abipolitseinik.length,
-            sisekaitseakadeemia: coursesForTab.sisekaitseakadeemia.length,
-            politsei: coursesForTab.politsei.length
-
-        };
-    }, [coursesForTab]);
+    const courseCounts = useMemo(() => ({
+        available: coursesForTab.available.length,
+        completed: coursesForTab.completed.length,
+        abipolitseinik: coursesForTab.abipolitseinik.length,
+        sisekaitseakadeemia: coursesForTab.sisekaitseakadeemia.length,
+        politsei: coursesForTab.politsei.length
+    }), [coursesForTab]);
 
     // Get currently displayed courses based on active tab
-    const displayedCourses = useMemo(() => {
-        return coursesForTab[activeTab] || [];
-    }, [coursesForTab, activeTab]);
+    const displayedCourses = useMemo(() =>
+            coursesForTab[activeTab] || [],
+        [coursesForTab, activeTab]);
 
     // Check if current tab is a status tab
     const isStatusTab = activeTab !== 'available' && activeTab !== 'completed';
 
-    // Process stats updates
-    const processStatsUpdate = useCallback(async (stats: PlayerStats) => {
-        // Update courses
-        const available = getAvailableCourses(stats);
+    // Update courses when playerStats changes
+    useEffect(() => {
+        if (!playerStats) return;
+
+        // Update available courses
+        const available = getAvailableCourses(playerStats);
         setAvailableCourses(available);
 
-        if (stats.completedCourses && stats.completedCourses.length > 0) {
-            const completed = getCompletedCoursesDetails(stats.completedCourses);
+        // Update completed courses
+        if (playerStats.completedCourses && playerStats.completedCourses.length > 0) {
+            const completed = getCompletedCoursesDetails(playerStats.completedCourses);
             setCompletedCourses(completed);
         }
 
-        // Check for course completion
+        // Check for course completion notification
         if (lastActiveCourseRef.current &&
-            (!stats.activeCourse || stats.activeCourse.status !== 'in_progress')) {
+            (!playerStats.activeCourse || playerStats.activeCourse.status !== 'in_progress')) {
 
             const completedCourse = getCourseById(lastActiveCourseRef.current);
             if (completedCourse &&
-                stats.completedCourses?.includes(lastActiveCourseRef.current) &&
+                playerStats.completedCourses?.includes(lastActiveCourseRef.current) &&
                 completionAlertShownRef.current !== lastActiveCourseRef.current) {
 
-                // Mark this alert as shown
+                // Show completion toast
+                showToast(`Kursus "${completedCourse.name}" on edukalt lõpetatud!`, 'success');
                 completionAlertShownRef.current = lastActiveCourseRef.current;
-
                 lastActiveCourseRef.current = null;
             }
         }
 
         // Update active course reference
-        if (stats.activeCourse?.status === 'in_progress') {
-            lastActiveCourseRef.current = stats.activeCourse.courseId;
+        if (playerStats.activeCourse?.status === 'in_progress') {
+            lastActiveCourseRef.current = playerStats.activeCourse.courseId;
         } else {
             lastActiveCourseRef.current = null;
         }
+    }, [playerStats, showToast]);
 
-    }, []);
-
-    // Set up real-time listener for player stats
+    // Optimized timer for active course
     useEffect(() => {
-        if (!currentUser) return;
-
-        const statsRef = doc(firestore, 'playerStats', currentUser.uid);
-
-        const unsubscribe = onSnapshot(statsRef, (doc) => {
-            if (doc.exists()) {
-                const stats = doc.data() as PlayerStats;
-                setPlayerStats(stats);
-                processStatsUpdate(stats);
-                setLoading(false);
-            }
-        }, (error) => {
-            console.error('Error listening to player stats:', error);
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, [currentUser, processStatsUpdate]);
-
-    // Timer for active course
-    useEffect(() => {
+        // Clear any existing interval
         if (intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
@@ -153,54 +128,68 @@ const CoursesPage: React.FC = () => {
                 const remaining = getRemainingTime(playerStats.activeCourse);
                 setRemainingTime(remaining);
 
-                if (remaining <= 0) {
-                    // Clear interval immediately
-                    if (intervalRef.current) {
-                        clearInterval(intervalRef.current);
-                        intervalRef.current = null;
-                    }
+                if (remaining <= 0 && intervalRef.current) {
+                    // Clear interval immediately to prevent multiple calls
+                    clearInterval(intervalRef.current);
+                    intervalRef.current = null;
 
-                    // Wait 1 second to ensure server time has passed
+                    // Check completion after a short delay
                     setTimeout(async () => {
-                        await checkCourseCompletion(currentUser!.uid);
+                        const completed = await checkCourseCompletion(currentUser!.uid);
+                        if (completed) {
+                            await refreshStats(); // Refresh from context
+                            showToast('Kursus lõpetatud!', 'success');
+                        }
                     }, 1100);
                 }
             };
 
-            // Check immediately
+            // Initial check
             checkAndUpdate();
 
-            // Then check every second
+            // Set up interval for updates
             intervalRef.current = setInterval(checkAndUpdate, 1000);
+        } else {
+            setRemainingTime(0);
         }
 
+        // Cleanup function
         return () => {
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
                 intervalRef.current = null;
             }
         };
-    }, [playerStats?.activeCourse, currentUser]);
+    }, [playerStats?.activeCourse, currentUser, refreshStats, showToast]);
 
-    const handleEnrollCourse = async (courseId: string) => {
+    // Better error handling for enrollment
+    const handleEnrollCourse = useCallback(async (courseId: string) => {
         if (!currentUser || enrolling) return;
 
         setEnrolling(true);
         try {
             await enrollInCourse(currentUser.uid, courseId);
+            showToast('Koolitusele registreeritud!', 'success');
+            await refreshStats(); // Ensure UI updates immediately
         } catch (error: any) {
-            alert(error.message || 'Koolitusele registreerimine ebaõnnestus');
+            showToast(error.message || 'Koolitusele registreerimine ebaõnnestus', 'error');
         } finally {
             setEnrolling(false);
         }
-    };
+    }, [currentUser, enrolling, showToast, refreshStats]);
+
+    // Better booster handling
+    const handleBoosterApplied = useCallback(async () => {
+        await refreshStats();
+        showToast('Kiirendaja rakendatud!', 'success');
+    }, [refreshStats, showToast]);
 
     if (loading) {
         return (
             <div className="page">
                 <AuthenticatedHeader />
                 <main className="page-content">
-                    <div className="loading">Laadin...</div>
+                    <div className="loading">Laadin koolitusi...</div>
                 </main>
             </div>
         );
@@ -245,10 +234,7 @@ const CoursesPage: React.FC = () => {
                                 ? playerStats.activeCourse.endsAt.toDate()
                                 : new Date(playerStats.activeCourse.endsAt)
                         }
-                        onBoosterApplied={() => {
-                            // Refresh player stats to show updated course time
-                            window.location.reload(); // Simple approach
-                        }}
+                        onBoosterApplied={handleBoosterApplied} // IMPROVED: Better callback
                     />
                 )}
 
