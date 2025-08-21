@@ -229,6 +229,17 @@ export const AuthenticatedHeader: React.FC = () => {
 
                                 <div className="menu-divider"></div>
 
+                                <button
+                                    onClick={() => {
+                                        navigate('/feedback');
+                                        setIsMenuOpen(false);
+                                    }}
+                                    className="menu-item"
+                                >
+                                    <span className="menu-icon">💬</span>
+                                    <span>Tagasiside & Kontakt</span>
+                                </button>
+
                                 <div className="menu-section">
                                     <button onClick={handleLogout} className="menu-item menu-item-danger">
                                         <span className="menu-icon">🚪</span>
