@@ -59,6 +59,67 @@ export const DebugMenu: React.FC = () => {
         }
     };
 
+    const migrateAllPlayersPolicePosition = async () => {
+
+        try {
+            console.log('Starting police position migration...');
+
+            const playersCollection = collection(firestore, 'playerStats');
+            const playersSnapshot = await getDocs(playersCollection);
+
+            let updatedCount = 0;
+            let skippedCount = 0;
+            const results: string[] = [];
+
+            for (const playerDoc of playersSnapshot.docs) {
+                const playerData = playerDoc.data() as PlayerStats;
+
+                // Skip if already has policePosition
+                if (playerData.policePosition) {
+                    skippedCount++;
+                    continue;
+                }
+
+                // Determine policePosition based on completed courses
+                let newPosition: string | null = null;
+                const completedCourses = playerData.completedCourses || [];
+
+                if (completedCourses.includes('lopueksam')) {
+                    newPosition = 'patrullpolitseinik';
+                } else if (completedCourses.includes('sisekaitseakadeemia_entrance') &&
+                    !completedCourses.includes('lopueksam')) {
+                    newPosition = 'kadett';
+                } else if (completedCourses.includes('basic_police_training_abipolitseinik')) {
+                    newPosition = 'abipolitseinik';
+                } else {
+                    newPosition = null; // No position yet
+                }
+
+                // Update player document
+                const playerRef = doc(firestore, 'playerStats', playerDoc.id);
+                await updateDoc(playerRef, {
+                    policePosition: newPosition
+                });
+
+                updatedCount++;
+                results.push(`${playerData.username}: ${newPosition || 'null'}`);
+
+                console.log(`Updated ${playerData.username} -> ${newPosition}`);
+            }
+
+            const resultMessage = `Migration completed!\n` +
+                `Updated: ${updatedCount} players\n` +
+                `Skipped: ${skippedCount} players\n\n` +
+                `Results:\n${results.join('\n')}`;
+
+            console.log(resultMessage);
+
+        } catch (error) {
+            console.error('Migration error:', error);
+
+        }
+    };
+
     // 1. Complete admin's currently active course
     const completeActiveCourse = async () => {
         if (!playerStats?.activeCourse || playerStats.activeCourse.status !== 'in_progress') {
@@ -294,6 +355,13 @@ export const DebugMenu: React.FC = () => {
                                 Lõpeta KÕIKIDE mängijate töö
                             </button>
                         </div>
+
+                        <button
+                            onClick={migrateAllPlayersPolicePosition}
+                            style={{ marginBottom: '1rem', padding: '0.5rem 1rem' }}
+                        >
+                            {'Migrating...'}
+                        </button>
 
                         {/* Shop Stock Section */}
                         <div className="debug-section">

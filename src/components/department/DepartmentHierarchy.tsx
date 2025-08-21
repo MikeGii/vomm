@@ -336,44 +336,48 @@ export const DepartmentHierarchy: React.FC<DepartmentHierarchyProps> = ({
                                         {getUnitById(selectedUnit)?.name} ({currentPlayers.length} politseiametnikku)
                                     </h3>
                                 </div>
-                                <div className="players-grid">
-                                    {currentPlayers.map((player) => (
-                                        <div key={player.uid} className="player-card">
-                                            <div className="player-avatar">
-                                                👮‍♂️
-                                            </div>
-                                            <div className="player-info">
-                                                <div className="player-name">
-                                                    {player.username}
-                                                </div>
-                                                <div className="player-rank-section">
-                                                    <span className="player-rank">
-                                                        {player.rank}
-                                                    </span>
-                                                    {getRankImagePath(player.rank) && (
-                                                        <div className="player-rank-image">
+                                <div className="players-table-container">
+                                    <table className="players-table">
+                                        <thead>
+                                        <tr>
+                                            <th>Nimi</th>
+                                            <th>Auaste</th>
+                                            <th>Märk</th>
+                                            <th>Ametitõend</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {currentPlayers.map((player) => (
+                                            <tr key={player.uid} className="player-row">
+                                                <td className="player-name-cell">
+                                                    <div className="player-name-content">
+                                                        <div className="player-avatar-small">👮‍♂️</div>
+                                                        <span className="player-name-text">{player.username}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="player-rank-cell">
+                                                    <span className="rank-badge">{player.rank}</span>
+                                                </td>
+                                                <td className="player-rank-image-cell">
+                                                    {getRankImagePath(player.rank) ? (
+                                                        <div className="rank-image-container">
                                                             <img
                                                                 src={getRankImagePath(player.rank)!}
                                                                 alt={`${player.rank} märk`}
-                                                                className="rank-image-small"
+                                                                className="rank-image-table"
                                                             />
                                                         </div>
+                                                    ) : (
+                                                        <span className="no-rank-image">—</span>
                                                     )}
-                                                </div>
-                                                <div className="player-details">
-                                                    <span className="player-level">
-                                                        Tase {player.level}
-                                                    </span>
-                                                    <span className="player-badge">
-                                                        #{player.badgeNumber}
-                                                    </span>
-                                                </div>
-                                                <div className="player-reputation">
-                                                    {player.reputation} reputatsiooni
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
+                                                </td>
+                                                <td className="player-badge-cell">
+                                                    <span className="badge-number">#{player.badgeNumber}</span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </>
                         )}

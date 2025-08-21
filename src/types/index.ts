@@ -82,6 +82,7 @@ export interface PlayerStats {
     departmentUnit: string | null;
     department: string | null;
     prefecture: string | null;
+    policePosition?: 'abipolitseinik' | 'kadett' | 'patrullpolitseinik' | 'grupijuht' | 'talituse_juht' | null;
     badgeNumber: string | null;
     isEmployed: boolean;
     abilities?: string[];
@@ -212,6 +213,7 @@ export interface LeaderboardEntry {
     money: number;
     rank: string | null;
     badgeNumber: string | null;
+    policePosition?: string | null;
     isEmployed: boolean;
     completedCourses?: string[];
     attributes?: PlayerAttributes;
@@ -237,6 +239,7 @@ export interface PlayerProfileModalData {
     reputation: number;
     money: number;
     badgeNumber: string | null;
+    policePosition?: string | null;
     attributes?: PlayerAttributes;
     createdAt?: Date | Timestamp | FirestoreTimestamp;
     completedCourses?: string[];

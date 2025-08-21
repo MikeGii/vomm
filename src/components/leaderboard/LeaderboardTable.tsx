@@ -1,7 +1,8 @@
 // src/components/leaderboard/LeaderboardTable.tsx
 import React from 'react';
-import { LeaderboardEntry, PlayerProfileModalData } from '../../types';
+import {LeaderboardEntry, PlayerProfileModalData, PlayerStats} from '../../types';
 import '../../styles/components/leaderboard/LeaderboardTable.css';
+import {getPlayerDisplayStatus} from "../../utils/playerStatus";
 
 interface LeaderboardTableProps {
     entries: LeaderboardEntry[];
@@ -17,23 +18,11 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                                                                       startingRank = 0
                                                                   }) => {
     const getStatusText = (entry: LeaderboardEntry): string => {
-        // Check if player has graduated from academy (is a Politseiametnik)
-        if (entry.completedCourses?.includes('lopueksam')) {
-            return 'Politseiametnik';
-        }
+        const playerStats = {
+            policePosition: entry.policePosition
+        } as PlayerStats;
 
-        // Check if player has entered academy but not graduated (is a Kadett)
-        if (entry.completedCourses?.includes('sisekaitseakadeemia_entrance') &&
-            !entry.completedCourses?.includes('lopueksam')) {
-            return 'Kadett';
-        }
-
-        // Check if player has completed basic training (is an Abipolitseinik)
-        if (entry.completedCourses?.includes('basic_police_training_abipolitseinik')) {
-            return 'Abipolitseinik';
-        }
-
-        return '—';
+        return getPlayerDisplayStatus(playerStats);
     };
 
     const getMedalStyle = (globalRank: number) => {
@@ -57,9 +46,10 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             reputation: entry.reputation,
             money: entry.money,
             badgeNumber: entry.badgeNumber,
+            policePosition: entry.policePosition,
             attributes: entry.attributes,
             createdAt: undefined,
-            completedCourses: entry.completedCourses // ADD THIS LINE
+            completedCourses: entry.completedCourses
         };
         onPlayerClick(playerData);
     };

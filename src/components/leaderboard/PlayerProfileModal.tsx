@@ -1,7 +1,8 @@
 // src/components/modals/PlayerProfileModal.tsx
 import React, { useEffect } from 'react';
 import { Timestamp } from 'firebase/firestore';
-import { PlayerProfileModalData, FirestoreTimestamp } from '../../types';
+import {PlayerProfileModalData, FirestoreTimestamp, PlayerStats} from '../../types';
+import { getPlayerDisplayStatus } from '../../utils/playerStatus';
 import '../../styles/components/leaderboard/PlayerProfileModal.css';
 
 interface PlayerProfileModalProps {
@@ -11,24 +12,14 @@ interface PlayerProfileModalProps {
     loading?: boolean;
 }
 
-const getPlayerStatus = (completedCourses: string[] = []): string => {
-    // If player has graduated from academy (completed lopueksam), show Politseiametnik
-    if (completedCourses.includes('lopueksam')) {
-        return 'Politseiametnik';
-    }
+const getPlayerStatus = (playerData: PlayerProfileModalData): string => {
+    // Create a minimal PlayerStats object for the utility function
+    const playerStats = {
+        policePosition: playerData.policePosition || null,
+        completedCourses: playerData.completedCourses || []
+    } as PlayerStats;
 
-    // If player has entered academy but not graduated, show Kadett
-    if (completedCourses.includes('sisekaitseakadeemia_entrance') &&
-        !completedCourses.includes('lopueksam')) {
-        return 'Kadett';
-    }
-
-    // If player has completed basic training, show Abipolitseinik
-    if (completedCourses.includes('basic_police_training_abipolitseinik')) {
-        return 'Abipolitseinik';
-    }
-
-    return '—';
+    return getPlayerDisplayStatus(playerStats);
 };
 
 export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
@@ -124,7 +115,7 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
                     <div className="profile-field">
                         <label>Staatus:</label>
                         <span className="status-badge">
-                                {getPlayerStatus(playerData.completedCourses)}
+                                {getPlayerStatus(playerData)}
                             </span>
                     </div>
 

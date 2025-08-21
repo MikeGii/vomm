@@ -47,6 +47,7 @@ export const getLeaderboard = async (
                 money: playerData.money || 0,
                 rank: playerData.rank || null,
                 badgeNumber: playerData.badgeNumber || null,
+                policePosition: playerData.policePosition,
                 isEmployed: playerData.isEmployed || false,
                 completedCourses: playerData.completedCourses || [],
                 attributes: playerData.attributes,
