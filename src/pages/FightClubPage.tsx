@@ -1,43 +1,75 @@
-// src/pages/FightClubPage.tsx
-import React, { useState, useEffect } from 'react';
+// src/pages/FightClubPage.tsx - Updated version
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { firestore } from '../config/firebase';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { useAuth } from '../contexts/AuthContext';
-import { PlayerStats } from '../types';
+import { usePlayerStats } from '../contexts/PlayerStatsContext';
+import { useToast } from '../contexts/ToastContext';
 import { checkFightClubRequirements, getEligiblePlayers, EligiblePlayer } from '../services/FightClubService';
 import { FightClubRequirements, FightClubOpponents, FightResultModal } from '../components/fightclub';
 import { FightResult } from '../services/FightService';
 import '../styles/pages/FightClub.css';
 
+const FIGHTS_PER_HOUR = 5;
+const FIGHT_RESET_INTERVAL = 60 * 60 * 1000;
+
 const FightClubPage: React.FC = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
-    const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
+    const { playerStats, loading, refreshStats } = usePlayerStats();
+    const { showToast } = useToast();
+
     const [eligiblePlayers, setEligiblePlayers] = useState<EligiblePlayer[]>([]);
-    const [loading, setLoading] = useState(true);
     const [loadingPlayers, setLoadingPlayers] = useState(false);
     const [fightResult, setFightResult] = useState<FightResult | null>(null);
     const [showFightModal, setShowFightModal] = useState(false);
+    const [timeUntilResetDisplay, setTimeUntilResetDisplay] = useState<string>('');
 
-    // Listen to player stats
+    // Calculate remaining fights
+    const fightsRemaining = useMemo(() => {
+        if (!playerStats?.fightClubData) {
+            return FIGHTS_PER_HOUR;
+        }
+
+        const now = Date.now();
+        const lastReset = playerStats.fightClubData.lastResetTime?.toMillis() || 0;
+
+        if (now - lastReset >= FIGHT_RESET_INTERVAL) {
+            return FIGHTS_PER_HOUR;
+        }
+
+        return playerStats.fightClubData.remainingFights ?? FIGHTS_PER_HOUR;
+    }, [playerStats]);
+
+    // Update timer display every second
     useEffect(() => {
-        if (!currentUser) return;
+        if (!playerStats?.fightClubData?.lastResetTime || fightsRemaining > 0) {
+            setTimeUntilResetDisplay('');
+            return;
+        }
 
-        const statsRef = doc(firestore, 'playerStats', currentUser.uid);
-        const unsubscribe = onSnapshot(statsRef, (doc) => {
-            if (doc.exists()) {
-                const stats = doc.data() as PlayerStats;
-                setPlayerStats(stats);
+        const updateTimer = () => {
+            const lastReset = playerStats.fightClubData!.lastResetTime!.toMillis();
+            const nextReset = lastReset + FIGHT_RESET_INTERVAL;
+            const now = Date.now();
+            const timeLeft = Math.max(0, nextReset - now);
+
+            if (timeLeft === 0) {
+                refreshStats();
+                return;
             }
-            setLoading(false);
-        });
 
-        return () => unsubscribe();
-    }, [currentUser]);
+            const minutes = Math.floor(timeLeft / 60000);
+            const seconds = Math.floor((timeLeft % 60000) / 1000);
+            setTimeUntilResetDisplay(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        };
 
-    // Load eligible players when player becomes eligible
+        updateTimer();
+        const interval = setInterval(updateTimer, 1000);
+        return () => clearInterval(interval);
+    }, [playerStats, fightsRemaining, refreshStats]);
+
+    // Load eligible players
     useEffect(() => {
         if (!playerStats || !currentUser) return;
 
@@ -50,17 +82,35 @@ const FightClubPage: React.FC = () => {
                 })
                 .catch(error => {
                     console.error('Error loading eligible players:', error);
+                    showToast('Viga vastaste laadimisel', 'error');
                 })
                 .finally(() => {
                     setLoadingPlayers(false);
                 });
         }
-    }, [playerStats, currentUser]);
+    }, [playerStats, currentUser, showToast]);
 
-    const handleFightComplete = (result: FightResult) => {
+    const handleFightComplete = async (result: FightResult) => {
         setFightResult(result);
         setShowFightModal(true);
+
+        await refreshStats();
+
+        if (currentUser) {
+            setLoadingPlayers(true);
+            try {
+                const players = await getEligiblePlayers(currentUser.uid);
+                setEligiblePlayers(players);
+            } catch (error) {
+                console.error('Error reloading players:', error);
+            } finally {
+                setLoadingPlayers(false);
+            }
+        }
     };
+
+    // Check if can fight
+    const canFight = fightsRemaining > 0;
 
     if (loading) {
         return (
@@ -68,7 +118,7 @@ const FightClubPage: React.FC = () => {
                 <AuthenticatedHeader />
                 <div className="page-content">
                     <div className="fight-club-container">
-                        <div className="loading">Laadin...</div>
+                        <div className="loading">Laadin võitlusklubi...</div>
                     </div>
                 </div>
             </div>
@@ -104,6 +154,42 @@ const FightClubPage: React.FC = () => {
 
                     <h1 className="fight-club-title">🥊 Võitlusklubi</h1>
 
+                    {/* Fight limit display - Better UI */}
+                    {requirements.eligible && (
+                        <div className="fight-limit-card">
+                            <div className="fight-limit-header">
+                                <h3>Võitluste limiit</h3>
+                            </div>
+                            <div className="fight-limit-content">
+                                <div className="fights-visual">
+                                    {[...Array(FIGHTS_PER_HOUR)].map((_, index) => (
+                                        <div
+                                            key={index}
+                                            className={`fight-slot ${index < fightsRemaining ? 'available' : 'used'}`}
+                                        >
+                                            {index < fightsRemaining ? '🥊' : '❌'}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="fights-text">
+                                    <span className="fights-count">
+                                        {fightsRemaining} / {FIGHTS_PER_HOUR} võitlust kasutada
+                                    </span>
+                                    {!canFight && timeUntilResetDisplay && (
+                                        <span className="reset-timer">
+                                            Taastub: {timeUntilResetDisplay}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            {!canFight && (
+                                <div className="fight-limit-warning">
+                                    ⏳ Oled kasutanud kõik võitlused selleks tunniks. Oota taastumist!
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {!requirements.eligible ? (
                         <FightClubRequirements
                             playerStats={playerStats}
@@ -115,13 +201,28 @@ const FightClubPage: React.FC = () => {
                             eligiblePlayers={eligiblePlayers}
                             loadingPlayers={loadingPlayers}
                             onFightComplete={handleFightComplete}
+                            // Removed fightsRemaining prop
                         />
+                    )}
+
+                    {/* Disable fight buttons if no fights remaining */}
+                    {requirements.eligible && !canFight && (
+                        <style>{`
+                            .fight-button {
+                                opacity: 0.5;
+                                cursor: not-allowed;
+                                pointer-events: none;
+                            }
+                        `}</style>
                     )}
 
                     <FightResultModal
                         isOpen={showFightModal}
                         fightResult={fightResult}
-                        onClose={() => setShowFightModal(false)}
+                        onClose={() => {
+                            setShowFightModal(false);
+                            setFightResult(null);
+                        }}
                     />
                 </div>
             </div>

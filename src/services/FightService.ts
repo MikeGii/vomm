@@ -1,4 +1,7 @@
 // src/services/FightService.ts
+import {doc, getDoc, Timestamp, updateDoc} from "firebase/firestore";
+import {firestore} from "../config/firebase";
+
 export interface FightRound {
     roundNumber: number;
     description: string[];
@@ -28,6 +31,18 @@ export interface FightParticipant {
         endurance: number;
         intelligence: number;
     };
+}
+
+export const executeFight = async (
+    attackerId: string,
+    attackerData: FightParticipant,
+    defenderData: FightParticipant
+): Promise<FightResult> => {
+    // Check and update fight limit FIRST
+    await checkAndUpdateFightLimit(attackerId);
+
+    // Then calculate the fight
+    return calculateFight(attackerData, defenderData);
 }
 
 // Calculate fight between two players
@@ -283,7 +298,7 @@ const calculateRoundScore = (player: FightParticipant, roundNumber: number) => {
     // Round-specific attribute importance
     if (roundNumber === 1) {
         // Early round - intelligence and dexterity more important
-        total += attrs.strength * 1.0;
+        total += attrs.strength;
         total += attrs.agility * 1.2;
         total += attrs.dexterity * 1.3;
         total += attrs.endurance * 0.8;
@@ -293,13 +308,13 @@ const calculateRoundScore = (player: FightParticipant, roundNumber: number) => {
         total += attrs.strength * 1.3;
         total += attrs.agility * 1.3;
         total += attrs.dexterity * 1.1;
-        total += attrs.endurance * 1.0;
-        total += attrs.intelligence * 1.0;
+        total += attrs.endurance;
+        total += attrs.intelligence;
     } else {
         // Late rounds - endurance becomes crucial
-        total += attrs.strength * 1.0;
+        total += attrs.strength;
         total += attrs.agility * 0.9;
-        total += attrs.dexterity * 1.0;
+        total += attrs.dexterity;
         total += attrs.endurance * 1.5;
         total += attrs.intelligence * 1.2;
     }
@@ -349,4 +364,48 @@ export const calculateWinProbability = (
     const player2WinChance = 100 - player1WinChance;
 
     return { player1WinChance, player2WinChance };
+};
+
+export const checkAndUpdateFightLimit = async (userId: string): Promise<boolean> => {
+    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsDoc = await getDoc(statsRef);
+
+    if (!statsDoc.exists()) return false;
+
+    const stats = statsDoc.data();
+    const now = Timestamp.now();
+    const oneHourAgo = now.toMillis() - (60 * 60 * 1000);
+
+    let fightData = stats.fightClubData || {
+        lastResetTime: now,
+        remainingFights: 5,
+        totalFights: 0
+    };
+
+    // Reset if hour has passed
+    const lastResetTime = fightData.lastResetTime?.toMillis() || 0;
+    if (lastResetTime < oneHourAgo) {
+        fightData = {
+            lastResetTime: now,
+            remainingFights: 5,
+            totalFights: fightData.totalFights || 0
+        };
+    }
+
+    // Check if player has fights remaining
+    if (fightData.remainingFights <= 0) {
+        throw new Error('Võitlused on selleks tunniks otsas!');
+    }
+
+    // Update fight count
+    await updateDoc(statsRef, {
+        fightClubData: {
+            ...fightData,
+            remainingFights: fightData.remainingFights - 1,
+            totalFights: (fightData.totalFights || 0) + 1,
+            lastFightTime: now
+        }
+    });
+
+    return true;
 };

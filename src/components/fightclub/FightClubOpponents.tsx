@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { PlayerStats } from '../../types';
 import { EligiblePlayer } from '../../services/FightClubService';
-import { FightResult, FightParticipant, calculateFight } from '../../services/FightService';
+import { FightResult, FightParticipant, executeFight } from '../../services/FightService';
 import { FightHistory } from './FightHistory';
 import { processFightResult } from '../../services/FightTransactionService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -82,7 +82,11 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
             };
 
             // Calculate the fight
-            const result = calculateFight(player1, player2);
+            const result = await executeFight(
+                currentUser.uid,
+                player1,
+                player2
+            );
 
             // Process the transaction (money, stats, history, AND health reduction)
             const transactionResult = await processFightResult(

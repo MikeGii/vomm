@@ -98,6 +98,7 @@ export interface PlayerStats {
     processedItems?: InventoryItem[];
     equipment?: CharacterEquipment;
     fightClubStats?: FightClubStats;
+    fightClubData?: FightClubData;
     casinoData?: {
         playsUsed: number;
         lastPlayTime: number;
@@ -248,6 +249,13 @@ export interface FightClubStats {
     losses: number;
     totalFights: number;
     totalMoneyWon: number;
+}
+
+export interface FightClubData {
+    lastResetTime: Timestamp;
+    remainingFights: number;
+    totalFights: number;
+    lastFightTime?: Timestamp;
 }
 
 export * from './events.types';

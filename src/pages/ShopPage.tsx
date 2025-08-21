@@ -1,16 +1,14 @@
-// src/pages/ShopPage.tsx - Updated with pagination
+// src/pages/ShopPage.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { firestore } from '../config/firebase';
+import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { ShopHeader } from '../components/shop/ShopHeader';
 import { ShopTable } from '../components/shop/ShopTable';
 import { ShopPurchaseModal } from '../components/shop/ShopPurchaseModal';
 import { ShopItem } from '../types/shop';
-import { PlayerStats } from '../types';
 import { purchaseItem } from '../services/ShopService';
 import { TabNavigation } from '../components/ui/TabNavigation';
 import { SHOP_CATEGORIES } from '../types/shop';
@@ -20,15 +18,15 @@ import {
 } from '../services/ShopStockService';
 import '../styles/pages/Shop.css';
 
-const ITEMS_PER_PAGE = 10; // Add pagination constant
+const ITEMS_PER_PAGE = 10;
 
 const ShopPage: React.FC = () => {
     const navigate = useNavigate();
-    const {currentUser} = useAuth();
-    const {showToast} = useToast();
+    const { currentUser } = useAuth();
+    const { showToast } = useToast();
+    const { playerStats, loading: statsLoading, refreshStats } = usePlayerStats();
 
-    const [playerMoney, setPlayerMoney] = useState(0);
-    const [playerPollid, setPlayerPollid] = useState(0);
+    // REMOVED: Individual state for playerMoney and playerPollid
     const [itemsWithStock, setItemsWithStock] = useState<Array<{
         item: any;
         currentStock: number;
@@ -41,7 +39,12 @@ const ShopPage: React.FC = () => {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState<string>('crafting');
     const [searchQuery, setSearchQuery] = useState<string>('');
-    const [currentPage, setCurrentPage] = useState(1); // Add pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [stockInitialized, setStockInitialized] = useState(false);
+
+    // Get money values from playerStats
+    const playerMoney = playerStats?.money || 0;
+    const playerPollid = playerStats?.pollid || 0;
 
     // Create tabs from SHOP_CATEGORIES
     const tabs = [
@@ -52,17 +55,12 @@ const ShopPage: React.FC = () => {
         { id: 'vip', label: SHOP_CATEGORIES.vip.name }
     ];
 
-    // Reset to page 1 when tab changes
+    // Reset to page 1 when tab or search changes
     useEffect(() => {
         setCurrentPage(1);
-    }, [activeTab]);
+    }, [activeTab, searchQuery]);
 
-    // Reset to page 1 when search changes
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchQuery]);
-
-    // Update filteredItems to use pagination
+    // Optimized filtering with memoization
     const getFilteredItems = useCallback(() => {
         let filtered = itemsWithStock
             .filter(({ item }) => item.category === activeTab)
@@ -70,16 +68,14 @@ const ShopPage: React.FC = () => {
                 searchQuery === '' ||
                 item.name.toLowerCase().includes(searchQuery.toLowerCase())
             )
-            .sort(({ item: a, currentStock: stockA }, { item: b, currentStock: stockB }) => {
+            .sort((a, b) => {
                 // Out of stock items go to bottom
-                if (stockA === 0 && stockB > 0) return 1;
-                if (stockB === 0 && stockA > 0) return -1;
-
+                if (a.currentStock === 0 && b.currentStock > 0) return 1;
+                if (b.currentStock === 0 && a.currentStock > 0) return -1;
                 // Alphabetical sorting for items with same stock status
-                return a.name.localeCompare(b.name, 'et');
+                return a.item.name.localeCompare(b.item.name, 'et');
             });
 
-        // Calculate pagination
         const totalItems = filtered.length;
         const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -95,49 +91,28 @@ const ShopPage: React.FC = () => {
 
     const { items: filteredItems, totalPages } = getFilteredItems();
 
-    // Add page change handler
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
 
-    // Initialize shop stock on first load
+    // Initialize shop stock once on first load
     useEffect(() => {
+        if (stockInitialized) return;
+
         const initStock = async () => {
             try {
                 await initializeShopStock();
+                setStockInitialized(true);
             } catch (error) {
                 console.error('Error initializing shop stock:', error);
             }
         };
         initStock();
-    }, []);
+    }, [stockInitialized]);
 
-    // Listen to player stats for money updates
-    useEffect(() => {
-        if (!currentUser) {
-            navigate('/login');
-            return;
-        }
+    // REMOVED: onSnapshot listener for playerStats (now using context)
 
-        const unsubscribe = onSnapshot(
-            doc(firestore, 'playerStats', currentUser.uid),
-            (doc) => {
-                if (doc.exists()) {
-                    const stats = doc.data() as PlayerStats;
-                    setPlayerMoney(stats.money || 0);
-                    setPlayerPollid(stats.pollid || 0);
-                }
-            },
-            (error) => {
-                console.error('Error fetching player stats:', error);
-                showToast('Viga andmete laadimisel', 'error');
-            }
-        );
-
-        return () => unsubscribe();
-    }, [currentUser, navigate, showToast]);
-
-    // Load items with stock - wrapped in useCallback
+    // Load items with stock
     const loadItemsWithStock = useCallback(async () => {
         setIsRefreshing(true);
         try {
@@ -156,7 +131,7 @@ const ShopPage: React.FC = () => {
     useEffect(() => {
         loadItemsWithStock();
 
-        // Refresh stock every 30 seconds
+        // Refresh stock every 30 seconds for real-time stock updates
         const interval = setInterval(loadItemsWithStock, 30000);
         return () => clearInterval(interval);
     }, [loadItemsWithStock]);
@@ -165,8 +140,7 @@ const ShopPage: React.FC = () => {
         const itemData = itemsWithStock.find(i => i.item.id === itemId);
         if (!itemData) return;
 
-        const {item, currentStock} = itemData;
-
+        const { item, currentStock } = itemData;
         setSelectedItem(item);
         setSelectedItemStock(currentStock);
         setIsPurchaseModalOpen(true);
@@ -175,7 +149,6 @@ const ShopPage: React.FC = () => {
     const confirmPurchase = async (quantity: number) => {
         if (!selectedItem || !currentUser) return;
 
-        // Update the purchaseItem call to include quantity
         const result = await purchaseItem(currentUser.uid, selectedItem.id, quantity);
 
         if (result.success) {
@@ -184,8 +157,11 @@ const ShopPage: React.FC = () => {
             setSelectedItem(null);
             setSelectedItemStock(0);
 
-            // Reload items to update stock
-            loadItemsWithStock();
+            // Reload items to update stock and refresh player stats
+            await Promise.all([
+                loadItemsWithStock(),
+                refreshStats() // Update player money through context
+            ]);
         } else {
             showToast(result.message, 'error');
         }
@@ -197,10 +173,11 @@ const ShopPage: React.FC = () => {
         setSelectedItemStock(0);
     };
 
-    if (isLoading) {
+    // Combined loading state
+    if (isLoading || statsLoading) {
         return (
             <div className="shop-page">
-                <AuthenticatedHeader/>
+                <AuthenticatedHeader />
                 <div className="shop-container">
                     <div className="loading">Laadin poodi...</div>
                 </div>
@@ -208,9 +185,15 @@ const ShopPage: React.FC = () => {
         );
     }
 
+    // Redirect if not logged in
+    if (!currentUser) {
+        navigate('/login');
+        return null;
+    }
+
     return (
         <div className="shop-page">
-            <AuthenticatedHeader/>
+            <AuthenticatedHeader />
             <div className="shop-container">
                 <button
                     className="back-to-dashboard"
@@ -273,6 +256,6 @@ const ShopPage: React.FC = () => {
             </div>
         </div>
     );
-}
+};
 
 export default ShopPage;
