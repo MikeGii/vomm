@@ -1,5 +1,5 @@
 // src/pages/TrainingPage.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { updateDoc, doc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
@@ -45,6 +45,7 @@ const TrainingPage: React.FC = () => {
     const [selectedKitchenLabActivity, setSelectedKitchenLabActivity] = useState<string>('');
     const [isKitchenLabTraining, setIsKitchenLabTraining] = useState(false);
     const [initializationDone, setInitializationDone] = useState(false);
+    const clicksCheckedRef = useRef(false);
 
     const tabs = [
         { id: 'sports', label: 'Sporditreening' },
@@ -117,31 +118,41 @@ const TrainingPage: React.FC = () => {
     useEffect(() => {
         if (!playerStats || !currentUser) return;
 
-        // Check and reset training clicks
-        const updateClicksIfNeeded = async () => {
-            const updatedTraining = await checkAndResetTrainingClicks(currentUser.uid);
-            const updatedKitchenLab = await checkAndResetKitchenLabTrainingClicks(currentUser.uid);
+        const abortController = new AbortController();
 
-            // Only refresh if clicks were reset
-            if (updatedTraining || updatedKitchenLab) {
-                await refreshStats();
+        const updateClicksIfNeeded = async () => {
+            if (abortController.signal.aborted || clicksCheckedRef.current) return;
+
+            try {
+                clicksCheckedRef.current = true;
+
+                await checkAndResetTrainingClicks(currentUser.uid);
+                await checkAndResetKitchenLabTrainingClicks(currentUser.uid);
+
+            } catch (error) {
+                if (!abortController.signal.aborted) {
+                    console.error('Error checking clicks:', error);
+                    clicksCheckedRef.current = false;
+                }
             }
         };
 
         updateClicksIfNeeded();
 
-        // Update training boosters
-        const boosters = getTrainingBoosters(playerStats.inventory || []);
-        setTrainingBoosters(boosters);
+        // Update UI elements based on playerStats
+        setTrainingBoosters(getTrainingBoosters(playerStats.inventory || []));
+        setAvailableActivities(getAvailableActivities(playerStats.level));
+        setKitchenLabActivities(getAvailableKitchenLabActivities(playerStats.level));
 
-        // Update available activities
-        const activities = getAvailableActivities(playerStats.level);
-        setAvailableActivities(activities);
+        return () => {
+            abortController.abort();
+        };
+    }, [playerStats, currentUser]);
 
-        const kitchenActivities = getAvailableKitchenLabActivities(playerStats.level);
-        setKitchenLabActivities(kitchenActivities);
-
-    }, [playerStats, currentUser, refreshStats]);
+// Reset flag when user changes
+    useEffect(() => {
+        clicksCheckedRef.current = false;
+    }, [currentUser]);
 
     // Handle training action
     const handleTrain = useCallback(async () => {

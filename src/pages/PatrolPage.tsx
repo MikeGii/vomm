@@ -32,9 +32,11 @@ const PatrolPage: React.FC = () => {
     const { showToast } = useToast();
     const { playerStats, loading, refreshStats } = usePlayerStats();
 
-    // Refs for interval management
+    // Refs for interval and event management
     const workCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const lastWorkCheckRef = useRef<number>(0);
+    const isCheckingEventRef = useRef(false);
+    const isProcessingWorkEndRef = useRef(false);
 
     // State
     const [availableActivities, setAvailableActivities] = useState<WorkActivity[]>([]);
@@ -75,12 +77,14 @@ const PatrolPage: React.FC = () => {
         }
     }, [currentUser]);
 
-    // Check for active events
+    // Check for active events - with protection against multiple calls
     const checkForEvents = useCallback(async () => {
-        if (!currentUser) return;
+        if (!currentUser || isCheckingEventRef.current) return;
 
         try {
+            isCheckingEventRef.current = true;
             const eventData = await getActiveEvent(currentUser.uid);
+
             if (eventData) {
                 setPendingEvent(eventData.event);
                 setEventDocumentId(eventData.documentId);
@@ -90,6 +94,11 @@ const PatrolPage: React.FC = () => {
             }
         } catch (error) {
             console.error('Error checking for events:', error);
+        } finally {
+            // Add a small delay before allowing next check
+            setTimeout(() => {
+                isCheckingEventRef.current = false;
+            }, 1000);
         }
     }, [currentUser]);
 
@@ -147,10 +156,11 @@ const PatrolPage: React.FC = () => {
             showToast('Viga sündmuse töötlemisel!', 'error');
         } finally {
             setIsProcessingEvent(false);
+            isProcessingWorkEndRef.current = false;
         }
     }, [currentUser, eventDocumentId, isProcessingEvent, showToast, refreshStats, loadWorkHistory]);
 
-    // Handle start work - Optimized
+    // Handle start work
     const handleStartWork = useCallback(async () => {
         if (!currentUser || !playerStats || isStartingWork) return;
 
@@ -201,13 +211,14 @@ const PatrolPage: React.FC = () => {
     }, [currentUser, playerStats, isStartingWork, selectedDepartment, selectedActivity,
         selectedHours, showToast, refreshStats, playerStatus.isPolitseiametnik]);
 
-    // Optimized work completion checking
+    // Optimized work completion checking with better event handling
     useEffect(() => {
         if (!currentUser || !playerStats?.activeWork) {
             if (workCheckIntervalRef.current) {
                 clearInterval(workCheckIntervalRef.current);
                 workCheckIntervalRef.current = null;
             }
+            isProcessingWorkEndRef.current = false;
             return;
         }
 
@@ -215,31 +226,42 @@ const PatrolPage: React.FC = () => {
             // Prevent duplicate checks
             const now = Date.now();
             if (now - lastWorkCheckRef.current < 500) return;
+            if (isProcessingWorkEndRef.current) return;
+
             lastWorkCheckRef.current = now;
 
             const result = await checkAndCompleteWork(currentUser.uid);
 
-            if (result.hasEvent) {
-                await checkForEvents();
-            } else if (result.completed) {
-                const exp = playerStats.activeWork?.expectedExp || 0;
-                showToast(`Töö on edukalt lõpetatud! Teenitud kogemus: +${exp} XP`, 'success', 4000);
-                await Promise.all([refreshStats(), loadWorkHistory()]);
+            if (result.hasEvent || result.completed) {
+                // Mark as processing to prevent multiple checks
+                isProcessingWorkEndRef.current = true;
+
+                if (result.hasEvent) {
+                    // Wait a bit for the event to be properly saved
+                    setTimeout(() => {
+                        checkForEvents();
+                    }, 500);
+                } else if (result.completed) {
+                    const exp = playerStats.activeWork?.expectedExp || 0;
+                    showToast(`Töö on edukalt lõpetatud! Teenitud kogemus: +${exp} XP`, 'success', 4000);
+                    await Promise.all([refreshStats(), loadWorkHistory()]);
+                    isProcessingWorkEndRef.current = false;
+                }
             }
         };
 
         // Initial check if time is up
-        if (remainingTime <= 0) {
+        if (remainingTime <= 0 && !isProcessingWorkEndRef.current) {
             checkWork();
         }
 
-        // Set up optimized interval
+        // Set up interval
         workCheckIntervalRef.current = setInterval(() => {
             if (playerStats.activeWork) {
                 const remaining = getRemainingWorkTime(playerStats.activeWork);
                 setRemainingTime(remaining);
 
-                if (remaining <= 0) {
+                if (remaining <= 0 && !isProcessingWorkEndRef.current) {
                     checkWork();
                 }
             }
@@ -254,12 +276,13 @@ const PatrolPage: React.FC = () => {
     }, [currentUser, playerStats?.activeWork, remainingTime, checkForEvents,
         showToast, refreshStats, loadWorkHistory]);
 
-    // Check for pending events
+    // Check for pending events only once on mount
     useEffect(() => {
-        if (currentUser && !loading) {
+        if (currentUser && !loading && !pendingEvent) {
             checkForEvents();
         }
-    }, [currentUser, loading, checkForEvents]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentUser, loading]); // Intentionally omitting checkForEvents and pendingEvent
 
     // Load work history on mount
     useEffect(() => {
@@ -276,16 +299,23 @@ const PatrolPage: React.FC = () => {
             const remaining = getRemainingWorkTime(playerStats.activeWork);
             setRemainingTime(remaining);
 
-            if (remaining <= 0) {
+            if (remaining <= 0 && !isProcessingWorkEndRef.current) {
+                isProcessingWorkEndRef.current = true;
                 const result = await checkAndCompleteWork(currentUser!.uid);
-                if (result.completed) {
+
+                if (result.hasEvent) {
+                    setTimeout(() => {
+                        checkForEvents();
+                    }, 500);
+                } else if (result.completed) {
                     const exp = playerStats.activeWork?.expectedExp || 0;
                     showToast(`Töö on edukalt lõpetatud! Teenitud kogemus: +${exp} XP`, 'success', 4000);
                     await Promise.all([refreshStats(), loadWorkHistory()]);
+                    isProcessingWorkEndRef.current = false;
                 }
             }
         }
-    }, [currentUser, playerStats, showToast, refreshStats, loadWorkHistory]);
+    }, [currentUser, playerStats, showToast, refreshStats, loadWorkHistory, checkForEvents]);
 
     // Get page title
     const getPageTitle = (): string => {
@@ -321,7 +351,6 @@ const PatrolPage: React.FC = () => {
     const notInCourse = !playerStats.activeCourse || playerStats.activeCourse.status !== 'in_progress';
     const canWork = hasBasicTraining && healthOk && notInCourse;
 
-    // Rest of JSX remains exactly the same...
     return (
         <div className="page">
             <AuthenticatedHeader />
