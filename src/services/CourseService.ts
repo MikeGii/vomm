@@ -118,6 +118,15 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
         const course = getCourseById(playerStats.activeCourse.courseId);
         if (!course) return false;
 
+        // Check if course has a completion question
+        if (course.completionQuestion && !playerStats.activeCourse.questionAnswered) {
+            // Set status to pending_question instead of completing
+            await updateDoc(playerStatsRef, {
+                'activeCourse.status': 'pending_question'
+            });
+            return false; // Course is not yet completed
+        }
+
         // Calculate new level
         const newExperience = playerStats.experience + course.rewards.experience;
         const newLevel = calculateLevelFromExp(newExperience);
@@ -315,6 +324,93 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
     }
 
     return false;
+};
+
+export const answerCourseQuestion = async (
+    userId: string,
+    courseId: string,
+    answerIndex: number
+): Promise<{
+    success: boolean;
+    isCorrect: boolean;
+    message: string;
+    bonusExp?: number;
+    bonusMoney?: number;
+    bonusReputation?: number;
+}> => {
+    const playerStatsRef = doc(firestore, 'playerStats', userId);
+    const playerStatsDoc = await getDoc(playerStatsRef);
+    const playerStats = playerStatsDoc.data() as PlayerStats;
+
+    // Verify the course is in pending_question status
+    if (!playerStats.activeCourse ||
+        playerStats.activeCourse.status !== 'pending_question' ||
+        playerStats.activeCourse.courseId !== courseId) {
+        return {
+            success: false,
+            isCorrect: false,
+            message: 'Kursus ei oota vastust'
+        };
+    }
+
+    const course = getCourseById(courseId);
+    if (!course || !course.completionQuestion) {
+        return {
+            success: false,
+            isCorrect: false,
+            message: 'Kursusel pole küsimust'
+        };
+    }
+
+    const isCorrect = answerIndex === course.completionQuestion.correctAnswerIndex;
+
+    if (isCorrect) {
+        // Get question rewards from course data
+        const questionRewards = course.completionQuestion.rewards;
+        const bonusExp = questionRewards.experience;
+        const bonusMoney = questionRewards.money || 0;
+        const bonusReputation = questionRewards.reputation || 0;
+
+        // Give question rewards immediately
+        const newExperience = playerStats.experience + bonusExp;
+        const newLevel = calculateLevelFromExp(newExperience);
+
+        await updateDoc(playerStatsRef, {
+            'activeCourse.questionAnswered': true,
+            'activeCourse.status': 'in_progress',
+            experience: newExperience,
+            level: newLevel,
+            money: (playerStats.money || 0) + bonusMoney,
+            reputation: playerStats.reputation + bonusReputation
+        });
+
+        // Now complete the course normally (will give course rewards)
+        await checkCourseCompletion(userId);
+
+        return {
+            success: true,
+            isCorrect: true,
+            message: `Õige vastus! Boonusena said ${bonusExp} XP${bonusMoney > 0 ? `, ${bonusMoney}€` : ''}${bonusReputation > 0 ? ` ja ${bonusReputation} mainet` : ''}!`,
+            bonusExp,
+            bonusMoney,
+            bonusReputation
+        };
+    } else {
+        // Wrong answer - mark as answered and complete course without bonus
+        await updateDoc(playerStatsRef, {
+            'activeCourse.questionAnswered': true,
+            'activeCourse.status': 'in_progress'
+        });
+
+        // Complete the course normally (only course rewards, no question rewards)
+        await checkCourseCompletion(userId);
+
+        return {
+            success: true,
+            isCorrect: false,
+            message: 'Vale vastus! Kursus lõpetatud tavatasuga.'
+        };
+    }
 };
 
 // Get remaining time for active course (handle Firestore timestamps)

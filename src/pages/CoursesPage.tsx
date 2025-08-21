@@ -6,6 +6,7 @@ import { ActiveCourseProgress } from '../components/courses/ActiveCourseProgress
 import { CourseTabs } from '../components/courses/CourseTabs';
 import { CoursesList } from '../components/courses/CoursesList';
 import { CourseBoosterPanel } from '../components/courses/CourseBoosterPanel';
+import { CourseQuestionModal } from '../components/courses/CourseQuestionModal';
 import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
@@ -31,6 +32,11 @@ const CoursesPage: React.FC = () => {
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const lastActiveCourseRef = useRef<string | null>(null);
     const completionAlertShownRef = useRef<string | null>(null);
+
+    // Question modal state
+    const [showQuestionModal, setShowQuestionModal] = useState(false);
+    const [questionCourse, setQuestionCourse] = useState<Course | null>(null);
+    const questionCheckRef = useRef<boolean>(false);
 
     const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
     const [completedCourses, setCompletedCourses] = useState<Course[]>([]);
@@ -77,6 +83,21 @@ const CoursesPage: React.FC = () => {
     // Check if current tab is a status tab
     const isStatusTab = activeTab !== 'available' && activeTab !== 'completed';
 
+    // Check for pending question status
+    useEffect(() => {
+        if (!playerStats?.activeCourse || questionCheckRef.current) return;
+
+        // Check if course is pending question
+        if (playerStats.activeCourse.status === 'pending_question' && !showQuestionModal) {
+            const course = getCourseById(playerStats.activeCourse.courseId);
+            if (course && course.completionQuestion) {
+                questionCheckRef.current = true;
+                setQuestionCourse(course);
+                setShowQuestionModal(true);
+            }
+        }
+    }, [playerStats?.activeCourse, showQuestionModal]);
+
     // Update courses when playerStats changes
     useEffect(() => {
         if (!playerStats) return;
@@ -100,8 +121,10 @@ const CoursesPage: React.FC = () => {
                 playerStats.completedCourses?.includes(lastActiveCourseRef.current) &&
                 completionAlertShownRef.current !== lastActiveCourseRef.current) {
 
-                // Show completion toast
-                showToast(`Kursus "${completedCourse.name}" on edukalt lõpetatud!`, 'success');
+                // Don't show toast if question modal is showing
+                if (!showQuestionModal) {
+                    showToast(`Kursus "${completedCourse.name}" on edukalt lõpetatud!`, 'success');
+                }
                 completionAlertShownRef.current = lastActiveCourseRef.current;
                 lastActiveCourseRef.current = null;
             }
@@ -110,10 +133,10 @@ const CoursesPage: React.FC = () => {
         // Update active course reference
         if (playerStats.activeCourse?.status === 'in_progress') {
             lastActiveCourseRef.current = playerStats.activeCourse.courseId;
-        } else {
+        } else if (playerStats.activeCourse?.status !== 'pending_question') {
             lastActiveCourseRef.current = null;
         }
-    }, [playerStats, showToast]);
+    }, [playerStats, showToast, showQuestionModal]);
 
     // Optimized timer for active course
     useEffect(() => {
@@ -121,6 +144,11 @@ const CoursesPage: React.FC = () => {
         if (intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
+        }
+
+        // Skip if question modal is showing
+        if (showQuestionModal) {
+            return;
         }
 
         if (playerStats?.activeCourse?.status === 'in_progress') {
@@ -136,8 +164,11 @@ const CoursesPage: React.FC = () => {
                     // Check completion after a short delay
                     setTimeout(async () => {
                         const completed = await checkCourseCompletion(currentUser!.uid);
-                        if (completed) {
-                            await refreshStats(); // Refresh from context
+                        if (!completed) {
+                            // Course might be pending question, refresh stats to get updated status
+                            await refreshStats();
+                        } else {
+                            await refreshStats();
                             showToast('Kursus lõpetatud!', 'success');
                         }
                     }, 1100);
@@ -160,7 +191,24 @@ const CoursesPage: React.FC = () => {
                 intervalRef.current = null;
             }
         };
-    }, [playerStats?.activeCourse, currentUser, refreshStats, showToast]);
+    }, [playerStats?.activeCourse, currentUser, refreshStats, showToast, showQuestionModal]);
+
+    // Handle question answered correctly
+    const handleQuestionAnswered = async () => {
+        questionCheckRef.current = false;
+        setShowQuestionModal(false);
+        setQuestionCourse(null);
+        await refreshStats();
+        // Toast is shown by the modal itself
+    };
+
+    // Handle modal close (for wrong answers)
+    const handleQuestionModalClose = () => {
+        questionCheckRef.current = false;
+        setShowQuestionModal(false);
+        setQuestionCourse(null);
+        refreshStats(); // Refresh to show course as completed
+    };
 
     // Better error handling for enrollment
     const handleEnrollCourse = useCallback(async (courseId: string) => {
@@ -234,7 +282,7 @@ const CoursesPage: React.FC = () => {
                                 ? playerStats.activeCourse.endsAt.toDate()
                                 : new Date(playerStats.activeCourse.endsAt)
                         }
-                        onBoosterApplied={handleBoosterApplied} // IMPROVED: Better callback
+                        onBoosterApplied={handleBoosterApplied}
                     />
                 )}
 
@@ -258,6 +306,16 @@ const CoursesPage: React.FC = () => {
                     playerStats={playerStats || undefined}
                 />
             </main>
+
+            {/* Question Modal */}
+            {questionCourse && (
+                <CourseQuestionModal
+                    course={questionCourse}
+                    isOpen={showQuestionModal}
+                    onClose={handleQuestionModalClose}
+                    onAnswerCorrect={handleQuestionAnswered}
+                />
+            )}
         </div>
     );
 };
