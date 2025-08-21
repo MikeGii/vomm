@@ -15,7 +15,21 @@ export const ABIPOLITSEINIK_COURSES: Course[] = [
             experience: 50,
             reputation: 10,
         },
-        category: 'abipolitseinik'
+        category: 'abipolitseinik',
+        completionQuestion: {
+            question: 'Millisest seadusest tulenevalt tekivad õigused ja kohustused abipolitseinikul teenistuses tegutsemiseks?',
+            answers: [
+                'Abipolitseiniku seadus',
+                'Politsei ja piirivalve seadus',
+                'Korrakaitseseadus'
+            ],
+            correctAnswerIndex: 0,
+            rewards: {
+                experience: 100,
+                money: 150,
+                reputation: 15
+            }
+        }
     },
     {
         id: 'firearm_training_abipolitseinik',
@@ -31,7 +45,21 @@ export const ABIPOLITSEINIK_COURSES: Course[] = [
             experience: 50,
             reputation: 20
         },
-        category: 'abipolitseinik'
+        category: 'abipolitseinik',
+        completionQuestion: {
+            question: 'Oled teenistuses äreval väljakutsel. Järsku haarab agressiivne isik taskust noa. ' +
+                'Haarasid kohe tulirelva kuigi kõrval seisnud politseiametnik võttis gaasi. Kas tegid abipolitseinikuna õigesti?',
+            answers: [
+                'Ei',
+                'Jah'
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 50,
+                money: 50,
+                reputation: 10
+            }
+        }
     },
     {
         id: 'electrical_shock_weapon_abipolitseinik',
@@ -47,7 +75,21 @@ export const ABIPOLITSEINIK_COURSES: Course[] = [
             experience: 75,
             reputation: 30,
         },
-        category: 'abipolitseinik'
+        category: 'abipolitseinik',
+        completionQuestion: {
+            question: 'Millal võib abipolitseinik elektrišokirelva kasutada?',
+            answers: [
+                'Üksnes hädakaitses, seejuures hädakaitse piire ületamata',
+                'Tõkestada vahetult eelseisva või juba asetleidva esimese astme kuriteo toimepanemist',
+                'Pidada kinni isik või takistada tema põgenemist'
+            ],
+            correctAnswerIndex: 0,
+            rewards: {
+                experience: 50,
+                money: 100,
+                reputation: 10
+            }
+        }
     },
     {
         id: 'police_apollo_usage_abipolitseinik',
@@ -63,7 +105,20 @@ export const ABIPOLITSEINIK_COURSES: Course[] = [
             experience: 100,
             reputation: 50,
         },
-        category: 'abipolitseinik'
+        category: 'abipolitseinik',
+        completionQuestion: {
+            question: 'Patrullpaariline lahkub autost, et kontrollida peatatud sõidukijuhi alkoholijoovet. Sina oled autos olles abipolitseinik ning läbi paarilise konto teostad kiirpäringu peatatud sõiduki kohta. Kas tegevus oli õiguspärane?',
+            answers: [
+                'Ei',
+                'Jah'
+            ],
+            correctAnswerIndex: 0,
+            rewards: {
+                experience: 50,
+                money: 100,
+                reputation: 25
+            }
+        }
     },
     {
         id: 'police_car_training_abipolitseinik',
@@ -79,7 +134,22 @@ export const ABIPOLITSEINIK_COURSES: Course[] = [
             experience: 150,
             reputation: 50,
         },
-        category: "abipolitseinik"
+        category: "abipolitseinik",
+        completionQuestion: {
+            question: 'Teostasid alarmsõitu ja sõitsid kiiruskaamerasse. Alarmsõidukil põlesid sinised märgutuled/vilkurid. ' +
+                'Hiljem vahetu juht nõuab kiiruskaameratrahvi tasumist, sest alarmsõit polnud tema hinnangul õiguspärane. ' +
+                'Kas vahetu juhi nõudmine on õiguspärane?',
+            answers: [
+                'Jah',
+                'Ei'
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 50,
+                money: 50,
+                reputation: 25
+            }
+        }
     },
     {
         id: 'speed_measurement_abipolitseinik',
@@ -95,7 +165,22 @@ export const ABIPOLITSEINIK_COURSES: Course[] = [
             experience: 150,
             reputation: 50,
         },
-        category: 'abipolitseinik'
+        category: 'abipolitseinik',
+        completionQuestion: {
+            question: 'Teenistuses olles abipolitseinikuna kasutasid kiirusmõõturit ja mõõtsid sõidukite ' +
+                'liikumiskiirust. Patrullpaariline hiljem palub sul teha kiirusmõõturikasutamise protokolli. Kas saad olla protokollija ' +
+                'kui ise mõõtsid eelnevalt kiiruse?',
+            answers: [
+                'Jah',
+                'Ei'
+            ],
+            correctAnswerIndex: 0,
+            rewards: {
+                experience: 50,
+                money: 50,
+                reputation: 25
+            }
+        }
     },
     {
         id: 'independent_competence_abipolitseinik',
@@ -116,6 +201,20 @@ export const ABIPOLITSEINIK_COURSES: Course[] = [
             experience: 300,
             reputation: 100,
         },
-        category: 'abipolitseinik'
+        category: 'abipolitseinik',
+        completionQuestion: {
+            question: 'Kas iseseisva pädevusega abipolitseinikul on rohkem õiguseid vahetu sunni rakendamisel ' +
+                'võrreldes tavalise abipolitseinikuga?',
+            answers: [
+                'Ei',
+                'Jah'
+            ],
+            correctAnswerIndex: 0,
+            rewards: {
+                experience: 150,
+                money: 100,
+                reputation: 50
+            }
+        }
     }
 ];

@@ -143,7 +143,19 @@ export interface Course {
             quantity: number;
         }>;
     };
-    category: 'abipolitseinik' | 'sisekaitseakadeemia' | 'politsei' ;
+    category: 'abipolitseinik' | 'sisekaitseakadeemia' | 'politsei';
+    completionQuestion?: CourseQuestion;
+}
+
+export interface CourseQuestion {
+    question: string;
+    answers: string[];
+    correctAnswerIndex: number;
+    rewards: {
+        experience: number;
+        money?: number;
+        reputation?: number;
+    };
 }
 
 // Active course enrollment
@@ -152,7 +164,8 @@ export interface ActiveCourse {
     userId: string;
     startedAt: Date | any;
     endsAt: Date | any;
-    status: 'in_progress' | 'completed' | 'cancelled';
+    status: 'in_progress' | 'completed' | 'cancelled' | 'pending_question';
+    questionAnswered?: boolean;
 }
 
 export interface WorkActivity {

@@ -8,7 +8,7 @@ import { PlayerStatsCard } from '../components/dashboard/PlayerStatsCard';
 import { QuickActions } from '../components/dashboard/QuickActions';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { usePlayerStats } from '../contexts/PlayerStatsContext'; // NEW IMPORT
+import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { ActiveCourse } from '../types';
 import { getPlayerStats } from '../services/PlayerService';
 import { PrefectureSelectionModal } from '../components/dashboard/PrefectureSelectionModal';
@@ -21,6 +21,7 @@ import { InstructionsModal } from '../components/dashboard/InstructionsModal';
 import { getActiveEvent } from "../services/EventService";
 
 import '../styles/pages/Dashboard.css';
+import {getCourseById} from "../data/courses";
 
 function DashboardPage() {
     const { currentUser, userData } = useAuth();
@@ -68,18 +69,28 @@ function DashboardPage() {
 
                 // Check for timer-based course completion
                 if (playerStats?.activeCourse) {
-                    const timerBasedCompletion = await checkCourseCompletion(currentUser.uid);
-                    if (timerBasedCompletion) {
-                        const tempStats = await getPlayerStats(currentUser.uid);
-                        if (tempStats?.completedCourses) {
-                            const lastCompletedCourse = tempStats.completedCourses[tempStats.completedCourses.length - 1];
-                            if (lastCompletedCourse === 'lopueksam') {
-                                showToast('Õnnitleme! Oled lõpetanud Sisekaitseakadeemia!', 'success');
-                            } else {
-                                showToast('Kursus lõpetatud!', 'success');
-                            }
+                    // Check if course has a pending question
+                    if (playerStats.activeCourse.status === 'pending_question') {
+                        const course = getCourseById(playerStats.activeCourse.courseId);
+                        if (course && course.completionQuestion) {
+                            // Just show a notification to go to courses page
+                            showToast('Kursusel on lõpuküsimus! Mine koolituste lehele vastama.', 'info');
                         }
-                        await refreshStats(); // Refresh stats after completion
+                    } else if (playerStats.activeCourse.status === 'in_progress') {
+                        // Original timer-based completion check
+                        const timerBasedCompletion = await checkCourseCompletion(currentUser.uid);
+                        if (timerBasedCompletion) {
+                            const tempStats = await getPlayerStats(currentUser.uid);
+                            if (tempStats?.completedCourses) {
+                                const lastCompletedCourse = tempStats.completedCourses[tempStats.completedCourses.length - 1];
+                                if (lastCompletedCourse === 'lopueksam') {
+                                    showToast('Õnnitleme! Oled lõpetanud Sisekaitseakadeemia!', 'success');
+                                } else {
+                                    showToast('Kursus lõpetatud!', 'success');
+                                }
+                            }
+                            await refreshStats();
+                        }
                     }
                 }
 
