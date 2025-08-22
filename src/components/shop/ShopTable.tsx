@@ -60,11 +60,14 @@ export const ShopTable: React.FC<ShopTableProps> = ({
         const consumable = effect.consumableEffect;
         switch (consumable.type) {
             case 'trainingClicks':
-                return <span className="effect-text">+{consumable.value} klõpsu</span>;
+                return <span className="vip-effect">+{consumable.value} spordiklõpsu</span>;
             case 'kitchenClicks':
-                return <span className="effect-text">+{consumable.value} köök/labor klõpsu</span>;
+                return <span className="vip-effect">+{consumable.value} köök/labor klõpsu</span>;
             case 'heal':
-                return <span className="effect-text">+{consumable.value === 9999 ? 'Täielik' : consumable.value} HP</span>;
+                if (consumable.value === 100) {
+                    return <span className="vip-effect">+100 HP</span>;
+                }
+                return <span className="effect-text">+{consumable.value === 100 ? 'Täielik' : consumable.value} HP</span>;
             case 'workTimeReduction':
                 return <span className="vip-effect">-{consumable.value}% tööaeg</span>;
             case 'courseTimeReduction':
