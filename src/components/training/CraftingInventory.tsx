@@ -62,15 +62,15 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
 
         if (quantity > maxQuantity || quantity < 1) return;
 
-        setSellLoading(prev => ({ ...prev, [item.id]: true }));
+        setSellLoading(prev => ({...prev, [item.id]: true}));
 
         try {
             await onSellItem(item.id, quantity);
-            setSellQuantities(prev => ({ ...prev, [item.id]: 1 }));
+            setSellQuantities(prev => ({...prev, [item.id]: 1}));
         } catch (error) {
             console.error('Müük ebaõnnestus:', error);
         } finally {
-            setSellLoading(prev => ({ ...prev, [item.id]: false }));
+            setSellLoading(prev => ({...prev, [item.id]: false}));
         }
     };
 
@@ -103,15 +103,12 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
                         <tr key={item.id}>
                             <td className="item-name">
                                 {item.displayName}
-                                {canSellItem(item) && (
-                                    <span className="sellable-badge">Müüdav</span>
-                                )}
                             </td>
                             <td className="item-quantity">
-                                {item.quantity}
+                                <span className="quantity-value">{item.quantity || 'X'}</span>  {/* Show X if no quantity */}
                             </td>
                             <td className="item-price">
-                                €{item.details?.basePrice || 0}
+                                {canSellItem(item) ? `€${item.details?.basePrice || 0}` : '-'}
                             </td>
                             <td className="item-actions">
                                 {canSellItem(item) ? (
@@ -124,13 +121,14 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
                                             onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 1)}
                                             className="quantity-input"
                                             disabled={sellLoading[item.id]}
+                                            aria-label="Kogus"
                                         />
                                         <button
                                             onClick={() => handleSellItem(item)}
                                             disabled={sellLoading[item.id] || !onSellItem}
                                             className="sell-button"
                                         >
-                                            {sellLoading[item.id] ? 'Müün...' : 'Müü'}
+                                            {sellLoading[item.id] ? '...' : 'Müü'}
                                         </button>
                                     </div>
                                 ) : (
@@ -144,4 +142,4 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
             </div>
         </div>
     );
-};
+}
