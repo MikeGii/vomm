@@ -16,7 +16,6 @@ export interface UseMedicalResult {
  */
 export const getMedicalItems = (inventory: InventoryItem[]): InventoryItem[] => {
     return inventory.filter(item =>
-        item.category === 'consumable' &&
         item.consumableEffect?.type === 'heal'
     );
 };
