@@ -6,7 +6,7 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
         id: 'sisekaitseakadeemia_entrance',
         name: 'Sisekaitseakadeemia sisseastumine',
         description: 'Ettevalmistuskursus Sisekaitseakadeemiasse astumiseks. Tutvud Sisekaitseakadeemiaga avatud uste päeval ja uurid võimalusi Politseikolledži kohta.',
-        duration: 14400, // 4 hours in seconds
+        duration: 14400,
         requirements: {
             level: 20,
             completedCourses: ['independent_competence_abipolitseinik'],
@@ -18,13 +18,27 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
             unlocksRank: 'Nooreminspektor',
             unlocksStatus: 'Kadett'
         },
-        category: 'sisekaitseakadeemia'
+        category: 'sisekaitseakadeemia',
+        completionQuestion: {
+            question: 'Mis aastal asutati Politseikool Paikusel?',
+            answers: [
+                '2004',
+                '1990',
+                '2010',
+                        ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 250,
+                money: 100,
+                reputation: 50,
+            }
+        }
     },
     {
         id: 'law_studies_curriculum',
         name: 'Õigusteaduste õppekava',
         description: 'Põhjalik õigusteaduse kursus, mis hõlmab kriminaalõigust, karistusseadustikku ja menetlusõigust.',
-        duration: 7200, // 2 hours
+        duration: 7200,
         requirements: {
             completedCourses: ['sisekaitseakadeemia_entrance'],
             totalWorkedHours: 20,
@@ -37,13 +51,27 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
             reputation: 50,
             money: 250
         },
-        category: 'sisekaitseakadeemia'
+        category: 'sisekaitseakadeemia',
+        completionQuestion: {
+            question: 'Mis annab pädevuse politseiametnikul olla menetleja?',
+            answers: [
+                'Menetluspraktika sooritamine Sisekaitseakadeemias',
+                'Sisekaitseakadeemia lõpetamine',
+                'Politseiametniku ametitõend',
+            ],
+            correctAnswerIndex: 2,
+            rewards: {
+                experience: 100,
+                money: 100,
+                reputation: 25,
+            }
+        }
     },
     {
         id: 'physical_preparation',
         name: 'Füüsilised ettevalmistused',
         description: 'Intensiivne füüsilise ettevalmistuse programm, mis arendab jõudu, vastupidavust ja taktilist valmisolekut.',
-        duration: 7200, // 2 hours
+        duration: 7200,
         requirements: {
             completedCourses: ['sisekaitseakadeemia_entrance'],
             totalWorkedHours: 20,
@@ -57,13 +85,27 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
             reputation: 50,
             money: 250
         },
-        category: 'sisekaitseakadeemia'
+        category: 'sisekaitseakadeemia',
+        completionQuestion: {
+            question: 'Milline nendest spordialadest ei kuulu politseiametniku kehalise ettevalmistuse nõuete hindamisele?',
+            answers: [
+                'Toenglamangus kätekõverdamine',
+                'Ujumine',
+                'Jalgrattaga sõitmine',
+            ],
+            correctAnswerIndex: 2,
+            rewards: {
+                experience: 200,
+                money: 100,
+                reputation: 25,
+            }
+        }
     },
     {
         id: 'firearm_handling_glock',
         name: 'Tulirelva käsitsemine - Glock',
         description: 'Spetsialiseeritud koolitus Glock teenistusrelva käsitsemiseks. Täiustab lasketehnikat ja taktilist relvakasutust.',
-        duration: 7200, // 2 hours
+        duration: 7200,
         requirements: {
             completedCourses: ['sisekaitseakadeemia_entrance'],
             totalWorkedHours: 20,
@@ -79,13 +121,27 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
             grantsAbility: 'firearm_carry_enhanced',
             replacesAbility: 'firearm_carry_abipolitseinik'
         },
-        category: 'sisekaitseakadeemia'
+        category: 'sisekaitseakadeemia',
+        completionQuestion: {
+            question: 'Milline seadus reguleerib politseiametniku tulirelva kasutamise aluseid?',
+            answers: [
+                'Korrakaitseseadus',
+                'Tulirelvaseadus',
+                'Karistusseadustik',
+            ],
+            correctAnswerIndex: 0,
+            rewards: {
+                experience: 150,
+                money: 100,
+                reputation: 25,
+            }
+        }
     },
     {
         id: 'firearm_handling_r20',
         name: 'Tugirelva käsitsemine - R20',
         description: 'Spetsialiseeritud koolitus tugirelva LMT R-20 teenistusrelva käsitsemiseks. Täiustab lasketehnikat ja taktilist relvakasutust.',
-        duration: 10800, // 3 hours
+        duration: 10800,
         requirements: {
             completedCourses: ['sisekaitseakadeemia_entrance'],
             totalWorkedHours: 25,
@@ -100,7 +156,21 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
             money: 450,
             grantsAbility: 'firearm_carry_r20_automatic',
         },
-        category: 'sisekaitseakadeemia'
+        category: 'sisekaitseakadeemia',
+        completionQuestion: {
+            question: 'Politseis kasutatakse tugirelva nimega "Rahe", kes on selle relva tootja?',
+            answers: [
+                'Glock GmbH',
+                'Lewis Machine & Tool Company',
+                'Heckler & Koch',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 200,
+                money: 150,
+                reputation: 25,
+            }
+        }
     },
     {
         id: 'self-defence_training',
@@ -120,7 +190,21 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
             reputation: 50,
             money: 300
         },
-        category: 'sisekaitseakadeemia'
+        category: 'sisekaitseakadeemia',
+        completionQuestion: {
+            question: 'Mis ei ole korrakaitseseaduse mõistes erivahend?',
+            answers: [
+                'Pipragaas',
+                'Teenistusloom',
+                'Veekahur',
+            ],
+            correctAnswerIndex: 0,
+            rewards: {
+                experience: 150,
+                money: 100,
+                reputation: 25,
+            }
+        }
     },
     {
         id: 'document_inspection_course',
@@ -139,7 +223,21 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
             reputation: 50,
             money: 400
         },
-        category: 'sisekaitseakadeemia'
+        category: 'sisekaitseakadeemia',
+        completionQuestion: {
+            question: 'Kuidas nimetatakse elementi dokumendil, millel erineva vaatenurga all värvid vahelduvad?',
+            answers: [
+                'IPI',
+                'OVD',
+                'OFV',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 150,
+                money: 150,
+                reputation: 25,
+            }
+        }
     },
     {
         id: 'response_training',
