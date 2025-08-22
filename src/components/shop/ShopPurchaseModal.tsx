@@ -93,6 +93,9 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
                                 {item.consumableEffect.type === 'trainingClicks' && (
                                     <span className="effect">+{item.consumableEffect.value} klõpsu</span>
                                 )}
+                                {item.consumableEffect.type === 'kitchenClicks' && (
+                                    <span className="effect">+{item.consumableEffect.value} köök/labor klõpsu</span>
+                                )}
                                 {item.consumableEffect.type === 'heal' && (
                                     <span className="effect">
                                         +{item.consumableEffect.value === 9999 ? 'Täielik' : item.consumableEffect.value} HP

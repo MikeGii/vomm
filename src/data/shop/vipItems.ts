@@ -33,5 +33,37 @@ export const VIP_ITEMS: ShopItem[] = [
             type: 'courseTimeReduction',
             value: 95
         }
+    },
+    {
+        id: 'vip_sport_clicks_restore',
+        name: 'Sport 50',
+        description: 'Taastab kõik klikid sporditegevustel',
+        category: 'vip',
+        price: 0,
+        pollidPrice: 10,
+        currency: 'pollid',
+        basePrice: 0,
+        basePollidPrice: 10,
+        maxStock: 100,
+        consumableEffect: {
+            type: 'trainingClicks',
+            value: 50
+        }
+    },
+    {
+        id: 'vip_kitchen_lab_clicks_restore',
+        name: 'Köök 50',
+        description: 'Taastab kõik klõpsud köögis ja laboris',
+        category: 'vip',
+        price: 0,
+        pollidPrice: 10,
+        currency: 'pollid',
+        basePrice: 0,
+        basePollidPrice: 10,
+        maxStock: 50,
+        consumableEffect: {
+            type: 'kitchenClicks',
+            value: 50
+        }
     }
 ];

@@ -61,6 +61,8 @@ export const ShopTable: React.FC<ShopTableProps> = ({
         switch (consumable.type) {
             case 'trainingClicks':
                 return <span className="effect-text">+{consumable.value} klõpsu</span>;
+            case 'kitchenClicks':
+                return <span className="effect-text">+{consumable.value} köök/labor klõpsu</span>;
             case 'heal':
                 return <span className="effect-text">+{consumable.value === 9999 ? 'Täielik' : consumable.value} HP</span>;
             case 'workTimeReduction':
