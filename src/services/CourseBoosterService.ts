@@ -37,6 +37,14 @@ export const applyCourseTimeBooster = async (
             };
         }
 
+        // ADD THIS CHECK - Check if booster already used for this course
+        if (stats.activeCourse.boosterUsed) {
+            return {
+                success: false,
+                message: 'Sa oled juba kasutanud kiirendajat selle kursuse jaoks!'
+            };
+        }
+
         // Find the booster item in inventory
         const inventory = stats.inventory || [];
         const boosterIndex = inventory.findIndex(item =>
@@ -83,7 +91,8 @@ export const applyCourseTimeBooster = async (
         // Update active course end time
         const updatedActiveCourse = {
             ...stats.activeCourse,
-            endsAt: Timestamp.fromDate(finalEndTime)
+            endsAt: Timestamp.fromDate(finalEndTime),
+            boosterUsed: true
         };
 
         // Update inventory - handle quantity properly

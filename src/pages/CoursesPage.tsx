@@ -283,6 +283,7 @@ const CoursesPage: React.FC = () => {
                                 : new Date(playerStats.activeCourse.endsAt)
                         }
                         onBoosterApplied={handleBoosterApplied}
+                        boosterAlreadyUsed={playerStats.activeCourse?.boosterUsed}
                     />
                 )}
 

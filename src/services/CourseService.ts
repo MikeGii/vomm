@@ -64,7 +64,8 @@ export const enrollInCourse = async (userId: string, courseId: string): Promise<
         userId: userId,
         startedAt: now.toDate(),  // Convert to Date for local storage
         endsAt: Timestamp.fromMillis(endsAtMillis).toDate(),  // Convert to Date for local storage
-        status: 'in_progress'
+        status: 'in_progress',
+        boosterUsed: false
     };
 
     // Update player stats with active course

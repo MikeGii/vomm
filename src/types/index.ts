@@ -166,6 +166,7 @@ export interface ActiveCourse {
     endsAt: Date | any;
     status: 'in_progress' | 'completed' | 'cancelled' | 'pending_question';
     questionAnswered?: boolean;
+    boosterUsed?: boolean;
 }
 
 export interface WorkActivity {

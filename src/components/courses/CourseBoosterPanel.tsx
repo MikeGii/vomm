@@ -10,13 +10,15 @@ interface CourseBoosterPanelProps {
     currentUserId: string;
     activeCourseEndTime: Date;
     onBoosterApplied: () => void;
+    boosterAlreadyUsed?: boolean;
 }
 
 export const CourseBoosterPanel: React.FC<CourseBoosterPanelProps> = ({
                                                                           inventory,
                                                                           currentUserId,
                                                                           activeCourseEndTime,
-                                                                          onBoosterApplied
+                                                                          onBoosterApplied,
+                                                                          boosterAlreadyUsed
                                                                       }) => {
     const [isApplying, setIsApplying] = useState(false);
     const { showToast } = useToast();
@@ -59,18 +61,38 @@ export const CourseBoosterPanel: React.FC<CourseBoosterPanelProps> = ({
         }
     };
 
+    // Check if booster was already used for this course
+    if (boosterAlreadyUsed) {
+        return (
+            <div className="course-booster-panel">
+                <h3 className="booster-title">🚀 Kursuse Kiirendajad</h3>
+                <div className="course-status">
+                    <p className="time-remaining">
+                        Aega jäänud: <span className="time-value">{formatTimeRemaining(activeCourseEndTime)}</span>
+                    </p>
+                </div>
+                <div className="no-boosters">
+                    <p style={{ color: '#9c27b0' }}>✅ Kiirendaja juba kasutatud sellel kursusel!</p>
+                    <p className="booster-hint">Iga kursuse kohta saab kasutada ainult ühe kiirendaja.</p>
+                </div>
+            </div>
+        );
+    }
+
+    // If no boosters in inventory
     if (courseBoosters.length === 0) {
         return (
             <div className="course-booster-panel">
                 <h3 className="booster-title">🚀 Kursuse Kiirendajad</h3>
                 <div className="no-boosters">
                     <p>Sul pole kursuse kiirendajaid.</p>
-                    <p className="booster-hint">Osta VIP pooest Pollidega!</p>
+                    <p className="booster-hint">Osta VIP pooest Pollidega või valmista Köök/Labor ruumis!</p>
                 </div>
             </div>
         );
     }
 
+    // Show available boosters
     return (
         <div className="course-booster-panel">
             <h3 className="booster-title">🚀 Kursuse Kiirendajad</h3>
@@ -84,7 +106,7 @@ export const CourseBoosterPanel: React.FC<CourseBoosterPanelProps> = ({
                 {courseBoosters.map((booster) => (
                     <div key={booster.id} className="booster-item">
                         <div className="booster-info">
-                            <h4 className="booster-name">{booster.name}</h4>
+                            <h4 className="booster-name">{booster.name} ({booster.quantity}x)</h4>
                             <p className="booster-description">{booster.description}</p>
                             <div className="booster-effect">
                                 -{booster.consumableEffect?.value}% kursuse aeg
