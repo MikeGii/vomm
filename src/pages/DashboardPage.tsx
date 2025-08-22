@@ -19,6 +19,8 @@ import { checkCourseCompletion } from '../services/CourseService';
 import { PlayerAbilities } from "../components/dashboard/PlayerAbilities";
 import { InstructionsModal } from '../components/dashboard/InstructionsModal';
 import { getActiveEvent } from "../services/EventService";
+import Footer from "../components/layout/footer";
+
 
 import '../styles/pages/Dashboard.css';
 import {getCourseById} from "../data/courses";
@@ -233,7 +235,7 @@ function DashboardPage() {
                 )}
 
             </main>
-
+            <Footer />
         </div>
     );
 }
