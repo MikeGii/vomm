@@ -243,7 +243,7 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
         id: 'response_training',
         name: 'Avaliku korra praktika',
         description: 'Kursuse läbides oskad reageerida ja lahendada lihtsamaid väljakutseid ning koostada vajalikke protokolle',
-        duration: 10800, // 3 hours
+        duration: 10800,
         requirements: {
             completedCourses: ['sisekaitseakadeemia_entrance', 'self-defence_training', 'law_studies_curriculum', 'firearm_handling_glock'],
             totalWorkedHours: 20,
@@ -258,7 +258,21 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
             reputation: 75,
             money: 600
         },
-        category: 'sisekaitseakadeemia'
+        category: 'sisekaitseakadeemia',
+        completionQuestion: {
+            question: 'Kes on avaliku korra eest vastutav isik?',
+            answers: [
+                'Politseiametnik',
+                'Isik, kelle valduses avaliku korda rikutakse',
+                'Isik, kes on rikkunud avaliku korda',
+            ],
+            correctAnswerIndex: 2,
+            rewards: {
+                experience: 200,
+                money: 250,
+                reputation: 50,
+            }
+        }
     },
     {
         id: 'medical_training',
@@ -277,7 +291,21 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
             reputation: 50,
             money: 300
         },
-        category: 'sisekaitseakadeemia'
+        category: 'sisekaitseakadeemia',
+        completionQuestion: {
+            question: 'Sündmusel kasutasid vahetut sundi isiku suhtes. Millal pead talle esmaabi andma?',
+            answers: [
+                'Kohe peale sunni kasutamist',
+                'Esimesel võimalusel',
+                'Ei pea esmaabi osutama ja kutsud kiirabi, kes osutab esmaabi',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 150,
+                money: 100,
+                reputation: 25,
+            }
+        }
     },
     {
         id: 'procedural_practice',
@@ -300,13 +328,27 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
             reputation: 100,
             money: 1000
         },
-        category: 'sisekaitseakadeemia'
+        category: 'sisekaitseakadeemia',
+        completionQuestion: {
+            question: 'Mis järgnevatest toimingutest ei ole süüteomenetluse alustamise toiming?',
+            answers: [
+                'Indikaatorvahendi kasutamise protokoll',
+                'Tunnistaja ülekuulamise protokoll',
+                'Sündmuskoha vaatlusprotokoll',
+            ],
+            correctAnswerIndex: 0,
+            rewards: {
+                experience: 500,
+                money: 400,
+                reputation: 75,
+            }
+        }
     },
     {
         id: 'lopueksam',
         name: 'Lõpueksam',
         description: 'Sisekaitseakadeemia lõpueksam. Pead demonstreerima kõiki omandatud oskusi ja teadmisi. Läbimine annab sulle politseiametniku staatuse ja inspektori auastme.',
-        duration: 7200, // 2 hours
+        duration: 7200,
         requirements: {
             level: 30,
             completedCourses: ['procedural_practice'],
