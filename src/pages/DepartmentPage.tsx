@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { DepartmentHierarchy } from '../components/department/DepartmentHierarchy';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
+import { DepartmentLeaderboard } from '../components/department/DepartmentLeaderboard';
 import '../styles/pages/Department.css';
 
 const DepartmentPage: React.FC = () => {
@@ -79,6 +80,8 @@ const DepartmentPage: React.FC = () => {
 
                 {/* Department Hierarchy */}
                 <DepartmentHierarchy currentPlayerStats={playerStats} />
+
+                <DepartmentLeaderboard />
             </main>
         </div>
     );

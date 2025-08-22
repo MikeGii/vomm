@@ -227,6 +227,9 @@ export interface LeaderboardEntry {
     rank: string | null;
     badgeNumber: string | null;
     policePosition?: string | null;
+    departmentUnit?: string | null;
+    department?: string | null;
+    prefecture?: string | null;
     isEmployed: boolean;
     completedCourses?: string[];
     attributes?: PlayerAttributes;
@@ -234,8 +237,6 @@ export interface LeaderboardEntry {
     criminalsArrested: number;
     totalWorkedHours: number;
 }
-
-export type LeaderboardSortBy = 'level';
 
 export interface GameUpdate {
     id: string;
