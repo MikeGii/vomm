@@ -11,7 +11,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 3,
         currency: 'money',
         basePrice: 3,
-        maxStock: 2000
+        maxStock: 5000
     },
     {
         id: 'porrige',
@@ -31,7 +31,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 2,
         currency: 'money',
         basePrice: 2,
-        maxStock: 5000
+        maxStock: 10000
     },
     {
         id: 'syrup',
@@ -41,7 +41,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 3,
         currency: 'money',
         basePrice: 3,
-        maxStock: 1200
+        maxStock: 2500
     },
     {
         id: 'juice',
@@ -61,7 +61,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 5,
         currency: 'money',
         basePrice: 5,
-        maxStock: 5000
+        maxStock: 10000
     },
     {
         id: 'bread',
@@ -117,7 +117,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 8,
         currency: 'money',
         basePrice: 8,
-        maxStock: 1200
+        maxStock: 2500
     },
     {
         id: 'salt',
@@ -127,7 +127,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 5,
         currency: 'money',
         basePrice: 5,
-        maxStock: 1200
+        maxStock: 2500
     },
     {
         id: 'vinegar',
@@ -137,7 +137,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 6,
         currency: 'money',
         basePrice: 6,
-        maxStock: 1200
+        maxStock: 2500
     },
     {
         id: 'disinfectant',

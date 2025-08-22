@@ -4,13 +4,22 @@ import { GameUpdate } from '../types';
 export const gameUpdates: GameUpdate[] = [
 
     {
+        id: '7',
+        title: 'Uuenduste süsteem',
+        description: 'Koolituste lõppemisel on nüüd kontrollküsimus boonuste saamiseks. Osakonna lehel loodud struktuuri vaade.' +
+            ' Parandatud event süsteem - ei tohiks enam mitut eventi korraga aktiveerida töö lõppemisel. Staatuse asemel on nüüd' +
+            ' ametikoht, mitte politseiamentik. Loodud tagasiside ja kontaktvorm - lisatud viide menüüsse. Patrullpolitseinikul on' +
+            ' nüüd võimalik saada kuni vanemkomissari auaste ja ülendamine toimub järgnevalt: level 20 -> 40 -> 60 -> 80 -> 100.',
+        date: '2025-08-21',
+        isNew: true
+    },
+    {
         id: '6',
         title: 'Uuenduste süsteem',
         description: 'Lisatud uued oskused ja tegevused Köögi & Labori osas treeningu lehe all. Nüüd mängijatel võimalus ' +
             'ise toota uusi asju. Loodud dünaamilne poe süsteem, kus mängijad peavad ise tekitama turgu läbi enda tehtud toodete.' +
             ' Level 40 sporditegevused lisaks. Loodud mängule kiirjuhend töölauale.',
         date: '2025-08-20',
-        isNew: true
     },
     {
         id: '5',
@@ -18,7 +27,6 @@ export const gameUpdates: GameUpdate[] = [
         description: 'Uus funktsioon - Võitlusklubi. Mängijatel on võimalik end proovile panna võitlusringis valides vastaseks' +
             ' teisi mängijaid. Lisatud koolitusi juurde politseiametniku staatuses mängijatele.',
         date: '2025-08-19',
-
     },
     {
         id: '4',
@@ -27,7 +35,6 @@ export const gameUpdates: GameUpdate[] = [
             'nagu: KASIINO ja PANK. Mängijad saavad nüüd proovida õnne kasiinos ja saata üksteisele raha läbi panga. Lisatud juurde' +
             'auastmetele paguni pilt. Sisekaitseakadeemia koolitused nüüd täisutavad abipolitseiniku kursustelt saadud oskuseid.',
         date: '2025-08-19',
-
     },
     {
         id: '3',
