@@ -83,6 +83,36 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         basePrice: 28,
         maxStock: 0
     },
+    {
+        id: 'herbs',
+        name: 'Ravimtaimed',
+        description: 'Looduslikud ravimtaimed tervendavate omadusega',
+        category: 'crafting',
+        price: 15,
+        currency: 'money',
+        basePrice: 15,
+        maxStock: 1500
+    },
+    {
+        id: 'caffeine',
+        name: 'Kofeiin',
+        description: 'Puhas kofeiin energiajookide valmistamiseks',
+        category: 'crafting',
+        price: 24,
+        currency: 'money',
+        basePrice: 24,
+        maxStock: 1500
+    },
+    {
+        id: 'nootropics',
+        name: 'Nootropikumid',
+        description: 'Aju võimekust tõstvad ained',
+        category: 'crafting',
+        price: 320,
+        currency: 'money',
+        basePrice: 320,
+        maxStock: 500
+    },
     // Drinks
     {
         id: 'energy_drink',
@@ -168,5 +198,47 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         currency: 'money',
         basePrice: 36,
         maxStock: 0
+    },
+    {
+        id: 'rescuer_meal',
+        name: 'Päästja eine',
+        description: 'Toitev ja taastav eine välitöödel',
+        category: 'crafting',
+        price: 165,
+        currency: 'money',
+        basePrice: 165,
+        maxStock: 0,
+        consumableEffect: {
+            type: 'heal',
+            value: 50
+        }
+    },
+    {
+        id: 'super_booster',
+        name: 'Supervõimendaja',
+        description: 'Ülim energiajook treeninguteks',
+        category: 'crafting',
+        price: 181,
+        currency: 'money',
+        basePrice: 181,
+        maxStock: 0,
+        consumableEffect: {
+            type: 'trainingClicks',
+            value: 5
+        }
+    },
+    {
+        id: 'brain_accelerator',
+        name: 'Ajukiirendaja',
+        description: 'Kiirendab õppimist ja kursuste läbimist 10% võrra',
+        category: 'crafting',
+        price: 1450,
+        currency: 'money',
+        basePrice: 1450,
+        maxStock: 0,
+        consumableEffect: {
+            type: 'courseTimeReduction',
+            value: 10
+        }
     }
 ];

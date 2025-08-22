@@ -54,6 +54,24 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
             { id: 'sandwich', quantity: 1 }
         ]
     },
+    {
+        id: 'master_cooking_01',
+        name: 'Valmista päästja eine',
+        description: 'Valmistad toitva ja taastava eine, mis taastab tervist välitöödel',
+        requiredLevel: 30,
+        rewards: {
+            cooking: 100,
+            playerExp: 20
+        },
+        requiredItems: [
+            { id: 'sandwich', quantity: 2 },
+            { id: 'antiseptic_solution', quantity: 1 },
+            { id: 'herbs', quantity: 2 }
+        ],
+        producedItems: [
+            { id: 'rescuer_meal', quantity: 1 }
+        ]
+    },
 
     // BREWING ACTIVITIES
     {
@@ -105,6 +123,24 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
         ],
         producedItems: [
             { id: 'power_smoothie', quantity: 1 }
+        ]
+    },
+    {
+        id: 'master_brewing_01',
+        name: 'Valmista supervõimendaja',
+        description: 'Valmistad ülima energiajoogi, mis annab lisajõudu treeninguteks',
+        requiredLevel: 30,
+        rewards: {
+            brewing: 100,
+            playerExp: 20
+        },
+        requiredItems: [
+            { id: 'power_smoothie', quantity: 2 },
+            { id: 'cleaning_solution', quantity: 1 },
+            { id: 'caffeine', quantity: 3 }
+        ],
+        producedItems: [
+            { id: 'super_booster', quantity: 1 }
         ]
     },
 
@@ -160,6 +196,24 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
         ],
         producedItems: [
             { id: 'antiseptic_solution', quantity: 1 }
+        ]
+    },
+    {
+        id: 'master_chemistry_01',
+        name: 'Valmista ajukiirendaja',
+        description: 'Valmistad keemilise segu, mis kiirendab õppimist ja mõtlemist',
+        requiredLevel: 30,
+        rewards: {
+            chemistry: 100,
+            playerExp: 20
+        },
+        requiredItems: [
+            { id: 'antiseptic_solution', quantity: 1 },
+            { id: 'energy_drink', quantity: 2 },
+            { id: 'nootropics', quantity: 2 }
+        ],
+        producedItems: [
+            { id: 'brain_accelerator', quantity: 1 }
         ]
     }
 ];
