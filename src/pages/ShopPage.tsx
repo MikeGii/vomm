@@ -19,7 +19,7 @@ import {
 } from '../services/ShopStockService';
 import '../styles/pages/Shop.css';
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 20;
 const REFRESH_INTERVAL = 120000; // CHANGED: From 30 seconds to 120 seconds (2 minutes)
 
 const ShopPage: React.FC = () => {
