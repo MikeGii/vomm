@@ -14,6 +14,7 @@ import { CraftingInventory } from "../components/training/CraftingInventory";
 import { TabNavigation } from '../components/ui/TabNavigation';
 import { getTrainingBoosters } from '../services/TrainingBoosterService';
 import { getAvailableKitchenLabActivities, getKitchenLabActivityById } from '../data/kitchenLabActivities';
+import { getAvailableHandicraftActivities, getHandicraftActivityById } from '../data/handicraftActivities';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
@@ -26,7 +27,9 @@ import {
     performTraining,
     initializeAttributes,
     initializeTrainingData,
-    initializeKitchenLabTrainingData
+    initializeKitchenLabTrainingData,
+    checkAndResetHandicraftTrainingClicks,
+    initializeHandicraftTrainingData
 } from '../services/TrainingService';
 import { getAvailableActivities, getActivityById } from '../data/trainingActivities';
 import { sellCraftedItem } from '../services/SellService';
@@ -49,6 +52,9 @@ const TrainingPage: React.FC = () => {
     const [isKitchenLabTraining, setIsKitchenLabTraining] = useState(false);
     const [initializationDone, setInitializationDone] = useState(false);
     const clicksCheckedRef = useRef(false);
+    const [handicraftActivities, setHandicraftActivities] = useState<TrainingActivity[]>([]);
+    const [selectedHandicraftActivity, setSelectedHandicraftActivity] = useState<string>('');
+    const [isHandicraftTraining, setIsHandicraftTraining] = useState(false);
 
     const tabs = [
         { id: 'sports', label: 'Sporditreening' },
@@ -100,6 +106,11 @@ const TrainingPage: React.FC = () => {
                 needsUpdate = true;
             }
 
+            if (!playerStats.handicraftTrainingData) {
+                updates.handicraftTrainingData = initializeHandicraftTrainingData();
+                needsUpdate = true;
+            }
+
             // Update database if needed
             if (needsUpdate) {
                 try {
@@ -131,6 +142,7 @@ const TrainingPage: React.FC = () => {
 
                 await checkAndResetTrainingClicks(currentUser.uid);
                 await checkAndResetKitchenLabTrainingClicks(currentUser.uid);
+                await checkAndResetHandicraftTrainingClicks(currentUser.uid);
 
             } catch (error) {
                 if (!abortController.signal.aborted) {
@@ -147,6 +159,7 @@ const TrainingPage: React.FC = () => {
         setKitchenBoosters(getKitchenBoosters(playerStats.inventory || []));
         setAvailableActivities(getAvailableActivities(playerStats.level));
         setKitchenLabActivities(getAvailableKitchenLabActivities(playerStats.level));
+        setHandicraftActivities(getAvailableHandicraftActivities(playerStats.level));
 
         return () => {
             abortController.abort();
@@ -168,6 +181,8 @@ const TrainingPage: React.FC = () => {
             hasClicks = (playerStats.trainingData?.remainingClicks || 0) > 0;
         } else if (activeTab === 'food') {
             hasClicks = (playerStats.kitchenLabTrainingData?.remainingClicks || 0) > 0;
+        } else if (activeTab === 'handcraft') {
+            hasClicks = (playerStats.handicraftTrainingData?.remainingClicks || 0) > 0;
         }
 
         if (!hasClicks) {
@@ -193,6 +208,13 @@ const TrainingPage: React.FC = () => {
             }
             activityId = selectedKitchenLabActivity;
             activity = getKitchenLabActivityById(selectedKitchenLabActivity);
+        } else if (activeTab === 'handcraft') {
+            if (!selectedHandicraftActivity) {
+                showToast('Vali esmalt käsitöö tegevus!', 'warning');
+                return;
+            }
+            activityId = selectedHandicraftActivity;
+            activity = getHandicraftActivityById(selectedHandicraftActivity);
         }
 
         if (!activity) return;
@@ -200,10 +222,13 @@ const TrainingPage: React.FC = () => {
         setIsTraining(true);
         if (activeTab === 'food') {
             setIsKitchenLabTraining(true);
+        } else if (activeTab === 'handcraft') {
+            setIsHandicraftTraining(true);
         }
 
         try {
-            const trainingType = activeTab === 'sports' ? 'sports' : 'kitchen-lab';
+            const trainingType = activeTab === 'sports' ? 'sports' :
+                activeTab === 'food' ? 'kitchen-lab' : 'handicraft';
             await performTraining(currentUser.uid, activityId, activity.rewards, trainingType);
             await refreshStats(); // Update stats after training
         } catch (error: any) {
@@ -211,8 +236,9 @@ const TrainingPage: React.FC = () => {
         } finally {
             setIsTraining(false);
             setIsKitchenLabTraining(false);
+            setIsHandicraftTraining(false);
         }
-    }, [currentUser, selectedActivity, selectedKitchenLabActivity, activeTab,
+    }, [currentUser, selectedActivity, selectedKitchenLabActivity, selectedHandicraftActivity, activeTab,
         isTraining, playerStats, refreshStats, showToast]);
 
     // Handle selling crafted items
@@ -371,10 +397,41 @@ const TrainingPage: React.FC = () => {
 
                 {/* Handcraft Tab */}
                 {activeTab === 'handcraft' && (
-                    <div className="tab-placeholder">
-                        <h2>Käsitöö</h2>
-                        <p>See sektsioon on veel arendamisel...</p>
-                    </div>
+                    <>
+                        <TrainingCounter
+                            remainingClicks={playerStats.handicraftTrainingData?.remainingClicks || 0}
+                            label="Käsitöö klikke jäänud"
+                            lastResetTime={playerStats.handicraftTrainingData?.lastResetTime}
+                        />
+
+                        <AttributesDisplay
+                            attributes={playerStats.attributes || initializeAttributes()}
+                            title="Sinu käsitöö oskused"
+                            displayAttributes={[
+                                { key: 'sewing', name: 'Õmblemine', icon: '🪡' },
+                                { key: 'medicine', name: 'Meditsiin', icon: '🏥' }
+                            ]}
+                        />
+
+                        <TrainingMilestones currentLevel={playerStats.level} />
+
+                        <ActivitySelector
+                            activities={handicraftActivities}
+                            selectedActivity={selectedHandicraftActivity}
+                            onActivitySelect={setSelectedHandicraftActivity}
+                            onTrain={handleTrain}
+                            isTraining={isHandicraftTraining}
+                            canTrain={(playerStats.handicraftTrainingData?.remainingClicks || 0) > 0}
+                            playerStats={playerStats}
+                            trainingType="handicraft"
+                        />
+
+                        <CraftingInventory
+                            inventory={playerStats.inventory || []}
+                            onSellItem={handleSellItem}
+                        />
+
+                    </>
                 )}
             </main>
         </div>

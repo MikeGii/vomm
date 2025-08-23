@@ -1,13 +1,21 @@
 // src/services/TrainingService.ts
 import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
-import {PlayerStats, PlayerAttributes, AttributeData, TrainingData, KitchenLabTrainingData} from '../types';
+import {
+    PlayerStats,
+    PlayerAttributes,
+    AttributeData,
+    TrainingData,
+    KitchenLabTrainingData,
+    HandicraftTrainingData
+} from '../types';
 import {calculateLevelFromExp, calculatePlayerHealth} from "./PlayerService";
 import { getTrainingBonusForAttribute} from "../data/abilities";
 import { getKitchenLabActivityById } from '../data/kitchenLabActivities';
+import { getHandicraftActivityById } from '../data/handicraftActivities';
 import { CRAFTING_INGREDIENTS } from '../data/shop/craftingIngredients';
 import { InventoryItem } from '../types';
-import { getBaseIdFromInventoryId, createTimestampedId } from '../utils/inventoryUtils'; // ADD THIS
+import { getBaseIdFromInventoryId, createTimestampedId } from '../utils/inventoryUtils';
 
 
 // Calculate experience needed for next attribute level
@@ -35,6 +43,8 @@ export const initializeAttributes = (): PlayerAttributes => {
         cooking: createAttribute(),
         brewing: createAttribute(),
         chemistry: createAttribute(),
+        sewing: createAttribute(),
+        medicine: createAttribute()
     };
 };
 
@@ -48,6 +58,14 @@ export const initializeTrainingData = (): TrainingData => {
 };
 
 export const initializeKitchenLabTrainingData = (): KitchenLabTrainingData => {
+    return {
+        remainingClicks: 50,
+        lastResetTime: Timestamp.now(),
+        totalTrainingsDone: 0
+    };
+};
+
+export const initializeHandicraftTrainingData = (): HandicraftTrainingData => {
     return {
         remainingClicks: 50,
         lastResetTime: Timestamp.now(),
@@ -250,6 +268,47 @@ export const checkAndResetKitchenLabTrainingClicks = async (userId: string): Pro
     return kitchenLabTrainingData;
 };
 
+export const checkAndResetHandicraftTrainingClicks = async (userId: string): Promise<HandicraftTrainingData> => {
+    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsDoc = await getDoc(statsRef);
+
+    if (!statsDoc.exists()) {
+        throw new Error('Player stats not found');
+    }
+
+    const stats = statsDoc.data() as PlayerStats;
+    let handicraftTrainingData = stats.handicraftTrainingData || initializeHandicraftTrainingData();
+
+    const maxClicks = stats.activeWork ? 10 : 50;
+    const now = new Date();
+    const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
+
+    let lastReset: Date;
+    if (handicraftTrainingData.lastResetTime instanceof Timestamp) {
+        lastReset = handicraftTrainingData.lastResetTime.toDate();
+    } else if (handicraftTrainingData.lastResetTime && typeof handicraftTrainingData.lastResetTime === 'object' && 'seconds' in handicraftTrainingData.lastResetTime) {
+        lastReset = new Date(handicraftTrainingData.lastResetTime.seconds * 1000);
+    } else {
+        lastReset = new Date(handicraftTrainingData.lastResetTime);
+    }
+
+    const lastResetHour = new Date(lastReset.getFullYear(), lastReset.getMonth(), lastReset.getDate(), lastReset.getHours());
+
+    if (currentHour.getTime() > lastResetHour.getTime()) {
+        handicraftTrainingData = {
+            remainingClicks: maxClicks,
+            lastResetTime: Timestamp.now(),
+            totalTrainingsDone: handicraftTrainingData.totalTrainingsDone
+        };
+
+        await updateDoc(statsRef, {
+            handicraftTrainingData: handicraftTrainingData
+        });
+    }
+
+    return handicraftTrainingData;
+};
+
 // Main training function with material checking and crafting
 export const performTraining = async (
     userId: string,
@@ -263,9 +322,11 @@ export const performTraining = async (
         cooking?: number;
         brewing?: number;
         chemistry?: number;
+        sewing?: number;
+        medicine?: number;
         playerExp: number;
     },
-    trainingType: 'sports' | 'kitchen-lab' = 'sports'
+    trainingType: 'sports' | 'kitchen-lab' | 'handicraft' = 'sports'
 ): Promise<PlayerStats> => {
     const statsRef = doc(firestore, 'playerStats', userId);
     const statsDoc = await getDoc(statsRef);
@@ -290,6 +351,27 @@ export const performTraining = async (
 
         // NEW: Check materials for kitchen/lab activities
         const activity = getKitchenLabActivityById(activityId);
+        if (activity && activity.requiredItems) {
+            const materialCheck = hasRequiredMaterials(stats.inventory || [], activity.requiredItems);
+
+            if (!materialCheck.hasAll) {
+                const missingItems = materialCheck.missing.map(missing => {
+                    const shopItem = CRAFTING_INGREDIENTS.find(item => item.id === missing.id);
+                    const itemName = shopItem?.name || missing.id;
+                    return `${itemName}: vajad ${missing.needed}, sul on ${missing.has}`;
+                }).join(', ');
+
+                throw new Error(`Sul puuduvad materjalid: ${missingItems}`);
+            }
+        }
+    } else if (trainingType === 'handicraft') {
+        const handicraftData = await checkAndResetHandicraftTrainingClicks(userId);
+        if (handicraftData.remainingClicks <= 0) {
+            throw new Error('Käsitöö treeningkordi pole enam järel! Oota järgmist täistundi.');
+        }
+
+        // NEW: Check materials for handicraft activities
+        const activity = getHandicraftActivityById(activityId);
         if (activity && activity.requiredItems) {
             const materialCheck = hasRequiredMaterials(stats.inventory || [], activity.requiredItems);
 
@@ -361,6 +443,12 @@ export const performTraining = async (
     if (rewards.chemistry) {
         attributes.chemistry = updateAttribute(attributes.chemistry, rewards.chemistry);
     }
+    if (rewards.sewing) {
+        attributes.sewing = updateAttribute(attributes.sewing, rewards.sewing);
+    }
+    if (rewards.medicine) {
+        attributes.medicine = updateAttribute(attributes.medicine, rewards.medicine);
+    }
 
     // Handle health updates
     let updatedHealth = stats.health;
@@ -415,6 +503,18 @@ export const performTraining = async (
         }
     }
 
+    if (trainingType === 'handicraft') {
+        const activity = getHandicraftActivityById(activityId);
+        if (activity && activity.requiredItems && activity.producedItems) {
+            const updatedInventory = updateInventoryForCrafting(
+                stats.inventory || [],
+                activity.requiredItems,
+                activity.producedItems
+            );
+            updates.inventory = updatedInventory;
+        }
+    }
+
     // Update training data
     if (trainingType === 'sports') {
         const trainingData = await checkAndResetTrainingClicks(userId);
@@ -433,6 +533,15 @@ export const performTraining = async (
             totalTrainingsDone: kitchenLabData.totalTrainingsDone + 1
         };
         updates.kitchenLabTrainingData = updatedKitchenLabData;
+
+    } else if (trainingType === 'handicraft') {
+        const handicraftData = await checkAndResetHandicraftTrainingClicks(userId);
+        const updatedHandicraftData: HandicraftTrainingData = {
+            remainingClicks: handicraftData.remainingClicks - 1,
+            lastResetTime: handicraftData.lastResetTime,
+            totalTrainingsDone: handicraftData.totalTrainingsDone + 1
+        };
+        updates.handicraftTrainingData = updatedHandicraftData;
     }
 
     // Save to database

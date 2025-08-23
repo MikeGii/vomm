@@ -240,5 +240,64 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
             type: 'courseTimeReduction',
             value: 10
         }
+    },
+
+    // Basic handicraft materials
+    {
+        id: 'fabric',
+        name: 'Kangas',
+        description: 'Põhiline tekstiilmaterjal õmblemiseks',
+        category: 'crafting',
+        price: 4,
+        currency: 'money',
+        basePrice: 4,
+        maxStock: 5000
+    },
+    {
+        id: 'thread',
+        name: 'Niit',
+        description: 'Tugev niit õmblemiseks ja parandamiseks',
+        category: 'crafting',
+        price: 2,
+        currency: 'money',
+        basePrice: 2,
+        maxStock: 5000
+    },
+    {
+        id: 'cotton',
+        name: 'Puuvill',
+        description: 'Puhas puuvill meditsiiniliste toodete valmistamiseks',
+        category: 'crafting',
+        price: 3,
+        currency: 'money',
+        basePrice: 3,
+        maxStock: 5000
+    },
+
+// Player-made products (maxStock: 0)
+    {
+        id: 'cloth',
+        name: 'Riie',
+        description: 'Käsitsi valmistatud lihtne riie',
+        category: 'crafting',
+        price: 11, // (4+4+2) * 1.1 = 11
+        currency: 'money',
+        basePrice: 11,
+        maxStock: 0
+    },
+    {
+        id: 'bandage',
+        name: 'Side',
+        description: 'Meditsiiniline side haavade katmiseks',
+        category: 'crafting',
+        price: 16, // (3+3+2) * 1.0 = 8
+        currency: 'money',
+        basePrice: 16,
+        maxStock: 0,
+        consumableEffect: {
+            type: 'heal',
+            value: 2
+        }
     }
+
 ];

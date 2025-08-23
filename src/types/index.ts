@@ -28,6 +28,8 @@ export interface PlayerAttributes {
     cooking: AttributeData;
     brewing: AttributeData;
     chemistry: AttributeData;
+    sewing: AttributeData;
+    medicine: AttributeData;
 }
 
 export interface TrainingActivity {
@@ -44,6 +46,8 @@ export interface TrainingActivity {
         cooking?: number;
         brewing?: number;
         chemistry?: number;
+        sewing?: number;
+        medicine?: number;
         playerExp: number;
     };
     requiredItems?: {
@@ -66,6 +70,12 @@ export interface TrainingData {
 export interface KitchenLabTrainingData {
     remainingClicks: number;
     lastResetTime: Date | any;
+    totalTrainingsDone: number;
+}
+
+export interface HandicraftTrainingData {
+    remainingClicks: number;
+    lastResetTime: any;
     totalTrainingsDone: number;
 }
 
@@ -99,6 +109,7 @@ export interface PlayerStats {
     lastHealthUpdate?: Timestamp;
     inventory?: InventoryItem[];
     kitchenLabTrainingData?: KitchenLabTrainingData;
+    handicraftTrainingData?: HandicraftTrainingData;
     processedItems?: InventoryItem[];
     equipment?: CharacterEquipment;
     fightClubStats?: FightClubStats;
