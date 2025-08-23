@@ -15,7 +15,7 @@ interface ActivitySelectorProps {
     isTraining: boolean;
     canTrain: boolean;
     playerStats: PlayerStats | null;
-    trainingType?: 'sports' | 'kitchen-lab';
+    trainingType?: 'sports' | 'kitchen-lab' | 'handicraft';
 }
 
 export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
@@ -34,16 +34,18 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
 
     const remainingClicks = trainingType === 'sports'
         ? (playerStats?.trainingData?.remainingClicks || 0)
-        : (playerStats?.kitchenLabTrainingData?.remainingClicks || 0);
+        : trainingType === 'kitchen-lab'
+            ? (playerStats?.kitchenLabTrainingData?.remainingClicks || 0)
+            : (playerStats?.handicraftTrainingData?.remainingClicks || 0);
 
     const canTrainActivity = (activity: TrainingActivity): boolean => {
         if (!playerStats) return false;
         return playerLevel >= activity.requiredLevel;
     };
 
-    // NEW: Check if player has required materials
+    // Check if player has required materials
     const hasRequiredMaterials = (activity: TrainingActivity): { hasAll: boolean; missing: string[] } => {
-        if (trainingType !== 'kitchen-lab' || !activity.requiredItems || !playerStats?.inventory) {
+        if ((trainingType !== 'kitchen-lab' && trainingType !== 'handicraft') || !activity.requiredItems || !playerStats?.inventory) {
             return { hasAll: true, missing: [] };
         }
 
@@ -72,7 +74,9 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
     };
 
     const getSelectorTitle = (): string => {
-        return trainingType === 'sports' ? 'Vali treening' : 'Vali köök/labor tegevus';
+        if (trainingType === 'sports') return 'Vali treening';
+        if (trainingType === 'kitchen-lab') return 'Vali köök/labor tegevus';
+        return 'Vali käsitöö tegevus';
     };
 
     const renderRewards = (activity: TrainingActivity) => {
@@ -86,12 +90,19 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                     {activity.rewards.endurance && (<li>🏋️ Vastupidavus: +{activity.rewards.endurance}</li>)}
                 </>
             );
-        } else {
+        } else if (trainingType === 'kitchen-lab') {
             return (
                 <>
                     {activity.rewards.cooking && (<li>🍳 Toidu valmistamine: +{activity.rewards.cooking}</li>)}
                     {activity.rewards.brewing && (<li>🥤 Joogi valmistamine: +{activity.rewards.brewing}</li>)}
                     {activity.rewards.chemistry && (<li>🧪 Keemia valmistamine: +{activity.rewards.chemistry}</li>)}
+                </>
+            );
+        } else {
+            return (
+                <>
+                    {activity.rewards.sewing && (<li>🪡 Õmblemine: +{activity.rewards.sewing}</li>)}
+                    {activity.rewards.medicine && (<li>🏥 Meditsiin: +{activity.rewards.medicine}</li>)}
                 </>
             );
         }
@@ -108,7 +119,7 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
     };
 
     const renderCraftingInfo = (activity: TrainingActivity) => {
-        if (trainingType !== 'kitchen-lab' || !activity.requiredItems || !activity.producedItems) {
+        if ((trainingType !== 'kitchen-lab' && trainingType !== 'handicraft') || !activity.requiredItems || !activity.producedItems) {
             return null;
         }
 
@@ -215,7 +226,7 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
         }
 
         // NEW: Check materials for kitchen/lab
-        if (trainingType === 'kitchen-lab') {
+        if (trainingType === 'kitchen-lab' || trainingType === 'handicraft') {
             const materialCheck = hasRequiredMaterials(selectedActivityData);
             if (!materialCheck.hasAll) {
                 return { disabled: true, text: 'Materjalid puuduvad' };
@@ -249,7 +260,7 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                 {sortedLevels.map(requiredLevel => (
                     <optgroup
                         key={requiredLevel}
-                        label={`Tase ${requiredLevel} treeningud ${playerLevel < requiredLevel ? '(lukus)' : ''}`}
+                        label={`Tase ${requiredLevel} ${trainingType === 'sports' ? 'treeningud' : 'tooted'} ${playerLevel < requiredLevel ? '(lukus)' : ''}`}
                     >
                         {groupedActivities[requiredLevel].map(activity => {
                             const canDo = canTrainActivity(activity);

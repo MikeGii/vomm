@@ -175,7 +175,7 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
                                     <span className="attribute-value">{playerData.attributes.endurance?.level || 0}</span>
                                 </div>
 
-                                {/* New Kitchen/Lab Skills */}
+                                {/* Kitchen/Lab Skills */}
                                 <div className="attribute-compact">
                                     <span className="attribute-emoji">🍳</span>
                                     <span className="attribute-name">Söök</span>
@@ -190,6 +190,18 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
                                     <span className="attribute-emoji">🧪</span>
                                     <span className="attribute-name">Keem.</span>
                                     <span className="attribute-value">{playerData.attributes.chemistry?.level || 0}</span>
+                                </div>
+
+                                {/* Handicraft Skills */}
+                                <div className="attribute-compact">
+                                    <span className="attribute-emoji">🪡</span>
+                                    <span className="attribute-name">Õmbl.</span>
+                                    <span className="attribute-value">{playerData.attributes.sewing?.level || 0}</span>
+                                </div>
+                                <div className="attribute-compact">
+                                    <span className="attribute-emoji">🏥</span>
+                                    <span className="attribute-name">Med.</span>
+                                    <span className="attribute-value">{playerData.attributes.medicine?.level || 0}</span>
                                 </div>
                             </div>
                         </div>

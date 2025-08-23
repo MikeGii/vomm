@@ -4,6 +4,23 @@ import { GameUpdate } from '../types';
 export const gameUpdates: GameUpdate[] = [
 
     {
+        id: '9',
+        title: 'Mängu uuenduesd',
+        description: 'Võimalik alustada tööd välijuhina alates level 40.',
+        date: '2025-08-23',
+        isNew: true
+    },
+    {
+        id: '8',
+        title: 'Süsteemi uuendused',
+        description: 'Aktiivse mängijaskonna kasvamisega teostatud põhjaliku süsteemi uuendused paremaks andmekasutuseks - NB! ' +
+            'IGAL MÄNGIJAL RANGELT SOOVITUSLIK TÜHJENDADA LEHE VAHEMÄLU JA LOGIDA VÄLJA JA UUESTI SISSE. Lisatud uued köögi ja labori ' +
+            'level 30 esemed, mis ka annavad boonuseid mängus. Nüüd Discordi link töölaua jaluses. Osakonnas nüüd talituse ja ' +
+            'prefektuuri põhine edetabel politseiametniku staatuses mängijatele.',
+        date: '2025-08-22',
+        isNew: true
+    },
+    {
         id: '7',
         title: 'Uuenduste süsteem',
         description: 'Koolituste lõppemisel on nüüd kontrollküsimus boonuste saamiseks. Osakonna lehel loodud struktuuri vaade.' +
@@ -11,7 +28,6 @@ export const gameUpdates: GameUpdate[] = [
             ' ametikoht, mitte politseiamentik. Loodud tagasiside ja kontaktvorm - lisatud viide menüüsse. Patrullpolitseinikul on' +
             ' nüüd võimalik saada kuni vanemkomissari auaste ja ülendamine toimub järgnevalt: level 20 -> 40 -> 60 -> 80 -> 100.',
         date: '2025-08-21',
-        isNew: true
     },
     {
         id: '6',

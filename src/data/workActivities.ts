@@ -34,7 +34,7 @@ const PATROL_ACTIVITIES: WorkActivity[] = [
         baseExpPerHour: 250,
         expGrowthRate: 0.10,
         maxHours: 12,
-        allowedFor: ['patrullpolitseinik']  // Changed from 'politseiametnik'
+        allowedFor: ['patrullpolitseinik']
     },
     {
         id: 'patrol_car_chief',
@@ -45,7 +45,18 @@ const PATROL_ACTIVITIES: WorkActivity[] = [
         baseExpPerHour: 350,
         expGrowthRate: 0.10,
         maxHours: 12,
-        allowedFor: ['patrullpolitseinik']  // Changed from 'politseiametnik'
+        allowedFor: ['patrullpolitseinik']
+    },
+    {
+        id: 'patrol_ground_leader',
+        name: 'Alusta patrullvahetust välijuhina',
+        description: 'Tugeva patrullitöö kogemuse ja vaneminspektorina on sul võimalus alustada teenistust välijuhina',
+        minLevel: 40,
+        requiredCourses: ['police_ground_leader_course'],
+        baseExpPerHour: 550,
+        expGrowthRate: 0.10,
+        maxHours: 12,
+        allowedFor: ['patrullpolitseinik']
     }
 ];
 
