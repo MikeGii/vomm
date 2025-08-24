@@ -391,23 +391,30 @@ export const performTraining = async (
     const attributes = stats.attributes || initializeAttributes();
 
     // Update attributes based on rewards
-    const updateAttribute = (attr: AttributeData, expGained: number): AttributeData => {
+    const updateAttribute = (attr: AttributeData, expGained: number): { updatedAttribute: AttributeData, levelsGained: number } => {
         let newExp = attr.experience + expGained;
         let newLevel = attr.level;
         let expForNext = attr.experienceForNextLevel;
+        let levelsGained = 0; // Track how many levels were gained
 
         while (newExp >= expForNext) {
             newExp -= expForNext;
             newLevel++;
+            levelsGained++; // Count each level gained
             expForNext = calculateExpForNextLevel(newLevel);
         }
 
         return {
-            level: newLevel,
-            experience: newExp,
-            experienceForNextLevel: expForNext
+            updatedAttribute: {
+                level: newLevel,
+                experience: newExp,
+                experienceForNextLevel: expForNext
+            },
+            levelsGained
         };
     };
+
+    let totalAttributeLevelsGained = 0;
 
     const applyBonusToReward = (baseReward: number, attribute: 'strength' | 'agility' | 'dexterity' | 'intelligence' | 'endurance'): number => {
         const bonus = getTrainingBonusForAttribute(stats.completedCourses || [], attribute);
@@ -416,38 +423,58 @@ export const performTraining = async (
 
     if (rewards.strength) {
         const bonusedReward = applyBonusToReward(rewards.strength, 'strength');
-        attributes.strength = updateAttribute(attributes.strength, bonusedReward);
+        const result = updateAttribute(attributes.strength, bonusedReward);
+        attributes.strength = result.updatedAttribute;
+        totalAttributeLevelsGained += result.levelsGained;
     }
     if (rewards.agility) {
         const bonusedReward = applyBonusToReward(rewards.agility, 'agility');
-        attributes.agility = updateAttribute(attributes.agility, bonusedReward);
+        const result = updateAttribute(attributes.agility, bonusedReward);
+        attributes.agility = result.updatedAttribute;
+        totalAttributeLevelsGained += result.levelsGained;
     }
     if (rewards.dexterity) {
         const bonusedReward = applyBonusToReward(rewards.dexterity, 'dexterity');
-        attributes.dexterity = updateAttribute(attributes.dexterity, bonusedReward);
+        const result = updateAttribute(attributes.dexterity, bonusedReward);
+        attributes.dexterity = result.updatedAttribute;
+        totalAttributeLevelsGained += result.levelsGained;
     }
     if (rewards.intelligence) {
         const bonusedReward = applyBonusToReward(rewards.intelligence, 'intelligence');
-        attributes.intelligence = updateAttribute(attributes.intelligence, bonusedReward);
+        const result = updateAttribute(attributes.intelligence, bonusedReward);
+        attributes.intelligence = result.updatedAttribute;
+        totalAttributeLevelsGained += result.levelsGained;
     }
     if (rewards.endurance) {
         const bonusedReward = applyBonusToReward(rewards.endurance, 'endurance');
-        attributes.endurance = updateAttribute(attributes.endurance, bonusedReward);
+        const result = updateAttribute(attributes.endurance, bonusedReward);
+        attributes.endurance = result.updatedAttribute;
+        totalAttributeLevelsGained += result.levelsGained;
     }
     if (rewards.cooking) {
-        attributes.cooking = updateAttribute(attributes.cooking, rewards.cooking);
+        const result = updateAttribute(attributes.cooking, rewards.cooking);
+        attributes.cooking = result.updatedAttribute;
+        totalAttributeLevelsGained += result.levelsGained;
     }
     if (rewards.brewing) {
-        attributes.brewing = updateAttribute(attributes.brewing, rewards.brewing);
+        const result = updateAttribute(attributes.brewing, rewards.brewing);
+        attributes.brewing = result.updatedAttribute;
+        totalAttributeLevelsGained += result.levelsGained;
     }
     if (rewards.chemistry) {
-        attributes.chemistry = updateAttribute(attributes.chemistry, rewards.chemistry);
+        const result = updateAttribute(attributes.chemistry, rewards.chemistry);
+        attributes.chemistry = result.updatedAttribute;
+        totalAttributeLevelsGained += result.levelsGained;
     }
     if (rewards.sewing) {
-        attributes.sewing = updateAttribute(attributes.sewing, rewards.sewing);
+        const result = updateAttribute(attributes.sewing, rewards.sewing);
+        attributes.sewing = result.updatedAttribute;
+        totalAttributeLevelsGained += result.levelsGained;
     }
     if (rewards.medicine) {
-        attributes.medicine = updateAttribute(attributes.medicine, rewards.medicine);
+        const result = updateAttribute(attributes.medicine, rewards.medicine);
+        attributes.medicine = result.updatedAttribute;
+        totalAttributeLevelsGained += result.levelsGained;
     }
 
     // Handle health updates
@@ -489,6 +516,12 @@ export const performTraining = async (
         health: updatedHealth,
         ...healthUpdates
     };
+
+    if (totalAttributeLevelsGained > 0) {
+        const reputationGained = totalAttributeLevelsGained * 2;
+        const currentReputation = stats.reputation || 0;
+        updates.reputation = currentReputation + reputationGained;
+    }
 
     // Handle inventory updates for kitchen/lab activities
     if (trainingType === 'kitchen-lab') {
