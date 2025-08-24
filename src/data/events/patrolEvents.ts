@@ -31,7 +31,7 @@ export const PATROL_EVENTS: WorkEvent[] = [
                 resultText: 'Kutsusid teised patrullid appi. Olukord lahenes rahulikult.'
             }
         ],
-        activityTypes: ['patrol_third_member', 'patrol_second_member', 'patrol_second_member_police', 'patrol_car_chief']
+        activityTypes: ['patrol_third_member', 'patrol_second_member', 'patrol_second_member_police', 'patrol_car_chief', 'patrol_ground_leader']
     },
     {
         id: 'traffic_stop',
@@ -64,7 +64,7 @@ export const PATROL_EVENTS: WorkEvent[] = [
                 resultText: 'Koerteüksus ei leidnud midagi. Juht oli lihtsalt närviline.'
             }
         ],
-        activityTypes: ['patrol_third_member', 'patrol_second_member', 'patrol_second_member_police', 'patrol_car_chief']
+        activityTypes: ['patrol_third_member', 'patrol_second_member', 'patrol_second_member_police', 'patrol_car_chief', 'patrol_ground_leader']
     },
     {
         id: 'domestic_dispute',
@@ -95,7 +95,7 @@ export const PATROL_EVENTS: WorkEvent[] = [
                 resultText: 'Kuni ootasid, rahunes olukord iseenesest. Kaotasid asjatult aega.'
             }
         ],
-        activityTypes: ['patrol_third_member', 'patrol_second_member', 'patrol_second_member_police', 'patrol_car_chief']
+        activityTypes: ['patrol_third_member', 'patrol_second_member', 'patrol_second_member_police', 'patrol_car_chief', 'patrol_ground_leader']
     },
     {
         id: 'youth_smoking',
@@ -128,7 +128,7 @@ export const PATROL_EVENTS: WorkEvent[] = [
                 resultText: 'Noored jooksid ära ja jätkasid teenistust.'
             }
         ],
-        activityTypes: ['patrol_third_member', 'patrol_second_member', 'patrol_second_member_police', 'patrol_car_chief']
+        activityTypes: ['patrol_third_member', 'patrol_second_member', 'patrol_second_member_police', 'patrol_car_chief', 'patrol_ground_leader']
     },
     {
         id: 'traffic_speeding',
@@ -160,7 +160,7 @@ export const PATROL_EVENTS: WorkEvent[] = [
                 resultText: 'Tegid juhile kiirmenetluse.'
             }
         ],
-        activityTypes: ['patrol_third_member', 'patrol_second_member', 'patrol_second_member_police', 'patrol_car_chief']
+        activityTypes: ['patrol_third_member', 'patrol_second_member', 'patrol_second_member_police', 'patrol_car_chief', 'patrol_ground_leader']
     },
     {
         id: 'helping_teammate',
@@ -187,7 +187,7 @@ export const PATROL_EVENTS: WorkEvent[] = [
                 resultText: 'Selle lause peale paariline solvus ja terve vahetus möödus vaikuses, see mõjus sulle vaimselt halvasti'
             }
         ],
-        activityTypes: ['patrol_third_member', 'patrol_second_member', 'patrol_second_member_police', 'patrol_car_chief']
+        activityTypes: ['patrol_third_member', 'patrol_second_member', 'patrol_second_member_police', 'patrol_car_chief', 'patrol_ground_leader']
     },
     {
         id: 'night_patrol',
@@ -214,7 +214,7 @@ export const PATROL_EVENTS: WorkEvent[] = [
                 resultText: 'Seekord vedas, ei juhtunud midagi, kuid väsimus mõjus su tervisele. '
             }
         ],
-        activityTypes: ['patrol_third_member', 'patrol_second_member', 'patrol_second_member_police', 'patrol_car_chief']
+        activityTypes: ['patrol_third_member', 'patrol_second_member', 'patrol_second_member_police', 'patrol_car_chief', 'patrol_ground_leader']
     },
     {
         id: 'traffic_insurance_technical',
@@ -241,6 +241,6 @@ export const PATROL_EVENTS: WorkEvent[] = [
                 resultText: 'Ülevaatuse ja kindlustuse puudumisele lisaks puudus sõidukit juhtinud isikul juhtimisõigus, ning teda on lähiajal korduvalt juhtimiselt kõrvaldatud. Pidasite sõidukijuhi kinni ning toimetasite ta arestimajja, teil läks patrullvahetus 2h üle. Tublid!'
             }
         ],
-        activityTypes: ['patrol_third_member', 'patrol_second_member', 'patrol_second_member_police', 'patrol_car_chief']
+        activityTypes: ['patrol_third_member', 'patrol_second_member', 'patrol_second_member_police', 'patrol_car_chief', 'patrol_ground_leader']
     }
 ];

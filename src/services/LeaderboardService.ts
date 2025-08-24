@@ -8,7 +8,7 @@ import {
 import { firestore } from '../config/firebase';
 import { LeaderboardEntry } from '../types';
 
-const EXCLUDED_USERNAMES = ['L22ne13'];
+const EXCLUDED_USERNAMES = ['Lääne13'];
 
 export const getLeaderboard = async (
     limitCount: number = 100

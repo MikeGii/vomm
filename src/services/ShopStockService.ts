@@ -175,7 +175,7 @@ const calculateRestockAmount = (
     }
 
     const hoursPassed = (now.getTime() - lastRestock.getTime()) / (1000 * 60 * 60);
-    const restockPerHour = maxStock * 0.05;
+    const restockPerHour = maxStock * 0.15;
     const totalRestock = Math.floor(hoursPassed * restockPerHour);
 
     return Math.min(currentStock + totalRestock, maxStock);

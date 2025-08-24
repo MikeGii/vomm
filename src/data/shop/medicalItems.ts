@@ -3,8 +3,8 @@ import { ShopItem } from '../../types/shop';
 
 export const MEDICAL_ITEMS: ShopItem[] = [
     {
-        id: 'bandage',
-        name: 'Side',
+        id: 'bandage_sterile',
+        name: 'Steriilne Side',
         description: 'Taastab 10 HP',
         category: 'medical',
         price: 25.00,

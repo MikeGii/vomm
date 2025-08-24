@@ -47,7 +47,8 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ stats, onShowInstruc
         },
         {
             icon: canTrain ? '🎯' : '🔒',
-            label: 'Treening',
+            label: 'Treening & ' +
+                'oskuste arendamine',
             disabled: !canTrain,
             action: () => navigate('/training'),
             disabledReason: !hasCompletedBasicTraining
