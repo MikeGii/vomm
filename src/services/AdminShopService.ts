@@ -1,13 +1,9 @@
-// src/services/AdminShopService.ts - Optimized Version
+// src/services/AdminShopService.ts - Fixed version
 import {
     doc,
-    updateDoc,
     setDoc,
-    getDoc,
     writeBatch,
-    Timestamp,
-    collection,
-    getDocs
+    Timestamp
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { ALL_SHOP_ITEMS } from '../data/shop';
@@ -19,7 +15,6 @@ export const restockAllItems = async (): Promise<{
     restockedCount: number;
     skippedCount: number;
 }> => {
-    const batch = writeBatch(firestore);
     let restockedCount = 0;
     let skippedCount = 0;
 
@@ -31,7 +26,7 @@ export const restockAllItems = async (): Promise<{
         const chunk = itemsToRestock.slice(i, i + chunkSize);
         const chunkBatch = writeBatch(firestore);
 
-        chunk.forEach(item => {
+        for (const item of chunk) {
             const stockRef = doc(firestore, 'shopStock', item.id);
             chunkBatch.set(stockRef, {
                 itemId: item.id,
@@ -41,7 +36,7 @@ export const restockAllItems = async (): Promise<{
                 playerSoldStock: 0
             }, { merge: true });
             restockedCount++;
-        });
+        }
 
         await chunkBatch.commit();
     }
@@ -50,40 +45,6 @@ export const restockAllItems = async (): Promise<{
     skippedCount = ALL_SHOP_ITEMS.length - restockedCount;
 
     return { restockedCount, skippedCount };
-};
-
-/**
- * Batch update multiple items efficiently
- */
-export const batchUpdateItems = async (updates: Array<{
-    itemId: string;
-    currentStock?: number;
-    maxStockOverride?: number;
-}>): Promise<void> => {
-    const batch = writeBatch(firestore);
-
-    updates.forEach(({ itemId, currentStock, maxStockOverride }) => {
-        if (currentStock !== undefined) {
-            const stockRef = doc(firestore, 'shopStock', itemId);
-            batch.set(stockRef, {
-                itemId,
-                currentStock,
-                lastRestockTime: Timestamp.now(),
-                stockSource: 'admin'
-            }, { merge: true });
-        }
-
-        if (maxStockOverride !== undefined) {
-            const configRef = doc(firestore, 'shopConfig', itemId);
-            batch.set(configRef, {
-                itemId,
-                maxStockOverride,
-                lastModified: Timestamp.now()
-            }, { merge: true });
-        }
-    });
-
-    await batch.commit();
 };
 
 /**

@@ -1,4 +1,4 @@
-// src/services/AdminWorkService.ts
+// src/services/AdminWorkService.ts - Fixed version
 import {
     collection,
     getDocs,
@@ -49,12 +49,12 @@ export const completeAllPlayersWorkAdmin = async (): Promise<{
                 const eventsSnapshot = await getDocs(eventsQuery);
 
                 // Delete all pending events for this player
-                eventsSnapshot.docs.forEach(eventDoc => {
+                for (const eventDoc of eventsSnapshot.docs) {
                     activeEventDeletions.push(
                         deleteDoc(doc(firestore, 'activeEvents', eventDoc.id))
                     );
                     eventsCleanedCount++;
-                });
+                }
 
                 // Calculate work completion rewards
                 const workActivity = getWorkActivityById(stats.activeWork.workId);

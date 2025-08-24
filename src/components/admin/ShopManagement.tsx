@@ -1,4 +1,4 @@
-// src/components/admin/ShopManagement.tsx - Highly Optimized Version
+// src/components/admin/ShopManagement.tsx - Clean Version with Warnings Fixed
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ShopItem } from '../../types/shop';
 import {
@@ -176,19 +176,6 @@ export const ShopManagement: React.FC = () => {
         showToast('Andmed värskendatud!', 'info');
     }, [loadShopData, showToast]);
 
-    // Debounced search to avoid excessive filtering
-    const debouncedSearch = useMemo(() => {
-        const timeoutId = setTimeout(() => {
-            // This effect handles the search automatically through useMemo
-        }, 300);
-
-        return () => clearTimeout(timeoutId);
-    }, [searchTerm]);
-
-    useEffect(() => {
-        return debouncedSearch;
-    }, [debouncedSearch]);
-
     if (loading) {
         return (
             <div className="shop-management">
@@ -263,17 +250,17 @@ export const ShopManagement: React.FC = () => {
                                     </div>
                                 </td>
                                 <td>
-                                        <span className={`category-tag ${itemData.item.category}`}>
-                                            {itemData.item.category}
-                                        </span>
+                                    <span className={`category-tag ${itemData.item.category}`}>
+                                        {itemData.item.category}
+                                    </span>
                                 </td>
                                 <td>
-                                        <span className={`price ${itemData.item.currency === 'pollid' ? 'pollid' : ''}`}>
-                                            {itemData.item.currency === 'pollid'
-                                                ? `${itemData.item.pollidPrice} P`
-                                                : `${itemData.dynamicPrice}€`
-                                            }
-                                        </span>
+                                    <span className={`price ${itemData.item.currency === 'pollid' ? 'pollid' : ''}`}>
+                                        {itemData.item.currency === 'pollid'
+                                            ? `${itemData.item.pollidPrice} P`
+                                            : `${itemData.dynamicPrice}€`
+                                        }
+                                    </span>
                                 </td>
                                 <td>
                                     {isEditing ? (
@@ -292,8 +279,8 @@ export const ShopManagement: React.FC = () => {
                                             itemData.currentStock === 0 ? 'out-of-stock' :
                                                 itemData.currentStock < itemData.item.maxStock * 0.2 ? 'low-stock' : ''
                                         }`}>
-                                                {itemData.currentStock}
-                                            </span>
+                                            {itemData.currentStock}
+                                        </span>
                                     )}
                                 </td>
                                 <td>
