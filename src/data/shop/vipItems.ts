@@ -67,6 +67,22 @@ export const VIP_ITEMS: ShopItem[] = [
         }
     },
     {
+        id: 'vip_handicraft_clicks_restore',
+        name: 'Käsitöö 50',
+        description: 'Taastab kõik klõpsud käsitöös',
+        category: 'vip',
+        price: 0,
+        pollidPrice: 10,
+        currency: 'pollid',
+        basePrice: 0,
+        basePollidPrice: 10,
+        maxStock: 100,
+        consumableEffect: {
+            type: 'handicraftClicks',
+            value: 50
+        }
+    },
+    {
         id: 'vip_full_health_restore',
         name: 'Tervis 100',
         description: 'Taastab 100 tervist',

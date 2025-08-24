@@ -31,7 +31,7 @@ export type ShopCategory =
     | 'crafting'
 
 export interface ConsumableEffect {
-    type: 'trainingClicks' | 'kitchenClicks' | 'heal' | 'energy' | 'experience' | 'temporary_boost' | 'workTimeReduction' | 'courseTimeReduction';
+    type: 'trainingClicks' | 'kitchenClicks' | 'handicraftClicks' | 'heal' | 'energy' | 'experience' | 'temporary_boost' | 'workTimeReduction' | 'courseTimeReduction';
     value: number;
     duration?: number;
 }

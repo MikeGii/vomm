@@ -10,6 +10,8 @@ import { TrainingMilestones } from "../components/training/TrainingMilestones";
 import { TrainingBoosters } from '../components/training/TrainingBoosters';
 import { KitchenBoosters } from '../components/training/KitchenBoosters';
 import { getKitchenBoosters } from '../services/TrainingBoosterService';
+import { HandicraftBoosters } from '../components/training/HandicraftBoosters';
+import { getHandicraftBoosters } from '../services/TrainingBoosterService';
 import { CraftingInventory } from "../components/training/CraftingInventory";
 import { TabNavigation } from '../components/ui/TabNavigation';
 import { getTrainingBoosters } from '../services/TrainingBoosterService';
@@ -46,6 +48,7 @@ const TrainingPage: React.FC = () => {
     const [isTraining, setIsTraining] = useState(false);
     const [trainingBoosters, setTrainingBoosters] = useState<InventoryItem[]>([]);
     const [kitchenBoosters, setKitchenBoosters] = useState<InventoryItem[]>([]);
+    const [handicraftBoosters, setHandicraftBoosters] = useState<InventoryItem[]>([]);
     const [activeTab, setActiveTab] = useState<string>('sports');
     const [kitchenLabActivities, setKitchenLabActivities] = useState<TrainingActivity[]>([]);
     const [selectedKitchenLabActivity, setSelectedKitchenLabActivity] = useState<string>('');
@@ -160,6 +163,7 @@ const TrainingPage: React.FC = () => {
         setAvailableActivities(getAvailableActivities(playerStats.level));
         setKitchenLabActivities(getAvailableKitchenLabActivities(playerStats.level));
         setHandicraftActivities(getAvailableHandicraftActivities(playerStats.level));
+        setHandicraftBoosters(getHandicraftBoosters(playerStats.inventory || []));
 
         return () => {
             abortController.abort();
@@ -434,6 +438,12 @@ const TrainingPage: React.FC = () => {
                             onSellItem={handleSellItem}
                         />
 
+                        <HandicraftBoosters
+                            boosters={handicraftBoosters}
+                            currentClicks={playerStats.handicraftTrainingData?.remainingClicks || 0}
+                            maxClicks={playerStats.activeWork ? 10 : 50}
+                            onBoosterUsed={handleBoosterUsed}
+                        />
                     </>
                 )}
             </main>
