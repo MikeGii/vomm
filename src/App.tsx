@@ -18,6 +18,8 @@ import FightClubPage from './pages/FightClubPage';
 import { PlayerStatsProvider } from './contexts/PlayerStatsContext';
 import DepartmentPage from "./pages/DepartmentPage";
 import FeedbackPage from "./pages/FeedbackPage";
+import AdminPage from './pages/AdminPage';
+
 
 function App() {
     return (
@@ -28,6 +30,9 @@ function App() {
                     <DebugMenu />
                     <Routes>
                         <Route path="/" element={<HomePage />} />
+
+                        <Route path="/admin" element={<AdminPage />} />
+
                         <Route
                             path="/dashboard"
                             element={

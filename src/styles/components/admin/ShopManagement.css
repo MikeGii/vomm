@@ -1,0 +1,309 @@
+/* src/styles/components/admin/ShopManagement.css */
+.shop-management {
+    background: #1a1a1a;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.shop-management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.shop-management-header h2 {
+    color: #ffd700;
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.refresh-btn {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+    background-color: #357abd;
+}
+
+.shop-table-container {
+    overflow-x: auto;
+    background: #252525;
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.shop-admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #f0f0f0;
+}
+
+.shop-admin-table th {
+    background-color: #333;
+    padding: 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #555;
+    color: #ffd700;
+}
+
+.shop-admin-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #333;
+    vertical-align: middle;
+}
+
+.shop-admin-table tr.updating {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.item-info strong {
+    display: block;
+    color: #f0f0f0;
+    font-size: 0.95rem;
+}
+
+.item-info small {
+    display: block;
+    color: #aaa;
+    font-size: 0.8rem;
+    margin-top: 0.2rem;
+}
+
+.stock-display {
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+.stock-display.out-of-stock {
+    background-color: #ff4444;
+    color: white;
+}
+
+.stock-display.low-stock {
+    background-color: #ff9800;
+    color: white;
+}
+
+.stock-input {
+    width: 80px;
+    padding: 0.3rem;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background-color: #2a2a2a;
+    color: #f0f0f0;
+    font-size: 0.9rem;
+}
+
+.stock-input:focus {
+    border-color: #4a90e2;
+    outline: none;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.edit-btn, .save-btn, .cancel-btn, .refill-btn {
+    padding: 0.4rem 0.6rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.edit-btn {
+    background-color: #666;
+    color: white;
+}
+
+.edit-btn:hover {
+    background-color: #777;
+}
+
+.save-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.save-btn:hover {
+    background-color: #45a049;
+}
+
+.cancel-btn {
+    background-color: #f44336;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background-color: #da190b;
+}
+
+.refill-btn {
+    background-color: #ff9800;
+    color: white;
+}
+
+.refill-btn:hover:not(:disabled) {
+    background-color: #e68900;
+}
+
+.refill-btn:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+
+.loading-state {
+    text-align: center;
+    padding: 2rem;
+    color: #aaa;
+    font-size: 1.1rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .shop-management-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .shop-table-container {
+        font-size: 0.8rem;
+    }
+
+    .shop-admin-table th,
+    .shop-admin-table td {
+        padding: 0.5rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.search-input {
+    padding: 0.5rem;
+    border: 1px solid #555;
+    border-radius: 6px;
+    background-color: #2a2a2a;
+    color: #f0f0f0;
+    font-size: 0.9rem;
+    min-width: 200px;
+}
+
+.search-input:focus {
+    border-color: #4a90e2;
+    outline: none;
+}
+
+.shop-stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding: 1rem;
+}
+
+.pagination-btn {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #357abd;
+}
+
+.pagination-btn:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    color: #f0f0f0;
+    font-weight: 600;
+}
+
+/* Add these optimized styles */
+.category-filter {
+    padding: 0.5rem;
+    border: 1px solid #555;
+    border-radius: 6px;
+    background-color: #2a2a2a;
+    color: #f0f0f0;
+    font-size: 0.9rem;
+    min-width: 150px;
+}
+
+.category-tag {
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.category-tag.crafting {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+}
+
+.category-tag.protection {
+    background-color: rgba(33, 150, 243, 0.2);
+    color: #2196F3;
+}
+
+.category-tag.trainingBooster {
+    background-color: rgba(255, 152, 0, 0.2);
+    color: #FF9800;
+}
+
+.price.pollid {
+    color: #ffd700;
+    font-weight: 600;
+}
+
+/* Enhanced pagination */
+.pagination-btn {
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

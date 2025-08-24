@@ -404,3 +404,17 @@
         display: none; /* Hide on mobile to save space */
     }
 }
+
+.menu-item-admin {
+    color: #ff6b35 !important;
+    font-weight: 600;
+}
+
+.menu-item-admin:hover {
+    background: rgba(255, 107, 53, 0.1) !important;
+    color: #ff8555 !important;
+}
+
+.menu-item-admin .menu-icon {
+    filter: brightness(1.2);
+}

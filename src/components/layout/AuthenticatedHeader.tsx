@@ -60,6 +60,9 @@ export const AuthenticatedHeader: React.FC = () => {
     // Determine if training should be shown based on actual progress (no tutorial)
     const showTraining = playerStats?.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
 
+    // Check if current user is admin
+    const isAdmin = currentUser?.uid === 'WUucfDi2DAat9sgDY75mDZ8ct1k2';
+
     // Enhanced status text with more detailed progression
     const getStatusText = (): string => {
         if (!playerStats) return '—';
@@ -239,6 +242,26 @@ export const AuthenticatedHeader: React.FC = () => {
                                     <span className="menu-icon">💬</span>
                                     <span>Tagasiside & Kontakt</span>
                                 </button>
+
+                                {/* Admin Menu Item - Only visible to admin */}
+                                {isAdmin && (
+                                    <>
+                                        <div className="menu-divider"></div>
+                                        <div className="menu-section">
+                                            <div className="menu-section-title">Admin</div>
+                                            <button
+                                                onClick={() => {
+                                                    navigate('/admin');
+                                                    setIsMenuOpen(false);
+                                                }}
+                                                className="menu-item menu-item-admin"
+                                            >
+                                                <span className="menu-icon">⚙️</span>
+                                                <span>Admin paneel</span>
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
 
                                 <div className="menu-section">
                                     <button onClick={handleLogout} className="menu-item menu-item-danger">
