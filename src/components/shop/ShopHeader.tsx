@@ -45,7 +45,7 @@ export const ShopHeader: React.FC<ShopHeaderProps> = ({
                     💡 Hinnad muutuvad vastavalt laoseisule
                 </span>
                 <span className="info-item">
-                    📦 Ladu täieneb 5% tunnis
+                    📦 Ladu täieneb 15% tunnis
                 </span>
             </div>
         </div>

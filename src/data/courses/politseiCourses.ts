@@ -17,7 +17,21 @@ export const POLITSEI_COURSES: Course[] = [
             reputation: 200,
             money: 2000
         },
-        category: 'politsei'
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Mis on politsei välijuhi eesmärk sündmustel?',
+            answers: [
+                'Delegeerida ülesandeid politsei, kiirabi ja pääste üksustele sündmuskohal',
+                'Juhtida politsei tegevusi sündmuskohal',
+                'Lahendada olukorda sündmuse keskel koos oma kolleegidega hea ülevaate saamiseks',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 400,
+                money: 500,
+                reputation: 75,
+            }
+        }
     },
     {
         id: 'medical_course_police',
@@ -27,7 +41,7 @@ export const POLITSEI_COURSES: Course[] = [
         requirements: {
             level: 35,
             completedCourses: ['lopueksam'],
-            totalWorkedHours: 50
+            totalWorkedHours: 40
         },
         rewards: {
             experience: 800,
@@ -37,7 +51,21 @@ export const POLITSEI_COURSES: Course[] = [
                 { itemId: 'medical_kit', quantity: 3 }
             ]
         },
-        category: 'politsei'
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Mida käsitleb AVPU skaala?',
+            answers: [
+                'Traumahaigete vigastuste klassifitseerimise süsteem',
+                'Elutähtsate näitajate jälgimise skaala',
+                'Isiku teadvuse hindamise skaala',
+            ],
+            correctAnswerIndex: 2,
+            rewards: {
+                experience: 300,
+                money: 400,
+                reputation: 60,
+            }
+        }
     },
     {
         id: 'riot_police_course',
@@ -47,7 +75,7 @@ export const POLITSEI_COURSES: Course[] = [
         requirements: {
             level: 40,
             completedCourses: ['medical_course_police'],
-            totalWorkedHours: 60
+            totalWorkedHours: 50
         },
         rewards: {
             experience: 1500,
@@ -82,7 +110,7 @@ export const POLITSEI_COURSES: Course[] = [
         requirements: {
             level: 40,
             completedCourses: ['lopueksam'],
-            totalWorkedHours: 70
+            totalWorkedHours: 60
         },
         rewards: {
             experience: 1500,
@@ -99,12 +127,29 @@ export const POLITSEI_COURSES: Course[] = [
         requirements: {
             level: 40,
             completedCourses: ['lopueksam'],
-            totalWorkedHours: 70
+            totalWorkedHours: 60
         },
         rewards: {
             experience: 1500,
             reputation: 200,
             money: 1500,
+        },
+        category: 'politsei'
+    },
+    {
+        id: 'evidence_place_course',
+        name: 'Sündmuskoha vormistamise koolitus',
+        description: 'Koolitus koos kogenud kriminalistiga, kuidas edukalt säilitada ja vaadelda sündmuskohta',
+        duration: 14400,
+        requirements: {
+            level: 45,
+            completedCourses: ['enhanced_law_studies'],
+            totalWorkedHours: 70
+        },
+        rewards: {
+            experience: 2000,
+            reputation: 300,
+            money: 2000,
         },
         category: 'politsei'
     },

@@ -24,7 +24,7 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
         id: 'basic_cooking_02',
         name: 'Küpseta leiba',
         description: 'Valmistad värske leiva, mida saab kasutada toitva toiduna või teiste roogade baasina',
-        requiredLevel: 5,
+        requiredLevel: 10,
         rewards: {
             cooking: 25,
             playerExp: 5
@@ -41,7 +41,7 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
         id: 'advanced_cooking_01',
         name: 'Valmista megaleibu',
         description: 'Kombineerid leiva ja putru, et valmistada toitev võileib välitöödel olevale personal',
-        requiredLevel: 10,
+        requiredLevel: 20,
         rewards: {
             cooking: 50,
             playerExp: 10
@@ -58,7 +58,7 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
         id: 'master_cooking_01',
         name: 'Valmista päästja eine',
         description: 'Valmistad toitva ja taastava eine, mis taastab tervist välitöödel',
-        requiredLevel: 30,
+        requiredLevel: 40,
         rewards: {
             cooking: 100,
             playerExp: 20
@@ -95,7 +95,7 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
         id: 'advanced_brewing_01',
         name: 'Valmista energiajooki',
         description: 'Valmistad värskendavat energiajooki, mis aitab püsida erksana pikemate töövahetuste ajal',
-        requiredLevel: 5,
+        requiredLevel: 10,
         rewards: {
             brewing: 25,
             playerExp: 5
@@ -112,7 +112,7 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
         id: 'advanced_brewing_02',
         name: 'Valmista jõujooki',
         description: 'Kombineerid energiajoogi ja putru, et luua võimsa jõujoogi eriliselt rasketeks ülesanneteks',
-        requiredLevel: 10,
+        requiredLevel: 20,
         rewards: {
             brewing: 50,
             playerExp: 10
@@ -129,7 +129,7 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
         id: 'master_brewing_01',
         name: 'Valmista supervõimendaja',
         description: 'Valmistad ülima energiajoogi, mis annab lisajõudu treeninguteks',
-        requiredLevel: 30,
+        requiredLevel: 40,
         rewards: {
             brewing: 100,
             playerExp: 20
@@ -166,7 +166,7 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
         id: 'cleaning_solution',
         name: 'Valmista puhastusaine',
         description: 'Valmistad võimsat puhastusainet, mis sobib ideaalselt kontorite ja sõidukite puhastamiseks',
-        requiredLevel: 5,
+        requiredLevel: 10,
         rewards: {
             chemistry: 25,
             playerExp: 5
@@ -184,7 +184,7 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
         id: 'antiseptic_solution',
         name: 'Valmista antiseptikut',
         description: 'Valmistad tugevat antiseptikut, mis hävitab baktereid ja sobib meditsiiniliseks kasutamiseks',
-        requiredLevel: 10,
+        requiredLevel: 20,
         rewards: {
             chemistry: 50,
             playerExp: 10
@@ -202,7 +202,7 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
         id: 'master_chemistry_01',
         name: 'Valmista ajukiirendaja',
         description: 'Valmistad keemilise segu, mis kiirendab õppimist ja mõtlemist',
-        requiredLevel: 30,
+        requiredLevel: 40,
         rewards: {
             chemistry: 100,
             playerExp: 20

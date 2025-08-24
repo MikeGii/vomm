@@ -313,6 +313,7 @@ const TrainingPage: React.FC = () => {
                     <>
                         <TrainingCounter
                             remainingClicks={playerStats.trainingData?.remainingClicks || 0}
+                            maxClicks={playerStats.activeWork ? 10 : 50}
                             lastResetTime={playerStats.trainingData?.lastResetTime}
                         />
 
@@ -343,7 +344,7 @@ const TrainingPage: React.FC = () => {
                         <TrainingBoosters
                             boosters={trainingBoosters}
                             currentClicks={playerStats.trainingData?.remainingClicks || 0}
-                            maxClicks={playerStats.activeWork ? 100 : 50}
+                            maxClicks={playerStats.activeWork ? 10 : 50}
                             onBoosterUsed={handleBoosterUsed}
                         />
                     </>
@@ -354,6 +355,7 @@ const TrainingPage: React.FC = () => {
                     <>
                         <TrainingCounter
                             remainingClicks={playerStats.kitchenLabTrainingData?.remainingClicks || 0}
+                            maxClicks={playerStats.activeWork ? 10 : 50}
                             label="Köök & Labor klikke jäänud"
                             lastResetTime={playerStats.kitchenLabTrainingData?.lastResetTime}
                         />
@@ -400,6 +402,7 @@ const TrainingPage: React.FC = () => {
                     <>
                         <TrainingCounter
                             remainingClicks={playerStats.handicraftTrainingData?.remainingClicks || 0}
+                            maxClicks={playerStats.activeWork ? 10 : 50}
                             label="Käsitöö klikke jäänud"
                             lastResetTime={playerStats.handicraftTrainingData?.lastResetTime}
                         />

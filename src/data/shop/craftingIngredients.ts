@@ -273,6 +273,16 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         basePrice: 3,
         maxStock: 5000
     },
+    {
+        id: 'gauze',
+        name: 'Marli',
+        description: 'Marli käsn haavade puhastamiseks',
+        category: 'crafting',
+        price: 6,
+        currency: 'money',
+        basePrice: 6,
+        maxStock: 2500
+    },
 
 // Player-made products (maxStock: 0)
     {
@@ -280,9 +290,19 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         name: 'Riie',
         description: 'Käsitsi valmistatud lihtne riie',
         category: 'crafting',
-        price: 11, // (4+4+2) * 1.1 = 11
+        price: 11,
         currency: 'money',
         basePrice: 11,
+        maxStock: 0
+    },
+    {
+        id: 'reinforced_cloth',
+        name: 'Täiustatud riie',
+        description: 'Tugevam riie, mis sobib kvaliteetsete riiete õmblemiseks',
+        category: 'crafting',
+        price: 18,
+        currency: 'money',
+        basePrice: 18,
         maxStock: 0
     },
     {
@@ -297,6 +317,20 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         consumableEffect: {
             type: 'heal',
             value: 2
+        }
+    },
+    {
+        id: 'pressure_bandage',
+        name: 'Rõhkside',
+        description: 'Side parema esmaabi jaoks',
+        category: 'crafting',
+        price: 24,
+        currency: 'money',
+        basePrice: 24,
+        maxStock: 0,
+        consumableEffect: {
+            type: 'heal',
+            value: 4
         }
     }
 

@@ -82,7 +82,9 @@ export const startWork = async (
     await updateDoc(statsRef, {
         activeWork,
         'trainingData.isWorking': true,
-        'trainingData.remainingClicks': 10
+        'trainingData.remainingClicks': 10,
+        'kitchenLabTrainingData.remainingClicks': 10,
+        'handicraftTrainingData.remainingClicks': 10
     });
 
     return activeWork;
@@ -170,7 +172,9 @@ export const completeWork = async (userId: string): Promise<void> => {
         level: newLevel,
         totalWorkedHours: newTotalWorkedHours,
         'trainingData.isWorking': false,
-        'trainingData.remainingClicks': 50
+        'trainingData.remainingClicks': 50,
+        'kitchenLabTrainingData.remainingClicks': 50,
+        'handicraftTrainingData.remainingClicks': 50
     };
 
     // Only update money if there's a monetary reward
