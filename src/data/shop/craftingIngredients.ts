@@ -11,7 +11,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 3,
         currency: 'money',
         basePrice: 3,
-        maxStock: 5000
+        maxStock: 10000
     },
     {
         id: 'porrige',
@@ -31,7 +31,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 2,
         currency: 'money',
         basePrice: 2,
-        maxStock: 10000
+        maxStock: 20000
     },
     {
         id: 'syrup',
@@ -41,7 +41,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 3,
         currency: 'money',
         basePrice: 3,
-        maxStock: 2500
+        maxStock: 5000
     },
     {
         id: 'juice',
@@ -61,7 +61,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 5,
         currency: 'money',
         basePrice: 5,
-        maxStock: 10000
+        maxStock: 20000
     },
     {
         id: 'bread',
@@ -91,7 +91,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 15,
         currency: 'money',
         basePrice: 15,
-        maxStock: 1500
+        maxStock: 5000
     },
     {
         id: 'caffeine',
@@ -101,7 +101,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 24,
         currency: 'money',
         basePrice: 24,
-        maxStock: 1500
+        maxStock: 5000
     },
     {
         id: 'nootropics',
@@ -111,7 +111,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 320,
         currency: 'money',
         basePrice: 320,
-        maxStock: 500
+        maxStock: 1000
     },
     // Drinks
     {
@@ -147,7 +147,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 8,
         currency: 'money',
         basePrice: 8,
-        maxStock: 2500
+        maxStock: 10000
     },
     {
         id: 'salt',
@@ -157,7 +157,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 5,
         currency: 'money',
         basePrice: 5,
-        maxStock: 2500
+        maxStock: 10000
     },
     {
         id: 'vinegar',
@@ -167,7 +167,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 6,
         currency: 'money',
         basePrice: 6,
-        maxStock: 2500
+        maxStock: 10000
     },
     {
         id: 'disinfectant',
@@ -251,7 +251,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 4,
         currency: 'money',
         basePrice: 4,
-        maxStock: 5000
+        maxStock: 10000
     },
     {
         id: 'thread',
@@ -261,7 +261,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 2,
         currency: 'money',
         basePrice: 2,
-        maxStock: 5000
+        maxStock: 10000
     },
     {
         id: 'cotton',
@@ -271,7 +271,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 3,
         currency: 'money',
         basePrice: 3,
-        maxStock: 5000
+        maxStock: 10000
     },
     {
         id: 'gauze',
@@ -281,7 +281,7 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         price: 6,
         currency: 'money',
         basePrice: 6,
-        maxStock: 2500
+        maxStock: 5000
     },
 
 // Player-made products (maxStock: 0)

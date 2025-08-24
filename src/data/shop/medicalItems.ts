@@ -10,7 +10,7 @@ export const MEDICAL_ITEMS: ShopItem[] = [
         price: 25.00,
         currency: 'money',
         basePrice: 25.00,
-        maxStock: 150,
+        maxStock: 1000,
         consumableEffect: {
             type: 'heal',
             value: 10
@@ -24,7 +24,7 @@ export const MEDICAL_ITEMS: ShopItem[] = [
         price: 40.00,
         currency: 'money',
         basePrice: 40.00,
-        maxStock: 100,
+        maxStock: 500,
         consumableEffect: {
             type: 'heal',
             value:15
@@ -38,7 +38,7 @@ export const MEDICAL_ITEMS: ShopItem[] = [
         price: 250.00,
         currency: 'money',
         basePrice: 250.00,
-        maxStock: 50,
+        maxStock: 250,
         consumableEffect: {
             type: 'heal',
             value: 25

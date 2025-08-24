@@ -83,7 +83,21 @@ export const POLITSEI_COURSES: Course[] = [
             money: 1500,
             grantsEquipment: ['riot_helmet']
         },
-        category: 'politsei'
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Mille vastu kaitseb politseile väljastatud massiohje varustus?',
+            answers: [
+                'Tuli, torked ja gaas',
+                'III klassi kuulikaitse, torked, gaas',
+                'torked, gaas ja keemia',
+            ],
+            correctAnswerIndex: 0,
+            rewards: {
+                experience: 500,
+                money: 500,
+                reputation: 75,
+            }
+        }
     },
     {
         id: 'enhanced_law_studies',
@@ -100,7 +114,21 @@ export const POLITSEI_COURSES: Course[] = [
             reputation: 150,
             money: 1500,
         },
-        category: 'politsei'
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Kes juhib Eesti Vabariigis kohtueelset kriminaalmenetlust?',
+            answers: [
+                'Prokuratuur',
+                'Politsei- ja Piirivalveamet',
+                'Kohus',
+            ],
+            correctAnswerIndex: 0,
+            rewards: {
+                experience: 600,
+                money: 600,
+                reputation: 75,
+            }
+        }
     },
     {
         id: 'police_drone_course',
