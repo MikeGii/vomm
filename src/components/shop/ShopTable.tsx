@@ -63,6 +63,9 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                 return <span className="effect-compact">+{consumable.value} spordiklõpsu</span>;
             case 'kitchenClicks':
                 return <span className="effect-compact">+{consumable.value} köök/labor</span>;
+            case 'handicraftClicks':
+                return <span className="effect-compact">+{consumable.value} käsitöö</span>;
+
             case 'heal':
                 if (consumable.value === 100) {
                     return <span className="effect-compact">+100 HP</span>;
