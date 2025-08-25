@@ -1,12 +1,22 @@
 // src/components/department/tabs/ApplicationsTab.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { PlayerStats } from '../../../types';
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { firestore } from '../../../config/firebase';
 import { getPositionById } from '../../../data/policePositions';
-import { getPositionDepartmentUnit, getGroupLeaderPositionForUnit } from '../../../utils/playerStatus';
+import {
+    getPositionDepartmentUnit,
+    getGroupLeaderPositionForUnit,
+} from '../../../utils/playerStatus';
 import { useToast } from '../../../contexts/ToastContext';
 import '../../../styles/components/department/tabs/ApplicationsTab.css';
+
+interface ApplicationVote {
+    voterId: string;
+    voterName: string;
+    vote: 'approve' | 'reject';
+    votedAt: Date;
+}
 
 interface ApplicationsTabProps {
     playerStats: PlayerStats;
@@ -19,7 +29,9 @@ interface ApplicationData {
     positionId: string;
     positionName: string;
     appliedAt: Date;
+    expiresAt: Date;
     status: 'pending' | 'approved' | 'rejected';
+    votes: ApplicationVote[];
     applicantData: {
         level: number;
         totalWorkedHours: number;
@@ -41,11 +53,6 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
     const [applications, setApplications] = useState<ApplicationData[]>([]);
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState<string | null>(null);
-    const [selectedApplication, setSelectedApplication] = useState<ApplicationData | null>(null);
-    const [showRejectModal, setShowRejectModal] = useState(false);
-    const [rejectionReason, setRejectionReason] = useState('');
-    const [showApprovalModal, setShowApprovalModal] = useState(false);
-    const [selectedApprovalApplication, setSelectedApprovalApplication] = useState<{id: string, applicantId: string} | null>(null);
 
     const { showToast } = useToast();
 
@@ -92,7 +99,9 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
                     positionId: data.positionId,
                     positionName: position?.name || 'Tundmatu positsioon',
                     appliedAt: data.appliedAt?.toDate() || new Date(),
+                    expiresAt: data.expiresAt?.toDate() || new Date(),
                     status: data.status || 'pending',
+                    votes: data.votes || [],
                     applicantData: data.applicantData || {}
                 });
             });
@@ -114,97 +123,56 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
         loadApplications();
     }, [loadApplications]);
 
-    const openApprovalModal = (applicationId: string, applicantId: string) => {
-        setSelectedApprovalApplication({ id: applicationId, applicantId });
-        setShowApprovalModal(true);
-    };
+    const handleVote = async (applicationId: string, vote: 'approve' | 'reject') => {
+        if (!applicationId || processing) return;
 
-    const handleApprove = async () => {
-        if (!selectedApprovalApplication) return;
-
-        setProcessing(selectedApprovalApplication.id);
+        setProcessing(applicationId);
 
         try {
-            // Update application status
-            const applicationRef = doc(firestore, 'applications', selectedApprovalApplication.id);
-            await updateDoc(applicationRef, {
-                status: 'approved',
-                reviewedAt: new Date(),
-                reviewedBy: playerStats.username
-            });
+            // Get current application data directly
+            const applicationRef = doc(firestore, 'applications', applicationId);
+            const applicationDoc = await getDoc(applicationRef);
 
-            // Update player's position
-            const playerRef = doc(firestore, 'playerStats', selectedApprovalApplication.applicantId);
-            const currentUnit = getPositionDepartmentUnit(playerStats.policePosition);
-            const groupLeaderPosition = getGroupLeaderPositionForUnit(currentUnit || '');
-
-            if (groupLeaderPosition) {
-                await updateDoc(playerRef, {
-                    policePosition: groupLeaderPosition
-                });
+            if (!applicationDoc.exists()) {
+                showToast('Avaldust ei leitud', 'error');
+                return;
             }
 
-            showToast('Avaldus heaks kiidetud ja mängija ametisse määratud', 'success');
+            const currentApp = applicationDoc.data();
+            const existingVotes = currentApp.votes || [];
 
-            // Reset modal state and refresh
-            setShowApprovalModal(false);
-            setSelectedApprovalApplication(null);
-            loadApplications();
+            // Check if user already voted
+            const userAlreadyVoted = existingVotes.some((v: any) => v.voterId === playerStats.username);
+            if (userAlreadyVoted) {
+                showToast('Sa oled juba hääletanud', 'warning');
+                return;
+            }
 
-        } catch (error) {
-            console.error('Error approving application:', error);
-            showToast('Viga avalduse heakskiitmisel', 'error');
-        } finally {
-            setProcessing(null);
-        }
-    };
+            // Add new vote
+            const newVote = {
+                voterId: playerStats.username,
+                voterName: playerStats.username,
+                vote: vote,
+                votedAt: new Date()
+            };
 
-    const handleReject = async () => {
-        if (!selectedApplication || !rejectionReason.trim()) {
-            showToast('Palun sisesta tagasilükkamise põhjus', 'warning');
-            return;
-        }
+            const updatedVotes = [...existingVotes, newVote];
 
-        setProcessing(selectedApplication.id);
-
-        try {
-            // Update application status
-            const applicationRef = doc(firestore, 'applications', selectedApplication.id);
             await updateDoc(applicationRef, {
-                status: 'rejected',
-                reviewedAt: new Date(),
-                reviewedBy: playerStats.username,
-                rejectionReason: rejectionReason.trim()
+                votes: updatedVotes
             });
 
-            showToast('Avaldus tagasi lükatud', 'success');
-
-            // Reset modal state
-            setShowRejectModal(false);
-            setSelectedApplication(null);
-            setRejectionReason('');
+            showToast(`Hääl edukalt esitatud: ${vote === 'approve' ? 'Toetatakse' : 'Ei toetata'}`, 'success');
 
             // Refresh applications list
             loadApplications();
 
         } catch (error) {
-            console.error('Error rejecting application:', error);
-            showToast('Viga avalduse tagasilükkamisel', 'error');
+            console.error('Error submitting vote:', error);
+            showToast('Viga hääletamisel', 'error');
         } finally {
             setProcessing(null);
         }
-    };
-
-    const openRejectModal = (application: ApplicationData) => {
-        setSelectedApplication(application);
-        setShowRejectModal(true);
-        setRejectionReason('');
-    };
-
-    const closeRejectModal = () => {
-        setShowRejectModal(false);
-        setSelectedApplication(null);
-        setRejectionReason('');
     };
 
     const formatDate = (date: Date): string => {
@@ -215,6 +183,23 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
             hour: '2-digit',
             minute: '2-digit'
         });
+    };
+
+    const formatTimeRemaining = (expiresAt: Date): string => {
+        const now = new Date();
+        const timeLeft = expiresAt.getTime() - now.getTime();
+
+        if (timeLeft <= 0) {
+            return 'Aegunud';
+        }
+
+        const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+        const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+
+        if (hoursLeft > 0) {
+            return `${hoursLeft}h ${minutesLeft}m`;
+        }
+        return `${minutesLeft}m`;
     };
 
     const getAttributeDisplayName = (attrName: string): string => {
@@ -273,186 +258,145 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
                 </div>
             ) : (
                 <div className="applications-list">
-                    {applications.map(application => (
-                        <div key={application.id} className="application-card">
-                            <div className="application-header">
-                                <div className="applicant-info">
-                                    <h4 className="applicant-name">{application.applicantId}</h4>
-                                    <div className="application-position">
-                                        Kandideerib: {application.positionName}
-                                    </div>
-                                    <div className="application-date">
-                                        Avaldus esitatud: {formatDate(application.appliedAt)}
-                                    </div>
-                                </div>
-                                <div className="application-actions">
-                                    <button
-                                        className="btn-approve"
-                                        onClick={() => openApprovalModal(application.id, application.applicantId)}
-                                        disabled={processing === application.id}
-                                    >
-                                        {processing === application.id ? 'Töötleb...' : 'Kiida heaks'}
-                                    </button>
-                                    <button
-                                        className="btn-reject"
-                                        onClick={() => openRejectModal(application)}
-                                        disabled={processing === application.id}
-                                    >
-                                        Lükka tagasi
-                                    </button>
-                                </div>
-                            </div>
+                    {applications.map(application => {
+                        const userVote = application.votes?.find(vote => vote.voterId === playerStats.username);
+                        const approveVotes = application.votes?.filter(vote => vote.vote === 'approve').length || 0;
+                        const rejectVotes = application.votes?.filter(vote => vote.vote === 'reject').length || 0;
+                        const timeRemaining = formatTimeRemaining(application.expiresAt);
+                        const isExpired = new Date() > application.expiresAt;
 
-                            <div className="applicant-details">
-                                <div className="details-section">
-                                    <h5>Kandidaadi andmed</h5>
-                                    <div className="details-grid">
-                                        <div className="detail-item">
-                                            <span className="detail-label">Tase:</span>
-                                            <span className="detail-value">{application.applicantData.level}</span>
+                        return (
+                            <div key={application.id} className="application-card">
+                                <div className="application-header">
+                                    <div className="applicant-info">
+                                        <h4 className="applicant-name">{application.applicantId}</h4>
+                                        <div className="application-position">
+                                            Kandideerib: {application.positionName}
                                         </div>
-                                        <div className="detail-item">
-                                            <span className="detail-label">Töötunnid:</span>
-                                            <span className="detail-value">{application.applicantData.totalWorkedHours} tundi</span>
+                                        <div className="application-date">
+                                            Avaldus esitatud: {formatDate(application.appliedAt)}
                                         </div>
-                                        <div className="detail-item">
-                                            <span className="detail-label">Maine:</span>
-                                            <span className="detail-value">{application.applicantData.reputation}</span>
+                                        <div className={`application-expires ${isExpired ? 'expired' : timeRemaining.includes('h') ? 'normal' : 'urgent'}`}>
+                                            {isExpired ? 'Aegunud' : `Aegub: ${timeRemaining}`}
                                         </div>
-                                        <div className="detail-item">
-                                            <span className="detail-label">Praegune positsioon:</span>
-                                            <span className="detail-value">
-                                                {getPositionById(application.applicantData.currentPosition)?.name || 'Tundmatu'}
+                                    </div>
+
+                                    <div className="application-actions">
+                                        <div className="vote-summary">
+                                            <span className="vote-count approve">
+                                                👍 {approveVotes}
+                                            </span>
+                                            <span className="vote-count reject">
+                                                👎 {rejectVotes}
                                             </span>
                                         </div>
+
+                                        <div className="voting-buttons">
+                                            <button
+                                                className={`btn-vote btn-vote-approve ${userVote?.vote === 'approve' ? 'voted' : ''}`}
+                                                onClick={() => handleVote(application.id, 'approve')}
+                                                disabled={processing === application.id || !!userVote || isExpired}
+                                            >
+                                                {userVote?.vote === 'approve' ? 'Toetad' : 'Toetan'}
+                                            </button>
+                                            <button
+                                                className={`btn-vote btn-vote-reject ${userVote?.vote === 'reject' ? 'voted' : ''}`}
+                                                onClick={() => handleVote(application.id, 'reject')}
+                                                disabled={processing === application.id || !!userVote || isExpired}
+                                            >
+                                                {userVote?.vote === 'reject' ? 'Ei toeta' : 'Ei toeta'}
+                                            </button>
+                                        </div>
+
+                                        {userVote && (
+                                            <div className="user-vote-status">
+                                                Sinu hääl: {userVote.vote === 'approve' ? 'Toetad' : 'Ei toeta'}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
-                                {application.applicantData.attributes && (
+                                <div className="applicant-details">
                                     <div className="details-section">
-                                        <h5>Atribuudid</h5>
-                                        <div className="attributes-grid">
-                                            {Object.entries(application.applicantData.attributes).map(([attr, value]) => (
-                                                <div key={attr} className="attribute-item">
-                                                    <span className="attribute-label">
-                                                        {getAttributeDisplayName(attr)}:
+                                        <h5>Kandidaadi andmed</h5>
+                                        <div className="details-grid">
+                                            <div className="detail-item">
+                                                <span className="detail-label">Tase:</span>
+                                                <span className="detail-value">{application.applicantData.level}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="detail-label">Töötunnid:</span>
+                                                <span className="detail-value">{application.applicantData.totalWorkedHours} tundi</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="detail-label">Maine:</span>
+                                                <span className="detail-value">{application.applicantData.reputation}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="detail-label">Praegune positsioon:</span>
+                                                <span className="detail-value">
+                                                    {getPositionById(application.applicantData.currentPosition)?.name || 'Tundmatu'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {application.applicantData.attributes && (
+                                        <div className="details-section">
+                                            <h5>Atribuudid</h5>
+                                            <div className="attributes-grid">
+                                                {Object.entries(application.applicantData.attributes).map(([attr, value]) => (
+                                                    <div key={attr} className="attribute-item">
+                                                        <span className="attribute-label">
+                                                            {getAttributeDisplayName(attr)}:
+                                                        </span>
+                                                        <span className="attribute-value">{value}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {application.applicantData.completedCourses && application.applicantData.completedCourses.length > 0 && (
+                                        <div className="details-section">
+                                            <h5>Lõpetatud koolitused ({application.applicantData.completedCourses.length})</h5>
+                                            <div className="courses-list">
+                                                {application.applicantData.completedCourses.slice(0, 5).map((courseId, index) => (
+                                                    <span key={index} className="course-badge">
+                                                        {courseId}
                                                     </span>
-                                                    <span className="attribute-value">{value}</span>
-                                                </div>
-                                            ))}
+                                                ))}
+                                                {application.applicantData.completedCourses.length > 5 && (
+                                                    <span className="course-badge more">
+                                                        +{application.applicantData.completedCourses.length - 5} veel
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
 
-                                {application.applicantData.completedCourses && application.applicantData.completedCourses.length > 0 && (
-                                    <div className="details-section">
-                                        <h5>Lõpetatud koolitused ({application.applicantData.completedCourses.length})</h5>
-                                        <div className="courses-list">
-                                            {application.applicantData.completedCourses.slice(0, 5).map((courseId, index) => (
-                                                <span key={index} className="course-badge">
-                                                    {courseId}
-                                                </span>
-                                            ))}
-                                            {application.applicantData.completedCourses.length > 5 && (
-                                                <span className="course-badge more">
-                                                    +{application.applicantData.completedCourses.length - 5} veel
-                                                </span>
-                                            )}
+                                    {application.votes && application.votes.length > 0 && (
+                                        <div className="details-section">
+                                            <h5>Hääled ({application.votes.length})</h5>
+                                            <div className="votes-list">
+                                                {application.votes.map((vote, index) => (
+                                                    <div key={index} className={`vote-item ${vote.vote}`}>
+                                                        <span className="vote-user">{vote.voterName}</span>
+                                                        <span className="vote-decision">
+                                                            {vote.vote === 'approve' ? '👍 Toetab' : '👎 Ei toeta'}
+                                                        </span>
+                                                        <span className="vote-time">
+                                                            {formatDate(vote.votedAt)}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {/* Reject Modal */}
-            {showRejectModal && selectedApplication && (
-                <div className="modal-overlay" onClick={closeRejectModal}>
-                    <div className="modal-content reject-modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3>Avalduse tagasilükkamine</h3>
-                            <button className="modal-close" onClick={closeRejectModal}>×</button>
-                        </div>
-
-                        <div className="modal-body">
-                            <div className="applicant-summary">
-                                <strong>Kandidaat:</strong> {selectedApplication.applicantId}
-                            </div>
-                            <div className="applicant-summary">
-                                <strong>Positsioon:</strong> {selectedApplication.positionName}
-                            </div>
-
-                            <div className="rejection-form">
-                                <label htmlFor="rejection-reason">
-                                    <strong>Tagasilükkamise põhjus:</strong>
-                                </label>
-                                <textarea
-                                    id="rejection-reason"
-                                    value={rejectionReason}
-                                    onChange={(e) => setRejectionReason(e.target.value)}
-                                    placeholder="Kirjuta põhjus, miks avaldus tagasi lükatakse..."
-                                    rows={4}
-                                    maxLength={500}
-                                />
-                                <div className="character-count">
-                                    {rejectionReason.length}/500
+                                    )}
                                 </div>
                             </div>
-                        </div>
-
-                        <div className="modal-footer">
-                            <button
-                                className="btn-cancel"
-                                onClick={closeRejectModal}
-                                disabled={processing === selectedApplication.id}
-                            >
-                                Tühista
-                            </button>
-                            <button
-                                className="btn-confirm-reject"
-                                onClick={handleReject}
-                                disabled={!rejectionReason.trim() || processing === selectedApplication.id}
-                            >
-                                {processing === selectedApplication.id ? 'Töötleb...' : 'Lükka tagasi'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Approval Modal */}
-            {showApprovalModal && selectedApprovalApplication && (
-                <div className="modal-overlay" onClick={() => setShowApprovalModal(false)}>
-                    <div className="modal-content approval-modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3>Avalduse heakskiitmine</h3>
-                            <button className="modal-close" onClick={() => setShowApprovalModal(false)}>×</button>
-                        </div>
-
-                        <div className="modal-body">
-                            <p>Kas oled kindel, et tahad selle avalduse heaks kiita?</p>
-                            <p>Kandidaat määratakse automaatselt grupijuhi positsioonile.</p>
-                        </div>
-
-                        <div className="modal-footer">
-                            <button
-                                className="btn-cancel"
-                                onClick={() => setShowApprovalModal(false)}
-                                disabled={selectedApprovalApplication && processing === selectedApprovalApplication.id}
-                            >
-                                Tühista
-                            </button>
-                            <button
-                                className="btn-confirm-approve"
-                                onClick={handleApprove}
-                                disabled={selectedApprovalApplication && processing === selectedApprovalApplication.id}
-                            >
-                                {selectedApprovalApplication && processing === selectedApprovalApplication.id ? 'Töötleb...' : 'Kiida heaks'}
-                            </button>
-                        </div>
-                    </div>
+                        );
+                    })}
                 </div>
             )}
         </div>

@@ -13,7 +13,7 @@ export const POLITSEI_COURSES: Course[] = [
             totalWorkedHours: 60
         },
         rewards: {
-            experience: 1000,
+            experience: 1500,
             reputation: 200,
             money: 2000
         },
@@ -44,9 +44,9 @@ export const POLITSEI_COURSES: Course[] = [
             totalWorkedHours: 40
         },
         rewards: {
-            experience: 800,
-            reputation: 150,
-            money: 1200,
+            experience: 1500,
+            reputation: 200,
+            money: 1500,
             grantsItems: [
                 { itemId: 'medical_kit', quantity: 3 }
             ]
@@ -110,7 +110,7 @@ export const POLITSEI_COURSES: Course[] = [
             totalWorkedHours: 60
         },
         rewards: {
-            experience: 1500,
+            experience: 2000,
             reputation: 150,
             money: 1500,
         },
@@ -158,9 +158,78 @@ export const POLITSEI_COURSES: Course[] = [
             totalWorkedHours: 60
         },
         rewards: {
-            experience: 1500,
+            experience: 2000,
             reputation: 200,
             money: 1500,
+        },
+        category: 'politsei'
+    },
+    {
+        id: 'dog_handler_course',
+        name: 'Politseikoerte baaskoolitus',
+        description: 'Baaskoolitus õppimaks tundma politseikoerte liike, käitumismustreid ja tegutsemisviise sündmuskohal',
+        duration: 18000,
+        requirements: {
+            level: 45,
+            completedCourses: ['medical_course_police'],
+            totalWorkedHours: 70
+        },
+        rewards: {
+            experience: 2500,
+            reputation: 250,
+            money: 2000,
+            grantsAbility: 'doggys_favorite',
+        },
+        category: 'politsei'
+    },
+    {
+        id: 'basic_computer_course',
+        name: 'Arvutisüsteemide algkoolitus',
+        description: 'Baasõpe ja sissejuhatus IT süsteemidesse',
+        duration: 10800,
+        requirements: {
+            level: 45,
+            completedCourses: ['lõpueksam'],
+            totalWorkedHours: 50
+        },
+        rewards: {
+            experience: 2500,
+            reputation: 150,
+            money: 1500
+        },
+        category: 'politsei'
+    },
+    {
+        id: 'advanced_computer_skills',
+        name: 'Arvutisüsteemide täiendkoolitus',
+        description: 'Täiendkoolitus arvutivõrkude ja IT süsteemidest edasijõudnutele',
+        duration: 14400,
+        requirements: {
+            level: 50,
+            completedCourses: ['basic_computer_course'],
+            totalWorkedHours: 60
+        },
+        rewards: {
+            experience: 4500,
+            reputation: 250,
+            money: 2000
+        },
+        category: 'politsei'
+    },
+    {
+        id: 'cyber_crime_course',
+        name: 'Küberturvalisuse baaskursus',
+        description: 'Baaskoolitus küberturvalisuse teadmistest',
+        duration: 18000,
+        requirements: {
+            level: 50,
+            completedCourses: ['enhanced_law_studies', 'basic_computer_course'],
+            totalWorkedHours: 60
+        },
+        rewards: {
+            experience: 5500,
+            reputation: 250,
+            money: 2000
         },
         category: 'politsei'
     },
@@ -175,9 +244,26 @@ export const POLITSEI_COURSES: Course[] = [
             totalWorkedHours: 70
         },
         rewards: {
-            experience: 2000,
+            experience: 4000,
             reputation: 300,
             money: 2000,
+        },
+        category: 'politsei'
+    },
+    {
+        id: 'detective_course',
+        name: 'Jälitustegevuse ja profileerimise kursus',
+        description: 'Koolitus jälitustegevuse õiguslikeks alusteks, praktilised käitumisjuhendid ja isikute profileerimine',
+        duration: 18000,
+        requirements: {
+            level: 50,
+            completedCourses: ['evidence_place_course'],
+            totalWorkedHours: 80
+        },
+        rewards: {
+            experience: 4500,
+            reputation: 400,
+            money: 3000,
         },
         category: 'politsei'
     },
@@ -192,10 +278,10 @@ export const POLITSEI_COURSES: Course[] = [
             totalWorkedHours: 80
         },
         rewards: {
-            experience: 3000,
+            experience: 4000,
             reputation: 500,
             money: 3000,
         },
         category: 'politsei'
-    },
+    }
 ];

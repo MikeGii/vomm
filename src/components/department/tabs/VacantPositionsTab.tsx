@@ -4,7 +4,7 @@ import { PlayerStats } from '../../../types';
 import { POLICE_POSITIONS} from '../../../data/policePositions';
 import { getUnitById } from '../../../data/departmentUnits';
 import { getCourseById } from '../../../data/courses';
-import { getPositionDepartmentUnit } from '../../../utils/playerStatus';
+import { getPositionDepartmentUnit, canUnitAcceptMoreGroupLeaders, getGroupLeaderCountInUnit } from '../../../utils/playerStatus';
 import { collection, addDoc, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { firestore } from '../../../config/firebase';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -22,10 +22,12 @@ interface PositionInfo {
     unitName: string;
     isGroupLeader: boolean;
     canApply: boolean;
-    canSwitch: boolean; // NEW: for standard positions
+    canSwitch: boolean;
     requirements: string[];
     missingRequirements: string[];
-    actionType: 'switch' | 'apply'; // NEW: determines button behavior
+    actionType: 'switch' | 'apply';
+    isCurrentPosition: boolean;
+    availabilityStatus?: string;
 }
 
 export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
@@ -36,9 +38,10 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
     const { showToast } = useToast();
     const [positions, setPositions] = useState<PositionInfo[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedCategory, setSelectedCategory] = useState<'all' | 'standard' | 'leaders'>('all');
+    const [selectedPosition, setSelectedPosition] = useState<PositionInfo | null>(null);
     const [applying, setApplying] = useState<string | null>(null);
     const [switching, setSwitching] = useState<string | null>(null);
-    const [selectedCategory, setSelectedCategory] = useState<'all' | 'standard' | 'leaders'>('all');
 
     const generatePositionsList = useCallback(async () => {
         if (!playerStats.department) {
@@ -51,14 +54,14 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
         const currentUnit = getPositionDepartmentUnit(playerStats.policePosition);
 
         // Get all positions in the same department
-        POLICE_POSITIONS.forEach(position => {
+        for (const position of POLICE_POSITIONS) {
             // Skip basic positions that don't belong to units
             if (['abipolitseinik', 'kadett', 'talituse_juht'].includes(position.id)) {
-                return;
+                continue;
             }
 
             const unit = getUnitById(position.departmentUnit || '');
-            if (!unit) return;
+            if (!unit) continue;
 
             const isGroupLeader = position.id.startsWith('grupijuht_');
             const requirements: string[] = [];
@@ -66,6 +69,8 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
             let canApply = false;
             let canSwitch = false;
             let actionType: 'switch' | 'apply' = isGroupLeader ? 'apply' : 'switch';
+            const isCurrentPosition = playerStats.policePosition === position.id;
+            let availabilityStatus: string | undefined;
 
             // Check requirements
             if (position.requirements) {
@@ -131,12 +136,27 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
             // Check if already in this unit
             if (currentUnit === position.departmentUnit) {
                 if (isGroupLeader) {
-                    // For group leader: can apply if you're a standard worker in the same unit
-                    const isStandardWorker = !playerStats.policePosition?.startsWith('grupijuht_');
-                    if (isStandardWorker && missingRequirements.length === 0) {
-                        canApply = true;
-                    } else if (!isStandardWorker) {
-                        missingRequirements.push('Pead olema tavakandidaat selles üksuses');
+                    // Check group leader limit first
+                    const canAcceptMore = await canUnitAcceptMoreGroupLeaders(position.departmentUnit || '');
+                    const currentCount = await getGroupLeaderCountInUnit(position.departmentUnit || '');
+
+                    // Set availability status
+                    if (canAcceptMore) {
+                        availabilityStatus = 'Koht saadaval';
+                    } else {
+                        availabilityStatus = 'Kohad täis';
+                        missingRequirements.push(`Üksuses on juba maksimum arv grupijuhte (${currentCount}/4)`);
+                        canApply = false;
+                    }
+
+                    // For group leader: can apply if you're a standard worker in the same unit and slots available
+                    if (canAcceptMore) {
+                        const isStandardWorker = !playerStats.policePosition?.startsWith('grupijuht_');
+                        if (isStandardWorker && missingRequirements.length === 0) {
+                            canApply = true;
+                        } else if (!isStandardWorker) {
+                            missingRequirements.push('Pead olema tavakandidaat selles üksuses');
+                        }
                     }
                 } else {
                     // Standard worker in same unit - no action needed
@@ -145,6 +165,16 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
             } else {
                 // Different unit
                 if (isGroupLeader) {
+                    // Check group leader limit for different unit
+                    const canAcceptMore = await canUnitAcceptMoreGroupLeaders(position.departmentUnit || '');
+
+                    // Set availability status
+                    if (canAcceptMore) {
+                        availabilityStatus = 'Koht saadaval';
+                    } else {
+                        availabilityStatus = 'Kohad täis';
+                    }
+
                     // Can't apply for group leader in different unit
                     missingRequirements.push(`Pead töötama ${unit.name} üksuses`);
                 } else {
@@ -173,9 +203,11 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
                 canSwitch,
                 requirements,
                 missingRequirements,
-                actionType
+                actionType,
+                isCurrentPosition,
+                availabilityStatus
             });
-        });
+        }
 
         // Check existing applications for group leader positions
         if (playerStats.username) {
@@ -244,8 +276,7 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
         setSwitching(positionId);
 
         try {
-            const userRef = doc(firestore, 'playerStats', playerStats.username);
-            await updateDoc(userRef, {
+            const updatedData: any = {
                 departmentUnit: position.unitName.toLowerCase().includes('patrol') ? 'patrol' :
                     position.unitName.toLowerCase().includes('menetlus') ? 'procedural_service' :
                         position.unitName.toLowerCase().includes('kiir') ? 'emergency_response' :
@@ -253,9 +284,16 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
                                 position.unitName.toLowerCase().includes('küber') ? 'cyber_crime' :
                                     position.unitName.toLowerCase().includes('kuritegude') ? 'crime_unit' : 'patrol',
                 policePosition: positionId
-            });
+            };
 
-            showToast(`Edukalt liikusid üksusesse: ${position.unitName}`, 'success');
+            const playerRef = doc(firestore, 'playerStats', playerStats.username);
+            await updateDoc(playerRef, updatedData);
+
+            if (position.isGroupLeader) {
+                showToast(`Õnnitleme! Saite edutatud grupijuhiks ja teie uus auaste on Vanemkomissar!`, 'success');
+            } else {
+                showToast(`Edukalt liikusid üksusesse: ${position.unitName}`, 'success');
+            }
 
             // Refresh player stats and positions
             if (onPlayerStatsUpdate) {
@@ -326,7 +364,9 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
                 department: playerStats.department,
                 prefecture: playerStats.prefecture,
                 appliedAt: new Date(),
+                expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
                 status: 'pending',
+                votes: [],
                 applicantData: {
                     level: playerStats.level,
                     totalWorkedHours: playerStats.totalWorkedHours || 0,
@@ -435,61 +475,185 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
                         }
                     </div>
                 ) : (
-                    filteredPositions.map(position => {
-                        const buttonConfig = getButtonConfig(position);
-                        return (
-                            <div key={position.positionId} className="position-card">
-                                <div className="position-header">
-                                    <div className="position-info">
-                                        <h4 className="position-name">{position.positionName}</h4>
-                                        <div className="position-unit">{position.unitName}</div>
-                                        {position.isGroupLeader && (
-                                            <span className="leader-badge">Grupijuht</span>
-                                        )}
-                                    </div>
-                                    <div className="position-actions">
-                                        <button
-                                            className={`apply-btn ${buttonConfig.className}`}
-                                            onClick={buttonConfig.onClick}
-                                            disabled={buttonConfig.disabled}
-                                        >
-                                            {buttonConfig.text}
-                                        </button>
-                                    </div>
+                    filteredPositions.map(position => (
+                        <div key={position.positionId} className="position-card-compact">
+                            <div className="position-header-compact">
+                                <div className="position-info-compact">
+                                    <h4 className="position-name-compact">{position.positionName}</h4>
+                                    <div className="position-unit-compact">{position.unitName}</div>
+                                    {position.isGroupLeader && (
+                                        <span className="leader-badge-compact">Grupijuht</span>
+                                    )}
                                 </div>
-
-                                <div className="position-requirements">
-                                    {position.requirements.length > 0 && (
-                                        <div className="requirements-section">
-                                            <h5>Nõuded:</h5>
-                                            <ul className="requirements-list">
-                                                {position.requirements.map((req, index) => (
-                                                    <li key={index} className="requirement-item">
-                                                        {req}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
-
-                                    {position.missingRequirements.length > 0 && (
-                                        <div className="missing-requirements-section">
-                                            <h5>Puuduvad nõuded:</h5>
-                                            <ul className="missing-requirements-list">
-                                                {position.missingRequirements.map((req, index) => (
-                                                    <li key={index} className="missing-requirement-item">
-                                                        ❌ {req}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
+                                <div className="position-actions-compact">
+                                    <button
+                                        className={`see-more-btn ${position.isCurrentPosition ? 'current-position' : 'available'}`}
+                                        onClick={() => setSelectedPosition(position)}
+                                        disabled={position.isCurrentPosition}
+                                    >
+                                        {position.isCurrentPosition ? 'Hetkel töötad' : 'Vaata rohkem'}
+                                    </button>
                                 </div>
                             </div>
-                        );
-                    })
+                        </div>
+                    ))
                 )}
             </div>
+
+            {/* Position Details Modal */}
+            {selectedPosition && (
+                <div className="position-modal-overlay" onClick={() => setSelectedPosition(null)}>
+                    <div className="position-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div className="modal-title-section">
+                                <h3>{selectedPosition.positionName}</h3>
+                                <div className="position-unit-modal">{selectedPosition.unitName}</div>
+                                {selectedPosition.isGroupLeader && (
+                                    <span className="leader-badge">Grupijuht</span>
+                                )}
+                            </div>
+                            <button
+                                className="modal-close-btn"
+                                onClick={() => setSelectedPosition(null)}
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="modal-body">
+                            {selectedPosition.isGroupLeader && selectedPosition.availabilityStatus && (
+                                <div className="availability-section">
+                                    <div className={`availability-status ${selectedPosition.availabilityStatus === 'Koht saadaval' ? 'available' : 'full'}`}>
+                                        <span className="status-indicator">
+                                            {selectedPosition.availabilityStatus === 'Koht saadaval' ? '🟢' : '🔴'}
+                                        </span>
+                                        <span className="status-text">{selectedPosition.availabilityStatus}</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="requirements-unified">
+                                <h4>Nõuded:</h4>
+                                <div className="requirements-list-unified">
+                                    {(() => {
+                                        // Create a unified requirements list without duplicates
+                                        const unifiedRequirements: Array<{text: string, status: 'met' | 'missing', id: string}> = [];
+                                        const processedRequirements = new Set<string>();
+
+                                        // Process each requirement and check if it's missing
+                                        selectedPosition.requirements.forEach((req, index) => {
+                                            const reqId = `req-${index}-${req}`;
+
+                                            if (!processedRequirements.has(req)) {
+                                                processedRequirements.add(req);
+
+                                                // Check if this requirement appears in missing requirements
+                                                const isMissing = selectedPosition.missingRequirements.some(missing => {
+                                                    if (req.includes('Tase') && missing.includes('Tase')) return true;
+                                                    if (req.includes('Kursus:') && missing.includes('Kursus:')) {
+                                                        const reqCourse = req.split('Kursus:')[1]?.trim();
+                                                        const missingCourse = missing.split('Kursus:')[1]?.trim();
+                                                        return reqCourse === missingCourse;
+                                                    }
+                                                    if (req.includes('töötundi') && missing.includes('töötundi')) return true;
+                                                    if ((req.includes('Jõud') && missing.includes('Jõud')) ||
+                                                        (req.includes('Kiirus') && missing.includes('Kiirus')) ||
+                                                        (req.includes('Osavus') && missing.includes('Osavus')) ||
+                                                        (req.includes('Intelligentsus') && missing.includes('Intelligentsus')) ||
+                                                        (req.includes('Vastupidavus') && missing.includes('Vastupidavus'))) return true;
+                                                    if (req.includes('maine') && missing.includes('maine')) return true;
+                                                    return false;
+                                                });
+
+                                                if (isMissing) {
+                                                    const detailedMissing = selectedPosition.missingRequirements.find(missing => {
+                                                        if (req.includes('Tase') && missing.includes('Tase')) return true;
+                                                        if (req.includes('Kursus:') && missing.includes('Kursus:')) {
+                                                            const reqCourse = req.split('Kursus:')[1]?.trim();
+                                                            const missingCourse = missing.split('Kursus:')[1]?.trim();
+                                                            return reqCourse === missingCourse;
+                                                        }
+                                                        if (req.includes('töötundi') && missing.includes('töötundi')) return true;
+                                                        if ((req.includes('Jõud') && missing.includes('Jõud')) ||
+                                                            (req.includes('Kiirus') && missing.includes('Kiirus')) ||
+                                                            (req.includes('Osavus') && missing.includes('Osavus')) ||
+                                                            (req.includes('Intelligentsus') && missing.includes('Intelligentsus')) ||
+                                                            (req.includes('Vastupidavus') && missing.includes('Vastupidavus'))) return true;
+                                                        if (req.includes('maine') && missing.includes('maine')) return true;
+                                                        return false;
+                                                    });
+
+                                                    unifiedRequirements.push({
+                                                        text: detailedMissing || req,
+                                                        status: 'missing',
+                                                        id: reqId
+                                                    });
+                                                } else {
+                                                    unifiedRequirements.push({
+                                                        text: `${req} (täidetud)`,
+                                                        status: 'met',
+                                                        id: reqId
+                                                    });
+                                                }
+                                            }
+                                        });
+
+                                        // Add any missing requirements that don't match existing requirements
+                                        selectedPosition.missingRequirements.forEach((missing, index) => {
+                                            const missingId = `missing-${index}-${missing}`;
+
+                                            const alreadyProcessed = unifiedRequirements.some(req =>
+                                                req.text === missing || req.text.includes(missing.split('(')[0]?.trim() || missing)
+                                            );
+
+                                            if (!alreadyProcessed) {
+                                                unifiedRequirements.push({
+                                                    text: missing,
+                                                    status: 'missing',
+                                                    id: missingId
+                                                });
+                                            }
+                                        });
+
+                                        return unifiedRequirements.map((req, index) => (
+                                            <div
+                                                key={req.id}
+                                                className={`requirement-row ${req.status === 'met' ? 'requirement-met' : 'requirement-missing'}`}
+                                            >
+                                                <span className="requirement-number">{index + 1}.</span>
+                                                <span className="requirement-text">{req.text}</span>
+                                                <span className={`requirement-status ${req.status}`}>
+                                                    {req.status === 'met' ? '✓' : '✗'}
+                                                </span>
+                                            </div>
+                                        ));
+                                    })()}
+                                </div>
+                            </div>
+
+                            {!selectedPosition.isCurrentPosition && (
+                                <div className="modal-actions">
+                                    {(() => {
+                                        const buttonConfig = getButtonConfig(selectedPosition);
+                                        return (
+                                            <button
+                                                className={`modal-action-btn ${buttonConfig.className}`}
+                                                onClick={() => {
+                                                    buttonConfig.onClick();
+                                                    setSelectedPosition(null);
+                                                }}
+                                                disabled={buttonConfig.disabled}
+                                            >
+                                                {buttonConfig.text}
+                                            </button>
+                                        );
+                                    })()}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

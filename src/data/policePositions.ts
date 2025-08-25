@@ -45,7 +45,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'procedural_service',
         requirements: {
             minimumLevel: 45,
-            completedCourses: ['lopueksam', 'evidence_place_course'],
+            completedCourses: ['evidence_place_course'],
             minimumWorkedHours: 50
         }
     },
@@ -54,8 +54,8 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Kiirreageerija',
         departmentUnit: 'emergency_response',
         requirements: {
-            minimumLevel: 55,
-            completedCourses: ['lopueksam', 'riot_police_course', 'medical_course_police'],
+            minimumLevel: 50,
+            completedCourses: ['riot_police_course', 'medical_course_police'],
             minimumWorkedHours: 80,
             attributes: {
                 strength: 45,
@@ -69,9 +69,14 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Koerajuht',
         departmentUnit: 'k9_unit',
         requirements: {
-            minimumLevel: 40,
-            completedCourses: ['lopueksam', 'dog_handler_course'],
-            minimumWorkedHours: 60
+            minimumLevel: 45,
+            completedCourses: ['dog_handler_course'],
+            minimumWorkedHours: 70,
+            attributes: {
+                strength: 40,
+                agility: 50,
+                endurance: 45
+            }
         }
     },
     {
@@ -79,11 +84,11 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Küberkriminalist',
         departmentUnit: 'cyber_crime',
         requirements: {
-            minimumLevel: 60,
-            completedCourses: ['lopueksam', 'cyber_crime_course', 'advanced_computer_skills'],
-            minimumWorkedHours: 100,
+            minimumLevel: 55,
+            completedCourses: ['cyber_crime_course', 'advanced_computer_skills'],
+            minimumWorkedHours: 80,
             attributes: {
-                intelligence: 55
+                intelligence: 60
             }
         }
     },

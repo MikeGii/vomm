@@ -1,4 +1,6 @@
 // src/utils/playerStatus.ts
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { firestore } from '../config/firebase';
 import { PlayerStats } from '../types';
 import { getPositionName } from '../data/policePositions';
 
@@ -105,4 +107,44 @@ export const getGroupLeaderPositionForUnit = (unitId: string): string | null => 
     };
 
     return leaderMap[unitId] || null;
+};
+
+/**
+ * Counts current group leaders in a specific department unit
+ * @param unitId - The department unit ID (e.g., 'patrol', 'procedural_service')
+ * @returns Promise<number> - Number of current group leaders in that unit
+ */
+export const getGroupLeaderCountInUnit = async (unitId: string): Promise<number> => {
+    const groupLeaderPositions = [
+        'grupijuht_patrol',
+        'grupijuht_investigation',
+        'grupijuht_emergency',
+        'grupijuht_k9',
+        'grupijuht_cyber',
+        'grupijuht_crimes'
+    ];
+
+    try {
+        const playersQuery = query(
+            collection(firestore, 'playerStats'),
+            where('policePosition', 'in', groupLeaderPositions),
+            where('departmentUnit', '==', unitId)
+        );
+
+        const querySnapshot = await getDocs(playersQuery);
+        return querySnapshot.size;
+    } catch (error) {
+        console.error('Error counting group leaders:', error);
+        return 0;
+    }
+};
+
+/**
+ * Checks if unit can accept more group leaders (max 4 per unit)
+ * @param unitId - The department unit ID
+ * @returns Promise<boolean> - True if unit has space for more group leaders
+ */
+export const canUnitAcceptMoreGroupLeaders = async (unitId: string): Promise<boolean> => {
+    const currentCount = await getGroupLeaderCountInUnit(unitId);
+    return currentCount < 4;
 };

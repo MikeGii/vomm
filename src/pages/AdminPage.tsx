@@ -5,6 +5,7 @@ import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { TabNavigation } from '../components/ui/TabNavigation';
 import { ShopManagement } from '../components/admin/ShopManagement';
 import { AdminTools } from '../components/admin/AdminTools';
+import { AdminApplicationsTab } from '../components/admin/AdminApplicationsTab';
 import { useAuth } from '../contexts/AuthContext';
 import '../styles/pages/Admin.css';
 
@@ -16,9 +17,11 @@ const AdminPage: React.FC = () => {
     // Check if user is admin
     const isAdmin = currentUser?.uid === 'WUucfDi2DAat9sgDY75mDZ8ct1k2';
 
+    // ADD the applications tab to your tabs array
     const tabs = [
         { id: 'tools', label: 'Admin tööriistad' },
-        { id: 'shop', label: 'Poe haldus' }
+        { id: 'shop', label: 'Poe haldus' },
+        { id: 'applications', label: 'Kandideerimised' }
     ];
 
     if (!isAdmin) {
@@ -62,6 +65,7 @@ const AdminPage: React.FC = () => {
 
                 {activeTab === 'tools' && <AdminTools />}
                 {activeTab === 'shop' && <ShopManagement />}
+                {activeTab === 'applications' && <AdminApplicationsTab />}
             </main>
         </div>
     );
