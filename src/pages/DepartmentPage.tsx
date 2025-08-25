@@ -8,6 +8,7 @@ import { DepartmentTabs } from '../components/department/DepartmentTabs';
 import { DepartmentLeaderboard } from '../components/department/DepartmentLeaderboard';
 import '../styles/pages/Department.css';
 import {isPoliceOfficer} from "../utils/playerStatus";
+import {DepartmentInstructions} from "../components/department/DepartmentInstructions";
 
 const DepartmentPage: React.FC = () => {
     const navigate = useNavigate();
@@ -79,6 +80,8 @@ const DepartmentPage: React.FC = () => {
                 </button>
 
                 <h1 className="department-title">Politsei Struktuur</h1>
+
+                <DepartmentInstructions />
 
                 {/* Department Hierarchy */}
                 <DepartmentHierarchy currentPlayerStats={playerStats} />

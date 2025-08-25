@@ -23,7 +23,7 @@ export const DEPARTMENT_UNITS: DepartmentUnit[] = [
         name: 'Menetlustalitus',
         description: 'Süütegude uurimine ja tõendite kogumine.',
         requirements: {
-            minimumLevel: 50,
+            minimumLevel: 45,
             requiredCourses: ['enhanced_law_studies'],
             specialRequirements: ['Peab olema lõpetanud süüteomenetluse täiendkursuse']
         }
@@ -33,7 +33,7 @@ export const DEPARTMENT_UNITS: DepartmentUnit[] = [
         name: 'Kiirreageerimisüksus',
         description: 'Kiireloomulistele väljakutsetele reageerimine ja kriisiolukordade lahendamine',
         requirements: {
-            minimumLevel: 60,
+            minimumLevel: 50,
             requiredCourses: ['lopueksam', 'riot_police_course'],
             specialRequirements: ['Peab olema läbinud füüsilise ettevalmistuse testi']
         }
@@ -53,7 +53,7 @@ export const DEPARTMENT_UNITS: DepartmentUnit[] = [
         name: 'Küberkuritegevuse talitus',
         description: 'Küberruumis toime pandud kuritegude uurimine ja ennetamine',
         requirements: {
-            minimumLevel: 65,
+            minimumLevel: 55,
             requiredCourses: ['lopueksam', 'cyber_crime_course', 'advanced_computer_skills'],
             specialRequirements: ['Peab olema läbinud küberjulgeoleku spetsialiseerumise']
         }
@@ -63,7 +63,7 @@ export const DEPARTMENT_UNITS: DepartmentUnit[] = [
         name: 'Kuritegude talitus',
         description: 'Raskete kuritegude uurimine ja kurjategijate jälitamine',
         requirements: {
-            minimumLevel: 55,
+            minimumLevel: 50,
             requiredCourses: ['lopueksam', 'detective_course', 'forensics_basics'],
             specialRequirements: ['Peab olema läbinud uurimistehnikate koolituse']
         }

@@ -24,6 +24,7 @@ import Footer from "../components/layout/footer";
 
 import '../styles/pages/Dashboard.css';
 import {getCourseById} from "../data/courses";
+import {CacheNotification} from "../components/dashboard/CacheNotification";
 
 function DashboardPage() {
     const { currentUser, userData } = useAuth();
@@ -186,6 +187,9 @@ function DashboardPage() {
             <HealthRecoveryManager />
             <AuthenticatedHeader />
             <main className="dashboard-container">
+
+                <CacheNotification />
+
                 {playerStats && userData && (
                     <>
                         {/* RESTORED: All original components */}
