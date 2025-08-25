@@ -130,7 +130,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Menetluse grupijuht',
         departmentUnit: 'procedural_service',
         requirements: {
-            minimumLevel: 55,
+            minimumLevel: 60,
             completedCourses: ['lopueksam', 'police_group_leader_course', 'evidence_place_course', 'enhanced_law_studies'],
             minimumWorkedHours: 150,
             attributes: {
@@ -164,7 +164,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Koertegrupi grupijuht',
         departmentUnit: 'k9_unit',
         requirements: {
-            minimumLevel: 55,
+            minimumLevel: 60,
             completedCourses: ['lopueksam', 'police_group_leader_course', 'dog_handler_course'],
             minimumWorkedHours: 150
         }
@@ -184,7 +184,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Kuritegude grupijuht',
         departmentUnit: 'crime_unit',
         requirements: {
-            minimumLevel: 60,
+            minimumLevel: 65,
             completedCourses: ['lopueksam', 'police_group_leader_course', 'detective_course', 'forensics_basics'],
             minimumWorkedHours: 150
         }
