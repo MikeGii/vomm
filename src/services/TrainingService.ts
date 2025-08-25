@@ -14,6 +14,7 @@ import { getTrainingBonusForAttribute} from "../data/abilities";
 import { getKitchenLabActivityById } from '../data/kitchenLabActivities';
 import { getHandicraftActivityById } from '../data/handicraftActivities';
 import { CRAFTING_INGREDIENTS } from '../data/shop/craftingIngredients';
+import { ALL_SHOP_ITEMS } from '../data/shop';
 import { InventoryItem } from '../types';
 import { getBaseIdFromInventoryId, createTimestampedId } from '../utils/inventoryUtils';
 
@@ -106,24 +107,36 @@ const hasRequiredMaterials = (
 
 // Helper function to create proper InventoryItem from shop data
 const createInventoryItemFromId = (itemId: string, quantity: number): InventoryItem => {
-    const shopItem = CRAFTING_INGREDIENTS.find(item => item.id === itemId);
+    // First check CRAFTING_INGREDIENTS
+    let shopItem = CRAFTING_INGREDIENTS.find(item => item.id === itemId);
+
+    // If not found, check ALL_SHOP_ITEMS (for equipment)
+    if (!shopItem) {
+        shopItem = ALL_SHOP_ITEMS.find(item => item.id === itemId);
+    }
 
     if (!shopItem) {
-        throw new Error(`Item ${itemId} not found in crafting ingredients`);
+        throw new Error(`Item ${itemId} not found in shop items`);
     }
 
     const inventoryItem: InventoryItem = {
         id: createTimestampedId(itemId),
         name: shopItem.name,
         description: shopItem.description,
-        category: 'crafting',
+        category: shopItem.category === 'protection' ? 'equipment' : 'crafting',
         quantity: quantity,
         shopPrice: shopItem.basePrice,
         source: 'training',
         obtainedAt: new Date()
     };
 
-    // Copy consumableEffect if it exists
+    // Copy equipment properties
+    if (shopItem.equipmentSlot) {
+        inventoryItem.equipmentSlot = shopItem.equipmentSlot;
+    }
+    if (shopItem.stats) {
+        inventoryItem.stats = shopItem.stats;
+    }
     if (shopItem.consumableEffect) {
         inventoryItem.consumableEffect = shopItem.consumableEffect;
     }

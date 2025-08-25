@@ -104,7 +104,7 @@ export const ABILITIES: Ability[] = [
     },
     {
         id: 'police_e_politsei_usage_abipolitseinik',
-        name: 'E-Polistei kasutamine - Abipolitseinik',
+        name: 'E-Politsei kasutamine - Abipolitseinik',
         description: 'Oskus ja õigus kasutada Apollot',
         icon: FaTabletAlt,
         requiredCourse: 'police_apollo_usage_abipolitseinik',

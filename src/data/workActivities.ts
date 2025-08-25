@@ -79,12 +79,24 @@ const GROUP_LEADER_ACTIVITIES: WorkActivity[] = [
         name: 'Grupijuhi kohustused jaoskonnas',
         description: 'Grupijuhina täidad töökohustusi jaoskonnas, viid läbi arenguvestluseid, osaled koosolekutel ja parendad grupi toimivust',
         minLevel: 55,
-        requiredCourses: ['police_ground_leader_course'],
+        requiredCourses: ['police_group_leader_course'],
         baseExpPerHour: 1050,
         expGrowthRate: 0.10,
         maxHours: 12,
         allowedFor: ['grupijuht_patrol']
-    }
+    },
+    {
+        id: 'procedural_group_leader_01',
+        name: 'Grupijuhi kohustused jaoskonnas',
+        description: 'Grupijuhina täidad töökohustusi jaoskonnas, viid läbi arenguvestluseid, osaled koosolekutel ja parendad grupi toimivust',
+        minLevel: 60,
+        requiredCourses: ['police_group_leader_course'],
+        baseExpPerHour: 1250,
+        expGrowthRate: 0.10,
+        maxHours: 8,
+        allowedFor: ['grupijuht_investigation']
+    },
+
 
 ]
 
@@ -295,8 +307,8 @@ export const calculateSalaryForOfficer = (rank: string | null, hours: number): n
         'inspektor': 120,
         'vaneminspektor': 140,
         'üleminspektor': 160,
-        'komissar': 200,
-        'vanemkomissar': 240
+        'komissar': 210,
+        'vanemkomissar': 260
     };
 
     const normalizedRank = rank.toLowerCase();

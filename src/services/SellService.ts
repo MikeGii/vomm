@@ -8,6 +8,7 @@ import {
 import { firestore } from '../config/firebase';
 import { PlayerStats } from '../types';
 import { CRAFTING_INGREDIENTS } from '../data/shop/craftingIngredients';
+import { ALL_SHOP_ITEMS } from '../data/shop';
 import { updateStockAfterSell } from './ShopStockService';
 import { getBaseIdFromInventoryId } from '../utils/inventoryUtils';
 
@@ -60,7 +61,12 @@ export const sellCraftedItem = async (
 
         // Get base item ID and shop item details - FIXED
         const baseId = getBaseIdFromInventoryId(inventoryItem.id);
-        const shopItem = CRAFTING_INGREDIENTS.find(item => item.id === baseId);
+
+        // Check both CRAFTING_INGREDIENTS and ALL_SHOP_ITEMS
+        let shopItem = CRAFTING_INGREDIENTS.find(item => item.id === baseId);
+        if (!shopItem) {
+            shopItem = ALL_SHOP_ITEMS.find(item => item.id === baseId);
+        }
 
         if (!shopItem) {
             return {

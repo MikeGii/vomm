@@ -306,6 +306,16 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         maxStock: 0
     },
     {
+        id: 'leather',
+        name: 'Nahk',
+        description: 'Looduslik nahk kaitseriietuse valmistamiseks',
+        category: 'crafting',
+        price: 12,
+        currency: 'money',
+        basePrice: 12,
+        maxStock: 8000
+    },
+    {
         id: 'bandage',
         name: 'Side',
         description: 'Meditsiiniline side haavade katmiseks',
@@ -331,6 +341,30 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         consumableEffect: {
             type: 'heal',
             value: 4
+        }
+    },
+    {
+        id: 'medical_gel',
+        name: 'Meditsiiniline geel',
+        description: 'Spetsiaalne geel haavade kiireks paranemiseks',
+        category: 'crafting',
+        price: 22,
+        currency: 'money',
+        basePrice: 22,
+        maxStock: 4000
+    },
+    {
+        id: 'advanced_medical_kit',
+        name: 'Täiustatud meditsiinipakett',
+        description: 'Professionaalne meditsiinipakett kiireks terviseks',
+        category: 'crafting',
+        price: 105,
+        currency: 'money',
+        basePrice: 105,
+        maxStock: 0,
+        consumableEffect: {
+            type: 'heal',
+            value: 8
         }
     }
 

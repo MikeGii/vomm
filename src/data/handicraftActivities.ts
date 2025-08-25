@@ -40,6 +40,24 @@ export const HANDICRAFT_ACTIVITIES: TrainingActivity[] = [
             { id: 'reinforced_cloth', quantity: 1 }
         ]
     },
+    {
+        id: 'reinforced_work_gloves',
+        name: 'Tugevdatud töökindad',
+        description: 'Nahkkindade valmistamine tugevdatud kangaga',
+        requiredLevel: 20,
+        rewards: {
+            sewing: 50,
+            playerExp: 10
+        },
+        requiredItems: [
+            { id: 'leather', quantity: 6 },
+            { id: 'reinforced_cloth', quantity: 4 },
+            { id: 'thread', quantity: 4 }
+        ],
+        producedItems: [
+            { id: 'reinforced_work_gloves', quantity: 1 }
+        ]
+    },
 
     // Medicine activities
 
@@ -77,7 +95,27 @@ export const HANDICRAFT_ACTIVITIES: TrainingActivity[] = [
         producedItems: [
             { id: 'pressure_bandage', quantity: 1 }
         ]
+    },
+    {
+        id: 'advanced_medical_kit',
+        name: 'Täiustatud meditsiinipakett',
+        description: 'Professionaalse meditsiinipaketi koostamine',
+        requiredLevel: 20,
+        rewards: {
+            medicine: 50,
+            playerExp: 10
+        },
+        requiredItems: [
+            { id: 'pressure_bandage', quantity: 2 },
+            { id: 'medical_gel', quantity: 1 },
+            { id: 'gauze', quantity: 2 },
+            { id: 'antiseptic_solution', quantity: 1 }
+        ],
+        producedItems: [
+            { id: 'advanced_medical_kit', quantity: 1 }
+        ]
     }
+
 ];
 
 export const getHandicraftActivityById = (activityId: string): TrainingActivity | undefined => {
