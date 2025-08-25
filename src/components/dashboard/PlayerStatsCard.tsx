@@ -7,6 +7,7 @@ import {calculateEquipmentBonuses} from "../../services/EquipmentBonusService";
 import { HealthModal } from '../health/HealthModal';
 import { getRankImagePath} from "../../utils/rankUtils";
 import '../../styles/components/PlayerStatsCard.css';
+import {isPoliceOfficer} from "../../utils/playerStatus";
 
 interface PlayerStatsCardProps {
     stats: PlayerStats;
@@ -76,7 +77,6 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
 
     // Check player status
     const isKadett = stats.policePosition === 'kadett';
-    const hasGraduated = ['patrullpolitseinik', 'grupijuht', 'talituse_juht'].includes(stats.policePosition || '');
     const isAbipolitseinik = stats.policePosition === 'abipolitseinik';
 
     // Get prefecture display
@@ -95,7 +95,8 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
         if (isAbipolitseinik) {
             return '—'; // Empty for abipolitseinik
         }
-        if (hasGraduated) {
+        // Use isPoliceOfficer instead of hardcoded position checks
+        if (isPoliceOfficer(stats)) {
             return stats.department || 'Määramata';
         }
         return '—';

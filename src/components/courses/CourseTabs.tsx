@@ -3,6 +3,7 @@ import React from 'react';
 import { CourseTab, TabType} from "../../types/courseTabs.types";
 import { PlayerStats} from "../../types";
 import '../../styles/components/courses/CourseTabs.css';
+import {isPoliceOfficer} from "../../utils/playerStatus";
 
 interface CourseTabsProps {
     activeTab: TabType;
@@ -62,7 +63,8 @@ export const CourseTabs: React.FC<CourseTabsProps> = ({
             return playerStats.policePosition === 'kadett';
         }
         if (requiredStatus === 'Politseiametnik') {
-            return ['patrullpolitseinik', 'grupijuht', 'talituse_juht'].includes(playerStats.policePosition || '');
+            // Pass the entire playerStats object, not just the policePosition string
+            return isPoliceOfficer(playerStats);
         }
         return false;
     };
