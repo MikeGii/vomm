@@ -1,0 +1,459 @@
+/* src/styles/components/department/tabs/ApplicationsTab.css */
+.applications-tab {
+    padding: 1.5rem;
+}
+
+.tab-header {
+    margin-bottom: 1.5rem;
+}
+
+.tab-header h3 {
+    margin: 0 0 1rem 0;
+    color: #fff;
+    font-size: 1.3rem;
+}
+
+.applications-summary {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.summary-item {
+    padding: 0.5rem 1rem;
+    background-color: #4a4a2a;
+    color: #ffd700;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.no-access {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #ccc;
+}
+
+.no-access-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.no-access-text {
+    font-size: 1.2rem;
+    color: #ff6b6b;
+}
+
+.no-applications {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #ccc;
+}
+
+.no-applications-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.no-applications-text {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    color: #fff;
+}
+
+.no-applications-hint {
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+.applications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.application-card {
+    background-color: #222;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.application-card:hover {
+    border-color: #4a90e2;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.1);
+}
+
+.application-header {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.applicant-info {
+    flex: 1;
+}
+
+.applicant-name {
+    margin: 0 0 0.5rem 0;
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.application-position {
+    color: #4a90e2;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+
+.application-date {
+    color: #ccc;
+    font-size: 0.85rem;
+}
+
+.application-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.btn-approve {
+    padding: 0.75rem 1.5rem;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-approve:hover {
+    background-color: #357abd;
+    transform: translateY(-1px);
+}
+
+.btn-reject {
+    padding: 0.75rem 1.5rem;
+    background-color: #666;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-reject:hover {
+    background-color: #ff6b6b;
+}
+
+.btn-approve:disabled, .btn-reject:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.applicant-details {
+    padding: 1.5rem;
+    border-top: 1px solid #333;
+}
+
+.details-section {
+    margin-bottom: 1.5rem;
+}
+
+.details-section:last-child {
+    margin-bottom: 0;
+}
+
+.details-section h5 {
+    margin: 0 0 1rem 0;
+    color: #4a90e2;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background-color: #2a2a2a;
+    border-radius: 6px;
+    border-left: 3px solid #4a90e2;
+}
+
+.detail-label {
+    color: #ccc;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #fff;
+    font-weight: 600;
+}
+
+.attributes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
+}
+
+.attribute-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background-color: #2a2a2a;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.attribute-label {
+    color: #ccc;
+}
+
+.attribute-value {
+    color: #fff;
+    font-weight: 600;
+}
+
+.courses-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.course-badge {
+    background-color: #2a4a2a;
+    color: #90ee90;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    border: 1px solid #4a8a4a;
+}
+
+.course-badge.more {
+    background-color: #4a4a2a;
+    color: #ffd700;
+    border-color: #8a8a4a;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #222;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border: 1px solid #333;
+}
+
+.modal-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.2rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: #ccc;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    background-color: #333;
+    color: #fff;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.applicant-summary {
+    margin-bottom: 1rem;
+    color: #ccc;
+}
+
+.rejection-form {
+    margin-top: 1rem;
+}
+
+.rejection-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #fff;
+}
+
+.rejection-form textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 0.75rem;
+    background-color: #333;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #fff;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.rejection-form textarea:focus {
+    outline: none;
+    border-color: #4a90e2;
+}
+
+.character-count {
+    text-align: right;
+    margin-top: 0.5rem;
+    color: #ccc;
+    font-size: 0.8rem;
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #333;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.btn-cancel {
+    padding: 0.75rem 1.5rem;
+    background-color: #666;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel:hover {
+    background-color: #777;
+}
+
+.btn-confirm-reject {
+    padding: 0.75rem 1.5rem;
+    background-color: #ff6b6b;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-confirm-reject:hover {
+    background-color: #ff5252;
+}
+
+.btn-confirm-approve {
+    padding: 0.75rem 1.5rem;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-confirm-approve:hover {
+    background-color: #357abd;
+}
+
+.btn-cancel:disabled, .btn-confirm-reject:disabled, .btn-confirm-approve:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: #ccc;
+}
+
+@media (max-width: 768px) {
+    .application-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .application-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .btn-approve, .btn-reject {
+        flex: 1;
+    }
+
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .modal-content {
+        width: 95%;
+        margin: 1rem;
+    }
+
+    .modal-footer {
+        flex-direction: column;
+    }
+
+    .btn-cancel, .btn-confirm-reject, .btn-confirm-approve {
+        width: 100%;
+    }
+}

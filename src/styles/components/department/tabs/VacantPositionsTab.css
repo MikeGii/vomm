@@ -1,0 +1,213 @@
+/* src/styles/components/department/tabs/VacantPositionsTab.css */
+.vacant-positions-tab {
+    padding: 1.5rem;
+}
+
+.tab-header {
+    margin-bottom: 1.5rem;
+}
+
+.tab-header h3 {
+    margin: 0 0 1rem 0;
+    color: #fff;
+    font-size: 1.3rem;
+}
+
+.category-filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 0.5rem 1rem;
+    background-color: #333;
+    color: #ccc;
+    border: 1px solid #444;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.filter-btn:hover {
+    background-color: #404040;
+    border-color: #4a90e2;
+}
+
+.filter-btn.active {
+    background-color: #4a90e2;
+    color: white;
+    border-color: #4a90e2;
+}
+
+.positions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.position-card {
+    background-color: #222;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.position-card:hover {
+    border-color: #4a90e2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.1);
+}
+
+.position-header {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.position-info {
+    flex: 1;
+}
+
+.position-name {
+    margin: 0 0 0.5rem 0;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.position-unit {
+    color: #4a90e2;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.leader-badge {
+    display: inline-block;
+    background-color: #ff6b35;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.position-actions {
+    flex-shrink: 0;
+}
+
+.apply-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    min-width: 140px;
+}
+
+.apply-btn.available {
+    background-color: #4a90e2;
+    color: white;
+}
+
+.apply-btn.available:hover {
+    background-color: #357abd;
+    transform: translateY(-1px);
+}
+
+.apply-btn.unavailable {
+    background-color: #666;
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+.apply-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.position-requirements {
+    padding: 1rem;
+    border-top: 1px solid #333;
+}
+
+.requirements-section, .missing-requirements-section {
+    margin-bottom: 1rem;
+}
+
+.requirements-section:last-child, .missing-requirements-section:last-child {
+    margin-bottom: 0;
+}
+
+.requirements-section h5, .missing-requirements-section h5 {
+    margin: 0 0 0.5rem 0;
+    color: #4a90e2;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.missing-requirements-section h5 {
+    color: #ff6b6b;
+}
+
+.requirements-list, .missing-requirements-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.requirement-item {
+    background-color: #2a4a2a;
+    color: #90ee90;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    border: 1px solid #4a8a4a;
+}
+
+.missing-requirement-item {
+    background-color: #4a2a2a;
+    color: #ff9999;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    border: 1px solid #8a4a4a;
+}
+
+.no-positions {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #ccc;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: #ccc;
+}
+
+@media (max-width: 768px) {
+    .position-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .apply-btn {
+        width: 100%;
+    }
+
+    .category-filters {
+        justify-content: center;
+    }
+}

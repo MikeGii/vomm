@@ -1,0 +1,19 @@
+/* src/styles/components/department/DepartmentTabs.css */
+.department-tabs-container {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.tab-content {
+    padding: 0;
+}
+
+/* Tab content should have no additional padding since each tab handles its own */
+.tab-content > * {
+    border-radius: 0;
+    border: none;
+    margin: 0;
+}

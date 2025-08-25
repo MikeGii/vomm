@@ -1,0 +1,241 @@
+/* src/styles/components/department/tabs/MyApplicationsTab.css */
+.my-applications-tab {
+    padding: 1.5rem;
+}
+
+.tab-header {
+    margin-bottom: 1.5rem;
+}
+
+.tab-header h3 {
+    margin: 0 0 1rem 0;
+    color: #fff;
+    font-size: 1.3rem;
+}
+
+.applications-summary {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.summary-item {
+    padding: 0.5rem 1rem;
+    background-color: #333;
+    border-radius: 6px;
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.summary-item.pending {
+    background-color: #4a4a2a;
+    color: #ffd700;
+}
+
+.summary-item.processed {
+    background-color: #2a4a2a;
+    color: #90ee90;
+}
+
+.no-applications {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #ccc;
+}
+
+.no-applications-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.no-applications-text {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    color: #fff;
+}
+
+.no-applications-hint {
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+.applications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.applications-section {
+    margin-bottom: 1rem;
+}
+
+.section-title {
+    margin: 0 0 1rem 0;
+    padding: 0.75rem 0;
+    border-bottom: 2px solid #4a90e2;
+    color: #4a90e2;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.application-card {
+    background-color: #222;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.application-card:hover {
+    border-color: #4a90e2;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.1);
+}
+
+.pending-card {
+    border-left: 4px solid #ffd700;
+}
+
+.processed-card.approved {
+    border-left: 4px solid #90ee90;
+}
+
+.processed-card.rejected {
+    border-left: 4px solid #ff6b6b;
+}
+
+.application-header {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.application-info {
+    flex: 1;
+}
+
+.application-position {
+    margin: 0 0 0.5rem 0;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.application-unit {
+    color: #4a90e2;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.application-status-badge {
+    flex-shrink: 0;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.status-pending {
+    background-color: #4a4a2a;
+    color: #ffd700;
+    border: 1px solid #666622;
+}
+
+.status-badge.status-approved {
+    background-color: #2a4a2a;
+    color: #90ee90;
+    border: 1px solid #226622;
+}
+
+.status-badge.status-rejected {
+    background-color: #4a2a2a;
+    color: #ff9999;
+    border: 1px solid #662222;
+}
+
+.application-details {
+    padding: 1rem;
+    border-top: 1px solid #333;
+}
+
+.application-date {
+    color: #ccc;
+    font-size: 0.85rem;
+}
+
+.application-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.timeline-item {
+    color: #ccc;
+    font-size: 0.85rem;
+}
+
+.rejection-reason {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #4a2a2a;
+    border-radius: 6px;
+    border-left: 3px solid #ff6b6b;
+}
+
+.reason-text {
+    margin-top: 0.5rem;
+    color: #ff9999;
+    font-style: italic;
+}
+
+.application-actions {
+    padding: 1rem;
+    border-top: 1px solid #333;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-cancel-application {
+    padding: 0.5rem 1rem;
+    background-color: #666;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel-application:hover {
+    background-color: #ff6b6b;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: #ccc;
+}
+
+@media (max-width: 768px) {
+    .application-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .applications-summary {
+        justify-content: center;
+    }
+
+    .application-timeline {
+        font-size: 0.8rem;
+    }
+}
