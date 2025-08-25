@@ -8,12 +8,24 @@ import { initializeAttributes, initializeTrainingData } from './TrainingService'
 export const calculateExpForLevel = (level: number): number => {
     if (level <= 1) return 0;
 
-    // Base formula: 100 XP for level 2, then increases by 20% per level
     const baseExp = 100;
-    const growthRate = 0.12; // 20% increase per level
-
     let totalExp = 0;
+
     for (let i = 2; i <= level; i++) {
+        // Use different growth rates for different level ranges
+        let growthRate: number;
+
+        if (i <= 50) {
+            // Levels 2-50: 12% growth rate (keeps current progression)
+            growthRate = 0.12;
+        } else if (i <= 75) {
+            // Levels 51-75: Reduced to 8% growth rate
+            growthRate = 0.08;
+        } else {
+            // Levels 76-99: Further reduced to 5% growth rate
+            growthRate = 0.05;
+        }
+
         totalExp += Math.floor(baseExp * Math.pow(1 + growthRate, i - 2));
     }
 
