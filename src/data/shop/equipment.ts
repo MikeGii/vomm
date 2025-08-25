@@ -160,8 +160,7 @@ export const PROTECTION_ITEMS: ShopItem[] = [
         equipmentSlot: 'hands',
         stats: {
             dexterity: 2,
-            agility: 1,
-            strength: 1,
+            agility: 1
         }
     },
     {
@@ -179,4 +178,20 @@ export const PROTECTION_ITEMS: ShopItem[] = [
             strength: 2,
         }
     },
+    {
+        id: 'reinforced_work_gloves',
+        name: 'Tugevdatud töökindad',
+        description: 'Käsitsi valmistatud nahkkindad tugevdatud kangaga',
+        category: 'protection',
+        price: 650,
+        currency: 'money',
+        basePrice: 650,
+        maxStock: 0,
+        equipmentSlot: 'hands',
+        stats: {
+            dexterity: 2,
+            strength: 1,
+            agility: 1
+        }
+    }
 ];

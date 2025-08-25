@@ -4,6 +4,7 @@ import { InventoryItem } from '../../types';
 import { CRAFTING_INGREDIENTS } from '../../data/shop/craftingIngredients';
 import { getBaseIdFromInventoryId } from '../../utils/inventoryUtils';
 import '../../styles/components/training/CraftingInventory.css';
+import {ALL_SHOP_ITEMS} from "../../data/shop";
 
 interface CraftingInventoryProps {
     inventory: InventoryItem[];
@@ -18,7 +19,16 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
     // Get item details from CRAFTING_INGREDIENTS
     const getItemDetails = (item: InventoryItem) => {
         const baseId = getBaseIdFromInventoryId(item.id);
-        return CRAFTING_INGREDIENTS.find(ingredient => ingredient.id === baseId);
+
+        // First check CRAFTING_INGREDIENTS
+        let details = CRAFTING_INGREDIENTS.find(ingredient => ingredient.id === baseId);
+
+        // If not found, check ALL_SHOP_ITEMS
+        if (!details) {
+            details = ALL_SHOP_ITEMS.find(shopItem => shopItem.id === baseId);
+        }
+
+        return details;
     };
 
     // Check if item can be sold (only produced items, not basic ingredients)
@@ -30,15 +40,37 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
 
     // Filter only crafting category items and sort alphabetically
     const craftingItems = inventory
-        .filter(item => item.category === 'crafting')
+        .filter(item => {
+            // Hide equipped items (your requirement #1)
+            if (item.equipped) return false;
+
+            const baseId = getBaseIdFromInventoryId(item.id);
+
+            // Show items from CRAFTING_INGREDIENTS (traditional crafting materials)
+            const inCraftingIngredients = CRAFTING_INGREDIENTS.find(ingredient => ingredient.id === baseId);
+            if (inCraftingIngredients) return true;
+
+            // Show ONLY player-made equipment (maxStock = 0) from ALL_SHOP_ITEMS
+            const inShopItems = ALL_SHOP_ITEMS.find(shopItem =>
+                shopItem.id === baseId && shopItem.maxStock === 0
+            );
+            if (inShopItems) return true;
+
+            return false;
+        })
         .map(item => {
             const baseId = getBaseIdFromInventoryId(item.id);
-            const details = getItemDetails(item);
+            // Get details from either source
+            let details = CRAFTING_INGREDIENTS.find(ingredient => ingredient.id === baseId);
+            if (!details) {
+                details = ALL_SHOP_ITEMS.find(shopItem => shopItem.id === baseId);
+            }
+
             return {
                 ...item,
                 baseId: baseId,
                 details: details,
-                displayName: item.name || details?.name || baseId // Add displayName
+                displayName: item.name || details?.name || baseId
             };
         })
         .sort((a, b) => {

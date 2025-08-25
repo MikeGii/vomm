@@ -179,6 +179,50 @@ export const TRAINING_ACTIVITIES: TrainingActivity[] = [
             intelligence: 200,
             playerExp: 20
         }
+    },
+    // Level 60 activities - NEW
+    {
+        id: 'advanced_02_strength_training',
+        name: 'Intensiivne jõutrenn personaaltreeneriga',
+        description: 'Ülimalt intensiivne ja suurte raskustega jõutrenn professionaalse personaaltreeneri käe all',
+        requiredLevel: 60,
+        rewards: {
+            strength: 300,
+            endurance: 150,
+            playerExp: 40
+        }
+    },
+    {
+        id: 'advanced_training_running',
+        name: 'Osaled SEB maratonil',
+        description: 'Võistled maratonil joostes 42km koos tippjooksjatega',
+        requiredLevel: 60,
+        rewards: {
+            endurance: 300,
+            agility: 175,
+            playerExp: 40
+        }
+    },
+    {
+        id: 'advanced_02_weapon_technics',
+        name: 'Treening koos K-komandoga',
+        description: 'Treenid koos K-komandoga õppetegevuses õhus, maal ja merel',
+        requiredLevel: 60,
+        rewards: {
+            dexterity: 300,
+            agility: 175,
+            playerExp: 40
+        }
+    },
+    {
+        id: 'advanced_02_intelligence_training',
+        name: 'Osale rahvusvahelisel teadlaste konverentsil',
+        description: 'Rändad ja kohtud üle maailma kuulsate teadlastega ja osaled konverentsidel',
+        requiredLevel: 60,
+        rewards: {
+            intelligence: 300,
+            playerExp: 40
+        }
     }
 ];
 
