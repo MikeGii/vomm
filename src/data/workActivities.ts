@@ -93,7 +93,7 @@ export const WORK_ACTIVITIES: WorkActivity[] = [
 ];
 
 // Helper function to determine player status - NOW USES POLICE POSITION
-type PlayerStatus = 'kadett' | 'abipolitseinik' | 'patrullpolitseinik' | 'unknown';
+type PlayerStatus = 'kadett' | 'abipolitseinik' | 'patrullpolitseinik' | 'uurija' | 'kiirreageerija' | 'koerajuht' | 'küberkriminalist' | 'jälitaja' | 'unknown';
 
 const getPlayerStatus = (
     policePosition: string | null | undefined
@@ -105,10 +105,23 @@ const getPlayerStatus = (
     if (policePosition === 'kadett') return 'kadett';
     if (policePosition === 'patrullpolitseinik') return 'patrullpolitseinik';
 
-    // Higher positions (grupijuht, talituse_juht) work as patrullpolitseinik
-    if (policePosition === 'grupijuht' || policePosition === 'talituse_juht') {
-        return 'patrullpolitseinik';
-    }
+    // New unit positions
+    if (policePosition === 'uurija') return 'uurija';
+    if (policePosition === 'kiirreageerija') return 'kiirreageerija';
+    if (policePosition === 'koerajuht') return 'koerajuht';
+    if (policePosition === 'küberkriminalist') return 'küberkriminalist';
+    if (policePosition === 'jälitaja') return 'jälitaja';
+
+    // Group leaders work as their base unit position for now
+    if (policePosition === 'grupijuht_patrol') return 'patrullpolitseinik';
+    if (policePosition === 'grupijuht_investigation') return 'uurija';
+    if (policePosition === 'grupijuht_emergency') return 'kiirreageerija';
+    if (policePosition === 'grupijuht_k9') return 'koerajuht';
+    if (policePosition === 'grupijuht_cyber') return 'küberkriminalist';
+    if (policePosition === 'grupijuht_crimes') return 'jälitaja';
+
+    // Higher positions work as patrullpolitseinik for now
+    if (policePosition === 'talituse_juht') return 'patrullpolitseinik';
 
     return 'unknown';
 };

@@ -1,0 +1,139 @@
+/* src/styles/components/department/DepartmentInstructions.css */
+.department-instructions {
+    background: linear-gradient(135deg, #1a2332, #1a1a1a);
+    border: 1px solid #4a90e2;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.instructions-toggle {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    background: none;
+    border: none;
+    color: #f0f0f0;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.instructions-toggle:hover {
+    background: rgba(74, 144, 226, 0.1);
+}
+
+.toggle-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.info-icon {
+    color: #4a90e2;
+    font-size: 1.2rem;
+}
+
+.instructions-content {
+    padding: 0 1.5rem 1.5rem;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.instruction-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #333;
+}
+
+.instruction-section:last-child {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.instruction-section h3 {
+    color: #4a90e2;
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.instruction-section p {
+    color: #b0b0b0;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.instruction-section strong {
+    color: #f0f0f0;
+}
+
+.units-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.unit-icon-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: #2a2a2a;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+.unit-icon-item span {
+    color: #f0f0f0;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .instructions-toggle {
+        padding: 1rem;
+        font-size: 1rem;
+    }
+
+    .instructions-content {
+        padding: 0 1rem 1rem;
+    }
+
+    .units-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .instruction-section h3 {
+        font-size: 0.9rem;
+    }
+}
+
+.chevron-icon {
+    font-size: 0.9rem;
+    transition: transform 0.3s ease;
+    color: #4a90e2;
+}
+
+.instructions-toggle[aria-expanded="true"] .chevron-icon {
+    transform: rotate(180deg);
+}

@@ -26,6 +26,19 @@ interface BreadcrumbItem {
     unit?: string;
 }
 
+const getUnitIcon = (unitId: string): string => {
+    const iconMap: Record<string, string> = {
+        'patrol': '🚔',                    // Police car for Patrol
+        'procedural_service': '🔍',        // Magnifying glass for Investigation
+        'emergency_response': '🚨',         // Emergency siren for Emergency Response
+        'k9_unit': '🐕',                   // Dog for K9 Unit
+        'cyber_crime': '💻',               // Computer for Cyber Crime
+        'crime_unit': '🕵️'                 // Detective for Crime Unit
+    };
+
+    return iconMap[unitId] || '⚙️'; // Default to gear if unit not found
+};
+
 export const DepartmentHierarchy: React.FC<DepartmentHierarchyProps> = ({
                                                                             currentPlayerStats
                                                                         }) => {
@@ -299,7 +312,7 @@ export const DepartmentHierarchy: React.FC<DepartmentHierarchyProps> = ({
                                 className="hierarchy-card unit-card"
                                 onClick={() => handleUnitClick(unit.id)}
                             >
-                                <div className="card-icon">⚙️</div>
+                                <div className="card-icon">{getUnitIcon(unit.id)}</div>
                                 <div className="card-content">
                                     <div className="card-title">{unit.name}</div>
                                     <div className="card-description">{unit.description}</div>
@@ -307,8 +320,8 @@ export const DepartmentHierarchy: React.FC<DepartmentHierarchyProps> = ({
                                         <div className="card-requirements">
                                             {unit.requirements.minimumLevel && (
                                                 <span className="requirement-badge">
-                                                    Tase {unit.requirements.minimumLevel}+
-                                                </span>
+                                    Tase {unit.requirements.minimumLevel}+
+                                </span>
                                             )}
                                         </div>
                                     )}

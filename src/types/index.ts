@@ -92,7 +92,23 @@ export interface PlayerStats {
     departmentUnit: string | null;
     department: string | null;
     prefecture: string | null;
-    policePosition?: 'abipolitseinik' | 'kadett' | 'patrullpolitseinik' | 'grupijuht' | 'talituse_juht' | null;
+    policePosition?:
+        | 'abipolitseinik'
+        | 'kadett'
+        | 'patrullpolitseinik'
+        | 'uurija'
+        | 'kiirreageerija'
+        | 'koerajuht'
+        | 'küberkriminalist'
+        | 'jälitaja'
+        | 'grupijuht_patrol'
+        | 'grupijuht_investigation'
+        | 'grupijuht_emergency'
+        | 'grupijuht_k9'
+        | 'grupijuht_cyber'
+        | 'grupijuht_crimes'
+        | 'talituse_juht'
+        | null;
     badgeNumber: string | null;
     isEmployed: boolean;
     abilities?: string[];
@@ -189,7 +205,16 @@ export interface WorkActivity {
     baseExpPerHour: number;
     expGrowthRate: number; // percentage as decimal (0.15 for 15%)
     maxHours: number;
-    allowedFor?: ('kadett' | 'abipolitseinik' | 'patrullpolitseinik')[];
+    allowedFor?: (
+        | 'kadett'
+        | 'abipolitseinik'
+        | 'patrullpolitseinik'
+        | 'uurija'
+        | 'kiirreageerija'
+        | 'koerajuht'
+        | 'küberkriminalist'
+        | 'jälitaja'
+        )[];
     moneyReward?: number;
 }
 

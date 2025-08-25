@@ -4,11 +4,23 @@ import { GameUpdate } from '../types';
 export const gameUpdates: GameUpdate[] = [
 
     {
+        id: '10',
+        title: 'Mängu uuenduesd',
+        description: 'Osakonna lehel nüüd võimalik mängijatel liikuda allüksuste vahel. Lisatud uus positioon karjääri arenguks - grupijuht.' +
+            ' Grupijuhid saavad automaatsel vanemkomissari auastme. Oskuste treenimisel iga level annab +2 reputatsiooni. Tõstetud koolitustel ' +
+            'saadavat kogemust ja reputatsiooni.',
+        date: '2025-08-25',
+        isNew: true
+    },
+    {
         id: '9',
         title: 'Mängu uuenduesd',
-        description: 'Võimalik alustada tööd välijuhina alates level 40.',
+        description: 'Võimalik alustada tööd välijuhina alates level 40. Lisatud käsitööle uued esemed. Suurendatud poes olevate asjade koguseid' +
+            ' seoses mängijaskonna kasvuga. Pood nüüd taastab inventaari 15% tunnis 5% asemel. Parandatud viga, kus sidet ei saanud müüa, mida ' +
+            ' mängija ise tegi. Tõstetud köögi ja labori tootmiseks vajalike leveleid tasakaalustatud arengu jaoks. Lisatud mõned boonusküsimused' +
+            ' politsei kursuste kategoorias juurde. Uued VIP boosterid ning lisatud klikkide taastamise võimekus käsitöö osale.',
         date: '2025-08-23',
-        isNew: true
+
     },
     {
         id: '8',
@@ -18,7 +30,7 @@ export const gameUpdates: GameUpdate[] = [
             'level 30 esemed, mis ka annavad boonuseid mängus. Nüüd Discordi link töölaua jaluses. Osakonnas nüüd talituse ja ' +
             'prefektuuri põhine edetabel politseiametniku staatuses mängijatele.',
         date: '2025-08-22',
-        isNew: true
+
     },
     {
         id: '7',

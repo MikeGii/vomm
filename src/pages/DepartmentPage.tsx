@@ -4,12 +4,15 @@ import { useNavigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { DepartmentHierarchy } from '../components/department/DepartmentHierarchy';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
+import { DepartmentTabs } from '../components/department/DepartmentTabs';
 import { DepartmentLeaderboard } from '../components/department/DepartmentLeaderboard';
 import '../styles/pages/Department.css';
+import {isPoliceOfficer} from "../utils/playerStatus";
+import {DepartmentInstructions} from "../components/department/DepartmentInstructions";
 
 const DepartmentPage: React.FC = () => {
     const navigate = useNavigate();
-    const { playerStats, loading } = usePlayerStats();
+    const { playerStats, loading, refreshStats } = usePlayerStats();
 
     if (loading) {
         return (
@@ -34,7 +37,7 @@ const DepartmentPage: React.FC = () => {
     }
 
     // Check if player has graduated (completed lopueksam)
-    const hasGraduated = ['patrullpolitseinik', 'grupijuht', 'talituse_juht'].includes(playerStats.policePosition || '');
+    const hasGraduated = isPoliceOfficer(playerStats);
 
     if (!hasGraduated) {
         return (
@@ -78,8 +81,15 @@ const DepartmentPage: React.FC = () => {
 
                 <h1 className="department-title">Politsei Struktuur</h1>
 
+                <DepartmentInstructions />
+
                 {/* Department Hierarchy */}
                 <DepartmentHierarchy currentPlayerStats={playerStats} />
+
+                <DepartmentTabs
+                    currentPlayerStats={playerStats}
+                    onPlayerStatsUpdate={refreshStats}
+                />
 
                 <DepartmentLeaderboard />
             </main>

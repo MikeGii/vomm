@@ -1,0 +1,480 @@
+/* src/styles/components/admin/AdminApplicationsTab.css */
+.admin-applications-tab {
+    padding: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    gap: 1rem;
+}
+
+.tab-header h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.5rem;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.summary-stats {
+    display: flex;
+    gap: 1rem;
+}
+
+.stat-item {
+    padding: 0.5rem 1rem;
+    background-color: #333;
+    color: #fff;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.stat-item.expired {
+    background-color: #dc3545;
+}
+
+.cleanup-btn {
+    padding: 0.75rem 1.5rem;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.cleanup-btn:hover:not(:disabled) {
+    background-color: #5a6268;
+}
+
+.cleanup-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.no-applications {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: #ccc;
+}
+
+.no-applications-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.no-applications-text {
+    font-size: 1.3rem;
+    color: #fff;
+}
+
+.applications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.admin-application-card {
+    background-color: #222;
+    border: 1px solid #333;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.admin-application-card:hover {
+    border-color: #4a90e2;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(74, 144, 226, 0.15);
+}
+
+.application-summary {
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 2rem;
+    align-items: center;
+}
+
+.applicant-info h4 {
+    margin: 0 0 0.75rem 0;
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.application-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.application-details span {
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.application-timing {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.application-timing span {
+    font-size: 0.85rem;
+    color: #999;
+}
+
+.expires {
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: inline-block;
+    max-width: fit-content;
+}
+
+.expires.normal {
+    background-color: rgba(74, 144, 226, 0.2);
+    color: #4a90e2;
+}
+
+.expires.urgent {
+    background-color: rgba(255, 165, 0, 0.2);
+    color: #ffa500;
+}
+
+.expires.expired {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+}
+
+.vote-summary {
+    text-align: center;
+    min-width: 120px;
+}
+
+.vote-counts {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.vote-count {
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.vote-count.approve {
+    background-color: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.vote-count.reject {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.vote-trend {
+    font-size: 0.8rem;
+    color: #999;
+    font-style: italic;
+}
+
+.admin-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 140px;
+}
+
+.btn-admin-approve,
+.btn-admin-reject {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.btn-admin-approve {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-admin-approve:hover:not(:disabled) {
+    background-color: #218838;
+    transform: translateY(-1px);
+}
+
+.btn-admin-reject {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-admin-reject:hover:not(:disabled) {
+    background-color: #c82333;
+    transform: translateY(-1px);
+}
+
+.btn-admin-approve:disabled,
+.btn-admin-reject:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #222;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border: 1px solid #333;
+}
+
+.modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.3rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: #ccc;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    background-color: #333;
+    color: #fff;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.application-summary-modal {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    border-left: 4px solid #4a90e2;
+}
+
+.application-summary-modal p {
+    margin: 0.5rem 0;
+    color: #ccc;
+}
+
+.rejection-form {
+    margin-top: 1rem;
+}
+
+.rejection-form label {
+    display: block;
+    margin-bottom: 0.75rem;
+    color: #fff;
+    font-weight: 600;
+}
+
+.rejection-form textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 0.75rem;
+    background-color: #333;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #fff;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.rejection-form textarea:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.character-count {
+    text-align: right;
+    margin-top: 0.5rem;
+    color: #999;
+    font-size: 0.8rem;
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #333;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.btn-cancel {
+    padding: 0.75rem 1.5rem;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel:hover:not(:disabled) {
+    background-color: #5a6268;
+}
+
+.btn-confirm {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-confirm.approve {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-confirm.approve:hover:not(:disabled) {
+    background-color: #218838;
+}
+
+.btn-confirm.reject {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-confirm.reject:hover:not(:disabled) {
+    background-color: #c82333;
+}
+
+.btn-cancel:disabled,
+.btn-confirm:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.loading {
+    text-align: center;
+    padding: 3rem;
+    color: #ccc;
+    font-size: 1.1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .application-summary {
+        grid-template-columns: 1fr auto;
+        gap: 1.5rem;
+    }
+
+    .vote-summary {
+        grid-column: 1 / -1;
+        margin-top: 1rem;
+    }
+
+    .admin-actions {
+        flex-direction: row;
+        min-width: unset;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-applications-tab {
+        padding: 1rem;
+    }
+
+    .tab-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .header-actions {
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .summary-stats {
+        flex: 1;
+    }
+
+    .application-summary {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .admin-actions {
+        flex-direction: column;
+    }
+
+    .modal-content {
+        width: 95%;
+        margin: 1rem;
+    }
+
+    .modal-footer {
+        flex-direction: column;
+    }
+
+    .btn-cancel,
+    .btn-confirm {
+        width: 100%;
+    }
+}

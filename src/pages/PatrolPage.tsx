@@ -25,6 +25,7 @@ import {
 import { getAvailableWorkActivities } from '../data/workActivities';
 import { getActiveEvent, processEventChoice } from '../services/EventService';
 import '../styles/pages/Patrol.css';
+import {isAbipolitseinik, isKadett, isPoliceOfficer} from "../utils/playerStatus";
 
 const PatrolPage: React.FC = () => {
     const navigate = useNavigate();
@@ -56,11 +57,9 @@ const PatrolPage: React.FC = () => {
         if (!playerStats) return { isAbipolitseinik: false, isKadett: false, isPolitseiametnik: false };
 
         return {
-            isAbipolitseinik: playerStats.policePosition === 'abipolitseinik',
-            isKadett: playerStats.policePosition === 'kadett',
-            isPolitseiametnik: playerStats.policePosition === 'patrullpolitseinik' ||
-                playerStats.policePosition === 'grupijuht' ||
-                playerStats.policePosition === 'talituse_juht'
+            isAbipolitseinik: isAbipolitseinik(playerStats),
+            isKadett: isKadett(playerStats),
+            isPolitseiametnik: isPoliceOfficer(playerStats)
         };
     }, [playerStats]);
 

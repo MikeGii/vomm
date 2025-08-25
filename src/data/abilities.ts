@@ -1,6 +1,6 @@
 // src/data/abilities.ts
 import { IconType } from 'react-icons';
-import { GiPistolGun, GiElectric, GiPoliceCar, GiMachineGunMagazine } from 'react-icons/gi';
+import {GiPistolGun, GiElectric, GiPoliceCar, GiMachineGunMagazine, GiSniffingDog} from 'react-icons/gi';
 import { MdSpeed } from 'react-icons/md';
 import { FaTabletAlt, FaMedkit } from 'react-icons/fa';
 import { FaComputer, FaPeopleGroup } from 'react-icons/fa6';
@@ -185,6 +185,17 @@ export const ABILITIES: Ability[] = [
         trainingBonuses: [
             { attribute: 'intelligence', percentage: 0.05 },
             { attribute: 'endurance', percentage: 0.05 }
+        ]
+    },
+    {
+        id: 'doggys_favorite',
+        name: 'Koertega tegutsemine',
+        description: 'Oled läbinud koolituse koos K9 üksusega edukaks tegutsemiseks',
+        icon: GiSniffingDog,
+        requiredCourse: 'dog_handler_course',
+        trainingBonuses: [
+            { attribute: 'dexterity', percentage: 0.05 },
+            { attribute: 'agility', percentage: 0.05 }
         ]
     }
 ];

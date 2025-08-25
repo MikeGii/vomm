@@ -21,11 +21,51 @@ export const DEPARTMENT_UNITS: DepartmentUnit[] = [
     {
         id: 'procedural_service',
         name: 'Menetlustalitus',
-        description: 'Kuritegude uurimine ja tõendite kogumine.',
+        description: 'Süütegude uurimine ja tõendite kogumine.',
         requirements: {
-            minimumLevel: 50,
+            minimumLevel: 45,
             requiredCourses: ['enhanced_law_studies'],
             specialRequirements: ['Peab olema lõpetanud süüteomenetluse täiendkursuse']
+        }
+    },
+    {
+        id: 'emergency_response',
+        name: 'Kiirreageerimisüksus',
+        description: 'Kiireloomulistele väljakutsetele reageerimine ja kriisiolukordade lahendamine',
+        requirements: {
+            minimumLevel: 50,
+            requiredCourses: ['lopueksam', 'riot_police_course'],
+            specialRequirements: ['Peab olema läbinud füüsilise ettevalmistuse testi']
+        }
+    },
+    {
+        id: 'k9_unit',
+        name: 'K9',
+        description: 'Teenistuskoertega tehtav töö - jälgede otsing, narkootikumide tuvastamine',
+        requirements: {
+            minimumLevel: 45,
+            requiredCourses: ['lopueksam', 'dog_handler_course'],
+            specialRequirements: ['Peab olema läbinud koerajuhi koolituse']
+        }
+    },
+    {
+        id: 'cyber_crime',
+        name: 'Küberkuritegevuse talitus',
+        description: 'Küberruumis toime pandud kuritegude uurimine ja ennetamine',
+        requirements: {
+            minimumLevel: 55,
+            requiredCourses: ['lopueksam', 'cyber_crime_course', 'advanced_computer_skills'],
+            specialRequirements: ['Peab olema läbinud küberjulgeoleku spetsialiseerumise']
+        }
+    },
+    {
+        id: 'crime_unit',
+        name: 'Kuritegude talitus',
+        description: 'Raskete kuritegude uurimine ja kurjategijate jälitamine',
+        requirements: {
+            minimumLevel: 50,
+            requiredCourses: ['lopueksam', 'detective_course', 'forensics_basics'],
+            specialRequirements: ['Peab olema läbinud uurimistehnikate koolituse']
         }
     }
 ];
