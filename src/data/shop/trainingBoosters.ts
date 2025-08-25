@@ -32,7 +32,7 @@ export const TRAINING_BOOSTER_ITEMS: ShopItem[] = [
     },
     {
         id: 'steroid_01',
-        name: 'Lahja steroid',
+        name: 'Lahja steroid - Stanozolol',
         description: 'Taastab 4 treeningklõpsu',
         category: 'trainingBooster',
         price: 50.00,
@@ -46,7 +46,7 @@ export const TRAINING_BOOSTER_ITEMS: ShopItem[] = [
     },
     {
         id: 'steroid_02',
-        name: 'Kange steroid',
+        name: 'Kange steroid - Trenbolone',
         description: 'Taastab 10 treeningklõpsu',
         category: 'trainingBooster',
         price: 450.00,
