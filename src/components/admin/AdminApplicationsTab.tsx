@@ -171,8 +171,8 @@ export const AdminApplicationsTab: React.FC = () => {
                     adminDecision: 'approved'
                 });
 
-                // Update player position
-                const playerRef = doc(firestore, 'playerStats', selectedApplication.applicantId);
+                // FIXED: Use applicantUserId instead of applicantId
+                const playerRef = doc(firestore, 'playerStats', selectedApplication.applicantUserId);
                 await updateDoc(playerRef, {
                     policePosition: selectedApplication.positionId,
                     departmentUnit: targetUnit

@@ -286,20 +286,22 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
                 policePosition: positionId
             };
 
-            const playerRef = doc(firestore, 'playerStats', playerStats.username);
+            // FIXED: Use currentUser.uid instead of playerStats.username
+            const playerRef = doc(firestore, 'playerStats', currentUser.uid);
             await updateDoc(playerRef, updatedData);
 
             if (position.isGroupLeader) {
-                showToast(`Õnnitleme! Saite edutatud grupijuhiks ja teie uus auaste on Vanemkomissar!`, 'success');
+                showToast(`Õnnitleme! Sa oled nüüd ${position.positionName}!`, 'success');
             } else {
-                showToast(`Edukalt liikusid üksusesse: ${position.unitName}`, 'success');
+                showToast(`Edukalt üle viidud üksusesse: ${position.unitName}`, 'success');
             }
 
-            // Refresh player stats and positions
             if (onPlayerStatsUpdate) {
                 onPlayerStatsUpdate();
             }
-            generatePositionsList();
+
+            // Refresh positions list
+            await generatePositionsList();
 
         } catch (error) {
             console.error('Error switching unit:', error);
@@ -307,8 +309,6 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
         } finally {
             setSwitching(null);
         }
-
-        await generatePositionsList();
     };
 
     const handleApply = async (positionId: string) => {
