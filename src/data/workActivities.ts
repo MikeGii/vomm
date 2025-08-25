@@ -53,12 +53,91 @@ const PATROL_ACTIVITIES: WorkActivity[] = [
         description: 'Tugeva patrullitöö kogemuse ja vaneminspektorina on sul võimalus alustada teenistust välijuhina',
         minLevel: 40,
         requiredCourses: ['police_ground_leader_course'],
-        baseExpPerHour: 550,
+        baseExpPerHour: 650,
+        expGrowthRate: 0.10,
+        maxHours: 12,
+        allowedFor: ['patrullpolitseinik']
+    },
+    {
+        id: 'patrol_group_leader_placement',
+        name: 'Asendad grupijuhti tema tööülesannetes',
+        description: 'Grupijuht on puhkusel ja oled määratud tema asendajaks',
+        minLevel: 50,
+        requiredCourses: ['police_group_leader_course'],
+        baseExpPerHour: 850,
         expGrowthRate: 0.10,
         maxHours: 12,
         allowedFor: ['patrullpolitseinik']
     }
 ];
+
+// Group leader work activities
+const GROUP_LEADER_ACTIVITIES: WorkActivity[] = [
+
+    {
+        id: 'patrol_group_leader_01',
+        name: 'Grupijuhi kohustused jaoskonnas',
+        description: 'Grupijuhina täidad töökohustusi jaoskonnas, viid läbi arenguvestluseid, osaled koosolekutel ja parendad grupi toimivust',
+        minLevel: 55,
+        requiredCourses: ['police_ground_leader_course'],
+        baseExpPerHour: 1050,
+        expGrowthRate: 0.10,
+        maxHours: 12,
+        allowedFor: ['grupijuht_patrol']
+    }
+
+]
+
+// Procedural unit work activities
+const PROCEDURAL_UNIT_ACTIVITIES: WorkActivity[] = [
+
+    {
+        id: 'procedural_unit_work_01',
+        name: 'Menetle väärteomaterjale',
+        description: 'Uurijana pead menetlema ja lõpetama jaoskonda tulnud väärteomenetlusi',
+        minLevel: 45,
+        requiredCourses: ['evidence_place_course'],
+        baseExpPerHour: 700,
+        expGrowthRate: 0.10,
+        maxHours: 8,
+        allowedFor: ['uurija'],
+    }
+
+]
+
+// Emergency responder unit work activities
+const EMERGENCY_RESPOND_UNIT_ACTIVITIES: WorkActivity[] = [
+
+    {
+        id: 'emergency_respond_work_01',
+        name: 'Abista patrulle ohtlike isikute tabamisel',
+        description: 'Kiirreageerijana oled valmis reageerima ja abistama patrullpolitseinike ohtlike isikute kinnipidamisel',
+        minLevel: 50,
+        requiredCourses: ['riot_police_course', 'medical_course_police'],
+        baseExpPerHour: 750,
+        expGrowthRate: 0.10,
+        maxHours: 12,
+        allowedFor: ['kiirreageerija'],
+    }
+
+]
+
+// Emergency responder unit work activities
+const K9_UNIT_ACTIVITIES: WorkActivity[] = [
+
+    {
+        id: 'K9_work_01',
+        name: 'Abista patrulle ohtlike isikute tabamisel',
+        description: 'K9 üksusena oled valmis reageerima ja abistama patrullpolitseinike ohtlike isikute kinnipidamisel ja sõidukite läbiotsimisel',
+        minLevel: 45,
+        requiredCourses: ['dog_handler_course'],
+        baseExpPerHour: 650,
+        expGrowthRate: 0.12,
+        maxHours: 12,
+        allowedFor: ['koerajuht'],
+    }
+
+]
 
 // Academy student work activities
 const ACADEMY_ACTIVITIES: WorkActivity[] = [
@@ -89,11 +168,30 @@ const ACADEMY_ACTIVITIES: WorkActivity[] = [
 // Export combined work activities
 export const WORK_ACTIVITIES: WorkActivity[] = [
     ...PATROL_ACTIVITIES,
-    ...ACADEMY_ACTIVITIES
+    ...ACADEMY_ACTIVITIES,
+    ...GROUP_LEADER_ACTIVITIES,
+    ...PROCEDURAL_UNIT_ACTIVITIES,
+    ...EMERGENCY_RESPOND_UNIT_ACTIVITIES,
+    ...K9_UNIT_ACTIVITIES,
 ];
 
 // Helper function to determine player status - NOW USES POLICE POSITION
-type PlayerStatus = 'kadett' | 'abipolitseinik' | 'patrullpolitseinik' | 'uurija' | 'kiirreageerija' | 'koerajuht' | 'küberkriminalist' | 'jälitaja' | 'unknown';
+type PlayerStatus =
+    | 'kadett'
+    | 'abipolitseinik'
+    | 'patrullpolitseinik'
+    | 'uurija'
+    | 'kiirreageerija'
+    | 'koerajuht'
+    | 'küberkriminalist'
+    | 'jälitaja'
+    | 'grupijuht_patrol'
+    | 'grupijuht_investigation'
+    | 'grupijuht_emergency'
+    | 'grupijuht_k9'
+    | 'grupijuht_cyber'
+    | 'grupijuht_crimes'
+    | 'unknown';
 
 const getPlayerStatus = (
     policePosition: string | null | undefined
@@ -113,7 +211,7 @@ const getPlayerStatus = (
     if (policePosition === 'jälitaja') return 'jälitaja';
 
     // Group leaders work as their base unit position for now
-    if (policePosition === 'grupijuht_patrol') return 'patrullpolitseinik';
+    if (policePosition === 'grupijuht_patrol') return 'grupijuht_patrol';
     if (policePosition === 'grupijuht_investigation') return 'uurija';
     if (policePosition === 'grupijuht_emergency') return 'kiirreageerija';
     if (policePosition === 'grupijuht_k9') return 'koerajuht';
@@ -197,6 +295,8 @@ export const calculateSalaryForOfficer = (rank: string | null, hours: number): n
         'inspektor': 120,
         'vaneminspektor': 140,
         'üleminspektor': 160,
+        'komissar': 200,
+        'vanemkomissar': 240
     };
 
     const normalizedRank = rank.toLowerCase();

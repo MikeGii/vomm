@@ -214,6 +214,12 @@ export interface WorkActivity {
         | 'koerajuht'
         | 'küberkriminalist'
         | 'jälitaja'
+        | 'grupijuht_patrol'
+        | 'grupijuht_investigation'
+        | 'grupijuht_emergency'
+        | 'grupijuht_k9'
+        | 'grupijuht_cyber'
+        | 'grupijuht_crimes'
         )[];
     moneyReward?: number;
 }
