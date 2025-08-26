@@ -1,5 +1,5 @@
 // src/components/leaderboard/Leaderboard.tsx
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, {useState, useEffect, useCallback, useMemo, useRef} from 'react';
 import { LeaderboardTable } from './LeaderboardTable';
 import { PlayerProfileModal } from './PlayerProfileModal';
 import { getLeaderboard } from '../../services/LeaderboardService';
@@ -11,11 +11,6 @@ interface LeaderboardProps {
     currentUserId?: string;
 }
 
-// Cache edetabeli andmed 5 minutiks
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutit
-let cachedData: LeaderboardEntry[] | null = null;
-let cacheTimestamp: number = 0;
-
 export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId }) => {
     const [allEntries, setAllEntries] = useState<LeaderboardEntry[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
@@ -25,10 +20,12 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isLoadingProfile, setIsLoadingProfile] = useState(false);
 
+    // Add ref to prevent double-loading in development
+    const loadingRef = useRef(false);
+
     // Pagination settings
     const entriesPerPage = 10;
 
-    // Optimeeri kalkulatsioonid useMemo'ga
     const { currentEntries, totalPages, userRank, userPage, indexOfFirstEntry, indexOfLastEntry } = useMemo(() => {
         const total = Math.ceil(allEntries.length / entriesPerPage);
         const indexOfLastEntry = currentPage * entriesPerPage;
@@ -48,31 +45,23 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId }) => {
     }, [allEntries, currentPage, currentUserId, entriesPerPage]);
 
     const loadLeaderboard = useCallback(async (forceRefresh = false) => {
-        // Kontrolli cache'i
-        const now = Date.now();
-        if (!forceRefresh && cachedData && (now - cacheTimestamp < CACHE_DURATION)) {
-            setAllEntries(cachedData);
-            setLoading(false);
-            return;
-        }
+        // Prevent double-loading in React StrictMode
+        if (loadingRef.current && !forceRefresh) return;
+        loadingRef.current = true;
 
         setLoading(true);
         setError(null);
 
         try {
-            // Uuendatud funktsioonikutse - enam ei kasuta sortBy parameetrit
-            const data = await getLeaderboard(100);
-
-            // Salvesta cache'i
-            cachedData = data;
-            cacheTimestamp = now;
-
+            // SIMPLIFIED - CacheManager handles caching now!
+            const data = await getLeaderboard(200, forceRefresh);  // Changed to 200
             setAllEntries(data);
         } catch (err) {
             console.error('Error loading leaderboard:', err);
             setError('Edetabeli laadimine ebaõnnestus');
         } finally {
             setLoading(false);
+            loadingRef.current = false;
         }
     }, []);
 
