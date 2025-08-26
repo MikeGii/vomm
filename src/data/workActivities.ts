@@ -143,10 +143,55 @@ const K9_UNIT_ACTIVITIES: WorkActivity[] = [
         description: 'K9 üksusena oled valmis reageerima ja abistama patrullpolitseinike ohtlike isikute kinnipidamisel ja sõidukite läbiotsimisel',
         minLevel: 45,
         requiredCourses: ['dog_handler_course'],
-        baseExpPerHour: 650,
+        baseExpPerHour: 700,
         expGrowthRate: 0.12,
         maxHours: 12,
         allowedFor: ['koerajuht'],
+    }
+
+]
+
+const CRIME_UNIT_ACTIVITIES: WorkActivity[] = [
+
+    {
+        id: 'crime_unit_work_01',
+        name: 'Jälita tänavatel narkokaubitsejaid',
+        description: 'Liigud tänavatel erariietes ja kogud infot narkokaubitsejate asukohtade, tegevuste ja liikumiste kohta',
+        minLevel: 50,
+        requiredCourses: ['detective_course'],
+        baseExpPerHour: 850,
+        expGrowthRate: 0.10,
+        maxHours: 12,
+        allowedFor: ['jälitaja'],
+    },
+    {
+        id: 'crime_unit_work_02',
+        name: 'Lahenda raskeid varavastaseid süütegusid',
+        description: 'Tegeled jaoskonnas bürokraatiaga ja väljas info kogumisega raskete varavastaste süütegude osas nagu röövimised ja väljapressimised',
+        minLevel: 65,
+        requiredCourses: ['narcotic_psyhotropic_substances'],
+        baseExpPerHour: 950,
+        expGrowthRate: 0.12,
+        maxHours: 12,
+        allowedFor: ['jälitaja'],
+    }
+
+]
+
+
+const CYBER_CRIME_UNIT_ACTIVITIES: WorkActivity[] = [
+
+    {
+        id: 'cyber_crime_work_01',
+        name: 'Jälgi internetis toimuvat',
+        description: 'Uue liikmena küberkuritegevuse uurijate üksuses esmalt jälgid internetis pettuste ja muude halva kavatsustega' +
+            ' isikute tegevust',
+        minLevel: 55,
+        requiredCourses: ['cyber_crime_course'],
+        baseExpPerHour: 800,
+        expGrowthRate: 0.12,
+        maxHours: 8,
+        allowedFor: ['küberkriminalist'],
     }
 
 ]
@@ -185,6 +230,8 @@ export const WORK_ACTIVITIES: WorkActivity[] = [
     ...PROCEDURAL_UNIT_ACTIVITIES,
     ...EMERGENCY_RESPOND_UNIT_ACTIVITIES,
     ...K9_UNIT_ACTIVITIES,
+    ...CRIME_UNIT_ACTIVITIES,
+    ...CYBER_CRIME_UNIT_ACTIVITIES
 ];
 
 // Helper function to determine player status - NOW USES POLICE POSITION
