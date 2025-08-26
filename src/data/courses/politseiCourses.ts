@@ -189,7 +189,7 @@ export const POLITSEI_COURSES: Course[] = [
         duration: 10800,
         requirements: {
             level: 45,
-            completedCourses: ['lõpueksam'],
+            completedCourses: ['lopueksam'],
             totalWorkedHours: 50
         },
         rewards: {
@@ -264,6 +264,42 @@ export const POLITSEI_COURSES: Course[] = [
             experience: 4500,
             reputation: 400,
             money: 3000,
+        },
+        category: 'politsei'
+    },
+    {
+        id: 'narcotic_psyhotropic_substances',
+        name: 'Narkootiliste ja psühhotroopsete ainete koolitus',
+        description: 'Koolitus, kus õpid tundma narkootiliste ja psühhotroopsete ainete tundemärke, lihtsamaid keemilisi koostiosasi ja ' +
+            'isikute käitumismustreid',
+        duration: 18000,
+        requirements: {
+            level: 60,
+            completedCourses: ['detective_course'],
+            totalWorkedHours: 100
+        },
+        rewards: {
+            experience: 6500,
+            reputation: 500,
+            money: 4000,
+        },
+        category: 'politsei'
+    },
+    {
+        id: 'forensics_basics',
+        name: 'Kohtuekspertiisi algkoolitus',
+        description: 'Põhjalik koolitus tõendite kogumiseks, säilitamiseks ja analüüsimiseks. Õpid DNA analüüsi, sõrmejälgede võtmist,' +
+            ' ballistikat ja muud kohtumeditsiini alaseid oskusi.',
+        duration: 18000,
+        requirements: {
+            level: 65,
+            completedCourses: ['detective_course'],
+            totalWorkedHours: 120
+        },
+        rewards: {
+            experience: 8500,
+            reputation: 600,
+            money: 5000,
         },
         category: 'politsei'
     },

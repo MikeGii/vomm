@@ -185,7 +185,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'crime_unit',
         requirements: {
             minimumLevel: 65,
-            completedCourses: ['lopueksam', 'police_group_leader_course', 'detective_course', 'forensics_basics'],
+            completedCourses: ['police_group_leader_course', 'narcotic_psyhotropic_substances', 'forensics_basics'],
             minimumWorkedHours: 150
         }
     },
