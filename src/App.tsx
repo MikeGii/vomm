@@ -19,7 +19,7 @@ import { PlayerStatsProvider } from './contexts/PlayerStatsContext';
 import DepartmentPage from "./pages/DepartmentPage";
 import FeedbackPage from "./pages/FeedbackPage";
 import AdminPage from './pages/AdminPage';
-
+import TestsPage from './pages/TestsPage';
 
 function App() {
     return (
@@ -110,6 +110,8 @@ function App() {
                                 </ProtectedRoute>
                             }
                         />
+
+                        <Route path="/tests" element={<TestsPage />} />
 
                         <Route
                             path="/feedback"

@@ -23,7 +23,11 @@ export const ProfileAttributes: React.FC<ProfileAttributesProps> = ({ attributes
             endurance: 'Vastupidavus',
             cooking: 'Toidu valmistamine',
             brewing: 'Joogi valmistamine',
-            chemistry: 'Keemia valmistamine'
+            chemistry: 'Keemia valmistamine',
+            sewing: 'Õmblemine',
+            medicine: 'Meditsiin',
+            printing: '3D Printimine - (tulekul)',
+            lasercutting: 'Laserlõikus - (tulekul)'
         };
         return names[key] || key;
     };
@@ -37,13 +41,19 @@ export const ProfileAttributes: React.FC<ProfileAttributesProps> = ({ attributes
             endurance: '🏋️',
             cooking: '🍳',
             brewing: '🥤',
-            chemistry: '🧪'
+            chemistry: '🧪',
+            sewing: '🪡',
+            medicine: '🏥',
+            printing: '🔒',
+            lasercutting: '🔒'
         };
         return icons[key] || '📊';
     };
 
-    const getAttributeCategory = (key: string): 'physical' | 'kitchen-lab' => {
-        return ['cooking', 'brewing', 'chemistry'].includes(key) ? 'kitchen-lab' : 'physical';
+    const getAttributeCategory = (key: string): 'physical' | 'kitchen-lab' | 'handicraft' => {
+        if (['cooking', 'brewing', 'chemistry'].includes(key)) return 'kitchen-lab';
+        if (['sewing', 'medicine', 'printing', 'lasercutting'].includes(key)) return 'handicraft';
+        return 'physical';
     };
 
     // Separate attributes into categories
@@ -55,12 +65,17 @@ export const ProfileAttributes: React.FC<ProfileAttributesProps> = ({ attributes
         getAttributeCategory(key) === 'kitchen-lab'
     );
 
+    const handicraftAttributes = Object.entries(attributes).filter(([key]) =>
+        getAttributeCategory(key) === 'handicraft'
+    );
+
     const renderAttributeCard = ([key, data]: [string, any]) => {
         const bonus = equipmentBonuses ? equipmentBonuses[key as keyof typeof equipmentBonuses] : 0;
         const totalLevel = data.level + bonus;
+        const isLocked = key === 'printing' || key === 'lasercutting';
 
         return (
-            <div key={key} className="attribute-card">
+            <div key={key} className={`attribute-card ${isLocked ? 'locked' : ''}`}>
                 <div className="attribute-header">
                     <span className="attribute-emoji">{getAttributeIcon(key)}</span>
                     <span className="attribute-name">{getAttributeName(key)}</span>
@@ -109,6 +124,14 @@ export const ProfileAttributes: React.FC<ProfileAttributesProps> = ({ attributes
                 <h3 className="category-title">Köök & Labor oskused</h3>
                 <div className="attributes-grid">
                     {kitchenLabAttributes.map(renderAttributeCard)}
+                </div>
+            </div>
+
+            {/* Handicraft Attributes Section */}
+            <div className="attribute-category">
+                <h3 className="category-title">Käsitöö oskused</h3>
+                <div className="attributes-grid">
+                    {handicraftAttributes.map(renderAttributeCard)}
                 </div>
             </div>
 

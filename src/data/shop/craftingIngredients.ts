@@ -113,6 +113,36 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         basePrice: 320,
         maxStock: 1000
     },
+    {
+        id: 'protein_powder',
+        name: 'Valgupulber',
+        description: 'Kõrgekvaliteediline valgupulber lihasmassi taastamiseks ja energia säilitamiseks',
+        category: 'crafting',
+        price: 85,
+        currency: 'money',
+        basePrice: 85,
+        maxStock: 4000
+    },
+    {
+        id: 'creatine_monohydrate',
+        name: 'Kreatiin monohüdraat',
+        description: 'Puhas kreatiin monohüdraat lihasjõu ja vastupidavuse suurendamiseks',
+        category: 'crafting',
+        price: 125,
+        currency: 'money',
+        basePrice: 125,
+        maxStock: 4000
+    },
+    {
+        id: 'amino_acids',
+        name: 'Aminohapped',
+        description: 'Essentiaalsed aminohapped aju neurotransmitterite tootmiseks ja fookuse parandamiseks',
+        category: 'crafting',
+        price: 180,
+        currency: 'money',
+        basePrice: 180,
+        maxStock: 4000
+    },
     // Drinks
     {
         id: 'energy_drink',
@@ -214,6 +244,20 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         }
     },
     {
+        id: 'rescue_league_food_pack',
+        name: 'Päästeliidu toidupakk',
+        description: 'Professionaalne toidupakk välitingimustes töötavate ametnike jaoks',
+        category: 'crafting',
+        price: 850,
+        currency: 'money',
+        basePrice: 850,
+        maxStock: 0,
+        consumableEffect: {
+            type: 'heal',
+            value: 80
+        }
+    },
+    {
         id: 'super_booster',
         name: 'Supervõimendaja',
         description: 'Ülim energiajook treeninguteks',
@@ -228,6 +272,20 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         }
     },
     {
+        id: 'anabolic_drink',
+        name: 'Anaboolne jook',
+        description: 'Võimas jõujook maksimaalse treeningu soorituse saavutamiseks',
+        category: 'crafting',
+        price: 1200,
+        currency: 'money',
+        basePrice: 1200,
+        maxStock: 0,
+        consumableEffect: {
+            type: 'trainingClicks',
+            value: 8
+        }
+    },
+    {
         id: 'brain_accelerator',
         name: 'Ajukiirendaja',
         description: 'Kiirendab õppimist ja kursuste läbimist 10% võrra',
@@ -238,6 +296,20 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         maxStock: 0,
         consumableEffect: {
             type: 'courseTimeReduction',
+            value: 10
+        }
+    },
+    {
+        id: 'work_efficiency_serum',
+        name: 'Töökuse seerum',
+        description: 'Keemiline lahus töökiirenduse ja fookuse parandamiseks',
+        category: 'crafting',
+        price: 4500,
+        currency: 'money',
+        basePrice: 4500,
+        maxStock: 0,
+        consumableEffect: {
+            type: 'workTimeReduction',
             value: 10
         }
     },
@@ -316,6 +388,16 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         maxStock: 8000
     },
     {
+        id: 'synthetic_fiber',
+        name: 'Sünteetilised kiud',
+        description: 'Kõrgtehnoloogilised sünteetilised kiud vastupidava varustuse valmistamiseks',
+        category: 'crafting',
+        price: 95,
+        currency: 'money',
+        basePrice: 95,
+        maxStock: 3000
+    },
+    {
         id: 'bandage',
         name: 'Side',
         description: 'Meditsiiniline side haavade katmiseks',
@@ -365,6 +447,20 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         consumableEffect: {
             type: 'heal',
             value: 8
+        }
+    },
+    {
+        id: 'emergency_trauma_kit',
+        name: 'Hädaabipakk',
+        description: 'Professionaalne hädaolukordade meditsiinipakk',
+        category: 'crafting',
+        price: 380,
+        currency: 'money',
+        basePrice: 380,
+        maxStock: 0,
+        consumableEffect: {
+            type: 'heal',
+            value: 25
         }
     }
 

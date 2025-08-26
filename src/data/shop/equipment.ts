@@ -193,5 +193,21 @@ export const PROTECTION_ITEMS: ShopItem[] = [
             strength: 1,
             agility: 1
         }
+    },
+    {
+        id: 'tactical_safety_boots',
+        name: 'Taktikalised turvasaapad',
+        description: 'Professionaalsed taktikalised saapad välitingimusteks',
+        category: 'protection',
+        price: 950,
+        currency: 'money',
+        basePrice: 950,
+        maxStock: 0,
+        equipmentSlot: 'shoes',
+        stats: {
+            dexterity: 2,
+            endurance: 1,
+            agility: 3
+        }
     }
 ];

@@ -30,6 +30,8 @@ export interface PlayerAttributes {
     chemistry: AttributeData;
     sewing: AttributeData;
     medicine: AttributeData;
+    printing: AttributeData;
+    lasercutting: AttributeData;
 }
 
 export interface TrainingActivity {
@@ -48,6 +50,8 @@ export interface TrainingActivity {
         chemistry?: number;
         sewing?: number;
         medicine?: number;
+        printing?: number;
+        lasercutting?: number;
         playerExp: number;
     };
     requiredItems?: {

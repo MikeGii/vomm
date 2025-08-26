@@ -150,3 +150,12 @@
         margin-bottom: 0.75rem;
     }
 }
+
+.attribute-card.locked {
+    opacity: 0.6;
+    border: 1px dashed #666;
+}
+
+.attribute-card.locked .attribute-name {
+    font-style: italic;
+}

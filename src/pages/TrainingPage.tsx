@@ -416,7 +416,9 @@ const TrainingPage: React.FC = () => {
                             title="Sinu käsitöö oskused"
                             displayAttributes={[
                                 { key: 'sewing', name: 'Õmblemine', icon: '🪡' },
-                                { key: 'medicine', name: 'Meditsiin', icon: '🏥' }
+                                { key: 'medicine', name: 'Meditsiin', icon: '🏥' },
+                                { key: 'printing', name: '3D Printimine - Esmalt osta kinnisvara (tulekul)', icon: '🔒' },
+                                { key: 'lasercutting', name: 'Laserilõikus - Esmalt osta kinnisvara (tulekul)', icon: '🔒' }
                             ]}
                         />
 
