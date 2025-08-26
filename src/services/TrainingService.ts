@@ -45,7 +45,9 @@ export const initializeAttributes = (): PlayerAttributes => {
         brewing: createAttribute(),
         chemistry: createAttribute(),
         sewing: createAttribute(),
-        medicine: createAttribute()
+        medicine: createAttribute(),
+        printing: createAttribute(),
+        lasercutting: createAttribute(),
     };
 };
 
@@ -337,6 +339,8 @@ export const performTraining = async (
         chemistry?: number;
         sewing?: number;
         medicine?: number;
+        printing?: number;
+        lasercutting?: number;
         playerExp: number;
     },
     trainingType: 'sports' | 'kitchen-lab' | 'handicraft' = 'sports'
@@ -489,6 +493,17 @@ export const performTraining = async (
         attributes.medicine = result.updatedAttribute;
         totalAttributeLevelsGained += result.levelsGained;
     }
+    if (rewards.printing) {
+        const result = updateAttribute(attributes.printing, rewards.printing);
+        attributes.printing = result.updatedAttribute;
+        totalAttributeLevelsGained += result.levelsGained;
+    }
+    if (rewards.lasercutting) {
+        const result = updateAttribute(attributes.lasercutting, rewards.lasercutting);
+        attributes.lasercutting = result.updatedAttribute;
+        totalAttributeLevelsGained += result.levelsGained;
+    }
+
 
     // Handle health updates
     let updatedHealth = stats.health;

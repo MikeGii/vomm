@@ -103,6 +103,8 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                 <>
                     {activity.rewards.sewing && (<li>🪡 Õmblemine: +{activity.rewards.sewing}</li>)}
                     {activity.rewards.medicine && (<li>🏥 Meditsiin: +{activity.rewards.medicine}</li>)}
+                    {activity.rewards.printing && (<li>🔒 3D Printimine - Esmalt osta kinnisvara (tulekul)</li>)}
+                    {activity.rewards.lasercutting && (<li>🔒 Laserilõikus - Esmalt osta kinnisvara (tulekul)</li>)}
                 </>
             );
         }

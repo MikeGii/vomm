@@ -58,6 +58,25 @@ export const HANDICRAFT_ACTIVITIES: TrainingActivity[] = [
             { id: 'reinforced_work_gloves', quantity: 1 }
         ]
     },
+    {
+        id: 'tactical_safety_boots_craft',
+        name: 'Valmista taktikalisi turvasaapaid',
+        description: 'Valmistad professionaalseid taktikalisi saapaid välitingimusteks kasutades tugevdatud materjale',
+        requiredLevel: 40,
+        rewards: {
+            sewing: 100,
+            playerExp: 15
+        },
+        requiredItems: [
+            { id: 'leather', quantity: 8 },
+            { id: 'reinforced_cloth', quantity: 6 },
+            { id: 'thread', quantity: 8 },
+            { id: 'synthetic_fiber', quantity: 4 }
+        ],
+        producedItems: [
+            { id: 'tactical_safety_boots', quantity: 1 }
+        ]
+    },
 
     // Medicine activities
 
@@ -113,6 +132,26 @@ export const HANDICRAFT_ACTIVITIES: TrainingActivity[] = [
         ],
         producedItems: [
             { id: 'advanced_medical_kit', quantity: 1 }
+        ]
+    },
+    {
+        id: 'emergency_trauma_kit_craft',
+        name: 'Valmista hädaabipakki',
+        description: 'Valmistad professionaalse hädaolukordade meditsiinipakki keeruliste vigastuste ravimiseks',
+        requiredLevel: 40,
+        rewards: {
+            medicine: 100,
+            playerExp: 15
+        },
+        requiredItems: [
+            { id: 'advanced_medical_kit', quantity: 2 },
+            { id: 'pressure_bandage', quantity: 4 },
+            { id: 'medical_gel', quantity: 3 },
+            { id: 'antiseptic_solution', quantity: 2 },
+            { id: 'synthetic_fiber', quantity: 3 }
+        ],
+        producedItems: [
+            { id: 'emergency_trauma_kit', quantity: 1 }
         ]
     }
 

@@ -72,6 +72,26 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
             { id: 'rescuer_meal', quantity: 1 }
         ]
     },
+    {
+        id: 'ultimate_cooking_01',
+        name: 'Valmista päästeliidu toidupakki',
+        description: 'Valmistad professionaalse toidupaki välitingimustes töötavate päästjate jaoks, mis taastab märkimisväärselt tervist',
+        requiredLevel: 60,
+        rewards: {
+            cooking: 150,
+            playerExp: 30
+        },
+        requiredItems: [
+            { id: 'rescuer_meal', quantity: 2 },
+            { id: 'vinegar', quantity: 3 },
+            { id: 'salt', quantity: 2 },
+            { id: 'power_smoothie', quantity: 1 },
+            { id: 'protein_powder', quantity: 3 }
+        ],
+        producedItems: [
+            { id: 'rescue_league_food_pack', quantity: 1 }
+        ]
+    },
 
     // BREWING ACTIVITIES
     {
@@ -141,6 +161,27 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
         ],
         producedItems: [
             { id: 'super_booster', quantity: 1 }
+        ]
+    },
+    {
+        id: 'ultimate_brewing_01',
+        name: 'Valmista anaboolset jooki',
+        description: 'Valmistad võimsat jõujooki maksimaalse treeningu soorituse saavutamiseks kasutades kõrgtehnoloogilisi lisandeid',
+        requiredLevel: 60,
+        rewards: {
+            brewing: 150,
+            playerExp: 30
+        },
+        requiredItems: [
+            { id: 'super_booster', quantity: 2 },
+            { id: 'power_smoothie', quantity: 2 },
+            { id: 'herbs', quantity: 3 },
+            { id: 'caffeine', quantity: 4 },
+            { id: 'brain_accelerator', quantity: 1 },
+            { id: 'creatine_monohydrate', quantity: 2 }
+        ],
+        producedItems: [
+            { id: 'anabolic_drink', quantity: 1 }
         ]
     },
 
@@ -214,6 +255,25 @@ export const KITCHEN_LAB_ACTIVITIES: TrainingActivity[] = [
         ],
         producedItems: [
             { id: 'brain_accelerator', quantity: 1 }
+        ]
+    },
+    {
+        id: 'ultimate_chemistry_01',
+        name: 'Valmista töökuse seerumit',
+        description: 'Valmistad keerukat keemilist lahust, mis suurendab töökiirendust ja parandab fookust 10% võrra',
+        requiredLevel: 60,
+        rewards: {
+            chemistry: 150,
+            playerExp: 30
+        },
+        requiredItems: [
+            { id: 'brain_accelerator', quantity: 2 },
+            { id: 'energy_drink', quantity: 3 },
+            { id: 'caffeine', quantity: 5 },
+            { id: 'amino_acids', quantity: 4 }
+        ],
+        producedItems: [
+            { id: 'work_efficiency_serum', quantity: 1 }
         ]
     }
 ];
