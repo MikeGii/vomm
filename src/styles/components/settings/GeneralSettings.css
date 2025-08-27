@@ -1,0 +1,717 @@
+/* src/styles/components/settings/GeneralSettings.css */
+
+/* ===========================================
+   MAIN CONTAINER
+   =========================================== */
+.general-settings {
+    background-color: #2a2a2a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 2rem;
+}
+
+.settings-section-title {
+    color: #f0f0f0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    text-align: center;
+    border-bottom: 1px solid #333;
+    padding-bottom: 1rem;
+}
+
+.settings-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* ===========================================
+   FORM GROUPS & LABELS
+   =========================================== */
+.form-group {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 6px;
+}
+
+.form-label {
+    display: block;
+    color: #f0f0f0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ===========================================
+   DISPLAY MODE (when not editing)
+   =========================================== */
+.display-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.current-value {
+    color: #4a90e2;
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.unverified-badge {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background-color: #ff6b6b;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 12px;
+    text-transform: uppercase;
+}
+
+.btn-edit {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.btn-edit:hover {
+    background-color: #357abd;
+    transform: translateY(-1px);
+}
+
+/* ===========================================
+   EDIT MODE (when editing)
+   =========================================== */
+.edit-field {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background-color: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #f0f0f0;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+}
+
+.form-input.error {
+    border-color: #ff6b6b;
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
+}
+
+.form-input::placeholder {
+    color: #888;
+}
+
+/* ===========================================
+   VALIDATION MESSAGES
+   =========================================== */
+.validation-message {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin: 0;
+    padding: 0.5rem 0;
+}
+
+.validation-message.success {
+    color: #4caf50;
+}
+
+.validation-message.error {
+    color: #ff6b6b;
+}
+
+/* ===========================================
+   EMAIL WARNING
+   =========================================== */
+.email-warning {
+    margin: 0.75rem 0;
+    padding: 0.75rem;
+    background-color: #3a2a1a;
+    border: 1px solid #ff9800;
+    border-radius: 4px;
+    border-left: 4px solid #ff9800;
+}
+
+.warning-text {
+    color: #ff9800;
+    font-size: 0.85rem;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* ===========================================
+   ACTION BUTTONS
+   =========================================== */
+.edit-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-save {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    flex: 1;
+}
+
+.btn-save:hover:not(:disabled) {
+    background-color: #45a049;
+    transform: translateY(-1px);
+}
+
+.btn-save:disabled {
+    background-color: #666;
+    cursor: not-allowed;
+    opacity: 0.6;
+    position: relative;
+}
+
+.btn-cancel {
+    background-color: #666;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    flex: 1;
+}
+
+.btn-cancel:hover:not(:disabled) {
+    background-color: #777;
+    transform: translateY(-1px);
+}
+
+.btn-cancel:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* ===========================================
+   PROGRESS RESET SECTION
+   =========================================== */
+.progress-reset-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #333;
+}
+
+.reset-group {
+    background-color: #2a1a1a;
+    border: 2px solid #ff9800;
+    border-radius: 8px;
+    padding: 0;
+}
+
+.reset-label {
+    background-color: #ff9800;
+    color: #1a1a1a;
+    margin: 0;
+    padding: 1rem 1.5rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    border-radius: 6px 6px 0 0;
+    text-align: center;
+    border-bottom: 2px solid #e68900;
+}
+
+/* Reset Warning Box */
+.reset-warning-box {
+    padding: 2rem;
+}
+
+.reset-warning-content {
+    margin-bottom: 2rem;
+}
+
+.reset-warning-title {
+    color: #ff9800;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.reset-warning-text {
+    color: #f0f0f0;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.reset-list {
+    color: #f0f0f0;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+}
+
+.reset-list li {
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.reset-list li strong {
+    color: #ff9800;
+}
+
+.reset-emphasis {
+    background-color: #3a1a1a;
+    border: 1px solid #ff9800;
+    border-radius: 6px;
+    padding: 1rem;
+    color: #ffb366;
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.reset-emphasis strong {
+    color: #ff6600;
+}
+
+/* Reset Confirmation Box */
+.reset-confirmation-box {
+    padding: 2rem;
+    text-align: center;
+}
+
+.reset-confirm-title {
+    color: #ff6600;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 0 10px rgba(255, 102, 0, 0.5);
+}
+
+.reset-confirm-text {
+    color: #f0f0f0;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.reset-confirmation-input {
+    width: 100%;
+    max-width: 300px;
+    padding: 1rem;
+    background-color: #1a1a1a;
+    border: 2px solid #ff9800;
+    border-radius: 6px;
+    color: #f0f0f0;
+    font-size: 1.1rem;
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 2px;
+    margin: 0 auto 2rem auto;
+    display: block;
+}
+
+.reset-confirmation-input:focus {
+    outline: none;
+    border-color: #ff6600;
+    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.3);
+}
+
+.reset-confirmation-input::placeholder {
+    color: #888;
+    font-weight: normal;
+    letter-spacing: normal;
+}
+
+/* ===========================================
+   RESET BUTTONS
+   =========================================== */
+.btn-reset-start {
+    background: linear-gradient(135deg, #ff9800, #e68900);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.btn-reset-start:hover {
+    background: linear-gradient(135deg, #e68900, #cc7a00);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+}
+
+.btn-reset-confirm {
+    background: linear-gradient(135deg, #ff6600, #cc5200);
+    color: white;
+    border: none;
+    padding: 1.25rem 2rem;
+    border-radius: 6px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    width: 100%;
+    margin-bottom: 1rem;
+    animation: reset-glow 2s infinite alternate;
+}
+
+.btn-reset-confirm:hover:not(:disabled) {
+    background: linear-gradient(135deg, #e55a00, #b34700);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 102, 0, 0.5);
+}
+
+.btn-reset-confirm:disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.6;
+    animation: none;
+    position: relative;
+}
+
+.btn-reset-cancel {
+    background-color: #666;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    width: 100%;
+}
+
+.btn-reset-cancel:hover:not(:disabled) {
+    background-color: #777;
+    transform: translateY(-1px);
+}
+
+.btn-reset-cancel:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.reset-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+/* ===========================================
+   INFO SECTION
+   =========================================== */
+.info-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background-color: #1a2a3a;
+    border: 1px solid #4a90e2;
+    border-radius: 6px;
+    border-left: 4px solid #4a90e2;
+}
+
+.info-title {
+    color: #4a90e2;
+    font-size: 1rem;
+    margin: 0 0 1rem 0;
+    font-weight: 600;
+}
+
+.info-list {
+    margin: 0;
+    padding-left: 1.2rem;
+    color: #b0d0b0;
+}
+
+.info-list li {
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+    font-size: 0.9rem;
+}
+
+.info-list li:last-child {
+    margin-bottom: 0;
+}
+
+.info-list strong {
+    color: #4a90e2;
+}
+
+/* ===========================================
+   ANIMATIONS
+   =========================================== */
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes reset-glow {
+    0% { box-shadow: 0 0 5px rgba(255, 102, 0, 0.5); }
+    100% { box-shadow: 0 0 20px rgba(255, 102, 0, 0.8); }
+}
+
+/* ===========================================
+   LOADING STATES
+   =========================================== */
+.btn-save:disabled::after,
+.btn-reset-confirm:disabled::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.btn-reset-confirm:disabled::after {
+    width: 20px;
+    height: 20px;
+}
+
+/* ===========================================
+   ACCESSIBILITY
+   =========================================== */
+.btn-edit:focus,
+.btn-save:focus,
+.btn-cancel:focus,
+.btn-reset-start:focus,
+.btn-reset-confirm:focus,
+.btn-reset-cancel:focus {
+    outline: 3px solid #4a90e2;
+    outline-offset: 2px;
+}
+
+.reset-confirmation-input:focus {
+    outline: none;
+}
+
+/* ===========================================
+   HIGH CONTRAST SUPPORT
+   =========================================== */
+@media (prefers-contrast: more) {
+    .reset-group {
+        border-width: 3px;
+    }
+
+    .btn-reset-start,
+    .btn-reset-confirm {
+        border: 2px solid #ff6600;
+    }
+}
+
+/* ===========================================
+   MOBILE RESPONSIVENESS
+   =========================================== */
+@media (max-width: 768px) {
+    .general-settings {
+        padding: 1rem;
+    }
+
+    .settings-section-title {
+        font-size: 1.3rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-size: 1rem;
+    }
+
+    .display-field {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .current-value {
+        font-size: 1rem;
+        text-align: center;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .unverified-badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .edit-buttons {
+        flex-direction: column;
+    }
+
+    .btn-edit,
+    .btn-save,
+    .btn-cancel {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .email-warning {
+        padding: 0.5rem;
+    }
+
+    .warning-text {
+        font-size: 0.8rem;
+    }
+
+    .info-section {
+        padding: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .info-title {
+        font-size: 0.9rem;
+    }
+
+    .info-list {
+        padding-left: 1rem;
+    }
+
+    .info-list li {
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Reset section mobile styles */
+    .progress-reset-section {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+    }
+
+    .reset-warning-box,
+    .reset-confirmation-box {
+        padding: 1.5rem;
+    }
+
+    .reset-label {
+        font-size: 1.1rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .reset-warning-title {
+        font-size: 1.2rem;
+    }
+
+    .reset-warning-text,
+    .reset-confirm-text {
+        font-size: 0.95rem;
+    }
+
+    .reset-list {
+        font-size: 0.9rem;
+        padding-left: 0.5rem;
+    }
+
+    .reset-list li {
+        margin-bottom: 0.5rem;
+    }
+
+    .reset-confirmation-input {
+        max-width: 100%;
+        padding: 0.75rem;
+        font-size: 1rem;
+    }
+
+    .btn-reset-start,
+    .btn-reset-cancel {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+
+    .btn-reset-confirm {
+        padding: 1rem;
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .settings-section-title {
+        font-size: 1.2rem;
+    }
+
+    .form-label {
+        font-size: 0.95rem;
+    }
+
+    .form-input {
+        font-size: 0.9rem;
+        padding: 0.6rem 0.8rem;
+    }
+
+    .reset-label {
+        font-size: 1rem;
+    }
+
+    .reset-warning-title {
+        font-size: 1.1rem;
+    }
+
+    .reset-confirm-title {
+        font-size: 1.2rem;
+    }
+
+    .reset-emphasis {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+}

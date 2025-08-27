@@ -1,0 +1,407 @@
+/* src/styles/components/settings/AccountDeletion.css */
+.account-deletion {
+    padding: 2rem;
+}
+
+.deletion-title {
+    color: #ff6b6b;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
+}
+
+/* Warning Section */
+.warning-section {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.warning-box {
+    background-color: #3a1a1a;
+    border: 2px solid #ff6b6b;
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border-left: 6px solid #ff4444;
+}
+
+.warning-title {
+    color: #ff6b6b;
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.warning-text {
+    color: #f0f0f0;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.deletion-list {
+    color: #ff9999;
+    font-size: 1rem;
+    line-height: 1.8;
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+}
+
+.deletion-list li {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.warning-emphasis {
+    background-color: #4a1a1a;
+    border: 1px solid #ff4444;
+    border-radius: 6px;
+    padding: 1rem;
+    color: #ff8888;
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+/* Alternative Section */
+.alternative-section {
+    background-color: #1a3a1a;
+    border: 1px solid #4caf50;
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.alternative-title {
+    color: #4caf50;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.alternative-list {
+    color: #88ff88;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0;
+    padding-left: 1rem;
+}
+
+.alternative-list li {
+    margin-bottom: 0.5rem;
+}
+
+/* Confirmation Section */
+.confirmation-section,
+.password-section {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.confirmation-box,
+.password-box {
+    background-color: #3a1a1a;
+    border: 2px solid #ff6b6b;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+}
+
+.confirmation-title,
+.password-title {
+    color: #ff6b6b;
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.confirmation-text,
+.password-text {
+    color: #f0f0f0;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.confirmation-input,
+.password-input {
+    width: 100%;
+    padding: 1rem;
+    background-color: #1a1a1a;
+    border: 2px solid #ff6b6b;
+    border-radius: 6px;
+    color: #f0f0f0;
+    font-size: 1.1rem;
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 2px;
+    margin-bottom: 2rem;
+}
+
+.confirmation-input:focus,
+.password-input:focus {
+    outline: none;
+    border-color: #ff4444;
+    box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.3);
+}
+
+.confirmation-input::placeholder,
+.password-input::placeholder {
+    color: #888;
+    font-weight: normal;
+    letter-spacing: normal;
+}
+
+/* Final Warning */
+.final-warning {
+    background-color: #5a1a1a;
+    border: 2px solid #ff2222;
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 1.5rem 0;
+    animation: pulse-warning 2s infinite;
+}
+
+.final-warning-text {
+    color: #ff4444;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+    text-align: center;
+}
+
+@keyframes pulse-warning {
+    0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
+}
+
+/* Buttons */
+.btn-danger {
+    background: linear-gradient(135deg, #ff4444, #cc0000);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 auto;
+    display: block;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: linear-gradient(135deg, #ff2222, #aa0000);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4);
+}
+
+.btn-danger:disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-final-delete {
+    background: linear-gradient(135deg, #ff0000, #990000);
+    color: white;
+    border: none;
+    padding: 1.25rem 2rem;
+    border-radius: 6px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    width: 100%;
+    margin-bottom: 1rem;
+    animation: danger-glow 2s infinite alternate;
+}
+
+.btn-final-delete:hover:not(:disabled) {
+    background: linear-gradient(135deg, #dd0000, #770000);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 0, 0, 0.5);
+}
+
+.btn-final-delete:disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.6;
+    animation: none;
+}
+
+@keyframes danger-glow {
+    0% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.5); }
+    100% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.8); }
+}
+
+.btn-cancel {
+    background-color: #666;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.btn-cancel:hover:not(:disabled) {
+    background-color: #777;
+    transform: translateY(-1px);
+}
+
+.btn-cancel:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Button Groups */
+.confirmation-buttons,
+.final-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.confirmation-buttons {
+    justify-content: center;
+}
+
+.final-buttons {
+    flex-direction: column;
+}
+
+/* Loading State */
+.btn-final-delete:disabled::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid transparent;
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .account-deletion {
+        padding: 1rem;
+    }
+
+    .deletion-title {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .warning-box,
+    .confirmation-box,
+    .password-box {
+        padding: 1.5rem;
+    }
+
+    .warning-title {
+        font-size: 1.2rem;
+    }
+
+    .warning-text,
+    .confirmation-text,
+    .password-text {
+        font-size: 1rem;
+    }
+
+    .deletion-list,
+    .alternative-list {
+        font-size: 0.9rem;
+        padding-left: 0.5rem;
+    }
+
+    .confirmation-input,
+    .password-input {
+        padding: 0.75rem;
+        font-size: 1rem;
+    }
+
+    .confirmation-buttons {
+        flex-direction: column;
+    }
+
+    .btn-danger,
+    .btn-cancel {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+
+    .btn-final-delete {
+        padding: 1rem;
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .deletion-title {
+        font-size: 1.3rem;
+    }
+
+    .warning-box,
+    .confirmation-box,
+    .password-box {
+        padding: 1rem;
+    }
+
+    .warning-title {
+        font-size: 1.1rem;
+    }
+
+    .final-warning-text {
+        font-size: 1rem;
+    }
+}
+
+/* Accessibility */
+.btn-danger:focus,
+.btn-final-delete:focus,
+.btn-cancel:focus {
+    outline: 3px solid #4a90e2;
+    outline-offset: 2px;
+}
+
+.confirmation-input:focus,
+.password-input:focus {
+    outline: none;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .warning-box,
+    .confirmation-box,
+    .password-box {
+        border-width: 3px;
+    }
+
+    .btn-danger,
+    .btn-final-delete {
+        border: 2px solid #ff0000;
+    }
+}

@@ -20,6 +20,7 @@ import DepartmentPage from "./pages/DepartmentPage";
 import FeedbackPage from "./pages/FeedbackPage";
 import AdminPage from './pages/AdminPage';
 import TestsPage from './pages/TestsPage';
+import SettingsPage from "./pages/SettingsPage";
 
 function App() {
     return (
@@ -121,6 +122,16 @@ function App() {
                                 </ProtectedRoute>
                             }
                         />
+
+                        <Route
+                            path="/settings"
+                            element={
+                                <ProtectedRoute>
+                                    <SettingsPage />
+                                </ProtectedRoute>
+                            }
+                        />
+
                         <Route path="*" element={<Navigate to="/" />} />
                     </Routes>
                     <DebugMenu />

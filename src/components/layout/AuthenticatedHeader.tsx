@@ -273,6 +273,17 @@ export const AuthenticatedHeader: React.FC = () => {
                                     </>
                                 )}
 
+                                <button
+                                    onClick={() => {
+                                        navigate('/settings');
+                                        setIsMenuOpen(false);
+                                    }}
+                                    className="menu-item"
+                                >
+                                    <span className="menu-icon">⚙️</span>
+                                    <span>Seaded</span>
+                                </button>
+
                                 <div className="menu-section">
                                     <button onClick={handleLogout} className="menu-item menu-item-danger">
                                         <span className="menu-icon">🚪</span>
