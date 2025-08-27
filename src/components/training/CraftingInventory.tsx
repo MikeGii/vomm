@@ -50,7 +50,7 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
             setSellQuantityInputs(prev => ({...prev, ...updates}));
             setSellQuantities(prev => ({...prev, ...quantityUpdates}));
         }
-    }, [inventory, sellQuantityInputs]);
+    }, [inventory, sellQuantityInputs, canSellItem]);
 
     const handleQuantityChange = (itemId: string, newQuantity: number, maxQuantity: number) => {
         if (newQuantity >= 1) {
