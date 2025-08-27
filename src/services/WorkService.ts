@@ -18,6 +18,7 @@ import { PlayerStats, ActiveWork, WorkHistoryEntry } from '../types';
 import { getWorkActivityById, calculateWorkRewards } from '../data/workActivities';
 import { calculateLevelFromExp } from "./PlayerService";
 import { triggerWorkEvent } from "./EventService";
+import {updateCrimeLevelAfterWork} from "./CrimeService";
 
 // Start work
 export const startWork = async (
@@ -167,8 +168,34 @@ export const completeWork = async (userId: string): Promise<void> => {
 
     await addDoc(collection(firestore, 'workHistory'), historyEntry);
 
+    // NEW: Update department crime level if player has a department
+    // Only for graduated officers (not abipolitseinik or kadett)
+    if (stats.department &&
+        stats.policePosition &&
+        stats.policePosition !== 'abipolitseinik' &&
+        stats.policePosition !== 'kadett') {
+
+        try {
+            const crimeResult = await updateCrimeLevelAfterWork(
+                stats.activeWork.prefecture,
+                stats.activeWork.department,
+                stats.activeWork.totalHours
+            );
+
+            // Log the crime reduction for debugging (optional)
+            if (crimeResult.success) {
+                console.log(`Crime reduction: ${crimeResult.message}`);
+            }
+        } catch (error) {
+            // Don't fail the work completion if crime update fails
+            console.error('Crime level update failed, but work completed successfully:', error);
+        }
+    }
+
+
     // VIP LOGIC: Determine non-working clicks based on VIP status
     const nonWorkingClicks = stats.isVip ? 100 : 50;
+
 
     // Update stats - clear work and update rewards
     const updateData: any = {
