@@ -10,29 +10,16 @@ export const calculateExpForLevel = (level: number): number => {
 
     const baseExp = 100;
     let totalExp = 0;
+    let currentLevelExp = baseExp;
 
     for (let i = 2; i <= level; i++) {
-        // Use different growth rates for different level ranges
-        let growthRate: number;
-
-        if (i <= 50) {
-            // Levels 2-50: 12% growth rate (keeps current progression)
-            growthRate = 0.12;
-        } else if (i <= 75) {
-            // Levels 51-75: Reduced to 8% growth rate
-            growthRate = 0.08;
-        } else {
-            // Levels 76-99: Further reduced to 5% growth rate
-            growthRate = 0.05;
-        }
-
-        totalExp += Math.floor(baseExp * Math.pow(1 + growthRate, i - 2));
+        totalExp += Math.floor(currentLevelExp);
+        currentLevelExp = currentLevelExp * 1.09; // 9% constant growth
     }
 
     return totalExp;
 };
 
-// Calculate level from total experience
 export const calculateLevelFromExp = (totalExp: number): number => {
     let level = 1;
     while (calculateExpForLevel(level + 1) <= totalExp) {

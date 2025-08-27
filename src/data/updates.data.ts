@@ -4,13 +4,20 @@ import { GameUpdate } from '../types';
 export const gameUpdates: GameUpdate[] = [
 
     {
+        id: '11',
+        title: 'Mängu uuenduesd',
+        description: 'Lisatud ',
+        date: '2025-08-26',
+        isNew: true
+    },
+    {
         id: '10',
         title: 'Mängu uuenduesd',
         description: 'Osakonna lehel nüüd võimalik mängijatel liikuda allüksuste vahel. Lisatud uus positioon karjääri arenguks - grupijuht.' +
             ' Grupijuhid saavad automaatsel vanemkomissari auastme. Oskuste treenimisel iga level annab +2 reputatsiooni. Tõstetud koolitustel ' +
             'saadavat kogemust ja reputatsiooni.',
         date: '2025-08-25',
-        isNew: true
+
     },
     {
         id: '9',

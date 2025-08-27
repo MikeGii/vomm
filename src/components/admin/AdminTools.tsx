@@ -3,11 +3,13 @@ import React, { useState } from 'react';
 import { restockAllItems } from '../../services/AdminShopService';
 import { completeAllPlayersWorkAdmin } from '../../services/AdminWorkService';
 import { useToast } from '../../contexts/ToastContext';
+import { recalculateAllPlayerLevels } from '../../services/AdminLevelService';
 import '../../styles/components/admin/AdminTools.css';
 
 export const AdminTools: React.FC = () => {
     const [isRestocking, setIsRestocking] = useState(false);
     const [isCompletingWork, setIsCompletingWork] = useState(false);
+    const [isRecalculatingLevels, setIsRecalculatingLevels] = useState(false);
     const { showToast } = useToast();
 
     const handleRestockAll = async () => {
@@ -68,6 +70,38 @@ export const AdminTools: React.FC = () => {
         }
     };
 
+    const handleRecalculateLevels = async () => {
+        if (isRecalculatingLevels) return;
+
+        const confirmed = window.confirm(
+            'Kas sa oled kindel, et tahad ümber arvutada kõigi mängijate tasemed uue 9% progressiooni süsteemi järgi? See toimingu ei saa tagasi võtta.'
+        );
+
+        if (!confirmed) return;
+
+        try {
+            setIsRecalculatingLevels(true);
+            const result = await recalculateAllPlayerLevels();
+
+            let message = `Edukalt töödeldud ${result.processedCount} mängijat. Uuendatud ${result.updatedCount} mängija taset.`;
+            if (result.errors.length > 0) {
+                message += ` ${result.errors.length} viga tekkis.`;
+            }
+
+            showToast(message, result.success && result.errors.length === 0 ? 'success' : 'warning');
+
+            if (result.errors.length > 0) {
+                console.warn('Level recalculation errors:', result.errors);
+            }
+
+        } catch (error: any) {
+            console.error('Error recalculating levels:', error);
+            showToast(error.message || 'Viga tasemete ümberarvutamisel', 'error');
+        } finally {
+            setIsRecalculatingLevels(false);
+        }
+    };
+
     return (
         <div className="admin-tools">
             <h2>Admin tööriistad</h2>
@@ -109,6 +143,27 @@ export const AdminTools: React.FC = () => {
                         </button>
                         <small className="tool-note">
                             Lõpetab kõigi mängijate aktiivsed tööd, annab täielikud auhinnad ja kustutab kõik pooleliolevad sündmused
+                        </small>
+                    </div>
+                </div>
+
+                {/* NEW: Level Recalculator */}
+                <div className="tool-card">
+                    <div className="tool-header">
+                        <h3>Tasemete haldus</h3>
+                        <p>Mängijate tasemete ümberarvutamine uue süsteemi järgi</p>
+                    </div>
+
+                    <div className="tool-actions">
+                        <button
+                            className="recalculate-levels-btn"
+                            onClick={handleRecalculateLevels}
+                            disabled={isRecalculatingLevels}
+                        >
+                            {isRecalculatingLevels ? 'Arvutan tasemeid...' : 'Arvuta kõik tasemed uuesti (9% süsteem)'}
+                        </button>
+                        <small className="tool-note">
+                            Arvutab kõigi mängijate tasemed uuesti lähtudes nende hetkelisest kogemusest ja uuest 9% kasvusüsteemist
                         </small>
                     </div>
                 </div>
