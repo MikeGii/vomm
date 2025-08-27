@@ -1,5 +1,5 @@
 // src/pages/FightClubPage.tsx - ENHANCED WITH PAGINATION
-import React, { useState, useEffect, useMemo } from 'react';
+import React, {useState, useEffect, useMemo, useCallback} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { useAuth } from '../contexts/AuthContext';
@@ -86,7 +86,7 @@ const FightClubPage: React.FC = () => {
     }, [playerStats, fightsRemaining, refreshStats]);
 
     // Load paginated opponents
-    const loadOpponents = async (page: number) => {
+    const loadOpponents = useCallback(async (page: number) => {
         if (!playerStats || !currentUser) return;
 
         const requirements = checkFightClubRequirements(playerStats);
@@ -103,14 +103,14 @@ const FightClubPage: React.FC = () => {
         } finally {
             setLoadingPlayers(false);
         }
-    };
+    }, [playerStats, currentUser, showToast]);
 
-    // Load opponents on initial load
+// Load opponents on initial load
     useEffect(() => {
         if (playerStats && currentUser) {
             loadOpponents(1);
         }
-    }, [playerStats, currentUser]);
+    }, [playerStats, currentUser, loadOpponents]);
 
     // Handle fight completion
     const handleFightComplete = async (result: FightResult) => {

@@ -4,13 +4,10 @@ import {
     query,
     where,
     orderBy,
-    startAfter,
     limit,
     getDocs,
     doc,
-    getDoc,
-    DocumentSnapshot,
-    QueryDocumentSnapshot
+    getDoc
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats } from '../types';
