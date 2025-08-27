@@ -167,7 +167,8 @@ export const initializePlayerStats = async (userId: string, username: string): P
         activeWork: null,
         workHistory: [],
         health: calculatePlayerHealth(0, 0),
-        inventory: createInitialVipItems()
+        inventory: createInitialVipItems(),
+        isVip: false
     };
 
     await setDoc(statsRef, initialStats);

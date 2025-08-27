@@ -1,4 +1,4 @@
-// src/services/AdminWorkService.ts - Fixed version
+// src/services/AdminWorkService.ts - VIP-aware version
 import {
     collection,
     getDocs,
@@ -73,6 +73,9 @@ export const completeAllPlayersWorkAdmin = async (): Promise<{
                 const newLevel = calculateLevelFromExp(newExp);
                 const newTotalWorkedHours = (stats.totalWorkedHours || 0) + stats.activeWork.totalHours;
 
+                // VIP LOGIC: Determine non-working clicks based on VIP status
+                const nonWorkingClicks = stats.isVip ? 100 : 50;
+
                 // Prepare work completion update
                 const updateData: any = {
                     activeWork: null,
@@ -80,9 +83,9 @@ export const completeAllPlayersWorkAdmin = async (): Promise<{
                     level: newLevel,
                     totalWorkedHours: newTotalWorkedHours,
                     'trainingData.isWorking': false,
-                    'trainingData.remainingClicks': 50,
-                    'kitchenLabTrainingData.remainingClicks': 50,
-                    'handicraftTrainingData.remainingClicks': 50
+                    'trainingData.remainingClicks': nonWorkingClicks,
+                    'kitchenLabTrainingData.remainingClicks': nonWorkingClicks,
+                    'handicraftTrainingData.remainingClicks': nonWorkingClicks
                 };
 
                 // Add money if there's a reward

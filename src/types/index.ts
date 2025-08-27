@@ -134,6 +134,7 @@ export interface PlayerStats {
     equipment?: CharacterEquipment;
     fightClubStats?: FightClubStats;
     fightClubData?: FightClubData;
+    isVip?: boolean;
     casinoData?: {
         playsUsed: number;
         lastPlayTime: number;

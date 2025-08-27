@@ -1,5 +1,4 @@
-// Update src/services/WorkService.ts
-
+// src/services/WorkService.ts
 import {
     doc,
     getDoc,
@@ -78,13 +77,16 @@ export const startWork = async (
         workSessionId
     };
 
+    // VIP LOGIC: Determine working clicks based on VIP status
+    const workingClicks = stats.isVip ? 30 : 10;
+
     // Update player stats
     await updateDoc(statsRef, {
         activeWork,
         'trainingData.isWorking': true,
-        'trainingData.remainingClicks': 10,
-        'kitchenLabTrainingData.remainingClicks': 10,
-        'handicraftTrainingData.remainingClicks': 10
+        'trainingData.remainingClicks': workingClicks,
+        'kitchenLabTrainingData.remainingClicks': workingClicks,
+        'handicraftTrainingData.remainingClicks': workingClicks
     });
 
     return activeWork;
@@ -165,6 +167,9 @@ export const completeWork = async (userId: string): Promise<void> => {
 
     await addDoc(collection(firestore, 'workHistory'), historyEntry);
 
+    // VIP LOGIC: Determine non-working clicks based on VIP status
+    const nonWorkingClicks = stats.isVip ? 100 : 50;
+
     // Update stats - clear work and update rewards
     const updateData: any = {
         activeWork: null,
@@ -172,9 +177,9 @@ export const completeWork = async (userId: string): Promise<void> => {
         level: newLevel,
         totalWorkedHours: newTotalWorkedHours,
         'trainingData.isWorking': false,
-        'trainingData.remainingClicks': 50,
-        'kitchenLabTrainingData.remainingClicks': 50,
-        'handicraftTrainingData.remainingClicks': 50
+        'trainingData.remainingClicks': nonWorkingClicks,
+        'kitchenLabTrainingData.remainingClicks': nonWorkingClicks,
+        'handicraftTrainingData.remainingClicks': nonWorkingClicks
     };
 
     // Only update money if there's a monetary reward

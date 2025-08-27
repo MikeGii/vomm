@@ -70,8 +70,13 @@ export const consumeTrainingBooster = async (
             };
         }
 
-        // Determine max clicks based on work status
-        const maxClicks = playerData.activeWork ? 10 : 50;
+        // VIP LOGIC: Determine max clicks based on VIP status and work status
+        let maxClicks: number;
+        if (playerData.isVip) {
+            maxClicks = playerData.activeWork ? 30 : 100;
+        } else {
+            maxClicks = playerData.activeWork ? 10 : 50;
+        }
 
         // Find the booster in inventory
         const boosterIndex = inventory.findIndex(item => item.id === boosterId);
@@ -161,13 +166,7 @@ export const consumeKitchenBooster = async (
     userId: string,
     itemId: string,
     quantity: number = 1
-): Promise<{
-    success: boolean;
-    message: string;
-    clicksAdded?: number;
-    newRemainingClicks?: number;
-    itemsUsed?: number;
-}> => {
+): Promise<UseBoosterResult> => {
     try {
         const playerRef = doc(firestore, 'playerStats', userId);
         const playerDoc = await getDoc(playerRef);
@@ -179,7 +178,7 @@ export const consumeKitchenBooster = async (
             };
         }
 
-        const playerData = playerDoc.data();
+        const playerData = playerDoc.data() as PlayerStats;
         const inventory = playerData.inventory || [];
         const kitchenLabTrainingData = playerData.kitchenLabTrainingData || initializeKitchenLabTrainingData();
 
@@ -210,8 +209,13 @@ export const consumeKitchenBooster = async (
             };
         }
 
-        // Determine max clicks based on work status
-        const maxClicks = playerData.activeWork ? 10 : 50;
+        // VIP LOGIC: Determine max clicks based on VIP status and work status
+        let maxClicks: number;
+        if (playerData.isVip) {
+            maxClicks = playerData.activeWork ? 30 : 100;
+        } else {
+            maxClicks = playerData.activeWork ? 10 : 50;
+        }
 
         // If already at max clicks
         const currentClicks = kitchenLabTrainingData.remainingClicks || 0;
@@ -284,7 +288,7 @@ export const consumeHandicraftBooster = async (
             };
         }
 
-        const playerData = playerDoc.data();
+        const playerData = playerDoc.data() as PlayerStats;
         const inventory = playerData.inventory || [];
         const handicraftTrainingData = playerData.handicraftTrainingData || initializeHandicraftTrainingData();
 
@@ -315,8 +319,13 @@ export const consumeHandicraftBooster = async (
             };
         }
 
-        // Determine max clicks based on work status
-        const maxClicks = playerData.activeWork ? 10 : 50;
+        // VIP LOGIC: Determine max clicks based on VIP status and work status
+        let maxClicks: number;
+        if (playerData.isVip) {
+            maxClicks = playerData.activeWork ? 30 : 100;
+        } else {
+            maxClicks = playerData.activeWork ? 10 : 50;
+        }
 
         // If already at max clicks
         const currentClicks = handicraftTrainingData.remainingClicks || 0;

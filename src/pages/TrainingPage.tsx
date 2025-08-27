@@ -21,7 +21,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { useNavigate } from 'react-router-dom';
-import { PlayerAttributes, TrainingActivity } from '../types';
+import {PlayerAttributes, PlayerStats, TrainingActivity} from '../types';
 import { InventoryItem } from '../types';
 import {
     checkAndResetTrainingClicks,
@@ -36,6 +36,16 @@ import {
 import { getAvailableActivities, getActivityById } from '../data/trainingActivities';
 import { sellCraftedItem } from '../services/SellService';
 import '../styles/pages/Training.css';
+
+const getVipAwareMaxClicks = (playerStats: PlayerStats | null): number => {
+    if (!playerStats) return 50;
+
+    if (playerStats.isVip) {
+        return playerStats.activeWork ? 30 : 100;
+    } else {
+        return playerStats.activeWork ? 10 : 50;
+    }
+};
 
 const TrainingPage: React.FC = () => {
     const navigate = useNavigate();
@@ -312,12 +322,12 @@ const TrainingPage: React.FC = () => {
                     onTabChange={setActiveTab}
                 />
 
-                {/* Sports Training Tab */}
+                {/* Sports Tab */}
                 {activeTab === 'sports' && (
                     <>
                         <TrainingCounter
                             remainingClicks={playerStats.trainingData?.remainingClicks || 0}
-                            maxClicks={playerStats.activeWork ? 10 : 50}
+                            maxClicks={getVipAwareMaxClicks(playerStats)}
                             lastResetTime={playerStats.trainingData?.lastResetTime}
                         />
 
@@ -348,7 +358,7 @@ const TrainingPage: React.FC = () => {
                         <TrainingBoosters
                             boosters={trainingBoosters}
                             currentClicks={playerStats.trainingData?.remainingClicks || 0}
-                            maxClicks={playerStats.activeWork ? 10 : 50}
+                            maxClicks={getVipAwareMaxClicks(playerStats)}
                             onBoosterUsed={handleBoosterUsed}
                         />
                     </>
@@ -359,7 +369,7 @@ const TrainingPage: React.FC = () => {
                     <>
                         <TrainingCounter
                             remainingClicks={playerStats.kitchenLabTrainingData?.remainingClicks || 0}
-                            maxClicks={playerStats.activeWork ? 10 : 50}
+                            maxClicks={getVipAwareMaxClicks(playerStats)}
                             label="Köök & Labor klikke jäänud"
                             lastResetTime={playerStats.kitchenLabTrainingData?.lastResetTime}
                         />
@@ -395,7 +405,7 @@ const TrainingPage: React.FC = () => {
                         <KitchenBoosters
                             boosters={kitchenBoosters}
                             currentClicks={playerStats.kitchenLabTrainingData?.remainingClicks || 0}
-                            maxClicks={playerStats.activeWork ? 10 : 50}
+                            maxClicks={getVipAwareMaxClicks(playerStats)}
                             onBoosterUsed={handleBoosterUsed}
                         />
                     </>
@@ -406,7 +416,7 @@ const TrainingPage: React.FC = () => {
                     <>
                         <TrainingCounter
                             remainingClicks={playerStats.handicraftTrainingData?.remainingClicks || 0}
-                            maxClicks={playerStats.activeWork ? 10 : 50}
+                            maxClicks={getVipAwareMaxClicks(playerStats)}
                             label="Käsitöö klikke jäänud"
                             lastResetTime={playerStats.handicraftTrainingData?.lastResetTime}
                         />
@@ -443,7 +453,7 @@ const TrainingPage: React.FC = () => {
                         <HandicraftBoosters
                             boosters={handicraftBoosters}
                             currentClicks={playerStats.handicraftTrainingData?.remainingClicks || 0}
-                            maxClicks={playerStats.activeWork ? 10 : 50}
+                            maxClicks={getVipAwareMaxClicks(playerStats)}
                             onBoosterUsed={handleBoosterUsed}
                         />
                     </>
