@@ -54,6 +54,9 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
         onPlayerClick(playerData);
     };
 
+    // Check if there are any VIP players in the leaderboard
+    const hasVipPlayers = entries.some(entry => entry.isVip);
+
     if (entries.length === 0) {
         return (
             <div className="leaderboard-empty">
@@ -64,7 +67,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
 
     return (
         <div className="leaderboard-table-container">
-            <table className="leaderboard-table">
+            <table className={`leaderboard-table ${hasVipPlayers ? 'has-vip' : ''}`}>
                 <thead>
                 <tr>
                     <th className="rank-column">Koht</th>
@@ -82,15 +85,20 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                     return (
                         <tr
                             key={entry.userId}
-                            className={entry.userId === currentUserId ? 'current-user' : ''}
+                            className={[
+                                entry.userId === currentUserId ? 'current-user' : '',
+                                entry.isVip ? 'vip-player' : '',
+                                entry.isVip && globalRank <= 3 ? 'top-vip' : '',
+                                entry.isVip ? 'particles' : ''
+                            ].filter(Boolean).join(' ')}
                         >
                             <td className="rank-column">
-                                    <span
-                                        className="rank-number"
-                                        style={medalStyle}
-                                    >
-                                        {globalRank}
-                                    </span>
+                                <span
+                                    className="rank-number"
+                                    style={medalStyle}
+                                >
+                                    {globalRank}
+                                </span>
                             </td>
                             <td className="name-column">
                                 <div className="player-name-container">
@@ -102,15 +110,15 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                                     </button>
                                     {entry.isVip && (
                                         <span className="vip-badge" title="VIP kasutaja">
-                                        VIP
-                                    </span>
+                                            VIP
+                                        </span>
                                     )}
                                 </div>
                             </td>
                             <td className="status-column">
-                                    <span className="status-badge">
-                                        {getStatusText(entry)}
-                                    </span>
+                                <span className="status-badge">
+                                    {getStatusText(entry)}
+                                </span>
                             </td>
                             <td className="level-column">{entry.level}</td>
                             <td className="reputation-column mobile-hide">{entry.reputation}</td>

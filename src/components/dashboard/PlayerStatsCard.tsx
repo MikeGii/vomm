@@ -118,19 +118,42 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
     const healthStatus = getHealthStatus();
 
     return (
-        <div className="player-stats-card">
-            {/* Header Section */}
+        <div className={`player-stats-card ${stats.isVip ? 'vip-player' : ''}`}>
+            {/* VIP Crown Effect */}
+            {stats.isVip && (
+                <div className="vip-crown-container">
+                    <div className="vip-crown-effect">👑</div>
+                    <div className="vip-particles">
+                        <div className="particle"></div>
+                        <div className="particle"></div>
+                        <div className="particle"></div>
+                        <div className="particle"></div>
+                    </div>
+                </div>
+            )}
+
+            {/* Header Section with VIP Enhancement */}
             <div className="stats-header-section">
                 <div className="player-info">
-                    <h2 className="player-username">{username}</h2>
+                    <div className="username-container">
+                        <h2 className="player-username">{username}</h2>
+                        {stats.isVip && (
+                            <span className="vip-crown-badge" title="VIP Kasutaja">
+                            <span className="crown-icon">👑</span>
+                            <span className="vip-text">VIP</span>
+                        </span>
+                        )}
+                    </div>
                     <div className="player-badges">
                         {stats.badgeNumber && (
-                            <span className="badge-display">
-            Ametitõend #{stats.badgeNumber}
-        </span>
+                            <span className={`badge-display ${stats.isVip ? 'vip-badge' : ''}`}>
+                            Ametitõend #{stats.badgeNumber}
+                        </span>
                         )}
                         {stats.rank && (
-                            <span className="rank-display">{stats.rank}</span>
+                            <span className={`rank-display ${stats.isVip ? 'vip-rank' : ''}`}>
+                            {stats.rank}
+                        </span>
                         )}
                         {stats.rank && getRankImagePath(stats.rank) && (
                             <div className="rank-image-container">
@@ -143,27 +166,32 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                         )}
                     </div>
                 </div>
-                <div className="level-display">
+                <div className={`level-display ${stats.isVip ? 'vip-level' : ''}`}>
                     <span className="level-number">{stats.level}</span>
                     <span className="level-label">TASE</span>
+                    {stats.isVip && <div className="level-vip-glow"></div>}
                 </div>
             </div>
 
-            {/* Experience Bar */}
+            {/* VIP Enhanced Experience Section */}
             <div className="experience-section">
                 <div className="exp-info">
                     <span className="exp-label">Kogemus</span>
                     <span className="exp-numbers">{expProgress.current} / {expProgress.needed} XP</span>
+                    {stats.isVip && (
+                        <span className="vip-exp-bonus" title="VIP kogemus boonus">✨ VIP</span>
+                    )}
                 </div>
-                <div className="exp-bar-large">
+                <div className={`exp-bar-large ${stats.isVip ? 'vip-exp-bar' : ''}`}>
                     <div
-                        className="exp-progress-large"
+                        className={`exp-progress-large ${stats.isVip ? 'vip-progress' : ''}`}
                         style={{ width: `${expPercentage}%` }}
                     />
+                    {stats.isVip && <div className="exp-bar-shimmer"></div>}
                 </div>
             </div>
 
-            {/* Main Stats Grid */}
+            {/* Rest of your existing code unchanged */}
             <div className="stats-main-grid">
                 <div className={`stat-card ${isKadett ? 'academy-highlight' : ''}`}>
                     <span className="stat-icon">🏛️</span>
@@ -190,12 +218,12 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                     <div className="stat-content">
                         <span className="stat-title">Tervis</span>
                         <span className={`stat-value ${healthStatus.color}`}>
-                            {healthStatus.text}
-                        </span>
+                        {healthStatus.text}
+                    </span>
                         {healthStatus.showRecovery && healthRecoveryTime && (
                             <span className="health-recovery-timer">
-                                +5 HP: {healthRecoveryTime}
-                            </span>
+                            +5 HP: {healthRecoveryTime}
+                        </span>
                         )}
                     </div>
                     <div className="click-hint">Kliki ravimiseks</div>
@@ -210,7 +238,7 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                 </div>
             </div>
 
-            {/* Achievement Stats */}
+            {/* All your existing sections remain exactly the same */}
             {hasCompletedBasicTraining && (
                 <div className="achievements-section">
                     <h3 className="section-title">Saavutused</h3>
@@ -231,7 +259,7 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                 </div>
             )}
 
-            {/* Attributes Section with Equipment Bonuses */}
+            {/* Attributes Section - unchanged */}
             {stats.attributes && (
                 <div className="attributes-section">
                     <h3 className="section-title">Omadused</h3>
@@ -240,57 +268,57 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                             <span className="attribute-emoji">💪</span>
                             <span className="attribute-name">Jõud</span>
                             <span className="attribute-value">
-                    {stats.attributes.strength.level}
+                            {stats.attributes.strength.level}
                                 {equipmentBonuses?.strength ? (
                                     <span className="equipment-bonus"> +{equipmentBonuses.strength}</span>
                                 ) : null}
-                </span>
+                        </span>
                         </div>
                         <div className="attribute-compact">
                             <span className="attribute-emoji">🏃</span>
                             <span className="attribute-name">Kiirus</span>
                             <span className="attribute-value">
-                    {stats.attributes.agility.level}
+                            {stats.attributes.agility.level}
                                 {equipmentBonuses?.agility ? (
                                     <span className="equipment-bonus"> +{equipmentBonuses.agility}</span>
                                 ) : null}
-                </span>
+                        </span>
                         </div>
                         <div className="attribute-compact">
                             <span className="attribute-emoji">🎯</span>
                             <span className="attribute-name">Osavus</span>
                             <span className="attribute-value">
-                    {stats.attributes.dexterity.level}
+                            {stats.attributes.dexterity.level}
                                 {equipmentBonuses?.dexterity ? (
                                     <span className="equipment-bonus"> +{equipmentBonuses.dexterity}</span>
                                 ) : null}
-                </span>
+                        </span>
                         </div>
                         <div className="attribute-compact">
                             <span className="attribute-emoji">🧠</span>
                             <span className="attribute-name">Intelligentsus</span>
                             <span className="attribute-value">
-                    {stats.attributes.intelligence.level}
+                            {stats.attributes.intelligence.level}
                                 {equipmentBonuses?.intelligence ? (
                                     <span className="equipment-bonus"> +{equipmentBonuses.intelligence}</span>
                                 ) : null}
-                </span>
+                        </span>
                         </div>
                         <div className="attribute-compact">
                             <span className="attribute-emoji">🏋️</span>
                             <span className="attribute-name">Vastupidavus</span>
                             <span className="attribute-value">
-                    {stats.attributes.endurance.level}
+                            {stats.attributes.endurance.level}
                                 {equipmentBonuses?.endurance ? (
                                     <span className="equipment-bonus"> +{equipmentBonuses.endurance}</span>
                                 ) : null}
-                </span>
+                        </span>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Status Messages */}
+            {/* All status messages remain unchanged */}
             {!hasCompletedBasicTraining && (
                 <div className="status-message warning">
                     <span className="status-icon">⚠️</span>
@@ -331,7 +359,7 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
                 </div>
             )}
 
-            {/* Health Modal */}
+            {/* Health Modal - unchanged */}
             <HealthModal
                 isOpen={isHealthModalOpen}
                 onClose={() => setIsHealthModalOpen(false)}
