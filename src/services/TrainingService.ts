@@ -18,7 +18,6 @@ import { ALL_SHOP_ITEMS } from '../data/shop';
 import { InventoryItem } from '../types';
 import { getBaseIdFromInventoryId, createTimestampedId } from '../utils/inventoryUtils';
 
-
 // Calculate experience needed for next attribute level
 export const calculateExpForNextLevel = (currentLevel: number): number => {
     if (currentLevel === 0) return 100;
@@ -211,17 +210,31 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
     const stats = statsDoc.data() as PlayerStats;
     let trainingData = stats.trainingData || initializeTrainingData();
 
+    // COMPREHENSIVE SAFETY CHECK: Clean all undefined values
+    trainingData = {
+        remainingClicks: trainingData.remainingClicks ?? 50,
+        lastResetTime: trainingData.lastResetTime || Timestamp.now(),
+        totalTrainingsDone: trainingData.totalTrainingsDone ?? 0,
+        isWorking: trainingData.isWorking ?? false
+    };
+
     const maxClicks = stats.activeWork ? 10 : 50;
     const now = new Date();
     const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
 
     let lastReset: Date;
-    if (trainingData.lastResetTime instanceof Timestamp) {
-        lastReset = trainingData.lastResetTime.toDate();
-    } else if (trainingData.lastResetTime && typeof trainingData.lastResetTime === 'object' && 'seconds' in trainingData.lastResetTime) {
-        lastReset = new Date(trainingData.lastResetTime.seconds * 1000);
-    } else {
-        lastReset = new Date(trainingData.lastResetTime);
+    try {
+        if (trainingData.lastResetTime instanceof Timestamp) {
+            lastReset = trainingData.lastResetTime.toDate();
+        } else if (trainingData.lastResetTime && typeof trainingData.lastResetTime === 'object' && 'seconds' in trainingData.lastResetTime) {
+            lastReset = new Date(trainingData.lastResetTime.seconds * 1000);
+        } else {
+            console.warn('Invalid lastResetTime, using current time');
+            lastReset = now;
+        }
+    } catch (error) {
+        console.error('Error parsing lastResetTime:', error);
+        lastReset = now;
     }
 
     const lastResetHour = new Date(lastReset.getFullYear(), lastReset.getMonth(), lastReset.getDate(), lastReset.getHours());
@@ -230,13 +243,21 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
         trainingData = {
             remainingClicks: maxClicks,
             lastResetTime: Timestamp.now(),
-            totalTrainingsDone: trainingData.totalTrainingsDone,
+            totalTrainingsDone: trainingData.totalTrainingsDone ?? 0,
             isWorking: !!stats.activeWork
         };
 
-        await updateDoc(statsRef, {
-            trainingData: trainingData
-        });
+        // GUARANTEED SAFE UPDATE: Explicitly construct clean object
+        const safeUpdateData = {
+            trainingData: {
+                remainingClicks: Number(trainingData.remainingClicks) || maxClicks,
+                lastResetTime: trainingData.lastResetTime,
+                totalTrainingsDone: Number(trainingData.totalTrainingsDone) || 0,
+                isWorking: Boolean(trainingData.isWorking)
+            }
+        };
+
+        await updateDoc(statsRef, safeUpdateData);
     }
 
     return trainingData;
@@ -253,17 +274,30 @@ export const checkAndResetKitchenLabTrainingClicks = async (userId: string): Pro
     const stats = statsDoc.data() as PlayerStats;
     let kitchenLabTrainingData = stats.kitchenLabTrainingData || initializeKitchenLabTrainingData();
 
+    // COMPREHENSIVE SAFETY CHECK: Clean all undefined values
+    kitchenLabTrainingData = {
+        remainingClicks: kitchenLabTrainingData.remainingClicks ?? 50,
+        lastResetTime: kitchenLabTrainingData.lastResetTime || Timestamp.now(),
+        totalTrainingsDone: kitchenLabTrainingData.totalTrainingsDone ?? 0
+    };
+
     const maxClicks = stats.activeWork ? 10 : 50;
     const now = new Date();
     const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
 
     let lastReset: Date;
-    if (kitchenLabTrainingData.lastResetTime instanceof Timestamp) {
-        lastReset = kitchenLabTrainingData.lastResetTime.toDate();
-    } else if (kitchenLabTrainingData.lastResetTime && typeof kitchenLabTrainingData.lastResetTime === 'object' && 'seconds' in kitchenLabTrainingData.lastResetTime) {
-        lastReset = new Date(kitchenLabTrainingData.lastResetTime.seconds * 1000);
-    } else {
-        lastReset = new Date(kitchenLabTrainingData.lastResetTime);
+    try {
+        if (kitchenLabTrainingData.lastResetTime instanceof Timestamp) {
+            lastReset = kitchenLabTrainingData.lastResetTime.toDate();
+        } else if (kitchenLabTrainingData.lastResetTime && typeof kitchenLabTrainingData.lastResetTime === 'object' && 'seconds' in kitchenLabTrainingData.lastResetTime) {
+            lastReset = new Date(kitchenLabTrainingData.lastResetTime.seconds * 1000);
+        } else {
+            console.warn('Invalid lastResetTime, using current time');
+            lastReset = now;
+        }
+    } catch (error) {
+        console.error('Error parsing lastResetTime:', error);
+        lastReset = now;
     }
 
     const lastResetHour = new Date(lastReset.getFullYear(), lastReset.getMonth(), lastReset.getDate(), lastReset.getHours());
@@ -272,12 +306,19 @@ export const checkAndResetKitchenLabTrainingClicks = async (userId: string): Pro
         kitchenLabTrainingData = {
             remainingClicks: maxClicks,
             lastResetTime: Timestamp.now(),
-            totalTrainingsDone: kitchenLabTrainingData.totalTrainingsDone
+            totalTrainingsDone: kitchenLabTrainingData.totalTrainingsDone ?? 0
         };
 
-        await updateDoc(statsRef, {
-            kitchenLabTrainingData: kitchenLabTrainingData
-        });
+        // GUARANTEED SAFE UPDATE: Explicitly construct clean object
+        const safeUpdateData = {
+            kitchenLabTrainingData: {
+                remainingClicks: Number(kitchenLabTrainingData.remainingClicks) || maxClicks,
+                lastResetTime: kitchenLabTrainingData.lastResetTime,
+                totalTrainingsDone: Number(kitchenLabTrainingData.totalTrainingsDone) || 0
+            }
+        };
+
+        await updateDoc(statsRef, safeUpdateData);
     }
 
     return kitchenLabTrainingData;
@@ -294,17 +335,30 @@ export const checkAndResetHandicraftTrainingClicks = async (userId: string): Pro
     const stats = statsDoc.data() as PlayerStats;
     let handicraftTrainingData = stats.handicraftTrainingData || initializeHandicraftTrainingData();
 
+    // COMPREHENSIVE SAFETY CHECK: Clean all undefined values
+    handicraftTrainingData = {
+        remainingClicks: handicraftTrainingData.remainingClicks ?? 50,
+        lastResetTime: handicraftTrainingData.lastResetTime || Timestamp.now(),
+        totalTrainingsDone: handicraftTrainingData.totalTrainingsDone ?? 0
+    };
+
     const maxClicks = stats.activeWork ? 10 : 50;
     const now = new Date();
     const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
 
     let lastReset: Date;
-    if (handicraftTrainingData.lastResetTime instanceof Timestamp) {
-        lastReset = handicraftTrainingData.lastResetTime.toDate();
-    } else if (handicraftTrainingData.lastResetTime && typeof handicraftTrainingData.lastResetTime === 'object' && 'seconds' in handicraftTrainingData.lastResetTime) {
-        lastReset = new Date(handicraftTrainingData.lastResetTime.seconds * 1000);
-    } else {
-        lastReset = new Date(handicraftTrainingData.lastResetTime);
+    try {
+        if (handicraftTrainingData.lastResetTime instanceof Timestamp) {
+            lastReset = handicraftTrainingData.lastResetTime.toDate();
+        } else if (handicraftTrainingData.lastResetTime && typeof handicraftTrainingData.lastResetTime === 'object' && 'seconds' in handicraftTrainingData.lastResetTime) {
+            lastReset = new Date(handicraftTrainingData.lastResetTime.seconds * 1000);
+        } else {
+            console.warn('Invalid lastResetTime, using current time');
+            lastReset = now;
+        }
+    } catch (error) {
+        console.error('Error parsing lastResetTime:', error);
+        lastReset = now;
     }
 
     const lastResetHour = new Date(lastReset.getFullYear(), lastReset.getMonth(), lastReset.getDate(), lastReset.getHours());
@@ -313,12 +367,19 @@ export const checkAndResetHandicraftTrainingClicks = async (userId: string): Pro
         handicraftTrainingData = {
             remainingClicks: maxClicks,
             lastResetTime: Timestamp.now(),
-            totalTrainingsDone: handicraftTrainingData.totalTrainingsDone
+            totalTrainingsDone: handicraftTrainingData.totalTrainingsDone ?? 0
         };
 
-        await updateDoc(statsRef, {
-            handicraftTrainingData: handicraftTrainingData
-        });
+        // GUARANTEED SAFE UPDATE: Explicitly construct clean object
+        const safeUpdateData = {
+            handicraftTrainingData: {
+                remainingClicks: Number(handicraftTrainingData.remainingClicks) || maxClicks,
+                lastResetTime: handicraftTrainingData.lastResetTime,
+                totalTrainingsDone: Number(handicraftTrainingData.totalTrainingsDone) || 0
+            }
+        };
+
+        await updateDoc(statsRef, safeUpdateData);
     }
 
     return handicraftTrainingData;
@@ -504,7 +565,6 @@ export const performTraining = async (
         totalAttributeLevelsGained += result.levelsGained;
     }
 
-
     // Handle health updates
     let updatedHealth = stats.health;
     let healthUpdates: any = {};
@@ -576,31 +636,30 @@ export const performTraining = async (
         }
     }
 
-    // Update training data
+    // Update training data with SAFE OBJECT CONSTRUCTION
     if (trainingType === 'sports') {
         const trainingData = await checkAndResetTrainingClicks(userId);
         const updatedTrainingData: TrainingData = {
-            remainingClicks: trainingData.remainingClicks - 1,
+            remainingClicks: Number(trainingData.remainingClicks - 1) || 0,
             lastResetTime: trainingData.lastResetTime,
-            totalTrainingsDone: trainingData.totalTrainingsDone + 1,
-            isWorking: !!stats.activeWork
+            totalTrainingsDone: Number(trainingData.totalTrainingsDone + 1) || 1,
+            isWorking: Boolean(stats.activeWork)
         };
         updates.trainingData = updatedTrainingData;
     } else if (trainingType === 'kitchen-lab') {
         const kitchenLabData = await checkAndResetKitchenLabTrainingClicks(userId);
         const updatedKitchenLabData: KitchenLabTrainingData = {
-            remainingClicks: kitchenLabData.remainingClicks - 1,
+            remainingClicks: Number(kitchenLabData.remainingClicks - 1) || 0,
             lastResetTime: kitchenLabData.lastResetTime,
-            totalTrainingsDone: kitchenLabData.totalTrainingsDone + 1
+            totalTrainingsDone: Number(kitchenLabData.totalTrainingsDone + 1) || 1
         };
         updates.kitchenLabTrainingData = updatedKitchenLabData;
-
     } else if (trainingType === 'handicraft') {
         const handicraftData = await checkAndResetHandicraftTrainingClicks(userId);
         const updatedHandicraftData: HandicraftTrainingData = {
-            remainingClicks: handicraftData.remainingClicks - 1,
+            remainingClicks: Number(handicraftData.remainingClicks - 1) || 0,
             lastResetTime: handicraftData.lastResetTime,
-            totalTrainingsDone: handicraftData.totalTrainingsDone + 1
+            totalTrainingsDone: Number(handicraftData.totalTrainingsDone + 1) || 1
         };
         updates.handicraftTrainingData = updatedHandicraftData;
     }

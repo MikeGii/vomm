@@ -1,7 +1,7 @@
-// src/components/fightclub/FightClubOpponents.tsx
+// src/components/fightclub/FightClubOpponents.tsx - ENHANCED WITH PAGINATION
 import React, { useState } from 'react';
 import { PlayerStats } from '../../types';
-import { EligiblePlayer } from '../../services/FightClubService';
+import { FightClubPaginatedResult } from '../../services/FightClubService';
 import { FightResult, FightParticipant, executeFight } from '../../services/FightService';
 import { processFightResult } from '../../services/FightTransactionService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -13,19 +13,23 @@ import '../../styles/components/fightclub/FightClubOpponents.css';
 
 interface FightClubOpponentsProps {
     playerStats: PlayerStats;
-    eligiblePlayers: EligiblePlayer[];
+    paginatedData: FightClubPaginatedResult;
     loadingPlayers: boolean;
     onFightComplete: (result: FightResult) => void;
+    onPageChange: (page: number) => void;
+    canFight: boolean;
 }
 
 export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
                                                                           playerStats,
-                                                                          eligiblePlayers,
+                                                                          paginatedData,
                                                                           loadingPlayers,
-                                                                          onFightComplete
+                                                                          onFightComplete,
+                                                                          onPageChange,
+                                                                          canFight
                                                                       }) => {
-    const {currentUser} = useAuth();
-    const {showToast} = useToast();
+    const { currentUser } = useAuth();
+    const { showToast } = useToast();
     const [fightingWith, setFightingWith] = useState<string | null>(null);
 
     // Get current user's username
@@ -43,8 +47,8 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
         return 'Tundmatu';
     };
 
-    const handleFight = async (opponent: EligiblePlayer) => {
-        if (!playerStats || !currentUser || fightingWith) return;
+    const handleFight = async (opponent: any) => {
+        if (!playerStats || !currentUser || fightingWith || !canFight) return;
 
         // Check if player has enough health (5 HP required)
         if (playerStats.health && playerStats.health.current < 5) {
@@ -55,11 +59,10 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
         setFightingWith(opponent.userId);
 
         try {
-            // Get current user's username
             const currentUsername = await getCurrentUsername();
 
-            // Prepare fight participants with real data
-            const player1: FightParticipant = {
+            // Prepare fight participants
+            const attackerData: FightParticipant = {
                 userId: currentUser.uid,
                 username: currentUsername,
                 level: playerStats.level,
@@ -68,45 +71,41 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
                     agility: playerStats.attributes?.agility?.level || 0,
                     dexterity: playerStats.attributes?.dexterity?.level || 0,
                     endurance: playerStats.attributes?.endurance?.level || 0,
-                    intelligence: playerStats.attributes?.intelligence?.level || 0,
+                    intelligence: playerStats.attributes?.intelligence?.level || 0
                 }
             };
 
-            const player2: FightParticipant = {
+            const defenderData: FightParticipant = {
                 userId: opponent.userId,
                 username: opponent.username,
                 level: opponent.level,
                 attributes: opponent.attributes
             };
 
-            // Calculate the fight
-            const result = await executeFight(
-                currentUser.uid,
-                player1,
-                player2
-            );
+            showToast(`⚔️ Alustasid võitlust kasutajaga ${opponent.username}!`, 'info');
 
-            // Process the transaction (money, stats, history, AND health reduction)
+            // Execute fight
+            const fightResult = await executeFight(currentUser.uid, attackerData, defenderData);
+
+            // Process fight result (update database)
             const transactionResult = await processFightResult(
                 currentUser.uid,
                 opponent.userId,
-                result
+                fightResult
             );
 
-            // In the handleFight function - update the toast messages:
             if (transactionResult.success) {
-                // Refresh player stats to show updated health and money
-                await onFightComplete(result);
+                onFightComplete(fightResult);
 
-                // Show result toast with dynamic health cost
-                if (result.winner === 'player1') {
+                // Show result notification
+                if (fightResult.winner === 'player1') {
                     showToast(
-                        `🏆 Võitsid ${opponent.username} vastu! +${result.moneyWon}€ | -5 HP`,
+                        `🏆 Võitsid! +${fightResult.moneyWon}€ | -5 HP`,
                         'success'
                     );
                 } else {
                     showToast(
-                        `😞 Kaotasid ${opponent.username} vastu. | -15 HP`,
+                        `😔 Kaotasid võitluse kasutajaga ${opponent.username} | -15 HP`,
                         'error'
                     );
                 }
@@ -127,6 +126,8 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
             setFightingWith(null);
         }
     };
+
+    const { players, totalCount, currentPage, totalPages, hasNextPage, hasPreviousPage } = paginatedData;
 
     return (
         <div className="fight-club-content">
@@ -150,81 +151,152 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
             )}
 
             <div className="opponents-section">
-                <h3>Võimalikud vastased:</h3>
+                <div className="opponents-header">
+                    <h3>Võimalikud vastased:</h3>
+                    {!loadingPlayers && players.length > 0 && (
+                        <div className="opponents-count">
+                            Kokku {totalCount} vastast
+                        </div>
+                    )}
+                </div>
 
                 {loadingPlayers ? (
                     <div className="loading-players">Laadin mängijaid...</div>
-                ) : eligiblePlayers.length === 0 ? (
+                ) : players.length === 0 ? (
                     <div className="no-opponents">
                         <p>Hetkel pole teisi sobivaid vastaseid võitlusklubis.</p>
                         <p>Proovi hiljem uuesti!</p>
                     </div>
                 ) : (
-                    <div className="opponents-list">
-                        {eligiblePlayers.map(player => {
-                            const hasEnoughHealth = playerStats.health && playerStats.health.current >= 5;
-                            const potentialReward = calculatePotentialReward(playerStats.level, player.level);
-                            const levelDiff = player.level - playerStats.level;
+                    <>
+                        <div className="opponents-list">
+                            {players.map(player => {
+                                const hasEnoughHealth = playerStats.health && playerStats.health.current >= 5;
+                                const potentialRewardData = calculatePotentialReward(playerStats.level, player.level);
+                                const potentialReward = potentialRewardData.reward;
+                                const levelDiff = player.level - playerStats.level;
+                                const isFighting = fightingWith === player.userId;
+                                const winRate = player.wins + player.losses > 0
+                                    ? Math.round((player.wins / (player.wins + player.losses)) * 100)
+                                    : 0;
 
-                            return (
-                                <div key={player.userId} className="opponent-card">
-                                    <div className="opponent-info">
-                                        <div className="opponent-header">
-                                            <span className="opponent-name">{player.username}</span>
-                                            <span className={`opponent-level ${
-                                                levelDiff > 0 ? 'higher-level' :
-                                                    levelDiff < 0 ? 'lower-level' :
-                                                        'same-level'
-                                            }`}>
-                                            Tase {player.level}
-                                                {levelDiff !== 0 && (
-                                                    <span className="level-diff">
-                                                    {levelDiff > 0 ? `(+${levelDiff})` : `(${levelDiff})`}
+                                return (
+                                    <div key={player.userId} className="opponent-card">
+                                        <div className="opponent-info">
+                                            <div className="opponent-header">
+                                                <span className="opponent-name">{player.username}</span>
+                                                <span className={`opponent-level ${
+                                                    levelDiff > 0 ? 'higher-level' :
+                                                        levelDiff < 0 ? 'lower-level' :
+                                                            'same-level'
+                                                }`}>
+                                                    Tase {player.level}
+                                                    {levelDiff !== 0 && (
+                                                        <span className="level-diff">
+                                                            {levelDiff > 0 ? `(+${levelDiff})` : `(${levelDiff})`}
+                                                        </span>
+                                                    )}
                                                 </span>
-                                                )}
-                                        </span>
-                                        </div>
+                                            </div>
 
-                                        {/* Reward preview section */}
-                                        <div className="reward-preview">
-                                            <span className="reward-label">Võimalik võit:</span>
-                                            <span className={`reward-amount ${
-                                                levelDiff > 0 ? 'bonus-reward' :
-                                                    levelDiff < -5 ? 'penalty-reward' : ''
-                                            }`}>
-                                            ~{potentialReward.reward}€
-                                                {levelDiff !== 0 && (
-                                                    <span className="reward-percentage">
-                                                    ({potentialReward.percentage})
-                                                </span>
+                                            {/* Fight statistics */}
+                                            <div className="fight-stats">
+                                                <span className="stats-label">Statistika:</span>
+                                                <span className="wins">{player.wins}V</span>
+                                                <span className="losses">{player.losses}K</span>
+                                                {player.wins + player.losses > 0 && (
+                                                    <span className="win-rate">({winRate}%)</span>
                                                 )}
-                                        </span>
-                                        </div>
+                                            </div>
 
-                                        {/* Health cost indicator */}
-                                        <div className="fight-cost">
-                                            <span className="cost-label">Vigastus:</span>
-                                            <span className={`cost-value ${!hasEnoughHealth ? 'insufficient' : ''}`}>
-                                                5-15 HP
+                                            {/* Reward preview section */}
+                                            <div className="reward-preview">
+                                                <span className="reward-label">Võimalik võit:</span>
+                                                <span className={`reward-amount ${
+                                                    levelDiff > 0 ? 'bonus-reward' :
+                                                        levelDiff < -5 ? 'penalty-reward' : ''
+                                                }`}>
+                                                +{potentialReward}€
+                                                    {levelDiff !== 0 && (
+                                                        <span className="reward-percentage">
+                                                        {` (${potentialRewardData.percentage})`}
+                                                    </span>
+                                                    )}
                                             </span>
-                                        </div>
-                                    </div>
+                                            </div>
 
-                                    <button
-                                        className="fight-button"
-                                        onClick={() => handleFight(player)}
-                                        disabled={fightingWith === player.userId || !hasEnoughHealth}
-                                        title={!hasEnoughHealth ? 'Vajalik vähemalt 5 HP võitlemiseks' : ''}
-                                    >
-                                        {fightingWith === player.userId ? '⚔️ Võitleb...' :
-                                            !hasEnoughHealth ? '❤️ Liiga vähe HP' : '⚔️ Võitle'}
-                                    </button>
+                                            {/* Health cost indicator */}
+                                            <div className="fight-cost">
+                                                <span>Tervise kulu:</span>
+                                                <span className={`cost-value ${
+                                                    !hasEnoughHealth ? 'insufficient' : ''
+                                                }`}>
+                                                    Võit: -5 HP | Kaotus: -15 HP
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            className="fight-button"
+                                            onClick={() => handleFight(player)}
+                                            disabled={!hasEnoughHealth || !canFight || isFighting}
+                                        >
+                                            {isFighting ? '⚔️ Võitleb...' :
+                                                !hasEnoughHealth ? '❤️ Pole tervist' :
+                                                    !canFight ? '⏳ Ei saa võidelda' :
+                                                        '⚔️ Võitle'}
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                            <div className="pagination-controls">
+                                <button
+                                    className="pagination-btn"
+                                    onClick={() => onPageChange(1)}
+                                    disabled={currentPage === 1 || loadingPlayers}
+                                >
+                                    ««
+                                </button>
+                                <button
+                                    className="pagination-btn"
+                                    onClick={() => onPageChange(currentPage - 1)}
+                                    disabled={!hasPreviousPage || loadingPlayers}
+                                >
+                                    ‹
+                                </button>
+
+                                <div className="pagination-info">
+                                    <span className="page-numbers">
+                                        Lehekülg {currentPage} / {totalPages}
+                                    </span>
+                                    <span className="total-count">
+                                        ({totalCount} vastast)
+                                    </span>
                                 </div>
-                            );
-                        })}
-                    </div>
+
+                                <button
+                                    className="pagination-btn"
+                                    onClick={() => onPageChange(currentPage + 1)}
+                                    disabled={!hasNextPage || loadingPlayers}
+                                >
+                                    ›
+                                </button>
+                                <button
+                                    className="pagination-btn"
+                                    onClick={() => onPageChange(totalPages)}
+                                    disabled={currentPage === totalPages || loadingPlayers}
+                                >
+                                    »»
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>
     );
-}
+};

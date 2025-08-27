@@ -1,11 +1,16 @@
-// src/pages/FightClubPage.tsx - Updated version
+// src/pages/FightClubPage.tsx - ENHANCED WITH PAGINATION
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { useToast } from '../contexts/ToastContext';
-import { checkFightClubRequirements, getEligiblePlayers, EligiblePlayer } from '../services/FightClubService';
+import {
+    checkFightClubRequirements,
+    getEligiblePlayersWithPagination,
+    FightClubPaginatedResult,
+    clearFightClubCache
+} from '../services/FightClubService';
 import { FightClubRequirements, FightClubOpponents, FightResultModal } from '../components/fightclub';
 import { FightResult } from '../services/FightService';
 import '../styles/pages/FightClub.css';
@@ -18,8 +23,20 @@ const FightClubPage: React.FC = () => {
     const { currentUser } = useAuth();
     const { playerStats, loading, refreshStats } = usePlayerStats();
     const { showToast } = useToast();
-    const [eligiblePlayers, setEligiblePlayers] = useState<EligiblePlayer[]>([]);
+
+    // Pagination state
+    const [paginatedData, setPaginatedData] = useState<FightClubPaginatedResult>({
+        players: [],
+        totalCount: 0,
+        currentPage: 1,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPreviousPage: false
+    });
+    const [currentPage, setCurrentPage] = useState(1);
     const [loadingPlayers, setLoadingPlayers] = useState(false);
+
+    // Fight modal state
     const [fightResult, setFightResult] = useState<FightResult | null>(null);
     const [showFightModal, setShowFightModal] = useState(false);
     const [timeUntilResetDisplay, setTimeUntilResetDisplay] = useState<string>('');
@@ -68,43 +85,52 @@ const FightClubPage: React.FC = () => {
         return () => clearInterval(interval);
     }, [playerStats, fightsRemaining, refreshStats]);
 
-    // Load eligible players
-    useEffect(() => {
+    // Load paginated opponents
+    const loadOpponents = async (page: number) => {
         if (!playerStats || !currentUser) return;
 
         const requirements = checkFightClubRequirements(playerStats);
-        if (requirements.eligible) {
-            setLoadingPlayers(true);
-            getEligiblePlayers(currentUser.uid)
-                .then(players => {
-                    setEligiblePlayers(players);
-                })
-                .catch(error => {
-                    console.error('Error loading eligible players:', error);
-                    showToast('Viga vastaste laadimisel', 'error');
-                })
-                .finally(() => {
-                    setLoadingPlayers(false);
-                });
-        }
-    }, [playerStats, currentUser, showToast]);
+        if (!requirements.eligible) return;
 
+        setLoadingPlayers(true);
+        try {
+            const data = await getEligiblePlayersWithPagination(currentUser.uid, page);
+            setPaginatedData(data);
+            setCurrentPage(page);
+        } catch (error) {
+            console.error('Error loading opponents:', error);
+            showToast('Viga vastaste laadimisel', 'error');
+        } finally {
+            setLoadingPlayers(false);
+        }
+    };
+
+    // Load opponents on initial load
+    useEffect(() => {
+        if (playerStats && currentUser) {
+            loadOpponents(1);
+        }
+    }, [playerStats, currentUser]);
+
+    // Handle fight completion
     const handleFightComplete = async (result: FightResult) => {
         setFightResult(result);
         setShowFightModal(true);
 
+        // Refresh player stats
         await refreshStats();
 
+        // Clear fight club cache and reload current page
         if (currentUser) {
-            setLoadingPlayers(true);
-            try {
-                const players = await getEligiblePlayers(currentUser.uid);
-                setEligiblePlayers(players);
-            } catch (error) {
-                console.error('Error reloading players:', error);
-            } finally {
-                setLoadingPlayers(false);
-            }
+            clearFightClubCache(currentUser.uid);
+            await loadOpponents(currentPage);
+        }
+    };
+
+    // Handle page changes
+    const handlePageChange = async (newPage: number) => {
+        if (newPage >= 1 && newPage <= paginatedData.totalPages) {
+            await loadOpponents(newPage);
         }
     };
 
@@ -153,7 +179,7 @@ const FightClubPage: React.FC = () => {
 
                     <h1 className="fight-club-title">🥊 Võitlusklubi</h1>
 
-                    {/* Fight limit display - Better UI */}
+                    {/* Fight limit display */}
                     {requirements.eligible && (
                         <div className="fight-limit-card">
                             <div className="fight-limit-header">
@@ -197,22 +223,12 @@ const FightClubPage: React.FC = () => {
                     ) : (
                         <FightClubOpponents
                             playerStats={playerStats}
-                            eligiblePlayers={eligiblePlayers}
+                            paginatedData={paginatedData}
                             loadingPlayers={loadingPlayers}
                             onFightComplete={handleFightComplete}
-                            // Removed fightsRemaining prop
+                            onPageChange={handlePageChange}
+                            canFight={canFight}
                         />
-                    )}
-
-                    {/* Disable fight buttons if no fights remaining */}
-                    {requirements.eligible && !canFight && (
-                        <style>{`
-                            .fight-button {
-                                opacity: 0.5;
-                                cursor: not-allowed;
-                                pointer-events: none;
-                            }
-                        `}</style>
                     )}
 
                     <FightResultModal
