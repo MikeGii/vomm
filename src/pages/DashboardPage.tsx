@@ -208,6 +208,7 @@ function DashboardPage() {
 
                         <Leaderboard
                             currentUserId={currentUser?.uid}
+                            currentUserIsVip={playerStats?.isVip === true}
                         />
 
                         {/* RESTORED: Prefecture Selection Modal - for both abipolitseinik and graduated officers */}
