@@ -25,7 +25,7 @@ export const PublicHeader: React.FC = () => {
                     <div className="header-left"></div>
                     <div className="header-center">
                         <div className="title-with-badge">
-                            <h1 className="game-title">Võmm</h1>
+                            <h1 className="game-title">Võmm.ee</h1>
                             <img
                                 src="/images/policeBadge.png"
                                 alt="Police Badge"
