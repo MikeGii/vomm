@@ -6,7 +6,9 @@ export const gameUpdates: GameUpdate[] = [
     {
         id: '11',
         title: 'Mängu uuenduesd',
-        description: 'Lisatud ',
+        description: 'Lisatud testide lehekülg kuhu tulevikus lisandub teste boonus tasudega. Lisatud kaks uut arendatavat käsitöö oskust (3D printimine ja laserlõikamine,' +
+            ' mis avanevad tulevikus uute mängu funtksioonidega. Lisatud uusi tegevusi käsitöö ja köögi alla. Parandused profiili lehel oskuste all. Tõstetud edetabeli ' +
+            'kuvamiste arvu 200 peale. Lisatud uus koolitus politsei kategoorias.',
         date: '2025-08-26',
         isNew: true
     },
