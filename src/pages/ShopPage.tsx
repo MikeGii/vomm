@@ -182,7 +182,7 @@ const ShopPage: React.FC = () => {
             if (interval) clearInterval(interval);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
-    }, [loadItemsWithStock, lastRefreshTime]);
+    }, [loadItemsWithStock, lastRefreshTime, stockInitialized]);
 
     const handlePurchase = async (itemId: string) => {
         const itemData = itemsWithStock.find(i => i.item.id === itemId);
