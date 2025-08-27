@@ -1,10 +1,10 @@
 // src/components/training/CraftingInventory.tsx
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import { InventoryItem } from '../../types';
 import { CRAFTING_INGREDIENTS } from '../../data/shop/craftingIngredients';
 import { getBaseIdFromInventoryId } from '../../utils/inventoryUtils';
 import '../../styles/components/training/CraftingInventory.css';
-import {ALL_SHOP_ITEMS} from "../../data/shop";
+import { ALL_SHOP_ITEMS } from "../../data/shop";
 
 interface CraftingInventoryProps {
     inventory: InventoryItem[];
@@ -12,22 +12,18 @@ interface CraftingInventoryProps {
 }
 
 export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory, onSellItem }) => {
-
     const [sellQuantities, setSellQuantities] = useState<{ [key: string]: number }>({});
+    const [sellQuantityInputs, setSellQuantityInputs] = useState<{ [key: string]: string }>({});
+    const [sellQuantityErrors, setSellQuantityErrors] = useState<{ [key: string]: string | null }>({});
     const [sellLoading, setSellLoading] = useState<{ [key: string]: boolean }>({});
 
     // Get item details from CRAFTING_INGREDIENTS
     const getItemDetails = (item: InventoryItem) => {
         const baseId = getBaseIdFromInventoryId(item.id);
-
-        // First check CRAFTING_INGREDIENTS
         let details = CRAFTING_INGREDIENTS.find(ingredient => ingredient.id === baseId);
-
-        // If not found, check ALL_SHOP_ITEMS
         if (!details) {
             details = ALL_SHOP_ITEMS.find(shopItem => shopItem.id === baseId);
         }
-
         return details;
     };
 
@@ -38,34 +34,101 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
         return details.maxStock === 0;
     };
 
+    // Initialize quantity inputs when inventory changes
+    useEffect(() => {
+        const updates: { [key: string]: string } = {};
+        const quantityUpdates: { [key: string]: number } = {};
+
+        inventory.forEach(item => {
+            if (canSellItem(item) && !(item.id in sellQuantityInputs)) {
+                updates[item.id] = '1';
+                quantityUpdates[item.id] = 1;
+            }
+        });
+
+        if (Object.keys(updates).length > 0) {
+            setSellQuantityInputs(prev => ({...prev, ...updates}));
+            setSellQuantities(prev => ({...prev, ...quantityUpdates}));
+        }
+    }, [inventory, sellQuantityInputs]);
+
+    const handleQuantityChange = (itemId: string, newQuantity: number, maxQuantity: number) => {
+        if (newQuantity >= 1) {
+            setSellQuantities(prev => ({...prev, [itemId]: newQuantity}));
+            setSellQuantityInputs(prev => ({...prev, [itemId]: newQuantity.toString()}));
+
+            // Check for errors
+            if (newQuantity > maxQuantity) {
+                setSellQuantityErrors(prev => ({
+                    ...prev,
+                    [itemId]: `Sul on ainult ${maxQuantity} tükki`
+                }));
+            } else {
+                setSellQuantityErrors(prev => ({...prev, [itemId]: null}));
+            }
+        }
+    };
+
+    const handleInputChange = (itemId: string, value: string, maxQuantity: number) => {
+        setSellQuantityInputs(prev => ({...prev, [itemId]: value}));
+
+        if (value === '') {
+            setSellQuantityErrors(prev => ({...prev, [itemId]: 'Sisesta kogus'}));
+            return;
+        }
+
+        const numValue = parseInt(value);
+        if (!isNaN(numValue) && numValue >= 1) {
+            handleQuantityChange(itemId, numValue, maxQuantity);
+        } else if (numValue < 1) {
+            setSellQuantityErrors(prev => ({...prev, [itemId]: 'Kogus peab olema vähemalt 1'}));
+        } else {
+            setSellQuantityErrors(prev => ({...prev, [itemId]: 'Sisesta kehtiv number'}));
+        }
+    };
+
+    const handleSellItem = async (item: any) => {
+        if (!onSellItem || !canSellItem(item)) return;
+
+        const quantity = sellQuantities[item.id] || 1;
+        const error = sellQuantityErrors[item.id];
+
+        if (error) return; // Don't sell if there's an error
+
+        setSellLoading(prev => ({...prev, [item.id]: true}));
+
+        try {
+            await onSellItem(item.id, quantity);
+            // Reset to 1 after successful sale
+            setSellQuantities(prev => ({...prev, [item.id]: 1}));
+            setSellQuantityInputs(prev => ({...prev, [item.id]: '1'}));
+            setSellQuantityErrors(prev => ({...prev, [item.id]: null}));
+        } catch (error) {
+            console.error('Müük ebaõnnestus:', error);
+        } finally {
+            setSellLoading(prev => ({...prev, [item.id]: false}));
+        }
+    };
+
     // Filter only crafting category items and sort alphabetically
     const craftingItems = inventory
         .filter(item => {
-            // Hide equipped items (your requirement #1)
             if (item.equipped) return false;
-
             const baseId = getBaseIdFromInventoryId(item.id);
-
-            // Show items from CRAFTING_INGREDIENTS (traditional crafting materials)
             const inCraftingIngredients = CRAFTING_INGREDIENTS.find(ingredient => ingredient.id === baseId);
             if (inCraftingIngredients) return true;
-
-            // Show ONLY player-made equipment (maxStock = 0) from ALL_SHOP_ITEMS
             const inShopItems = ALL_SHOP_ITEMS.find(shopItem =>
                 shopItem.id === baseId && shopItem.maxStock === 0
             );
             if (inShopItems) return true;
-
             return false;
         })
         .map(item => {
             const baseId = getBaseIdFromInventoryId(item.id);
-            // Get details from either source
             let details = CRAFTING_INGREDIENTS.find(ingredient => ingredient.id === baseId);
             if (!details) {
                 details = ALL_SHOP_ITEMS.find(shopItem => shopItem.id === baseId);
             }
-
             return {
                 ...item,
                 baseId: baseId,
@@ -78,33 +141,6 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
             const nameB = b.displayName;
             return nameA.localeCompare(nameB, 'et');
         });
-
-    const handleQuantityChange = (itemId: string, quantity: number) => {
-        setSellQuantities(prev => ({
-            ...prev,
-            [itemId]: quantity
-        }));
-    };
-
-    const handleSellItem = async (item: any) => {
-        if (!onSellItem || !canSellItem(item)) return;
-
-        const quantity = sellQuantities[item.id] || 1;
-        const maxQuantity = item.quantity;
-
-        if (quantity > maxQuantity || quantity < 1) return;
-
-        setSellLoading(prev => ({...prev, [item.id]: true}));
-
-        try {
-            await onSellItem(item.id, quantity);
-            setSellQuantities(prev => ({...prev, [item.id]: 1}));
-        } catch (error) {
-            console.error('Müük ebaõnnestus:', error);
-        } finally {
-            setSellLoading(prev => ({...prev, [item.id]: false}));
-        }
-    };
 
     if (craftingItems.length === 0) {
         return (
@@ -131,47 +167,57 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
                     </tr>
                     </thead>
                     <tbody>
-                    {craftingItems.map(item => (
-                        <tr key={item.id}>
-                            <td className="item-name">
-                                {item.displayName}
-                            </td>
-                            <td className="item-quantity">
-                                <span className="quantity-value">{item.quantity || 'X'}</span>  {/* Show X if no quantity */}
-                            </td>
-                            <td className="item-price">
-                                {canSellItem(item) ? `€${item.details?.basePrice || 0}` : '-'}
-                            </td>
-                            <td className="item-actions">
-                                {canSellItem(item) ? (
-                                    <div className="sell-controls">
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            max={item.quantity}
-                                            value={sellQuantities[item.id] || 1}
-                                            onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 1)}
-                                            className="quantity-input"
-                                            disabled={sellLoading[item.id]}
-                                            aria-label="Kogus"
-                                        />
-                                        <button
-                                            onClick={() => handleSellItem(item)}
-                                            disabled={sellLoading[item.id] || !onSellItem}
-                                            className="sell-button"
-                                        >
-                                            {sellLoading[item.id] ? '...' : 'Müü'}
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <span className="not-sellable">-</span>
-                                )}
-                            </td>
-                        </tr>
-                    ))}
+                    {craftingItems.map(item => {
+                        const currentInput = sellQuantityInputs[item.id] || '';
+                        const currentError = sellQuantityErrors[item.id];
+                        const canSell = canSellItem(item) && !currentError;
+
+                        return (
+                            <tr key={item.id}>
+                                <td className="item-name">
+                                    {item.displayName}
+                                </td>
+                                <td className="item-quantity">
+                                    <span className="quantity-value">{item.quantity || 'X'}</span>
+                                </td>
+                                <td className="item-price">
+                                    {canSellItem(item) ? `€${item.details?.basePrice || 0}` : '-'}
+                                </td>
+                                <td className="item-actions">
+                                    {canSellItem(item) ? (
+                                        <div className="sell-controls">
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={currentInput}
+                                                onChange={(e) => handleInputChange(item.id, e.target.value, item.quantity)}
+                                                className="quantity-input"
+                                                disabled={sellLoading[item.id]}
+                                                placeholder="Kogus"
+                                            />
+                                            <button
+                                                onClick={() => handleSellItem(item)}
+                                                disabled={sellLoading[item.id] || !onSellItem || !canSell}
+                                                className="sell-button"
+                                            >
+                                                {sellLoading[item.id] ? '...' : 'Müü'}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <span className="not-sellable">Ei müüda</span>
+                                    )}
+                                    {currentError && (
+                                        <div className="sell-error">
+                                            {currentError}
+                                        </div>
+                                    )}
+                                </td>
+                            </tr>
+                        );
+                    })}
                     </tbody>
                 </table>
             </div>
         </div>
     );
-}
+};
