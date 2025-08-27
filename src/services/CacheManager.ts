@@ -84,8 +84,7 @@ class CacheManager {
     /**
      * Save data to cache
      */
-    set<T>(key: string, data: T): void {
-        try {
+    set<T>(key: string, data: T, customDuration?: number): void {        try {
             const fullKey = `${this.CACHE_PREFIX}${key}`;
             const entry: CacheEntry<T> = {
                 data,
