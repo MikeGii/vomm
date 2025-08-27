@@ -5,7 +5,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { TabNavigation } from '../components/ui/TabNavigation';
-import { ShopManagement } from '../components/admin/ShopManagement';
 import { AdminTools } from '../components/admin/AdminTools';
 import { AdminApplicationsTab } from '../components/admin/AdminApplicationsTab';
 import { UserManagement } from '../components/admin/user-management/UserManagement';
@@ -68,7 +67,6 @@ const AdminPage: React.FC = () => {
                 />
 
                 {activeTab === 'tools' && <AdminTools />}
-                {activeTab === 'shop' && <ShopManagement />}
                 {activeTab === 'applications' && <AdminApplicationsTab />}
                 {activeTab === 'users' && <UserManagement />}
             </main>
