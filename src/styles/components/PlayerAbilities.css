@@ -167,3 +167,128 @@
         padding: 0.15rem 0.4rem;
     }
 }
+
+/* Basic VIP container enhancement */
+.abilities-container.vip-abilities {
+    background: linear-gradient(135deg, #1a1a1a, #2a1a2a);
+    border: 2px solid rgba(156, 39, 176, 0.4);
+    position: relative;
+}
+
+/* Simple header layout */
+.abilities-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.vip-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: linear-gradient(135deg, #9c27b0, #e91e63);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.vip-crown {
+    animation: crown-wiggle 3s ease-in-out infinite;
+}
+
+@keyframes crown-wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(10deg); }
+}
+
+/* Enhanced ability cards for VIP */
+.ability-card.vip-enhanced {
+    background: linear-gradient(135deg, #2a1a2a, #1a1a2a);
+    border: 1px solid rgba(156, 39, 176, 0.3);
+    transition: all 0.3s ease;
+}
+
+.ability-card.vip-enhanced:hover {
+    border-color: rgba(156, 39, 176, 0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(156, 39, 176, 0.3);
+}
+
+/* VIP icon enhancement */
+.ability-card.vip-enhanced .ability-icon {
+    position: relative;
+}
+
+.icon-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(circle, rgba(156, 39, 176, 0.2), transparent);
+    border-radius: 50%;
+    animation: icon-pulse 2s ease-in-out infinite;
+    z-index: -1;
+}
+
+@keyframes icon-pulse {
+    0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+/* VIP bonus tags */
+.bonus-tag.vip-bonus {
+    background: linear-gradient(135deg, rgba(156, 39, 176, 0.3), rgba(233, 30, 99, 0.2));
+    border: 1px solid rgba(156, 39, 176, 0.5);
+    color: #e1bee7;
+}
+
+.vip-sparkle {
+    margin-left: 0.3rem;
+    animation: sparkle-twinkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle-twinkle {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+/* VIP enhanced text */
+.abilities-container.vip-abilities .abilities-title {
+    color: #e1bee7;
+    text-shadow: 0 0 8px rgba(156, 39, 176, 0.3);
+}
+
+.abilities-container.vip-abilities .ability-name {
+    color: #e1bee7;
+}
+
+.vip-hint {
+    color: #9c27b0;
+    font-weight: 500;
+    margin-top: 0.5rem;
+    animation: hint-glow 3s ease-in-out infinite;
+}
+
+@keyframes hint-glow {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .abilities-header {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    .vip-indicator {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.6rem;
+    }
+}

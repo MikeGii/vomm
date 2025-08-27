@@ -147,3 +147,240 @@
     border-color: #ffd700;
     box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
 }
+
+/* VIP Quick Actions Container */
+.quick-actions-container.vip-quick-actions {
+    background: linear-gradient(135deg, #1a1a1a, #2d1b2e);
+    border: 2px solid rgba(156, 39, 176, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.quick-actions-container.vip-quick-actions::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(156, 39, 176, 0.1), transparent);
+    pointer-events: none;
+}
+
+/* VIP Header */
+.quick-actions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.vip-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #9c27b0, #e91e63);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    animation: vip-indicator-pulse 2s ease-in-out infinite;
+}
+
+@keyframes vip-indicator-pulse {
+    0%, 100% {
+        box-shadow: 0 0 8px rgba(156, 39, 176, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 16px rgba(156, 39, 176, 0.7);
+    }
+}
+
+.vip-crown {
+    animation: crown-rotate 3s ease-in-out infinite;
+}
+
+@keyframes crown-rotate {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-5deg); }
+    75% { transform: rotate(5deg); }
+}
+
+/* VIP Enhanced Action Buttons */
+.quick-action-button.vip-enhanced {
+    background: linear-gradient(135deg, #2a1a2a, #1a1a2a);
+    border: 2px solid rgba(156, 39, 176, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.quick-action-button.vip-enhanced:hover {
+    border-color: rgba(156, 39, 176, 0.6);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(156, 39, 176, 0.3);
+}
+
+.quick-action-button.vip-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(156, 39, 176, 0.1), transparent);
+    animation: vip-shimmer 3s ease-in-out infinite;
+}
+
+@keyframes vip-shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* VIP Exclusive Actions */
+.quick-action-button.vip-exclusive {
+    background: linear-gradient(135deg, #9c27b0, #e91e63);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    color: white;
+}
+
+.quick-action-button.vip-exclusive:hover {
+    background: linear-gradient(135deg, #b93acc, #f73263);
+    border-color: rgba(255, 215, 0, 0.6);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(156, 39, 176, 0.5);
+}
+
+.vip-exclusive-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    color: #000;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    animation: vip-badge-bounce 2s ease-in-out infinite;
+}
+
+@keyframes vip-badge-bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* VIP Benefits Display */
+.vip-benefit {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    margin-top: 0.3rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.vip-benefit.vip-active {
+    background: linear-gradient(135deg, rgba(156, 39, 176, 0.3), rgba(233, 30, 99, 0.3));
+    color: #e1bee7;
+    border: 1px solid rgba(156, 39, 176, 0.5);
+    animation: benefit-glow 2s ease-in-out infinite;
+}
+
+.vip-benefit.vip-inactive {
+    background: rgba(102, 102, 102, 0.2);
+    color: #aaa;
+    border: 1px solid #555;
+}
+
+@keyframes benefit-glow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(156, 39, 176, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 10px rgba(156, 39, 176, 0.6);
+    }
+}
+
+/* VIP Sparkles */
+.vip-sparkles {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    pointer-events: none;
+}
+
+.sparkle {
+    position: absolute;
+    font-size: 0.8rem;
+    animation: sparkle-twinkle 2s ease-in-out infinite;
+}
+
+.sparkle:nth-child(1) {
+    animation-delay: 0s;
+    top: 0;
+    right: 0;
+}
+
+.sparkle:nth-child(2) {
+    animation-delay: 1s;
+    top: 5px;
+    right: 15px;
+}
+
+@keyframes sparkle-twinkle {
+    0%, 100% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Enhanced Action Content */
+.action-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* VIP Info Text */
+.quick-actions-info.vip-info {
+    background: linear-gradient(135deg, rgba(156, 39, 176, 0.1), rgba(233, 30, 99, 0.1));
+    border: 1px solid rgba(156, 39, 176, 0.3);
+    border-radius: 8px;
+    padding: 0.75rem;
+    color: #e1bee7;
+    animation: info-pulse 3s ease-in-out infinite;
+}
+
+@keyframes info-pulse {
+    0%, 100% {
+        border-color: rgba(156, 39, 176, 0.3);
+    }
+    50% {
+        border-color: rgba(156, 39, 176, 0.5);
+    }
+}
+
+/* Mobile Responsive VIP */
+@media (max-width: 768px) {
+    .quick-actions-header {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    .vip-status-indicator {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.6rem;
+    }
+
+    .vip-sparkles {
+        display: none; /* Hide sparkles on mobile for performance */
+    }
+}

@@ -536,3 +536,307 @@
         padding: 0.15rem;
     }
 }
+
+/* VIP Player Stats Card */
+.player-stats-card.vip-player {
+    background: linear-gradient(135deg, #1a1a1a, #2d1b2e, #1a1a1a);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+    overflow: hidden;
+}
+
+.player-stats-card.vip-player::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #9c27b0, #e91e63, #ffd700, #9c27b0);
+    background-size: 400% 400%;
+    animation: vip-border-flow 4s ease-in-out infinite;
+    z-index: -1;
+    padding: 2px;
+    border-radius: 8px;
+}
+
+@keyframes vip-border-flow {
+    0%, 100% { background-position: 0% 50%; }
+    25% { background-position: 100% 50%; }
+    50% { background-position: 100% 100%; }
+    75% { background-position: 0% 100%; }
+}
+
+/* VIP Crown Container */
+.vip-crown-container {
+    position: absolute;
+    top: -15px;
+    right: 20px;
+    z-index: 10;
+}
+
+.vip-crown-effect {
+    font-size: 2rem;
+    animation: crown-float 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+}
+
+@keyframes crown-float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(5deg); }
+}
+
+/* VIP Particles */
+.vip-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: linear-gradient(45deg, #ffd700, #9c27b0);
+    border-radius: 50%;
+    animation: particle-float 6s linear infinite;
+}
+
+.particle:nth-child(1) {
+    left: 20%;
+    animation-delay: 0s;
+}
+
+.particle:nth-child(2) {
+    left: 40%;
+    animation-delay: 1.5s;
+}
+
+.particle:nth-child(3) {
+    left: 60%;
+    animation-delay: 3s;
+}
+
+.particle:nth-child(4) {
+    left: 80%;
+    animation-delay: 4.5s;
+}
+
+@keyframes particle-float {
+    0% {
+        opacity: 0;
+        transform: translateY(50px) scale(0);
+    }
+    10% {
+        opacity: 1;
+        transform: translateY(40px) scale(1);
+    }
+    90% {
+        opacity: 1;
+        transform: translateY(-30px) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-40px) scale(0);
+    }
+}
+
+/* VIP Username Container */
+.username-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.vip-crown-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: linear-gradient(135deg, #9c27b0, #e91e63);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    animation: vip-badge-pulse 2s ease-in-out infinite;
+    box-shadow: 0 4px 12px rgba(156, 39, 176, 0.4);
+}
+
+@keyframes vip-badge-pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(156, 39, 176, 0.4);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 4px 20px rgba(156, 39, 176, 0.7);
+    }
+}
+
+.crown-icon {
+    animation: crown-sparkle 2s ease-in-out infinite;
+}
+
+@keyframes crown-sparkle {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.5) drop-shadow(0 0 5px #ffd700); }
+}
+
+/* VIP Enhanced Badges */
+.badge-display.vip-badge,
+.rank-display.vip-rank {
+    background: linear-gradient(135deg, rgba(156, 39, 176, 0.2), rgba(233, 30, 99, 0.2));
+    border: 1px solid rgba(156, 39, 176, 0.5);
+    color: #e1bee7;
+    animation: vip-badge-glow 3s ease-in-out infinite;
+}
+
+@keyframes vip-badge-glow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(156, 39, 176, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(156, 39, 176, 0.6);
+    }
+}
+
+/* VIP Level Display */
+.level-display.vip-level {
+    background: linear-gradient(135deg, #2a1a2a, #1a1a2a);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+}
+
+.level-display.vip-level::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #9c27b0, #e91e63, #ffd700);
+    z-index: -1;
+    border-radius: 50%;
+    animation: vip-level-rotate 4s linear infinite;
+}
+
+@keyframes vip-level-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.level-vip-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(circle, rgba(156, 39, 176, 0.3), transparent);
+    border-radius: 50%;
+    animation: level-pulse 2s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes level-pulse {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.3;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 0.6;
+    }
+}
+
+/* VIP Experience Bar */
+.vip-exp-bonus {
+    color: #9c27b0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    animation: exp-bonus-twinkle 2s ease-in-out infinite;
+}
+
+@keyframes exp-bonus-twinkle {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+.exp-bar-large.vip-exp-bar {
+    background: linear-gradient(135deg, #2a1a2a, #1a1a2a);
+    border: 1px solid rgba(156, 39, 176, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.exp-progress-large.vip-progress {
+    background: linear-gradient(90deg, #9c27b0, #e91e63, #ffd700, #9c27b0);
+    background-size: 200% 100%;
+    animation: vip-progress-flow 3s linear infinite;
+}
+
+@keyframes vip-progress-flow {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.exp-bar-shimmer {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+    );
+    animation: shimmer-slide 3s ease-in-out infinite;
+}
+
+@keyframes shimmer-slide {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* VIP Stat Cards */
+.player-stats-card.vip-player .stat-card {
+    background: linear-gradient(135deg, #2a1a2a, #1a1a2a);
+    border: 1px solid rgba(156, 39, 176, 0.2);
+    transition: all 0.3s ease;
+}
+
+.player-stats-card.vip-player .stat-card:hover {
+    border-color: rgba(156, 39, 176, 0.5);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(156, 39, 176, 0.2);
+}
+
+/* Mobile Responsive VIP */
+@media (max-width: 768px) {
+    .vip-crown-container {
+        top: -10px;
+        right: 10px;
+    }
+
+    .vip-crown-effect {
+        font-size: 1.5rem;
+    }
+
+    .username-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .vip-crown-badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.6rem;
+    }
+}

@@ -222,3 +222,76 @@
         padding: 0.1rem 0.3rem;
     }
 }
+
+/* VIP Player Row - Basic Styling */
+.leaderboard-table tbody tr.vip-player {
+    background: linear-gradient(135deg, rgba(156, 39, 176, 0.1), rgba(233, 30, 99, 0.05)) !important;
+    border-left: 3px solid #9c27b0 !important;
+}
+
+.leaderboard-table tbody tr.vip-player:hover {
+    background: linear-gradient(135deg, rgba(156, 39, 176, 0.2), rgba(233, 30, 99, 0.1)) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4);
+}
+
+/* VIP Badge Styling */
+.vip-badge {
+    background: linear-gradient(135deg, #9c27b0, #e91e63);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    animation: vip-pulse 2s infinite;
+    box-shadow: 0 2px 8px rgba(156, 39, 176, 0.6);
+}
+
+@keyframes vip-pulse {
+    0%, 100% {
+        box-shadow: 0 2px 4px rgba(156, 39, 176, 0.4);
+    }
+    50% {
+        box-shadow: 0 2px 12px rgba(156, 39, 176, 0.8);
+    }
+}
+
+/* Enhanced VIP Player Name */
+.leaderboard-table tbody tr.vip-player .player-name-button {
+    color: #e1bee7 !important;
+    font-weight: 600;
+    text-shadow: 0 0 8px rgba(156, 39, 176, 0.5);
+}
+
+/* Enhanced VIP Status Badge */
+.leaderboard-table tbody tr.vip-player .status-badge {
+    background: linear-gradient(135deg, rgba(156, 39, 176, 0.3), rgba(233, 30, 99, 0.2));
+    border: 1px solid rgba(156, 39, 176, 0.5);
+    color: #e1bee7;
+}
+
+/* Enhanced VIP Level and Reputation */
+.leaderboard-table tbody tr.vip-player .level-column,
+.leaderboard-table tbody tr.vip-player .reputation-column {
+    color: #e1bee7 !important;
+    font-weight: 700;
+    text-shadow: 0 0 6px rgba(156, 39, 176, 0.3);
+}
+
+/* VIP Crown for top 3 */
+.leaderboard-table tbody tr.vip-player.top-vip::after {
+    content: '👑';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    animation: crown-bounce 2s ease-in-out infinite;
+}
+
+@keyframes crown-bounce {
+    0%, 100% { transform: translateY(-50%); }
+    50% { transform: translateY(-70%); }
+}
