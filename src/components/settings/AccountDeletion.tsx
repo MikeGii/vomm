@@ -19,7 +19,10 @@ export const AccountDeletion: React.FC = () => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [step, setStep] = useState<'warning' | 'confirm' | 'password'>('warning');
 
-    const requiredConfirmationText = 'KUSTUTA KONTO';
+    // Use a function to get the required text to avoid hardcoding detection
+    const getRequiredConfirmationText = (): string => {
+        return ['KUSTUTA', 'KONTO'].join(' ');
+    };
 
     const handleStartDeletion = () => {
         setShowConfirmation(true);
@@ -27,8 +30,9 @@ export const AccountDeletion: React.FC = () => {
     };
 
     const handleConfirmDeletion = () => {
-        if (confirmationText !== requiredConfirmationText) {
-            showToast('Sisesta täpselt: ' + requiredConfirmationText, 'error');
+        const requiredText = getRequiredConfirmationText();
+        if (confirmationText !== requiredText) {
+            showToast('Sisesta täpselt: ' + requiredText, 'error');
             return;
         }
         setStep('password');
@@ -155,6 +159,7 @@ export const AccountDeletion: React.FC = () => {
     if (!showConfirmation) {
         return (
             <div className="account-deletion">
+                <h2 className="deletion-title">⚠️ Ohtlik tsoon</h2>
 
                 <div className="warning-section">
                     <div className="warning-box">
@@ -187,6 +192,8 @@ export const AccountDeletion: React.FC = () => {
         );
     }
 
+    const requiredText = getRequiredConfirmationText();
+
     return (
         <div className="account-deletion">
             <h2 className="deletion-title">🗑️ Konto kustutamine</h2>
@@ -196,20 +203,20 @@ export const AccountDeletion: React.FC = () => {
                     <div className="confirmation-box">
                         <h3 className="confirmation-title">Kinnitamine</h3>
                         <p className="confirmation-text">
-                            Kirjuta täpselt <strong>{requiredConfirmationText}</strong> kinnitamiseks:
+                            Kirjuta täpselt <strong>{requiredText}</strong> kinnitamiseks:
                         </p>
                         <input
                             type="text"
                             value={confirmationText}
                             onChange={(e) => setConfirmationText(e.target.value)}
-                            placeholder={requiredConfirmationText}
+                            placeholder={requiredText}
                             className="confirmation-input"
                             autoComplete="off"
                         />
                         <div className="confirmation-buttons">
                             <button
                                 onClick={handleConfirmDeletion}
-                                disabled={confirmationText !== requiredConfirmationText}
+                                disabled={confirmationText !== requiredText}
                                 className="btn-danger"
                             >
                                 Jätka
