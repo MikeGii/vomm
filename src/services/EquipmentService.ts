@@ -1,8 +1,8 @@
 // src/services/EquipmentService.ts
 import { doc, updateDoc, getDoc, deleteField } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
-import { EquipmentSlot, EquipmentItem } from '../types/equipment';
-import { InventoryItem } from '../types/inventory';
+import { EquipmentSlot, EquipmentItem } from '../types';
+import { InventoryItem } from '../types';
 
 export const equipItem = async (
     userId: string,

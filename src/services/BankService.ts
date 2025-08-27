@@ -12,7 +12,7 @@ import {
     runTransaction
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
-import { PlayerSearchResult, BankTransaction } from '../types/bank';
+import { PlayerSearchResult, BankTransaction } from '../types';
 import { PlayerStats } from '../types';
 
 /**

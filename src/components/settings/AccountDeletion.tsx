@@ -159,7 +159,6 @@ export const AccountDeletion: React.FC = () => {
     if (!showConfirmation) {
         return (
             <div className="account-deletion">
-                <h2 className="deletion-title">⚠️ Ohtlik tsoon</h2>
 
                 <div className="warning-section">
                     <div className="warning-box">

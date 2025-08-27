@@ -14,7 +14,7 @@ interface CacheStats {
 
 class CacheManager {
     private static instance: CacheManager;
-    private readonly CACHE_VERSION = '1.0.0';
+    private readonly CACHE_VERSION = '1.1.0';
     private readonly CACHE_PREFIX = 'game_cache_';
 
     // Cache durations in milliseconds
