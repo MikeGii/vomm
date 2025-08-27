@@ -1,0 +1,147 @@
+/* src/styles/components/department/DepartmentCrimeActivity.css */
+.crime-activity-container {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.crime-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.crime-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.crime-icon {
+    font-size: 1.5rem;
+}
+
+.crime-title h3 {
+    color: #f0f0f0;
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.crime-reset-info {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.crime-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.crime-level-display {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.crime-percentage {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+}
+
+.crime-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    font-family: monospace;
+}
+
+.crime-label {
+    color: #888;
+    font-size: 1rem;
+}
+
+.crime-progress-bar {
+    width: 100%;
+    height: 12px;
+    background-color: #333;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.crime-progress-fill {
+    height: 100%;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+}
+
+.crime-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #333;
+}
+
+.crime-info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #b0b0b0;
+    font-size: 0.9rem;
+}
+
+.info-icon {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+}
+
+.crime-loading, .crime-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 2rem;
+    color: #888;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #333;
+    border-top: 2px solid #4a90e2;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.error-icon {
+    color: #ff6b35;
+    font-size: 1.2rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .crime-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .crime-percentage {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .crime-number {
+        font-size: 2rem;
+    }
+}
