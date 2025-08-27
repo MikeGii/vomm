@@ -284,6 +284,7 @@ export interface LeaderboardEntry {
     casesCompleted: number;
     criminalsArrested: number;
     totalWorkedHours: number;
+    isVip?: boolean;
 }
 
 export interface GameUpdate {

@@ -244,6 +244,17 @@ export const AuthenticatedHeader: React.FC = () => {
 
                                 <button
                                     onClick={() => {
+                                        navigate('/vip');
+                                        setIsMenuOpen(false);
+                                    }}
+                                    className="menu-item menu-item-vip"
+                                >
+                                    <span className="menu-icon">💎</span>
+                                    <span>VIP & Pollid</span>
+                                </button>
+
+                                <button
+                                    onClick={() => {
                                         navigate('/feedback');
                                         setIsMenuOpen(false);
                                     }}

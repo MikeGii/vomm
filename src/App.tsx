@@ -21,6 +21,7 @@ import FeedbackPage from "./pages/FeedbackPage";
 import AdminPage from './pages/AdminPage';
 import TestsPage from './pages/TestsPage';
 import SettingsPage from "./pages/SettingsPage";
+import VIPPage from "./pages/VIPPage";
 
 function App() {
     return (
@@ -128,6 +129,15 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <SettingsPage />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/vip"
+                            element={
+                                <ProtectedRoute>
+                                    <VIPPage />
                                 </ProtectedRoute>
                             }
                         />

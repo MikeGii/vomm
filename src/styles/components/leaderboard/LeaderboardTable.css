@@ -168,3 +168,57 @@
         font-size: 0.8rem;
     }
 }
+
+.player-name-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.vip-badge {
+    background: linear-gradient(135deg, #9c27b0, #e91e63);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(156, 39, 176, 0.3);
+    animation: vip-pulse 2s infinite;
+}
+
+@keyframes vip-pulse {
+    0%, 100% {
+        box-shadow: 0 2px 4px rgba(156, 39, 176, 0.3);
+    }
+    50% {
+        box-shadow: 0 2px 8px rgba(156, 39, 176, 0.6);
+    }
+}
+
+/* Update name-column to accommodate the badge */
+.name-column {
+    font-weight: 600;
+    min-width: 150px; /* Increased from 120px to accommodate VIP badge */
+}
+
+/* Mobile responsiveness for VIP badge */
+@media (max-width: 768px) {
+    .vip-badge {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.4rem;
+    }
+
+    .player-name-container {
+        gap: 0.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .vip-badge {
+        font-size: 0.55rem;
+        padding: 0.1rem 0.3rem;
+    }
+}
