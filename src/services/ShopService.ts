@@ -1,4 +1,4 @@
-// src/services/ShopService.ts - Fixed version
+// src/services/ShopService.ts - UPDATED FOR HYBRID SYSTEM
 import {
     doc,
     Timestamp,
@@ -10,11 +10,8 @@ import { InventoryItem } from '../types';
 import { PlayerStats } from '../types';
 import { ALL_SHOP_ITEMS } from '../data/shop';
 import { createTimestampedId } from '../utils/inventoryUtils';
-import {
-    calculateDynamicPrice,
-    calculateRestockAmount,
-} from "./ShopStockService";
-import {cacheManager} from "./CacheManager";
+import { calculateStaticPrice } from "./ShopStockService";
+import { cacheManager } from "./CacheManager";
 
 /**
  * Get shop item by ID
@@ -24,9 +21,18 @@ export const getShopItemById = (itemId: string): ShopItem | undefined => {
 };
 
 /**
+ * Check if item is player-craftable (maxStock = 0)
+ */
+const isPlayerCraftableItem = (item: ShopItem): boolean => {
+    return item.maxStock === 0;
+};
+
+/**
  * Convert shop item to inventory item
  */
 const shopItemToInventoryItem = (shopItem: ShopItem): InventoryItem => {
+    const staticPrice = calculateStaticPrice(shopItem);
+
     const inventoryItem: InventoryItem = {
         id: createTimestampedId(shopItem.id),
         name: shopItem.name,
@@ -35,7 +41,7 @@ const shopItemToInventoryItem = (shopItem: ShopItem): InventoryItem => {
             (shopItem.category === 'protection' ? 'equipment' :
                 (shopItem.category === 'trainingBooster' || shopItem.category === 'medical' || shopItem.category === 'vip') ? 'consumable' : 'misc'),
         quantity: 1,
-        shopPrice: shopItem.currency === 'pollid' ? (shopItem.pollidPrice || 0) : shopItem.price,
+        shopPrice: shopItem.currency === 'pollid' ? staticPrice : staticPrice,
         equipped: false,
         source: 'shop',
         obtainedAt: new Date()
@@ -58,7 +64,7 @@ const shopItemToInventoryItem = (shopItem: ShopItem): InventoryItem => {
 };
 
 /**
- * Purchase item from shop WITH STOCK CHECK AND CURRENCY SUPPORT
+ * Purchase item from shop - UPDATED FOR HYBRID SYSTEM
  */
 export const purchaseItem = async (
     userId: string,
@@ -76,15 +82,22 @@ export const purchaseItem = async (
             };
         }
 
+        const isPlayerCraftable = isPlayerCraftableItem(shopItem);
+
         // Use atomic transaction to prevent race conditions
         return await runTransaction(firestore, async (transaction) => {
             // Get references
             const playerRef = doc(firestore, 'playerStats', userId);
-            const stockRef = doc(firestore, 'shopStock', itemId);
+            let stockRef = null;
 
-            // Read both documents within transaction (creates locks)
+            // Only check stock for player-craftable items
+            if (isPlayerCraftable) {
+                stockRef = doc(firestore, 'shopStock', itemId);
+            }
+
+            // Read documents within transaction
             const playerDoc = await transaction.get(playerRef);
-            const stockDoc = await transaction.get(stockRef);
+            const stockDoc = stockRef ? await transaction.get(stockRef) : null;
 
             // Validate player exists
             if (!playerDoc.exists()) {
@@ -93,44 +106,33 @@ export const purchaseItem = async (
 
             const playerStats = playerDoc.data() as PlayerStats;
 
-            // Calculate actual current stock
-            let currentStock = 0;
-            if (stockDoc.exists()) {
-                const stockData = stockDoc.data();
-                const item = ALL_SHOP_ITEMS.find(i => i.id === itemId);
-                if (item) {
-                    const isProducedItem = item.maxStock === 0;
-                    currentStock = calculateRestockAmount(
-                        stockData.currentStock,
-                        stockData.lastRestockTime,
-                        item.maxStock,
-                        isProducedItem
-                    );
-                    if (!isProducedItem) {
-                        currentStock = Math.min(currentStock, item.maxStock);
-                    }
+            // STOCK CHECK - only for player-craftable items
+            let currentStock = 999999; // Default to unlimited for basic ingredients
+
+            if (isPlayerCraftable) {
+                if (stockDoc && stockDoc.exists()) {
+                    const stockData = stockDoc.data();
+                    currentStock = stockData.currentStock || 0;
+                } else {
+                    currentStock = 0; // Player-craftable items start with 0 stock
                 }
-            } else {
-                // Initialize if doesn't exist
-                currentStock = shopItem.maxStock;
+
+                // Check if enough stock for player-craftable items
+                if (currentStock < quantity) {
+                    throw new Error(`Laos pole piisavalt! Saadaval: ${currentStock}`);
+                }
             }
 
-            // CHECK STOCK ATOMICALLY
-            if (currentStock < quantity) {
-                throw new Error(`Laos pole piisavalt! Saadaval: ${currentStock}`);
-            }
-
-            // Check currency and balance
+            // Calculate cost using static pricing
             const isPollidPurchase = shopItem.currency === 'pollid';
             let totalCost: number;
             let currentBalance: number;
 
             if (isPollidPurchase) {
-                totalCost = (shopItem.pollidPrice || 0) * quantity;
+                totalCost = (shopItem.basePollidPrice || shopItem.pollidPrice || 0) * quantity;
                 currentBalance = playerStats.pollid || 0;
             } else {
-                const dynamicPrice = calculateDynamicPrice(shopItem.basePrice, currentStock, shopItem.maxStock);
-                totalCost = dynamicPrice * quantity;
+                totalCost = shopItem.basePrice * quantity;
                 currentBalance = playerStats.money || 0;
             }
 
@@ -140,16 +142,21 @@ export const purchaseItem = async (
                 throw new Error(`Ebapiisav ${currencyName}. Vaja: ${totalCost}, Sul on: ${currentBalance}`);
             }
 
-            // UPDATE STOCK ATOMICALLY
-            transaction.set(stockRef, {
-                itemId: itemId,
-                currentStock: currentStock - quantity,
-                lastRestockTime: Timestamp.now(),
-                stockSource: 'auto',
-                playerSoldStock: stockDoc.exists() ? (stockDoc.data().playerSoldStock || 0) : 0
-            }, { merge: true });
+            // UPDATE STOCK - only for player-craftable items
+            if (isPlayerCraftable && stockRef) {
+                if (stockDoc && stockDoc.exists()) {
+                    const stockData = stockDoc.data();
+                    transaction.update(stockRef, {
+                        currentStock: stockData.currentStock - quantity,
+                        lastRestockTime: Timestamp.now()
+                    });
+                } else {
+                    // This shouldn't happen, but handle gracefully
+                    throw new Error('Stock data not found for player-craftable item');
+                }
+            }
 
-            // Update inventory
+            // Update player inventory
             const currentInventory = playerStats.inventory || [];
             let updatedInventory = [...currentInventory];
 
@@ -162,17 +169,17 @@ export const purchaseItem = async (
                 updatedInventory[existingItemIndex] = {
                     ...updatedInventory[existingItemIndex],
                     quantity: updatedInventory[existingItemIndex].quantity + quantity,
-                    shopPrice: isPollidPurchase ? (shopItem.pollidPrice || 0) : totalCost / quantity
+                    shopPrice: totalCost / quantity
                 };
             } else {
                 const newItem = shopItemToInventoryItem(shopItem);
                 newItem.quantity = quantity;
-                newItem.shopPrice = isPollidPurchase ? (shopItem.pollidPrice || 0) : totalCost / quantity;
+                newItem.shopPrice = totalCost / quantity;
                 newItem.id = createTimestampedId(shopItem.id);
                 updatedInventory.push(newItem);
             }
 
-            // UPDATE PLAYER ATOMICALLY
+            // Update player stats
             const updateData: any = {
                 inventory: updatedInventory,
                 lastModified: Timestamp.now()
@@ -187,7 +194,9 @@ export const purchaseItem = async (
             transaction.update(playerRef, updateData);
 
             // Clear caches after successful transaction
-            cacheManager.clearByPattern(`shop_stock_${itemId}`);
+            if (isPlayerCraftable) {
+                cacheManager.clearByPattern(`shop_stock_${itemId}`);
+            }
             cacheManager.clearByPattern('shop_all_items_stock');
 
             // Return success result
@@ -212,4 +221,12 @@ export const purchaseItem = async (
             message: error.message || 'Ostu sooritamine ebaõnnestus'
         };
     }
+};
+
+/**
+ * DEPRECATED - keeping for backward compatibility
+ */
+export const calculateDynamicPrice = (basePrice: number, currentStock: number, maxStock: number): number => {
+    console.warn('calculateDynamicPrice is deprecated in ShopService - use calculateStaticPrice instead');
+    return basePrice;
 };

@@ -323,3 +323,93 @@
     margin-top: 0.5rem;
     font-weight: 500;
 }
+
+/* Stock type indicator */
+.stock-type-indicator {
+    background: rgba(255, 152, 0, 0.1);
+    border: 1px solid rgba(255, 152, 0, 0.3);
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    color: #ff9800;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+/* Stock info styling */
+.quantity-info {
+    text-align: center;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.unlimited-stock {
+    color: #4caf50;
+    font-weight: 600;
+}
+
+.limited-stock {
+    color: #ff9800;
+    font-weight: 600;
+}
+
+/* VIP modal styling */
+.vip-modal {
+    border: 2px solid #ffc107;
+    box-shadow: 0 0 20px rgba(255, 193, 7, 0.3);
+}
+
+.vip-modal .modal-title {
+    color: #ffc107;
+}
+
+/* Effect styling */
+.item-effects {
+    margin-top: 0.5rem;
+}
+
+.effect-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.effect {
+    background: rgba(74, 144, 226, 0.15);
+    color: #4a90e2;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.vip-effect {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+/* Currency specific styling */
+.pollid-price,
+.pollid-balance {
+    color: #ffc107 !important;
+}
+
+.money-price,
+.money-balance {
+    color: #4caf50 !important;
+}
+
+/* Button states */
+.confirm-button.disabled {
+    background-color: #666 !important;
+    color: #999 !important;
+    cursor: not-allowed;
+}
+
+.confirm-button:disabled {
+    background-color: #666;
+    color: #999;
+    cursor: not-allowed;
+}

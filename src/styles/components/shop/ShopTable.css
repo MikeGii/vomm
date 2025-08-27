@@ -437,3 +437,43 @@
     0%, 50%, 100% { opacity: 1; }
     25%, 75% { opacity: 0.5; }
 }
+
+/* Unlimited stock styling */
+.stock-compact.unlimited .stock-text {
+    color: #4caf50;
+    font-size: 0.7rem;
+    text-align: center;
+}
+
+.stock-compact.available .stock-text {
+    color: #4caf50;
+}
+
+.stock-compact.out-of-stock .stock-text {
+    color: #f44336;
+    font-weight: 700;
+}
+
+/* Player craftable item warning */
+.player-warning-compact {
+    font-size: 0.65rem;
+    color: #ff9800;
+    margin-top: 0.1rem;
+    font-style: italic;
+}
+
+.mobile-warning {
+    color: #ff9800;
+    font-size: 0.65rem;
+    margin-top: 0.1rem;
+    font-style: italic;
+}
+
+/* Static price - remove dynamic price indicators */
+.price-amount.static {
+    color: #f0f0f0;
+}
+
+.price-amount.pollid {
+    color: #ffc107;
+}

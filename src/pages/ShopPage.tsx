@@ -1,4 +1,4 @@
-// src/pages/ShopPage.tsx
+// src/pages/ShopPage.tsx - UPDATED FOR HYBRID SYSTEM
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,12 +15,12 @@ import { SHOP_CATEGORIES } from '../types/shop';
 import {
     initializeShopStock,
     getAllItemsWithStock,
-    clearAllStockCaches // NEW IMPORT
+    clearAllStockCaches
 } from '../services/ShopStockService';
 import '../styles/pages/Shop.css';
 
 const ITEMS_PER_PAGE = 20;
-const REFRESH_INTERVAL = 120000; // CHANGED: From 30 seconds to 120 seconds (2 minutes)
+const REFRESH_INTERVAL = 300000; // 5 minutes - longer since most items are unlimited now
 
 const ShopPage: React.FC = () => {
     const navigate = useNavigate();
@@ -28,10 +28,12 @@ const ShopPage: React.FC = () => {
     const { showToast } = useToast();
     const { playerStats, loading: statsLoading, refreshStats } = usePlayerStats();
 
+    // Updated state structure for hybrid system
     const [itemsWithStock, setItemsWithStock] = useState<Array<{
         item: any;
         currentStock: number;
-        dynamicPrice: number;
+        staticPrice: number;
+        hasUnlimitedStock: boolean;
     }>>([]);
     const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
     const [selectedItemStock, setSelectedItemStock] = useState(0);
@@ -42,7 +44,7 @@ const ShopPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [currentPage, setCurrentPage] = useState(1);
     const [stockInitialized, setStockInitialized] = useState(false);
-    const [lastRefreshTime, setLastRefreshTime] = useState<number>(0); // NEW STATE
+    const [lastRefreshTime, setLastRefreshTime] = useState<number>(0);
 
     // Get money values from playerStats
     const playerMoney = playerStats?.money || 0;
@@ -62,7 +64,7 @@ const ShopPage: React.FC = () => {
         setCurrentPage(1);
     }, [activeTab, searchQuery]);
 
-    // Optimized filtering with memoization
+    // Optimized filtering with memoization for hybrid system
     const getFilteredItems = useCallback(() => {
         let filtered = itemsWithStock
             .filter(({ item }) => item.category === activeTab)
@@ -71,9 +73,16 @@ const ShopPage: React.FC = () => {
                 item.name.toLowerCase().includes(searchQuery.toLowerCase())
             )
             .sort((a, b) => {
-                // Out of stock items go to bottom
-                if (a.currentStock === 0 && b.currentStock > 0) return 1;
-                if (b.currentStock === 0 && a.currentStock > 0) return -1;
+                // Sort by stock availability: unlimited first, then by stock amount, then alphabetically
+                if (a.hasUnlimitedStock && !b.hasUnlimitedStock) return -1;
+                if (!a.hasUnlimitedStock && b.hasUnlimitedStock) return 1;
+
+                // If both have limited stock, sort by availability
+                if (!a.hasUnlimitedStock && !b.hasUnlimitedStock) {
+                    if (a.currentStock === 0 && b.currentStock > 0) return 1;
+                    if (b.currentStock === 0 && a.currentStock > 0) return -1;
+                }
+
                 // Alphabetical sorting for items with same stock status
                 return a.item.name.localeCompare(b.item.name, 'et');
             });
@@ -97,7 +106,7 @@ const ShopPage: React.FC = () => {
         setCurrentPage(page);
     };
 
-    // Initialize shop stock once on first load
+    // Initialize shop stock once on first load (only for player-craftable items)
     useEffect(() => {
         if (stockInitialized) return;
 
@@ -107,24 +116,26 @@ const ShopPage: React.FC = () => {
                 setStockInitialized(true);
             } catch (error) {
                 console.error('Error initializing shop stock:', error);
+                showToast('Viga poe seadistamisel', 'error');
             }
         };
-        initStock();
-    }, [stockInitialized]);
 
-    // OPTIMIZED: Load items with smart caching
-    const loadItemsWithStock = useCallback(async (forceRefresh: boolean = false) => {
-        // NEW: Prevent too frequent refreshes (minimum 5 seconds between refreshes)
+        initStock();
+    }, [stockInitialized, showToast]);
+
+    // Load items with stock - updated for hybrid system
+    const loadItemsWithStock = useCallback(async (forceRefresh = false) => {
+        if (!stockInitialized && !forceRefresh) return;
+
         const now = Date.now();
-        if (!forceRefresh && now - lastRefreshTime < 5000) {
-            console.log('Skipping refresh - too soon');
+        // Skip if last refresh was less than 10 seconds ago (unless forced)
+        if (!forceRefresh && now - lastRefreshTime < 10000) {
             return;
         }
 
-        setIsRefreshing(true);
         try {
-            // If forcing refresh, clear cache first
             if (forceRefresh) {
+                setIsRefreshing(true);
                 clearAllStockCaches();
             }
 
@@ -138,36 +149,37 @@ const ShopPage: React.FC = () => {
             setIsLoading(false);
             setIsRefreshing(false);
         }
-    }, [showToast, lastRefreshTime]);
+    }, [stockInitialized, lastRefreshTime, showToast]);
 
-    // OPTIMIZED: Smart refresh on mount and periodic updates
+    // Initial load
     useEffect(() => {
-        // Initial load
-        loadItemsWithStock(false);
+        if (stockInitialized) {
+            loadItemsWithStock();
+        }
+    }, [stockInitialized, loadItemsWithStock]);
 
-        // CHANGED: Less frequent automatic refresh (2 minutes instead of 30 seconds)
-        const interval = setInterval(() => {
-            // Only refresh if the page is visible
-            if (document.visibilityState === 'visible') {
-                loadItemsWithStock(false);
-            }
-        }, REFRESH_INTERVAL);
+    // Automatic refresh - reduced frequency since most items are unlimited
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
 
-        // NEW: Refresh when tab becomes visible after being hidden
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible') {
-                const timeSinceLastRefresh = Date.now() - lastRefreshTime;
-                // Only refresh if it's been more than 30 seconds
-                if (timeSinceLastRefresh > 30000) {
-                    loadItemsWithStock(false);
-                }
+                loadItemsWithStock(true);
             }
         };
 
-        document.addEventListener('visibilitychange', handleVisibilityChange);
+        if (stockInitialized) {
+            // Set up interval for automatic refresh (less frequent now)
+            interval = setInterval(() => {
+                loadItemsWithStock();
+            }, REFRESH_INTERVAL);
+
+            // Refresh when tab becomes visible
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+        }
 
         return () => {
-            clearInterval(interval);
+            if (interval) clearInterval(interval);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
     }, [loadItemsWithStock, lastRefreshTime]);
@@ -193,10 +205,9 @@ const ShopPage: React.FC = () => {
             setSelectedItem(null);
             setSelectedItemStock(0);
 
-            // OPTIMIZED: Force refresh after purchase to show updated stock
-            // The cache will be cleared automatically by the purchase
+            // Force refresh after purchase to show updated stock (only affects player-craftable items)
             await Promise.all([
-                loadItemsWithStock(true), // Force refresh to get fresh data
+                loadItemsWithStock(true),
                 refreshStats()
             ]);
         } else {
@@ -210,9 +221,9 @@ const ShopPage: React.FC = () => {
         setSelectedItemStock(0);
     };
 
-    // NEW: Manual refresh handler for the refresh button
+    // Manual refresh handler
     const handleManualRefresh = useCallback(async () => {
-        await loadItemsWithStock(true); // Force refresh with cache clear
+        await loadItemsWithStock(true);
     }, [loadItemsWithStock]);
 
     // Combined loading state
@@ -237,17 +248,10 @@ const ShopPage: React.FC = () => {
         <div className="shop-page">
             <AuthenticatedHeader />
             <div className="shop-container">
-                <button
-                    className="back-to-dashboard"
-                    onClick={() => navigate('/dashboard')}
-                >
-                    ← Tagasi töölauale
-                </button>
-
                 <ShopHeader
                     playerMoney={playerMoney}
                     playerPollid={playerPollid}
-                    onRefresh={handleManualRefresh} // CHANGED: Use manual refresh handler
+                    onRefresh={handleManualRefresh}
                     isRefreshing={isRefreshing}
                 />
 
@@ -257,7 +261,7 @@ const ShopPage: React.FC = () => {
                     onTabChange={setActiveTab}
                 />
 
-                <div className="search-container">
+                <div className="shop-controls">
                     <input
                         type="text"
                         placeholder="Otsi esemeid..."
@@ -265,14 +269,6 @@ const ShopPage: React.FC = () => {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="search-input"
                     />
-                    {searchQuery && (
-                        <button
-                            onClick={() => setSearchQuery('')}
-                            className="clear-search"
-                        >
-                            ✕
-                        </button>
-                    )}
                 </div>
 
                 <ShopTable
@@ -286,15 +282,17 @@ const ShopPage: React.FC = () => {
                     onPageChange={handlePageChange}
                 />
 
-                <ShopPurchaseModal
-                    item={selectedItem}
-                    isOpen={isPurchaseModalOpen}
-                    playerMoney={playerMoney}
-                    playerPollid={playerPollid}
-                    currentStock={selectedItemStock}
-                    onConfirm={confirmPurchase}
-                    onCancel={cancelPurchase}
-                />
+                {isPurchaseModalOpen && selectedItem && (
+                    <ShopPurchaseModal
+                        item={selectedItem}
+                        currentStock={selectedItemStock}
+                        playerMoney={playerMoney}
+                        playerPollid={playerPollid}
+                        onConfirm={confirmPurchase}
+                        onCancel={cancelPurchase}
+                        isLoading={false}
+                    />
+                )}
             </div>
         </div>
     );

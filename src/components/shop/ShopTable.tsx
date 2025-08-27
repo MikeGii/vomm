@@ -1,4 +1,4 @@
-// src/components/shop/ShopTable.tsx - COMPACT VERSION with all data preserved
+// src/components/shop/ShopTable.tsx - UPDATED FOR HYBRID SYSTEM
 import React from 'react';
 import { formatMoney } from '../../utils/currencyUtils';
 import '../../styles/components/shop/ShopTable.css';
@@ -7,7 +7,8 @@ interface ShopTableProps {
     items: Array<{
         item: any;
         currentStock: number;
-        dynamicPrice: number;
+        staticPrice: number;
+        hasUnlimitedStock: boolean;
     }>;
     playerMoney: number;
     playerPollid?: number;
@@ -29,8 +30,8 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                                                         onPageChange
                                                     }) => {
 
-    // Check if item is player-dependent (produced items with maxStock = 0)
-    const isPlayerDependent = (item: any): boolean => {
+    // Check if item is player-craftable (has limited stock from players)
+    const isPlayerCraftableItem = (item: any): boolean => {
         return item.maxStock === 0;
     };
 
@@ -54,23 +55,23 @@ export const ShopTable: React.FC<ShopTableProps> = ({
         );
     };
 
-    const formatEffect = (effect?: any): React.ReactElement => {
-        if (!effect || !effect.consumableEffect) return <span className="no-data">-</span>;
+    const formatEffect = (item: any): React.ReactElement => {
+        const consumable = item.consumableEffect;
+        if (!consumable) return <span className="no-data">-</span>;
 
-        const consumable = effect.consumableEffect;
         switch (consumable.type) {
             case 'trainingClicks':
-                return <span className="effect-compact">+{consumable.value} spordiklõpsu</span>;
+                return <span className="effect-compact">+{consumable.value} treening</span>;
             case 'kitchenClicks':
-                return <span className="effect-compact">+{consumable.value} köök/labor</span>;
+                return <span className="effect-compact">+{consumable.value} köök</span>;
             case 'handicraftClicks':
                 return <span className="effect-compact">+{consumable.value} käsitöö</span>;
-
+            case 'energy':
+                return <span className="effect-compact">+{consumable.value} energia</span>;
+            case 'experience':
+                return <span className="effect-compact">+{consumable.value} kogemus</span>;
             case 'heal':
-                if (consumable.value === 100) {
-                    return <span className="effect-compact">+100 HP</span>;
-                }
-                return <span className="effect-compact">+{consumable.value === 100 ? 'Täielik' : consumable.value} HP</span>;
+                return <span className="effect-compact">{consumable.value === 100 ? 'Täielik' : consumable.value} HP</span>;
             case 'workTimeReduction':
                 return <span className="vip-effect-compact">-{consumable.value}% tööaeg</span>;
             case 'courseTimeReduction':
@@ -80,17 +81,50 @@ export const ShopTable: React.FC<ShopTableProps> = ({
         }
     };
 
-    const getStockStatus = (current: number, max: number): string => {
-        if (max === 0) return 'player-dependent';
-        const percentage = (current / max) * 100;
-        if (percentage <= 10) return 'critical';
-        if (percentage <= 30) return 'low';
-        if (percentage <= 70) return 'medium';
-        return 'high';
+    const getStockStatus = (current: number, hasUnlimited: boolean, isPlayerCraftable: boolean): string => {
+        if (hasUnlimited) return 'unlimited';
+        if (isPlayerCraftable) {
+            if (current === 0) return 'out-of-stock';
+            if (current <= 5) return 'critical';
+            if (current <= 20) return 'low';
+            return 'available';
+        }
+        return 'unlimited';
     };
 
-    const getPriceStatus = (basePrice: number, currentPrice: number): boolean => {
-        return currentPrice > basePrice;
+    const renderStockDisplay = (currentStock: number, hasUnlimitedStock: boolean, isPlayerCraftable: boolean) => {
+        if (hasUnlimitedStock) {
+            return (
+                <div className="stock-compact unlimited">
+                    <span className="stock-text">Alati saadaval</span>
+                </div>
+            );
+        }
+
+        if (isPlayerCraftable) {
+            const stockStatus = getStockStatus(currentStock, hasUnlimitedStock, isPlayerCraftable);
+            return (
+                <div className={`stock-compact ${stockStatus}`}>
+                    <span className="stock-text">
+                        {currentStock === 0 ? 'Otsas' : `${currentStock} tk`}
+                    </span>
+                    {currentStock > 0 && (
+                        <div className="stock-bar-compact">
+                            <div
+                                className="stock-fill"
+                                style={{ width: `${Math.min(currentStock * 5, 100)}%` }}
+                            />
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        return (
+            <div className="stock-compact unlimited">
+                <span className="stock-text">Alati saadaval</span>
+            </div>
+        );
     };
 
     if (!items || items.length === 0) {
@@ -126,6 +160,7 @@ export const ShopTable: React.FC<ShopTableProps> = ({
 
     return (
         <div className="shop-table-container">
+            {/* Desktop Table */}
             <table className="shop-table compact">
                 <thead>
                 <tr>
@@ -138,15 +173,13 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                 </tr>
                 </thead>
                 <tbody>
-                {items.map(({ item, currentStock, dynamicPrice }) => {
+                {items.map(({ item, currentStock, staticPrice, hasUnlimitedStock }) => {
                     const canAfford = item.currency === 'pollid'
-                        ? playerPollid >= (item.pollidPrice || 0)
-                        : playerMoney >= dynamicPrice;
+                        ? playerPollid >= (item.basePollidPrice || item.pollidPrice || 0)
+                        : playerMoney >= staticPrice;
 
-                    const hasStock = currentStock > 0;
-                    const stockClass = getStockStatus(currentStock, item.maxStock);
-                    const priceIncreased = getPriceStatus(item.basePrice, dynamicPrice);
-                    const playerDependent = isPlayerDependent(item);
+                    const hasStock = hasUnlimitedStock || currentStock > 0;
+                    const isPlayerCraftable = isPlayerCraftableItem(item);
 
                     return (
                         <tr key={item.id} className={`compact-row ${!hasStock ? 'out-of-stock' : ''}`}>
@@ -159,9 +192,9 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                                 <div className="item-desc-compact">
                                     {item.description}
                                 </div>
-                                {playerDependent && (
+                                {isPlayerCraftable && (
                                     <div className="player-warning-compact">
-                                        ⚠ Ei täiene auto
+                                        ⚠ Mängijate poolt valmistatud
                                     </div>
                                 )}
                             </td>
@@ -170,36 +203,15 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                             </td>
                             <td className="td-price">
                                 <div className="price-compact">
-                                        <span className={`price-amount ${item.currency === 'pollid' ? 'pollid' :
-                                            priceIncreased ? 'increased' : ''}`}>
-                                            {item.currency === 'pollid' ?
-                                                `💎${item.pollidPrice}` :
-                                                formatMoney(dynamicPrice)}
-                                        </span>
-                                    {priceIncreased && item.currency !== 'pollid' && (
-                                        <span className="base-price">
-                                                €{item.basePrice.toFixed(2)}
-                                            </span>
-                                    )}
+                                    <span className={`price-amount ${item.currency === 'pollid' ? 'pollid' : ''}`}>
+                                        {item.currency === 'pollid' ?
+                                            `💎${item.basePollidPrice || item.pollidPrice}` :
+                                            formatMoney(staticPrice)}
+                                    </span>
                                 </div>
                             </td>
                             <td className="td-stock">
-                                <div className={`stock-compact ${stockClass}`}>
-                                        <span className="stock-text">
-                                            {playerDependent ?
-                                                `${currentStock}` :
-                                                `${currentStock}/${item.maxStock}`
-                                            }
-                                        </span>
-                                    {!playerDependent && (
-                                        <div className="stock-bar-compact">
-                                            <div
-                                                className="stock-fill"
-                                                style={{ width: `${(currentStock / item.maxStock) * 100}%` }}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
+                                {renderStockDisplay(currentStock, hasUnlimitedStock, isPlayerCraftable)}
                             </td>
                             <td className="td-action">
                                 <button
@@ -207,7 +219,7 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                                     onClick={() => onPurchase(item.id)}
                                     disabled={!canAfford || !hasStock || isLoading}
                                 >
-                                    {!hasStock ? 'Otsas' : !canAfford ? 'Raha' : 'Osta'}
+                                    {!hasStock ? 'Otsas' : !canAfford ? 'Kallis' : 'Osta'}
                                 </button>
                             </td>
                         </tr>
@@ -216,67 +228,58 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                 </tbody>
             </table>
 
-            {/* Mobile Cards - Compact Version */}
+            {/* Mobile Grid */}
             <div className="mobile-shop-grid">
-                {items.map(({ item, currentStock, dynamicPrice }) => {
+                {items.map(({ item, currentStock, staticPrice, hasUnlimitedStock }) => {
                     const canAfford = item.currency === 'pollid'
-                        ? playerPollid >= (item.pollidPrice || 0)
-                        : playerMoney >= dynamicPrice;
+                        ? playerPollid >= (item.basePollidPrice || item.pollidPrice || 0)
+                        : playerMoney >= staticPrice;
 
-                    const hasStock = currentStock > 0;
-                    const stockClass = getStockStatus(currentStock, item.maxStock);
-                    const stockPercentage = item.maxStock > 0 ? (currentStock / item.maxStock) * 100 : 0;
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const priceIncreased = getPriceStatus(item.basePrice, dynamicPrice);
-                    const playerDependent = isPlayerDependent(item);
+                    const hasStock = hasUnlimitedStock || currentStock > 0;
+                    const isPlayerCraftable = isPlayerCraftableItem(item);
 
                     return (
                         <div key={item.id} className={`mobile-card-compact ${!hasStock ? 'out-of-stock' : ''}`}>
                             <div className="mobile-header">
-                                <span className="mobile-name">{item.name}</span>
-                                <span className={`mobile-price ${item.currency === 'pollid' ? 'pollid' : ''}`}>
+                                <div className="mobile-name">{item.name}</div>
+                                <div className={`mobile-price ${item.currency === 'pollid' ? 'pollid' : ''}`}>
                                     {item.currency === 'pollid' ?
-                                        `💎${item.pollidPrice}` :
-                                        formatMoney(dynamicPrice)}
-                                </span>
-                            </div>
-
-                            <div className="mobile-type">
-                                {playerDependent ? 'Mängijad' : 'Auto'}
+                                        `💎${item.basePollidPrice || item.pollidPrice}` :
+                                        formatMoney(staticPrice)}
+                                </div>
                             </div>
 
                             <div className="mobile-desc">
                                 {item.description}
-                                {playerDependent && <span className="mobile-warning"> ⚠</span>}
+                                {isPlayerCraftable && (
+                                    <div className="mobile-warning">
+                                        ⚠ Mängijate poolt valmistatud
+                                    </div>
+                                )}
                             </div>
 
-                            <div className="mobile-stats">
-                                {item.stats ? (
-                                    <div className="mobile-stat-list">
-                                        {item.stats.strength && <span>J+{item.stats.strength}</span>}
-                                        {item.stats.agility && <span>K{item.stats.agility > 0 ? '+' : ''}{item.stats.agility}</span>}
-                                        {item.stats.dexterity && <span>O+{item.stats.dexterity}</span>}
-                                        {item.stats.intelligence && <span>I{item.stats.intelligence > 0 ? '+' : ''}{item.stats.intelligence}</span>}
-                                        {item.stats.endurance && <span>V{item.stats.endurance > 0 ? '+' : ''}{item.stats.endurance}</span>}
-                                    </div>
-                                ) : item.consumableEffect ? (
-                                    <div className="mobile-effect">
-                                        {item.consumableEffect.type === 'trainingClicks' && `+${item.consumableEffect.value} klõps`}
-                                        {item.consumableEffect.type === 'heal' && `+${item.consumableEffect.value === 9999 ? 'Full' : item.consumableEffect.value} HP`}
-                                        {item.consumableEffect.type === 'workTimeReduction' && `-${item.consumableEffect.value}% töö`}
-                                        {item.consumableEffect.type === 'courseTimeReduction' && `-${item.consumableEffect.value}% kursus`}
-                                    </div>
-                                ) : '-'}
-                            </div>
-
-                            <div className="mobile-footer">
-                                <div className={`mobile-stock ${stockClass}`}>
-                                    {playerDependent ? currentStock : `${currentStock}/${item.maxStock}`}
-                                    {!playerDependent && (
-                                        <div className="mobile-stock-bar">
-                                            <div className="mobile-stock-fill" style={{ width: `${stockPercentage}%` }} />
+                            {(item.stats || item.consumableEffect) && (
+                                <div className="mobile-stats">
+                                    {item.stats ? (
+                                        <div className="mobile-stat-list">
+                                            {item.stats.strength && <span>Jõud +{item.stats.strength}</span>}
+                                            {item.stats.agility && <span>Kiirus +{item.stats.agility}</span>}
+                                            {item.stats.dexterity && <span>Osavus +{item.stats.dexterity}</span>}
+                                            {item.stats.intelligence && <span>Intel +{item.stats.intelligence}</span>}
+                                            {item.stats.endurance && <span>Vastup +{item.stats.endurance}</span>}
+                                        </div>
+                                    ) : (
+                                        <div className="mobile-effect">
+                                            {formatEffect(item)}
                                         </div>
                                     )}
+                                </div>
+                            )}
+
+                            <div className="mobile-footer">
+                                <div className="mobile-stock">
+                                    {hasUnlimitedStock ? 'Alati saadaval' :
+                                        currentStock === 0 ? 'Otsas' : `${currentStock} tk`}
                                 </div>
                                 <button
                                     className={`mobile-buy-btn ${item.currency === 'pollid' ? 'pollid' : ''}`}
@@ -291,10 +294,9 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                 })}
             </div>
 
-            {/* Pagination Controls - Keep existing */}
+            {/* Pagination Controls */}
             {totalPages > 1 && (
                 <div className="pagination-container">
-                    {/* Keep your existing pagination code */}
                     <button
                         className="pagination-btn"
                         onClick={() => onPageChange(currentPage - 1)}

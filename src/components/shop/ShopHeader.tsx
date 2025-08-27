@@ -40,14 +40,6 @@ export const ShopHeader: React.FC<ShopHeaderProps> = ({
                     )}
                 </div>
             </div>
-            <div className="shop-info-bar">
-                <span className="info-item">
-                    💡 Hinnad muutuvad vastavalt laoseisule
-                </span>
-                <span className="info-item">
-                    📦 Ladu täieneb 15% tunnis
-                </span>
-            </div>
         </div>
     );
 };

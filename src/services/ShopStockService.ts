@@ -1,5 +1,5 @@
-// src/services/ShopStockService.ts - OPTIMIZED VERSION WITH CACHE
-import { cacheManager} from "./CacheManager";
+// src/services/ShopStockService.ts - UPDATED FOR HYBRID SYSTEM
+import { cacheManager } from "./CacheManager";
 import {
     doc,
     getDoc,
@@ -23,37 +23,48 @@ interface EnhancedShopStock {
 }
 
 /**
- * Initialize shop stock for all items if not exists
+ * Check if item is player-craftable (has unlimited stock from players)
+ */
+const isPlayerCraftableItem = (item: any): boolean => {
+    return item.maxStock === 0;
+};
+
+/**
+ * Initialize shop stock ONLY for player-craftable items
  */
 export const initializeShopStock = async (): Promise<void> => {
     const stockCollection = collection(firestore, 'shopStock');
     const stockSnapshot = await getDocs(stockCollection);
 
+    // Only track player-craftable items in stock system
+    const playerCraftableItems = ALL_SHOP_ITEMS.filter(isPlayerCraftableItem);
+
     if (!stockSnapshot.empty) {
-        // Populate cache using CacheManager
+        // Populate cache using CacheManager (only for existing player-craftable items)
         stockSnapshot.forEach(doc => {
             const data = doc.data() as EnhancedShopStock;
-            cacheManager.set(`shop_stock_${data.itemId}`, data);
+            const item = ALL_SHOP_ITEMS.find(i => i.id === data.itemId);
+            if (item && isPlayerCraftableItem(item)) {
+                cacheManager.set(`shop_stock_${data.itemId}`, data);
+            }
         });
         return;
     }
 
-    // Initialize stock for all items using batch writes
+    // Initialize stock ONLY for player-craftable items
     const batch = writeBatch(firestore);
 
-    for (const item of ALL_SHOP_ITEMS) {
+    for (const item of playerCraftableItems) {
         const stockRef = doc(firestore, 'shopStock', item.id);
         const stockData: EnhancedShopStock = {
             itemId: item.id,
-            currentStock: item.maxStock,
+            currentStock: 0, // Start with 0 stock for player-crafted items
             lastRestockTime: Timestamp.now(),
-            stockSource: 'auto',
+            stockSource: 'player_sold',
             playerSoldStock: 0
         };
 
         batch.set(stockRef, stockData);
-
-        // Cache using CacheManager
         cacheManager.set(`shop_stock_${item.id}`, stockData);
     }
 
@@ -61,73 +72,43 @@ export const initializeShopStock = async (): Promise<void> => {
 };
 
 /**
- * Calculate how much stock should be restored based on time passed
+ * REMOVED: calculateRestockAmount - no longer needed for basic ingredients
  */
-export const calculateRestockAmount = (
-    currentStock: number,
-    lastRestockTime: Timestamp | Date | any,
-    maxStock: number,
-    isProducedItem: boolean = false
-): number => {
-    if (isProducedItem || maxStock === 0) {
-        return currentStock;
+
+/**
+ * Calculate static price - no more dynamic pricing
+ */
+export const calculateStaticPrice = (item: any): number => {
+    // Always return base price for money items
+    if (item.currency === 'money') {
+        return item.basePrice;
     }
 
-    const now = new Date();
-    let lastRestock: Date;
-
-    if (lastRestockTime instanceof Timestamp) {
-        lastRestock = lastRestockTime.toDate();
-    } else if (lastRestockTime && typeof lastRestockTime === 'object' && 'seconds' in lastRestockTime) {
-        lastRestock = new Date(lastRestockTime.seconds * 1000);
-    } else {
-        lastRestock = new Date(lastRestockTime);
+    // Always return base pollid price for VIP items
+    if (item.currency === 'pollid') {
+        return item.basePollidPrice || item.pollidPrice || 0;
     }
 
-    const hoursPassed = (now.getTime() - lastRestock.getTime()) / (1000 * 60 * 60);
-    const restockPerHour = maxStock * 0.15;
-    const totalRestock = Math.floor(hoursPassed * restockPerHour);
-
-    return Math.min(currentStock + totalRestock, maxStock);
+    return item.basePrice;
 };
 
 /**
- * Calculate dynamic price based on stock level
- */
-export const calculateDynamicPrice = (basePrice: number, currentStock: number, maxStock: number): number => {
-    if (maxStock === 0) {
-        if (currentStock === 0) return basePrice * 3;
-        if (currentStock <= 5) return basePrice * 2;
-        if (currentStock <= 20) return basePrice * 1.5;
-        return basePrice;
-    }
-
-    const stockPercentage = (currentStock / maxStock) * 100;
-
-    if (stockPercentage < 80) {
-        const percentBelow80 = 80 - stockPercentage;
-        const priceMultiplier = 1 + (percentBelow80 * 0.05);
-        return Math.round(basePrice * priceMultiplier * 100) / 100;
-    }
-
-    return basePrice;
-};
-
-/**
- * Update stock after selling items back to shop - WITH CACHE INVALIDATION
+ * Update stock after selling player-crafted items back to shop
  */
 export const updateStockAfterSell = async (itemId: string, quantity: number = 1): Promise<void> => {
-    const stockRef = doc(firestore, 'shopStock', itemId);
-    const stockDoc = await getDoc(stockRef);
     const item = ALL_SHOP_ITEMS.find(i => i.id === itemId);
 
     if (!item) {
         throw new Error('Item not found');
     }
 
-    if (item.maxStock !== 0) {
-        throw new Error('Only produced items can be sold back');
+    // IMPORTANT: Only player-craftable items can be sold back
+    if (!isPlayerCraftableItem(item)) {
+        throw new Error('Ainult valmistatud tooteid saab tagasi müüa');
     }
+
+    const stockRef = doc(firestore, 'shopStock', itemId);
+    const stockDoc = await getDoc(stockRef);
 
     if (!stockDoc.exists()) {
         await setDoc(stockRef, {
@@ -150,28 +131,35 @@ export const updateStockAfterSell = async (itemId: string, quantity: number = 1)
         });
     }
 
+    // Clear caches
     cacheManager.clearByPattern(`shop_stock_${itemId}`);
     cacheManager.clearByPattern('shop_all_items_stock');
 };
 
 /**
- * Get all items with current stock and prices - MASSIVELY OPTIMIZED
- * This is the main optimization - fetch ALL documents at once instead of one-by-one
+ * Get all items with stock info - SIMPLIFIED FOR HYBRID SYSTEM
  */
 export const getAllItemsWithStock = async (): Promise<Array<{
     item: any;
     currentStock: number;
-    dynamicPrice: number;
+    staticPrice: number;
+    hasUnlimitedStock: boolean;
 }>> => {
     const cacheKey = 'shop_all_items_stock';
 
     // Check cache
-    const cached = cacheManager.get<Array<{ item: any; currentStock: number; dynamicPrice: number }>>(cacheKey);
+    const cached = cacheManager.get<Array<{
+        item: any;
+        currentStock: number;
+        staticPrice: number;
+        hasUnlimitedStock: boolean;
+    }>>(cacheKey);
     if (cached) {
         return cached;
     }
 
     try {
+        // Only fetch stock for player-craftable items
         const stockCollection = collection(firestore, 'shopStock');
         const stockSnapshot = await getDocs(stockCollection);
         const stockMap = new Map<string, EnhancedShopStock>();
@@ -179,41 +167,32 @@ export const getAllItemsWithStock = async (): Promise<Array<{
         stockSnapshot.forEach(doc => {
             const data = doc.data() as EnhancedShopStock;
             stockMap.set(data.itemId, data);
-
-            // Cache individual items too
             cacheManager.set(`shop_stock_${data.itemId}`, data);
         });
 
         const itemsWithStock = ALL_SHOP_ITEMS.map(item => {
-            const stockData = stockMap.get(item.id);
+            const isPlayerCraftable = isPlayerCraftableItem(item);
             let currentStock: number;
+            let hasUnlimitedStock: boolean;
 
-            if (!stockData) {
-                currentStock = item.maxStock;
+            if (isPlayerCraftable) {
+                // Player-craftable items: show actual stock from database
+                const stockData = stockMap.get(item.id);
+                currentStock = stockData ? stockData.currentStock : 0;
+                hasUnlimitedStock = false;
             } else {
-                const isProducedItem = item.maxStock === 0;
-                currentStock = calculateRestockAmount(
-                    stockData.currentStock,
-                    stockData.lastRestockTime,
-                    item.maxStock,
-                    isProducedItem
-                );
-
-                if (!isProducedItem) {
-                    currentStock = Math.min(currentStock, item.maxStock);
-                }
+                // Basic ingredients and VIP items: unlimited stock
+                currentStock = 999999; // Show as unlimited
+                hasUnlimitedStock = true;
             }
 
-            const dynamicPrice = calculateDynamicPrice(
-                item.basePrice,
-                currentStock,
-                item.maxStock
-            );
+            const staticPrice = calculateStaticPrice(item);
 
             return {
-                item: { ...item, price: dynamicPrice },
+                item: { ...item, price: staticPrice },
                 currentStock,
-                dynamicPrice
+                staticPrice,
+                hasUnlimitedStock
             };
         });
 
@@ -228,9 +207,27 @@ export const getAllItemsWithStock = async (): Promise<Array<{
 };
 
 /**
- * Force refresh all caches (useful after major updates)
+ * Force refresh all caches
  */
 export const clearAllStockCaches = () => {
     cacheManager.clearByPattern('shop');
     console.log('Shop caches cleared');
+};
+
+/**
+ * DEPRECATED FUNCTIONS - keeping for backward compatibility during migration
+ */
+export const calculateDynamicPrice = (basePrice: number, currentStock: number, maxStock: number): number => {
+    console.warn('calculateDynamicPrice is deprecated - use calculateStaticPrice instead');
+    return basePrice;
+};
+
+export const calculateRestockAmount = (
+    currentStock: number,
+    lastRestockTime: Timestamp | Date | any,
+    maxStock: number,
+    isProducedItem: boolean = false
+): number => {
+    console.warn('calculateRestockAmount is deprecated - no longer used in hybrid system');
+    return currentStock;
 };
