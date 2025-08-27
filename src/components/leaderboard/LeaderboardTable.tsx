@@ -54,8 +54,8 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
         onPlayerClick(playerData);
     };
 
-    // Check if there are any VIP players in the leaderboard
-    const hasVipPlayers = entries.some(entry => entry.isVip);
+    // FIXED: Strict VIP checking
+    const hasVipPlayers = entries.some(entry => entry.isVip === true);
 
     if (entries.length === 0) {
         return (
@@ -67,7 +67,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
 
     return (
         <div className="leaderboard-table-container">
-            <table className={`leaderboard-table ${hasVipPlayers ? 'has-vip' : ''}`}>
+            <table className={`leaderboard-table${hasVipPlayers ? ' has-vip' : ''}`}>
                 <thead>
                 <tr>
                     <th className="rank-column">Koht</th>
@@ -82,14 +82,16 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                     const globalRank = startingRank + index + 1;
                     const medalStyle = getMedalStyle(globalRank);
 
+                    // FIXED: Strict VIP checking - MOVED INSIDE THE MAP FUNCTION
+                    const isActuallyVip = entry.isVip === true;
+
                     return (
                         <tr
                             key={entry.userId}
                             className={[
                                 entry.userId === currentUserId ? 'current-user' : '',
-                                entry.isVip ? 'vip-player' : '',
-                                entry.isVip && globalRank <= 3 ? 'top-vip' : '',
-                                entry.isVip ? 'particles' : ''
+                                isActuallyVip ? 'vip-player' : '',
+                                isActuallyVip && globalRank <= 3 ? 'top-vip' : ''
                             ].filter(Boolean).join(' ')}
                         >
                             <td className="rank-column">
@@ -108,7 +110,8 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                                     >
                                         {entry.username}
                                     </button>
-                                    {entry.isVip && (
+                                    {/* FIXED: Only show for actual VIP players */}
+                                    {isActuallyVip && (
                                         <span className="vip-badge" title="VIP kasutaja">
                                             VIP
                                         </span>

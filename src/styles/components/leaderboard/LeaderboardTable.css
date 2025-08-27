@@ -1,4 +1,8 @@
 /* src/styles/components/leaderboard/LeaderboardTable.css */
+
+/* ================================
+   BASE TABLE STYLES (STANDARD)
+   ================================ */
 .leaderboard-table-container {
     overflow-x: auto;
     border-radius: 6px;
@@ -11,6 +15,9 @@
     background-color: #2a2a2a;
 }
 
+/* ================================
+   STANDARD HEADER STYLES (DEFAULT FOR ALL)
+   ================================ */
 .leaderboard-table thead {
     background-color: #333;
 }
@@ -25,6 +32,9 @@
     border-bottom: 2px solid #444;
 }
 
+/* ================================
+   STANDARD TABLE BODY STYLES
+   ================================ */
 .leaderboard-table td {
     padding: 0.75rem 1rem;
     color: #f0f0f0;
@@ -32,7 +42,8 @@
 }
 
 .leaderboard-table tbody tr {
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
+    position: relative;
 }
 
 .leaderboard-table tbody tr:hover {
@@ -44,6 +55,9 @@
     border-left: 3px solid #ffd700;
 }
 
+/* ================================
+   COLUMN STYLES
+   ================================ */
 .rank-column {
     width: 60px;
     text-align: center !important;
@@ -62,7 +76,13 @@
 
 .name-column {
     font-weight: 600;
-    min-width: 120px;
+    min-width: 150px;
+}
+
+.player-name-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .player-name-button {
@@ -85,7 +105,7 @@
     min-width: 130px;
 }
 
-.status-column .status-badge {
+.status-badge {
     padding: 0.25rem 0.5rem;
     background-color: rgba(74, 144, 226, 0.2);
     border: 1px solid #4a90e2;
@@ -105,13 +125,80 @@
     min-width: 100px;
 }
 
+/* ================================
+   VIP PLAYER STYLES (ONLY FOR VIP PLAYERS)
+   ================================ */
+
+/* VIP Player Row */
+.leaderboard-table tbody tr.vip-player {
+    background: linear-gradient(135deg, rgba(156, 39, 176, 0.1), rgba(233, 30, 99, 0.05)) !important;
+    border-left: 3px solid #9c27b0 !important;
+    position: relative;
+}
+
+.leaderboard-table tbody tr.vip-player:hover {
+    background: linear-gradient(135deg, rgba(156, 39, 176, 0.2), rgba(233, 30, 99, 0.1)) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4);
+}
+
+/* VIP Badge - REMOVED ANIMATION */
+.vip-badge {
+    background: linear-gradient(135deg, #9c27b0, #e91e63);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(156, 39, 176, 0.3);
+}
+
+/* VIP Player Enhanced Text */
+.leaderboard-table tbody tr.vip-player .player-name-button {
+    color: #e1bee7 !important;
+    font-weight: 600;
+    text-shadow: 0 0 8px rgba(156, 39, 176, 0.5);
+}
+
+.leaderboard-table tbody tr.vip-player .status-badge {
+    background: linear-gradient(135deg, rgba(156, 39, 176, 0.3), rgba(233, 30, 99, 0.2));
+    border: 1px solid rgba(156, 39, 176, 0.5);
+    color: #e1bee7;
+}
+
+.leaderboard-table tbody tr.vip-player .level-column,
+.leaderboard-table tbody tr.vip-player .reputation-column {
+    color: #e1bee7 !important;
+    font-weight: 700;
+    text-shadow: 0 0 6px rgba(156, 39, 176, 0.3);
+}
+
+/* VIP Crown for Top 3 - REMOVED ANIMATION */
+.leaderboard-table tbody tr.vip-player.top-vip::after {
+    content: '👑';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    z-index: 3;
+}
+
+/* ================================
+   EMPTY STATE
+   ================================ */
 .leaderboard-empty {
     text-align: center;
     padding: 3rem;
     color: #888;
 }
 
-/* Mobile responsiveness - Hide reputation and status columns */
+/* ================================
+   MOBILE RESPONSIVE STYLES
+   ================================ */
 @media (max-width: 768px) {
     .mobile-hide {
         display: none !important;
@@ -144,9 +231,17 @@
     .level-column {
         min-width: 60px;
     }
+
+    .vip-badge {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.4rem;
+    }
+
+    .player-name-container {
+        gap: 0.25rem;
+    }
 }
 
-/* Even smaller screens */
 @media (max-width: 480px) {
     .leaderboard-table {
         font-size: 0.85rem;
@@ -167,131 +262,9 @@
         line-height: 24px;
         font-size: 0.8rem;
     }
-}
 
-.player-name-container {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.vip-badge {
-    background: linear-gradient(135deg, #9c27b0, #e91e63);
-    color: white;
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 0.2rem 0.5rem;
-    border-radius: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 2px 4px rgba(156, 39, 176, 0.3);
-    animation: vip-pulse 2s infinite;
-}
-
-@keyframes vip-pulse {
-    0%, 100% {
-        box-shadow: 0 2px 4px rgba(156, 39, 176, 0.3);
-    }
-    50% {
-        box-shadow: 0 2px 8px rgba(156, 39, 176, 0.6);
-    }
-}
-
-/* Update name-column to accommodate the badge */
-.name-column {
-    font-weight: 600;
-    min-width: 150px; /* Increased from 120px to accommodate VIP badge */
-}
-
-/* Mobile responsiveness for VIP badge */
-@media (max-width: 768px) {
-    .vip-badge {
-        font-size: 0.6rem;
-        padding: 0.15rem 0.4rem;
-    }
-
-    .player-name-container {
-        gap: 0.25rem;
-    }
-}
-
-@media (max-width: 480px) {
     .vip-badge {
         font-size: 0.55rem;
         padding: 0.1rem 0.3rem;
     }
-}
-
-/* VIP Player Row - Basic Styling */
-.leaderboard-table tbody tr.vip-player {
-    background: linear-gradient(135deg, rgba(156, 39, 176, 0.1), rgba(233, 30, 99, 0.05)) !important;
-    border-left: 3px solid #9c27b0 !important;
-}
-
-.leaderboard-table tbody tr.vip-player:hover {
-    background: linear-gradient(135deg, rgba(156, 39, 176, 0.2), rgba(233, 30, 99, 0.1)) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4);
-}
-
-/* VIP Badge Styling */
-.vip-badge {
-    background: linear-gradient(135deg, #9c27b0, #e91e63);
-    color: white;
-    font-size: 0.65rem;
-    font-weight: 700;
-    padding: 0.2rem 0.5rem;
-    border-radius: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    animation: vip-pulse 2s infinite;
-    box-shadow: 0 2px 8px rgba(156, 39, 176, 0.6);
-}
-
-@keyframes vip-pulse {
-    0%, 100% {
-        box-shadow: 0 2px 4px rgba(156, 39, 176, 0.4);
-    }
-    50% {
-        box-shadow: 0 2px 12px rgba(156, 39, 176, 0.8);
-    }
-}
-
-/* Enhanced VIP Player Name */
-.leaderboard-table tbody tr.vip-player .player-name-button {
-    color: #e1bee7 !important;
-    font-weight: 600;
-    text-shadow: 0 0 8px rgba(156, 39, 176, 0.5);
-}
-
-/* Enhanced VIP Status Badge */
-.leaderboard-table tbody tr.vip-player .status-badge {
-    background: linear-gradient(135deg, rgba(156, 39, 176, 0.3), rgba(233, 30, 99, 0.2));
-    border: 1px solid rgba(156, 39, 176, 0.5);
-    color: #e1bee7;
-}
-
-/* Enhanced VIP Level and Reputation */
-.leaderboard-table tbody tr.vip-player .level-column,
-.leaderboard-table tbody tr.vip-player .reputation-column {
-    color: #e1bee7 !important;
-    font-weight: 700;
-    text-shadow: 0 0 6px rgba(156, 39, 176, 0.3);
-}
-
-/* VIP Crown for top 3 */
-.leaderboard-table tbody tr.vip-player.top-vip::after {
-    content: '👑';
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 1.2rem;
-    animation: crown-bounce 2s ease-in-out infinite;
-}
-
-@keyframes crown-bounce {
-    0%, 100% { transform: translateY(-50%); }
-    50% { transform: translateY(-70%); }
 }

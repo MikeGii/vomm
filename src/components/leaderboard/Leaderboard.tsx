@@ -12,7 +12,10 @@ interface LeaderboardProps {
     currentUserIsVip?: boolean;
 }
 
-export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, currentUserIsVip = false }) => {
+export const Leaderboard: React.FC<LeaderboardProps> = ({
+                                                            currentUserId,
+                                                            currentUserIsVip = false
+                                                        }) => {
     const [allEntries, setAllEntries] = useState<LeaderboardEntry[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(true);
@@ -31,7 +34,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, current
         const entries = allEntries.slice(indexOfFirstEntry, indexOfLastEntry);
         const rank = allEntries.findIndex(entry => entry.userId === currentUserId) + 1;
         const page = rank > 0 ? Math.ceil(rank / entriesPerPage) : 0;
-        const vipPlayerCount = allEntries.filter(entry => entry.isVip).length;
+        const vipPlayerCount = allEntries.filter(entry => entry.isVip === true).length;
 
         return {
             currentEntries: entries,
@@ -111,19 +114,24 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, current
         }
     };
 
-    const hasVipPlayers = allEntries.some(entry => entry.isVip);
+    const hasVipPlayers = allEntries.some(entry => entry.isVip === true);
 
     return (
         <>
-            <div className={`leaderboard-container ${currentUserIsVip ? 'current-user-vip' : ''}`}>
+            <div className={`leaderboard-container${currentUserIsVip ? ' current-user-vip' : ''}`}>
                 <div className="leaderboard-header">
-                    <div className="leaderboard-title-section">
+                    {currentUserIsVip ? (
+                        <div className="leaderboard-title-section">
+                            <h3 className="leaderboard-title">Edetabel</h3>
+                        </div>
+                    ) : (
                         <h3 className="leaderboard-title">Edetabel</h3>
-                    </div>
+                    )}
+
                     <div className="leaderboard-actions">
                         {userRank > 0 && userPage !== currentPage && (
                             <button
-                                className={`go-to-position-btn ${currentUserIsVip ? 'vip-button' : ''}`}
+                                className={`go-to-position-btn${currentUserIsVip ? ' vip-button' : ''}`}
                                 onClick={handleGoToMyPosition}
                             >
                                 Minu positsioon (#{userRank})
@@ -132,12 +140,11 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, current
                         )}
                         {!loading && (
                             <button
-                                className={`refresh-btn ${currentUserIsVip ? 'vip-button' : ''}`}
+                                className={`refresh-btn${currentUserIsVip ? ' vip-button' : ''}`}
                                 onClick={handleRefresh}
                                 title="Värskenda edetabelit"
                             >
                                 ↻
-                                {currentUserIsVip && <span className="button-sparkle">✨</span>}
                             </button>
                         )}
                     </div>
@@ -168,14 +175,14 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, current
                         {totalPages > 1 && (
                             <div className="leaderboard-pagination">
                                 <button
-                                    className={`pagination-btn ${currentUserIsVip ? 'vip-btn' : ''}`}
+                                    className={`pagination-btn${currentUserIsVip ? ' vip-btn' : ''}`}
                                     onClick={() => handlePageChange(1)}
                                     disabled={currentPage === 1}
                                 >
                                     ««
                                 </button>
                                 <button
-                                    className={`pagination-btn ${currentUserIsVip ? 'vip-btn' : ''}`}
+                                    className={`pagination-btn${currentUserIsVip ? ' vip-btn' : ''}`}
                                     onClick={() => handlePageChange(currentPage - 1)}
                                     disabled={currentPage === 1}
                                 >
@@ -195,7 +202,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, current
                                                     <span className="pagination-ellipsis">...</span>
                                                 )}
                                                 <button
-                                                    className={`pagination-number ${currentPage === page ? 'active' : ''} ${currentUserIsVip ? 'vip-btn' : ''}`}
+                                                    className={`pagination-number${currentPage === page ? ' active' : ''}${currentUserIsVip ? ' vip-btn' : ''}`}
                                                     onClick={() => handlePageChange(page)}
                                                 >
                                                     {page}
@@ -206,14 +213,14 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, current
                                 </div>
 
                                 <button
-                                    className={`pagination-btn ${currentUserIsVip ? 'vip-btn' : ''}`}
+                                    className={`pagination-btn${currentUserIsVip ? ' vip-btn' : ''}`}
                                     onClick={() => handlePageChange(currentPage + 1)}
                                     disabled={currentPage === totalPages}
                                 >
                                     ›
                                 </button>
                                 <button
-                                    className={`pagination-btn ${currentUserIsVip ? 'vip-btn' : ''}`}
+                                    className={`pagination-btn${currentUserIsVip ? ' vip-btn' : ''}`}
                                     onClick={() => handlePageChange(totalPages)}
                                     disabled={currentPage === totalPages}
                                 >
@@ -225,7 +232,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, current
                         <div className="leaderboard-info">
                             <span>
                                 Näitan {indexOfFirstEntry + 1}-{Math.min(indexOfLastEntry, allEntries.length)} kokku {allEntries.length} mängijast
-                                {hasVipPlayers && (
+                                {currentUserIsVip && hasVipPlayers && (
                                     <span className="vip-info-highlight"> • {vipCount} VIP kasutajat</span>
                                 )}
                             </span>
