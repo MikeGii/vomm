@@ -218,7 +218,15 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
         isWorking: trainingData.isWorking ?? false
     };
 
-    const maxClicks = stats.activeWork ? 10 : 50;
+    // VIP LOGIC: Determine max clicks based on VIP status and work status
+    let maxClicks: number;
+    if (stats.isVip) {
+        // VIP benefits: 100 clicks when not working, 30 when working
+        maxClicks = stats.activeWork ? 30 : 100;
+    } else {
+        // Regular players: 50 clicks when not working, 10 when working
+        maxClicks = stats.activeWork ? 10 : 50;
+    }
     const now = new Date();
     const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
 
@@ -241,7 +249,7 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
 
     if (currentHour.getTime() > lastResetHour.getTime()) {
         trainingData = {
-            remainingClicks: maxClicks,
+            remainingClicks: maxClicks, // Use VIP-aware maxClicks
             lastResetTime: Timestamp.now(),
             totalTrainingsDone: trainingData.totalTrainingsDone ?? 0,
             isWorking: !!stats.activeWork
@@ -281,7 +289,15 @@ export const checkAndResetKitchenLabTrainingClicks = async (userId: string): Pro
         totalTrainingsDone: kitchenLabTrainingData.totalTrainingsDone ?? 0
     };
 
-    const maxClicks = stats.activeWork ? 10 : 50;
+    // VIP LOGIC: Determine max clicks based on VIP status and work status
+    let maxClicks: number;
+    if (stats.isVip) {
+        // VIP benefits: 100 clicks when not working, 30 when working
+        maxClicks = stats.activeWork ? 30 : 100;
+    } else {
+        // Regular players: 50 clicks when not working, 10 when working
+        maxClicks = stats.activeWork ? 10 : 50;
+    }
     const now = new Date();
     const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
 
@@ -342,7 +358,15 @@ export const checkAndResetHandicraftTrainingClicks = async (userId: string): Pro
         totalTrainingsDone: handicraftTrainingData.totalTrainingsDone ?? 0
     };
 
-    const maxClicks = stats.activeWork ? 10 : 50;
+    // VIP LOGIC: Determine max clicks based on VIP status and work status
+    let maxClicks: number;
+    if (stats.isVip) {
+        // VIP benefits: 100 clicks when not working, 30 when working
+        maxClicks = stats.activeWork ? 30 : 100;
+    } else {
+        // Regular players: 50 clicks when not working, 10 when working
+        maxClicks = stats.activeWork ? 10 : 50;
+    }
     const now = new Date();
     const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
 
