@@ -1,4 +1,4 @@
-// src/components/fightclub/FightClubOpponents.tsx - ENHANCED WITH PAGINATION
+// src/components/fightclub/FightClubOpponents.tsx - ENHANCED WITH PAGINATION AND EXCLUSIONS
 import React, { useState } from 'react';
 import { PlayerStats } from '../../types';
 import { FightClubPaginatedResult } from '../../services/FightClubService';
@@ -10,6 +10,9 @@ import { doc, getDoc } from 'firebase/firestore';
 import { calculatePotentialReward} from "../../services/FightService";
 import { firestore } from '../../config/firebase';
 import '../../styles/components/fightclub/FightClubOpponents.css';
+
+// Excluded usernames list
+const EXCLUDED_USERNAMES = ['Lääne13'];
 
 interface FightClubOpponentsProps {
     playerStats: PlayerStats;
@@ -45,6 +48,13 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
             console.error('Error fetching current user username:', error);
         }
         return 'Tundmatu';
+    };
+
+    // Filter out excluded players
+    const filterExcludedPlayers = (players: any[]) => {
+        return players.filter(player =>
+            !EXCLUDED_USERNAMES.includes(player.username)
+        );
     };
 
     const handleFight = async (opponent: any) => {
@@ -129,6 +139,10 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
 
     const { players, totalCount, currentPage, totalPages, hasNextPage, hasPreviousPage } = paginatedData;
 
+    // Filter out excluded players from the display
+    const filteredPlayers = filterExcludedPlayers(players);
+    const adjustedTotalCount = totalCount - (players.length - filteredPlayers.length);
+
     return (
         <div className="fight-club-content">
             <div className="welcome-message">
@@ -153,16 +167,16 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
             <div className="opponents-section">
                 <div className="opponents-header">
                     <h3>Võimalikud vastased:</h3>
-                    {!loadingPlayers && players.length > 0 && (
+                    {!loadingPlayers && filteredPlayers.length > 0 && (
                         <div className="opponents-count">
-                            Kokku {totalCount} vastast
+                            Kokku {adjustedTotalCount} vastast
                         </div>
                     )}
                 </div>
 
                 {loadingPlayers ? (
                     <div className="loading-players">Laadin mängijaid...</div>
-                ) : players.length === 0 ? (
+                ) : filteredPlayers.length === 0 ? (
                     <div className="no-opponents">
                         <p>Hetkel pole teisi sobivaid vastaseid võitlusklubis.</p>
                         <p>Proovi hiljem uuesti!</p>
@@ -170,7 +184,7 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
                 ) : (
                     <>
                         <div className="opponents-list">
-                            {players.map(player => {
+                            {filteredPlayers.map(player => {
                                 const hasEnoughHealth = playerStats.health && playerStats.health.current >= 5;
                                 const potentialRewardData = calculatePotentialReward(playerStats.level, player.level);
                                 const potentialReward = potentialRewardData.reward;
@@ -274,7 +288,7 @@ export const FightClubOpponents: React.FC<FightClubOpponentsProps> = ({
                                         Lehekülg {currentPage} / {totalPages}
                                     </span>
                                     <span className="total-count">
-                                        ({totalCount} vastast)
+                                        ({adjustedTotalCount} vastast)
                                     </span>
                                 </div>
 
