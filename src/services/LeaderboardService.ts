@@ -86,7 +86,8 @@ export const getLeaderboard = async (
                 attributes: playerData.attributes,
                 casesCompleted: playerData.casesCompleted || 0,
                 criminalsArrested: playerData.criminalsArrested || 0,
-                totalWorkedHours: playerData.totalWorkedHours || 0
+                totalWorkedHours: playerData.totalWorkedHours || 0,
+                isVip: playerData.isVip || false
             });
         });
 

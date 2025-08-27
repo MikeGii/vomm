@@ -93,12 +93,19 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                                     </span>
                             </td>
                             <td className="name-column">
-                                <button
-                                    className="player-name-button"
-                                    onClick={() => handlePlayerClick(entry)}
-                                >
-                                    {entry.username}
-                                </button>
+                                <div className="player-name-container">
+                                    <button
+                                        className="player-name-button"
+                                        onClick={() => handlePlayerClick(entry)}
+                                    >
+                                        {entry.username}
+                                    </button>
+                                    {entry.isVip && (
+                                        <span className="vip-badge" title="VIP kasutaja">
+                                        VIP
+                                    </span>
+                                    )}
+                                </div>
                             </td>
                             <td className="status-column">
                                     <span className="status-badge">

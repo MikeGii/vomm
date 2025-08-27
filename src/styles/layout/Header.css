@@ -418,3 +418,17 @@
 .menu-item-admin .menu-icon {
     filter: brightness(1.2);
 }
+
+.menu-item-vip {
+    color: #9c27b0 !important;
+    font-weight: 600;
+}
+
+.menu-item-vip:hover {
+    background: rgba(156, 39, 176, 0.1) !important;
+    color: #e91e63 !important;
+}
+
+.menu-item-vip .menu-icon {
+    filter: brightness(1.2);
+}
