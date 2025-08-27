@@ -7,7 +7,7 @@ interface ShopPurchaseModalProps {
     item: ShopItem | null;
     isOpen: boolean;
     playerMoney: number;
-    playerPollid?: number; // Add pollid support
+    playerPollid?: number;
     currentStock: number;
     onConfirm: (quantity: number) => void;
     onCancel: () => void;
@@ -17,17 +17,21 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
                                                                         item,
                                                                         isOpen,
                                                                         playerMoney,
-                                                                        playerPollid = 0, // Default to 0
+                                                                        playerPollid = 0,
                                                                         currentStock,
                                                                         onConfirm,
                                                                         onCancel
                                                                     }) => {
     const [quantity, setQuantity] = useState(1);
+    const [quantityInput, setQuantityInput] = useState('1');
+    const [quantityError, setQuantityError] = useState<string | null>(null);
 
     // Reset quantity when modal opens with new item
     useEffect(() => {
         if (isOpen) {
             setQuantity(1);
+            setQuantityInput('1');
+            setQuantityError(null);
         }
     }, [isOpen, item]);
 
@@ -40,16 +44,47 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
     const playerBalance = isPollidPurchase ? playerPollid : playerMoney;
     const canAfford = playerBalance >= totalPrice;
     const maxAffordable = Math.floor(playerBalance / unitPrice);
-    const maxPurchasable = Math.min(maxAffordable, currentStock);
 
     const handleQuantityChange = (newQuantity: number) => {
-        if (newQuantity >= 1 && newQuantity <= maxPurchasable) {
+        if (newQuantity >= 1) {
             setQuantity(newQuantity);
+            setQuantityInput(newQuantity.toString());
+
+            // Check for errors and provide feedback
+            if (newQuantity > currentStock) {
+                setQuantityError(`Laos on ainult ${currentStock} tükki`);
+            } else if (newQuantity > maxAffordable) {
+                const currencyName = isPollidPurchase ? 'pollide' : 'raha';
+                setQuantityError(`Sul pole piisavalt ${currencyName}. Saad osta maksimaalselt ${maxAffordable} tükki`);
+            } else {
+                setQuantityError(null);
+            }
+        }
+    };
+
+    const handleInputChange = (value: string) => {
+        setQuantityInput(value);
+
+        // Allow empty input temporarily
+        if (value === '') {
+            setQuantityError('Sisesta kogus');
+            return;
+        }
+
+        const numValue = parseInt(value);
+        if (!isNaN(numValue) && numValue >= 1) {
+            handleQuantityChange(numValue);
+        } else if (numValue < 1) {
+            setQuantityError('Kogus peab olema vähemalt 1');
+        } else {
+            setQuantityError('Sisesta kehtiv number');
         }
     };
 
     const handleConfirm = () => {
-        onConfirm(quantity);
+        if (!quantityError && quantity >= 1) {
+            onConfirm(quantity);
+        }
     };
 
     // Format currency display
@@ -60,6 +95,9 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
             return `€${amount.toFixed(2)}`;
         }
     };
+
+    // Determine if purchase is possible
+    const canPurchase = !quantityError && quantity >= 1;
 
     return (
         <div className="modal-overlay" onClick={onCancel}>
@@ -120,22 +158,28 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
                         <input
                             type="number"
                             className="quantity-input"
-                            value={quantity}
-                            onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
+                            value={quantityInput}
+                            onChange={(e) => handleInputChange(e.target.value)}
                             min="1"
-                            max={maxPurchasable}
+                            placeholder="1"
                         />
                         <button
                             className="quantity-btn increase"
                             onClick={() => handleQuantityChange(quantity + 1)}
-                            disabled={quantity >= maxPurchasable}
                         >
                             +
                         </button>
                     </div>
-                    <span className="quantity-info">
-                        Max: {maxPurchasable} (Laos: {currentStock})
-                    </span>
+
+                    {quantityError ? (
+                        <div className="quantity-error">
+                            {quantityError}
+                        </div>
+                    ) : (
+                        <span className="quantity-info">
+                            Laos: {currentStock} tükki
+                        </span>
+                    )}
                 </div>
 
                 <div className="modal-price-info">
@@ -178,11 +222,13 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
                     <button
                         className={`confirm-button ${isPollidPurchase ? 'vip-confirm' : ''}`}
                         onClick={handleConfirm}
-                        disabled={!canAfford || quantity < 1 || quantity > maxPurchasable}
+                        disabled={!canPurchase}
                     >
-                        {!canAfford
-                            ? (isPollidPurchase ? 'Ebapiisav Pollide' : 'Ebapiisav raha')
-                            : `Osta ${quantity > 1 ? quantity + ' tk' : ''}`
+                        {quantityError
+                            ? 'Paranda kogus'
+                            : !canAfford
+                                ? (isPollidPurchase ? 'Ebapiisavalt Pollide' : 'Ebapiisavalt raha')
+                                : `Osta ${quantity > 1 ? quantity + ' tk' : ''}`
                         }
                     </button>
                 </div>

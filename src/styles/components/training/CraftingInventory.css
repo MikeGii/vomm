@@ -310,3 +310,25 @@
         min-width: auto;
     }
 }
+
+.sell-error {
+    color: #e74c3c;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    text-align: center;
+    font-weight: 500;
+}
+
+/* Parandatud mobile input */
+@media (max-width: 480px) {
+    .quantity-input {
+        width: 50px !important;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.15rem;
+    }
+
+    .sell-error {
+        font-size: 0.7rem;
+        margin-top: 0.2rem;
+    }
+}
