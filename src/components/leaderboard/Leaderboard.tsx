@@ -9,7 +9,7 @@ import '../../styles/components/leaderboard/Leaderboard.css';
 
 interface LeaderboardProps {
     currentUserId?: string;
-    currentUserIsVip?: boolean; // Add VIP status prop
+    currentUserIsVip?: boolean;
 }
 
 export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, currentUserIsVip = false }) => {
@@ -21,10 +21,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, current
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isLoadingProfile, setIsLoadingProfile] = useState(false);
 
-    // Add ref to prevent double-loading in development
     const loadingRef = useRef(false);
-
-    // Pagination settings
     const entriesPerPage = 10;
 
     const { currentEntries, totalPages, userRank, userPage, indexOfFirstEntry, indexOfLastEntry, vipCount } = useMemo(() => {
@@ -48,7 +45,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, current
     }, [allEntries, currentPage, currentUserId, entriesPerPage]);
 
     const loadLeaderboard = useCallback(async (forceRefresh = false) => {
-        // Prevent double-loading in React StrictMode
         if (loadingRef.current && !forceRefresh) return;
         loadingRef.current = true;
 
@@ -115,12 +111,11 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, current
         }
     };
 
-    // Check if there are VIP players for styling
     const hasVipPlayers = allEntries.some(entry => entry.isVip);
 
     return (
         <>
-            <div className={`leaderboard-container ${hasVipPlayers ? 'has-vip-players' : ''} ${currentUserIsVip ? 'current-user-vip' : ''}`}>
+            <div className={`leaderboard-container ${currentUserIsVip ? 'current-user-vip' : ''}`}>
                 <div className="leaderboard-header">
                     <div className="leaderboard-title-section">
                         <h3 className="leaderboard-title">Edetabel</h3>
@@ -149,11 +144,8 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, current
                 </div>
 
                 {loading && (
-                    <div className={`leaderboard-loading ${hasVipPlayers ? 'vip-loading' : ''}`}>
-                        <div className="loading-content">
-                            <div className="loading-spinner"></div>
-                            <p>Laadin edetabelit...</p>
-                        </div>
+                    <div className="leaderboard-loading">
+                        <p>Laadin edetabelit...</p>
                     </div>
                 )}
 
@@ -174,7 +166,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, current
                         />
 
                         {totalPages > 1 && (
-                            <div className={`leaderboard-pagination ${hasVipPlayers ? 'vip-pagination' : ''}`}>
+                            <div className="leaderboard-pagination">
                                 <button
                                     className={`pagination-btn ${currentUserIsVip ? 'vip-btn' : ''}`}
                                     onClick={() => handlePageChange(1)}
@@ -230,11 +222,11 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, current
                             </div>
                         )}
 
-                        <div className={`leaderboard-info ${hasVipPlayers ? 'vip-info' : ''}`}>
+                        <div className="leaderboard-info">
                             <span>
                                 Näitan {indexOfFirstEntry + 1}-{Math.min(indexOfLastEntry, allEntries.length)} kokku {allEntries.length} mängijast
                                 {hasVipPlayers && (
-                                    <span className="vip-info-text"> • {vipCount} VIP kasutajat</span>
+                                    <span className="vip-info-highlight"> • {vipCount} VIP kasutajat</span>
                                 )}
                             </span>
                         </div>
