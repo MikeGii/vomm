@@ -307,3 +307,98 @@
     align-items: center;
     justify-content: center;
 }
+
+/* Stock type indicators */
+.stock-type {
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.stock-type.unlimited {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4caf50;
+}
+
+.stock-type.limited {
+    background: rgba(255, 152, 0, 0.15);
+    color: #ff9800;
+}
+
+/* Unlimited stock display */
+.stock-display.unlimited {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4caf50;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.unlimited-text {
+    color: #4caf50;
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+.unlimited-badge {
+    color: #4caf50;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* Enhanced shop stats */
+.shop-stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: #1a1a1a;
+    border-radius: 6px;
+    flex-wrap: wrap;
+}
+
+.shop-stats span {
+    color: #b0b0b0;
+    font-size: 0.9rem;
+    padding: 0.25rem 0.5rem;
+    background: #333;
+    border-radius: 4px;
+}
+
+/* Enhanced action buttons */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.refill-btn {
+    background: #ff9800;
+    color: white;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+}
+
+.refill-btn:hover:not(:disabled) {
+    background: #f57c00;
+}
+
+.refill-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+}
+
+/* Table updates */
+.shop-admin-table th:nth-child(6) {
+    width: 100px;
+    text-align: center;
+}
+
+.shop-admin-table td:nth-child(6) {
+    text-align: center;
+}

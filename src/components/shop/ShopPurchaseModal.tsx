@@ -1,26 +1,26 @@
-// src/components/shop/ShopPurchaseModal.tsx
+// src/components/shop/ShopPurchaseModal.tsx - UPDATED FOR HYBRID SYSTEM
 import React, { useState, useEffect } from 'react';
 import { ShopItem } from '../../types/shop';
 import '../../styles/components/shop/ShopPurchaseModal.css';
 
 interface ShopPurchaseModalProps {
     item: ShopItem | null;
-    isOpen: boolean;
     playerMoney: number;
     playerPollid?: number;
     currentStock: number;
     onConfirm: (quantity: number) => void;
     onCancel: () => void;
+    isLoading?: boolean;
 }
 
 export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
                                                                         item,
-                                                                        isOpen,
                                                                         playerMoney,
                                                                         playerPollid = 0,
                                                                         currentStock,
                                                                         onConfirm,
-                                                                        onCancel
+                                                                        onCancel,
+                                                                        isLoading = false
                                                                     }) => {
     const [quantity, setQuantity] = useState(1);
     const [quantityInput, setQuantityInput] = useState('1');
@@ -28,18 +28,24 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
 
     // Reset quantity when modal opens with new item
     useEffect(() => {
-        if (isOpen) {
+        if (item) {
             setQuantity(1);
             setQuantityInput('1');
             setQuantityError(null);
         }
-    }, [isOpen, item]);
+    }, [item]);
 
-    if (!isOpen || !item) return null;
+    if (!item) return null;
+
+    // Check if item is player-craftable (limited stock)
+    const isPlayerCraftableItem = item.maxStock === 0;
+    const hasUnlimitedStock = !isPlayerCraftableItem;
 
     // Determine which currency is being used
     const isPollidPurchase = item.currency === 'pollid';
-    const unitPrice = isPollidPurchase ? (item.pollidPrice || 0) : item.price;
+    const unitPrice = isPollidPurchase
+        ? (item.basePollidPrice || item.pollidPrice || 0)
+        : item.basePrice;
     const totalPrice = unitPrice * quantity;
     const playerBalance = isPollidPurchase ? playerPollid : playerMoney;
     const canAfford = playerBalance >= totalPrice;
@@ -50,15 +56,20 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
             setQuantity(newQuantity);
             setQuantityInput(newQuantity.toString());
 
-            // Check for errors and provide feedback
-            if (newQuantity > currentStock) {
+            // Stock validation - only for player-craftable items
+            if (isPlayerCraftableItem && newQuantity > currentStock) {
                 setQuantityError(`Laos on ainult ${currentStock} tükki`);
-            } else if (newQuantity > maxAffordable) {
+                return;
+            }
+
+            // Balance validation
+            if (newQuantity > maxAffordable) {
                 const currencyName = isPollidPurchase ? 'pollide' : 'raha';
                 setQuantityError(`Sul pole piisavalt ${currencyName}. Saad osta maksimaalselt ${maxAffordable} tükki`);
-            } else {
-                setQuantityError(null);
+                return;
             }
+
+            setQuantityError(null);
         }
     };
 
@@ -82,7 +93,7 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
     };
 
     const handleConfirm = () => {
-        if (!quantityError && quantity >= 1) {
+        if (!quantityError && quantity >= 1 && !isLoading) {
             onConfirm(quantity);
         }
     };
@@ -96,50 +107,77 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
         }
     };
 
+    // Determine max quantity for input validation
+    const getMaxQuantity = () => {
+        if (hasUnlimitedStock) {
+            return maxAffordable; // Only limited by player's balance
+        } else {
+            return Math.min(currentStock, maxAffordable); // Limited by stock and balance
+        }
+    };
+
     // Determine if purchase is possible
-    const canPurchase = !quantityError && quantity >= 1;
+    const canPurchase = !quantityError && quantity >= 1 && canAfford &&
+        (hasUnlimitedStock || currentStock >= quantity);
 
     return (
         <div className="modal-overlay" onClick={onCancel}>
             <div className={`purchase-modal ${isPollidPurchase ? 'vip-modal' : ''}`} onClick={(e) => e.stopPropagation()}>
                 <h2 className="modal-title">
-                    {isPollidPurchase ? '💎 VIP Ost' : 'Kinnita ost'}
+                    {isPollidPurchase ? '💎 VIP Ost' : 'Ostu kinnitus'}
                 </h2>
 
+                {/* Item Info */}
                 <div className="modal-item-info">
                     <h3 className="item-name">{item.name}</h3>
                     <p className="item-description">{item.description}</p>
 
-                    {/* Show stats for equipment */}
+                    {/* Item Stats */}
                     {item.stats && (
                         <div className="item-stats">
-                            {item.stats.strength && <span className="stat">+{item.stats.strength} Jõud</span>}
-                            {item.stats.agility && <span className="stat">+{item.stats.agility} Kiirus</span>}
-                            {item.stats.dexterity && <span className="stat">+{item.stats.dexterity} Osavus</span>}
-                            {item.stats.intelligence && <span className="stat">+{item.stats.intelligence} Intel</span>}
-                            {item.stats.endurance && <span className="stat">+{item.stats.endurance} Vastup</span>}
+                            {item.stats.strength && <span className="stat">Jõud +{item.stats.strength}</span>}
+                            {item.stats.agility && <span className="stat">Kiirus +{item.stats.agility}</span>}
+                            {item.stats.dexterity && <span className="stat">Osavus +{item.stats.dexterity}</span>}
+                            {item.stats.intelligence && <span className="stat">Intel +{item.stats.intelligence}</span>}
+                            {item.stats.endurance && <span className="stat">Vastup +{item.stats.endurance}</span>}
                         </div>
                     )}
 
-                    {/* Show consumable effects */}
+                    {/* Consumable Effects */}
                     {item.consumableEffect && (
                         <div className="item-effects">
-                            <div className="effect-badge">
-                                {item.consumableEffect.type === 'workTimeReduction' && (
-                                    <span className="vip-effect">-{item.consumableEffect.value}% tööaeg</span>
-                                )}
+                            <div className="effect-info">
                                 {item.consumableEffect.type === 'trainingClicks' && (
-                                    <span className="effect">+{item.consumableEffect.value} klõpsu</span>
+                                    <span className="effect">+{item.consumableEffect.value} treening klick</span>
                                 )}
                                 {item.consumableEffect.type === 'kitchenClicks' && (
-                                    <span className="effect">+{item.consumableEffect.value} köök/labor klõpsu</span>
+                                    <span className="effect">+{item.consumableEffect.value} köök klick</span>
+                                )}
+                                {item.consumableEffect.type === 'handicraftClicks' && (
+                                    <span className="effect">+{item.consumableEffect.value} käsitöö klick</span>
+                                )}
+                                {item.consumableEffect.type === 'energy' && (
+                                    <span className="effect">+{item.consumableEffect.value} energia</span>
                                 )}
                                 {item.consumableEffect.type === 'heal' && (
                                     <span className="effect">
-                                        +{item.consumableEffect.value === 9999 ? 'Täielik' : item.consumableEffect.value} HP
+                                        {item.consumableEffect.value === 100 ? 'Täielik' : item.consumableEffect.value} HP
                                     </span>
                                 )}
+                                {item.consumableEffect.type === 'workTimeReduction' && (
+                                    <span className="vip-effect">-{item.consumableEffect.value}% tööaeg</span>
+                                )}
+                                {item.consumableEffect.type === 'courseTimeReduction' && (
+                                    <span className="vip-effect">-{item.consumableEffect.value}% kursus</span>
+                                )}
                             </div>
+                        </div>
+                    )}
+
+                    {/* Stock type indicator */}
+                    {isPlayerCraftableItem && (
+                        <div className="stock-type-indicator">
+                            ⚠ Mängijate poolt valmistatud - piiratud kogus
                         </div>
                     )}
                 </div>
@@ -151,7 +189,7 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
                         <button
                             className="quantity-btn decrease"
                             onClick={() => handleQuantityChange(quantity - 1)}
-                            disabled={quantity <= 1}
+                            disabled={quantity <= 1 || isLoading}
                         >
                             −
                         </button>
@@ -161,27 +199,36 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
                             value={quantityInput}
                             onChange={(e) => handleInputChange(e.target.value)}
                             min="1"
+                            max={getMaxQuantity()}
                             placeholder="1"
+                            disabled={isLoading}
                         />
                         <button
                             className="quantity-btn increase"
                             onClick={() => handleQuantityChange(quantity + 1)}
+                            disabled={isLoading}
                         >
                             +
                         </button>
                     </div>
 
+                    {/* Stock Info */}
                     {quantityError ? (
                         <div className="quantity-error">
                             {quantityError}
                         </div>
                     ) : (
-                        <span className="quantity-info">
-                            Laos: {currentStock} tükki
-                        </span>
+                        <div className="quantity-info">
+                            {hasUnlimitedStock ? (
+                                <span className="unlimited-stock">Alati saadaval</span>
+                            ) : (
+                                <span className="limited-stock">Laos: {currentStock} tükki</span>
+                            )}
+                        </div>
                     )}
                 </div>
 
+                {/* Price Information */}
                 <div className="modal-price-info">
                     <div className="price-row">
                         <span>Ühiku hind:</span>
@@ -203,36 +250,40 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
                     </div>
                     <div className="price-row">
                         <span>{isPollidPurchase ? 'Sinu Pollid:' : 'Sinu raha:'}</span>
-                        <span className={`${canAfford ? 'balance' : 'balance insufficient'} ${isPollidPurchase ? 'pollid-balance' : ''}`}>
+                        <span className={`${canAfford ? 'balance' : 'balance insufficient'} ${isPollidPurchase ? 'pollid-balance' : 'money-balance'}`}>
                             {formatCurrency(playerBalance)}
                         </span>
                     </div>
-                    <div className="price-row">
-                        <span>Peale ostu:</span>
-                        <span className={`${canAfford ? 'remaining' : 'remaining insufficient'} ${isPollidPurchase ? 'pollid-balance' : ''}`}>
-                            {formatCurrency(playerBalance - totalPrice)}
-                        </span>
-                    </div>
+                    {canAfford && (
+                        <div className="price-row">
+                            <span>Jääb üle:</span>
+                            <span className={`remaining ${isPollidPurchase ? 'pollid-balance' : 'money-balance'}`}>
+                                {formatCurrency(playerBalance - totalPrice)}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
+                {/* Action Buttons */}
                 <div className="modal-actions">
-                    <button className="cancel-button" onClick={onCancel}>
+                    <button
+                        className="cancel-button"
+                        onClick={onCancel}
+                        disabled={isLoading}
+                    >
                         Tühista
                     </button>
                     <button
-                        className={`confirm-button ${isPollidPurchase ? 'vip-confirm' : ''}`}
+                        className={`confirm-button ${!canPurchase ? 'disabled' : ''}`}
                         onClick={handleConfirm}
-                        disabled={!canPurchase}
+                        disabled={!canPurchase || isLoading}
                     >
-                        {quantityError
-                            ? 'Paranda kogus'
-                            : !canAfford
-                                ? (isPollidPurchase ? 'Ebapiisavalt Pollide' : 'Ebapiisavalt raha')
-                                : `Osta ${quantity > 1 ? quantity + ' tk' : ''}`
-                        }
+                        {isLoading ? 'Ostab...' : canPurchase ? 'Osta' : 'Ei saa osta'}
                     </button>
                 </div>
             </div>
         </div>
     );
 };
+
+export default ShopPurchaseModal;

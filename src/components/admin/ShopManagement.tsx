@@ -1,4 +1,4 @@
-// src/components/admin/ShopManagement.tsx - Clean Version with Warnings Fixed
+// src/components/admin/ShopManagement.tsx - UPDATED FOR HYBRID SYSTEM
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ShopItem } from '../../types/shop';
 import {
@@ -12,13 +12,15 @@ import {
 import { useToast } from '../../contexts/ToastContext';
 import '../../styles/components/admin/ShopManagement.css';
 
+// Updated interface for hybrid system
 interface ItemWithStock {
     item: ShopItem;
     currentStock: number;
-    dynamicPrice: number;
+    staticPrice: number;
+    hasUnlimitedStock: boolean;
 }
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 15;
 
 export const ShopManagement: React.FC = () => {
     const [items, setItems] = useState<ItemWithStock[]>([]);
@@ -33,6 +35,11 @@ export const ShopManagement: React.FC = () => {
         currentStock: number;
     }>({ maxStock: 0, currentStock: 0 });
     const { showToast } = useToast();
+
+    // Helper function to check if item is player-craftable
+    const isPlayerCraftableItem = useCallback((item: ShopItem): boolean => {
+        return item.maxStock === 0;
+    }, []);
 
     // Memoized filtered items for performance
     const filteredItems = useMemo(() => {
@@ -52,6 +59,20 @@ export const ShopManagement: React.FC = () => {
         if (categoryFilter !== 'all') {
             filtered = filtered.filter(item => item.item.category === categoryFilter);
         }
+
+        // Sort by stock type (unlimited first, then by stock availability)
+        filtered = filtered.sort((a, b) => {
+            if (a.hasUnlimitedStock && !b.hasUnlimitedStock) return -1;
+            if (!a.hasUnlimitedStock && b.hasUnlimitedStock) return 1;
+
+            // If both are limited, sort by stock level
+            if (!a.hasUnlimitedStock && !b.hasUnlimitedStock) {
+                if (a.currentStock === 0 && b.currentStock > 0) return 1;
+                if (b.currentStock === 0 && a.currentStock > 0) return -1;
+            }
+
+            return a.item.name.localeCompare(b.item.name, 'et');
+        });
 
         return filtered;
     }, [items, searchTerm, categoryFilter]);
@@ -176,6 +197,65 @@ export const ShopManagement: React.FC = () => {
         showToast('Andmed värskendatud!', 'info');
     }, [loadShopData, showToast]);
 
+    // Helper function to render stock status
+    const renderStockStatus = (itemData: ItemWithStock, isEditing: boolean) => {
+        if (isEditing) {
+            return (
+                <input
+                    type="number"
+                    min="0"
+                    value={editValues.currentStock}
+                    onChange={(e) => setEditValues(prev => ({
+                        ...prev,
+                        currentStock: parseInt(e.target.value) || 0
+                    }))}
+                    className="stock-input"
+                />
+            );
+        }
+
+        if (itemData.hasUnlimitedStock) {
+            return (
+                <span className="stock-display unlimited">
+                    ∞ Unlimited
+                </span>
+            );
+        }
+
+        return (
+            <span className={`stock-display ${
+                itemData.currentStock === 0 ? 'out-of-stock' :
+                    itemData.currentStock < (itemData.item.maxStock * 0.2) ? 'low-stock' : ''
+            }`}>
+                {itemData.currentStock}
+            </span>
+        );
+    };
+
+    // Helper function to render max stock
+    const renderMaxStock = (itemData: ItemWithStock, isEditing: boolean) => {
+        if (isEditing) {
+            return (
+                <input
+                    type="number"
+                    min="0"
+                    value={editValues.maxStock}
+                    onChange={(e) => setEditValues(prev => ({
+                        ...prev,
+                        maxStock: parseInt(e.target.value) || 0
+                    }))}
+                    className="stock-input"
+                />
+            );
+        }
+
+        if (itemData.hasUnlimitedStock) {
+            return <span className="unlimited-text">∞</span>;
+        }
+
+        return <span>{itemData.item.maxStock}</span>;
+    };
+
     if (loading) {
         return (
             <div className="shop-management">
@@ -222,6 +302,8 @@ export const ShopManagement: React.FC = () => {
                 <span>Kokku: {filteredItems.length} ese(t)</span>
                 <span>Kuvan: {paginationData.currentItems.length} ese(t)</span>
                 <span>Lehekülg: {currentPage} / {paginationData.totalPages}</span>
+                <span>Unlimited: {items.filter(i => i.hasUnlimitedStock).length}</span>
+                <span>Limited: {items.filter(i => !i.hasUnlimitedStock).length}</span>
             </div>
 
             <div className="shop-table-container">
@@ -233,6 +315,7 @@ export const ShopManagement: React.FC = () => {
                         <th>Hind</th>
                         <th>Ladu</th>
                         <th>Max</th>
+                        <th>Tüüp</th>
                         <th>Toimingud</th>
                     </tr>
                     </thead>
@@ -240,6 +323,7 @@ export const ShopManagement: React.FC = () => {
                     {paginationData.currentItems.map((itemData) => {
                         const isEditing = editingItem === itemData.item.id;
                         const isUpdating = updatingItem === itemData.item.id;
+                        const isPlayerCraftable = isPlayerCraftableItem(itemData.item);
 
                         return (
                             <tr key={itemData.item.id} className={isUpdating ? 'updating' : ''}>
@@ -257,47 +341,21 @@ export const ShopManagement: React.FC = () => {
                                 <td>
                                     <span className={`price ${itemData.item.currency === 'pollid' ? 'pollid' : ''}`}>
                                         {itemData.item.currency === 'pollid'
-                                            ? `${itemData.item.pollidPrice} P`
-                                            : `${itemData.dynamicPrice}€`
+                                            ? `${itemData.item.basePollidPrice || itemData.item.pollidPrice} P`
+                                            : `${itemData.staticPrice}€`
                                         }
                                     </span>
                                 </td>
                                 <td>
-                                    {isEditing ? (
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            value={editValues.currentStock}
-                                            onChange={(e) => setEditValues(prev => ({
-                                                ...prev,
-                                                currentStock: parseInt(e.target.value) || 0
-                                            }))}
-                                            className="stock-input"
-                                        />
-                                    ) : (
-                                        <span className={`stock-display ${
-                                            itemData.currentStock === 0 ? 'out-of-stock' :
-                                                itemData.currentStock < itemData.item.maxStock * 0.2 ? 'low-stock' : ''
-                                        }`}>
-                                            {itemData.currentStock}
-                                        </span>
-                                    )}
+                                    {renderStockStatus(itemData, isEditing)}
                                 </td>
                                 <td>
-                                    {isEditing ? (
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            value={editValues.maxStock}
-                                            onChange={(e) => setEditValues(prev => ({
-                                                ...prev,
-                                                maxStock: parseInt(e.target.value) || 0
-                                            }))}
-                                            className="stock-input"
-                                        />
-                                    ) : (
-                                        itemData.item.maxStock
-                                    )}
+                                    {renderMaxStock(itemData, isEditing)}
+                                </td>
+                                <td>
+                                    <span className={`stock-type ${itemData.hasUnlimitedStock ? 'unlimited' : 'limited'}`}>
+                                        {itemData.hasUnlimitedStock ? 'Unlimited' : 'Player-crafted'}
+                                    </span>
                                 </td>
                                 <td>
                                     <div className="action-buttons">
@@ -320,22 +378,30 @@ export const ShopManagement: React.FC = () => {
                                             </>
                                         ) : (
                                             <>
-                                                <button
-                                                    className="edit-btn"
-                                                    onClick={() => startEditing(itemData)}
-                                                    disabled={isUpdating}
-                                                >
-                                                    ✏️
-                                                </button>
-                                                {itemData.item.maxStock > 0 && (
+                                                {/* Only show edit button for player-craftable items */}
+                                                {isPlayerCraftable && (
+                                                    <button
+                                                        className="edit-btn"
+                                                        onClick={() => startEditing(itemData)}
+                                                        disabled={isUpdating}
+                                                        title="Muuda laoseisu"
+                                                    >
+                                                        ✏️
+                                                    </button>
+                                                )}
+                                                {/* Only show refill for limited stock items that aren't at max */}
+                                                {isPlayerCraftable && itemData.currentStock < 999 && (
                                                     <button
                                                         className="refill-btn"
-                                                        onClick={() => refillToMax(itemData.item.id, itemData.item.maxStock)}
-                                                        disabled={isUpdating || itemData.currentStock >= itemData.item.maxStock}
-                                                        title="Täida ladu maksimumini"
+                                                        onClick={() => refillToMax(itemData.item.id, 100)}
+                                                        disabled={isUpdating}
+                                                        title="Lisa 100 tükki laoseisu"
                                                     >
-                                                        {isUpdating ? '⏳' : '🔄'}
+                                                        {isUpdating ? '⏳' : '+100'}
                                                     </button>
+                                                )}
+                                                {itemData.hasUnlimitedStock && (
+                                                    <span className="unlimited-badge">∞</span>
                                                 )}
                                             </>
                                         )}
