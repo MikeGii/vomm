@@ -66,12 +66,7 @@ export class PositionProcessor {
 
     private async processPosition(position: any, unit: any): Promise<PositionInfo | null> {
         const isGroupLeaderPosition = position.id.startsWith('grupijuht_');
-        const isUnitLeaderPosition = position.id.startsWith('talituse_juht_');
-
-        // Skip unit leader positions for non-group leaders
-        if (isUnitLeaderPosition && !isGroupLeader(this.playerStats)) {
-            return null;
-        }
+        const isUnitLeaderPosition = position.id.startsWith('talituse_juht_');;
 
         const baseInfo = this.createBasePositionInfo(position, unit, isGroupLeaderPosition, isUnitLeaderPosition);
 
@@ -104,17 +99,21 @@ export class PositionProcessor {
     private async processUnitLeaderPosition(baseInfo: PositionInfo, position: any): Promise<PositionInfo> {
         this.processRequirements(baseInfo, position.requirements);
 
+        const hasLeader = await hasUnitLeader(position.departmentUnit || '');
+        if (hasLeader) {
+            const currentLeader = await getCurrentUnitLeader(position.departmentUnit || '');
+            baseInfo.availabilityStatus = 'Koht hõivatud';
+            baseInfo.missingRequirements.push(`Üksuses on juba talituse juht: ${currentLeader || 'Keegi'}`);
+            return baseInfo;
+        } else {
+            baseInfo.availabilityStatus = 'Koht saadaval';
+        }
+
         if (this.currentUnit === position.departmentUnit) {
-            const hasLeader = await hasUnitLeader(position.departmentUnit || '');
-            if (hasLeader) {
-                const currentLeader = await getCurrentUnitLeader(position.departmentUnit || '');
-                baseInfo.availabilityStatus = 'Koht hõivatud';
-                baseInfo.missingRequirements.push(`Üksuses on juba talituse juht: ${currentLeader || 'Keegi'}`);
-            } else {
-                baseInfo.availabilityStatus = 'Koht saadaval';
-                if (baseInfo.missingRequirements.length === 0) {
-                    baseInfo.canApply = true;
-                }
+            if (!isGroupLeader(this.playerStats)) {
+                baseInfo.missingRequirements.push('Pead olema grupijuht selles üksuses');
+            } else if (baseInfo.missingRequirements.length === 0) {
+                baseInfo.canApply = true;
             }
         } else {
             const unit = getUnitById(position.departmentUnit || '');

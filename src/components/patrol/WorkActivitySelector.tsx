@@ -34,7 +34,7 @@ export const WorkActivitySelector: React.FC<WorkActivitySelectorProps> = ({
                                                                           }) => {
     const selectedActivityData = activities.find(a => a.id === selectedActivity);
     const expectedRewards = selectedActivityData
-        ? calculateWorkRewards(selectedActivityData, selectedHours, playerRank)
+        ? calculateWorkRewards(selectedActivityData, selectedHours, playerRank, playerStats)
         : { experience: 0, money: 0 };
 
     // Check if player is a police officer (has rank)
@@ -120,7 +120,7 @@ export const WorkActivitySelector: React.FC<WorkActivitySelectorProps> = ({
                         {isPoliceOfficer && (
                             <div className="salary-info">
                                 <p className="salary-rate">
-                                    Tunnitasu: {calculateSalaryForOfficer(playerRank, 1)}€/tund ({playerRank})
+                                    Tunnitasu: {calculateSalaryForOfficer(playerRank, 1, playerStats)}€/tund ({playerRank})
                                 </p>
                             </div>
                         )}

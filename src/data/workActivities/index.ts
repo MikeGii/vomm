@@ -14,6 +14,7 @@ import { CRIME_ACTIVITIES } from './positions/crimes';
 import { getPlayerStatus as getPlayerStatusHelper } from './helpers/playerStatus';
 import { calculateWorkRewards as calculateWorkRewardsHelper, calculateSalaryForOfficer as calculateSalaryForOfficerHelper } from './helpers/rewards';
 import { getAvailableWorkActivities as getAvailableWorkActivitiesFilter, getWorkActivityById as getWorkActivityByIdFilter } from './helpers/filters';
+import {UNIT_LEADER_ACTIVITIES} from "./positions/unitLeaders";
 
 // Export types
 export type { WorkActivity, PlayerStatus, WorkRewards } from './types';
@@ -27,7 +28,8 @@ export const WORK_ACTIVITIES = [
     ...EMERGENCY_ACTIVITIES,
     ...K9_ACTIVITIES,
     ...CYBERCRIME_ACTIVITIES,
-    ...CRIME_ACTIVITIES
+    ...CRIME_ACTIVITIES,
+    ...UNIT_LEADER_ACTIVITIES
 ];
 
 // Export helper functions with original names

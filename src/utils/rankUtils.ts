@@ -1,6 +1,7 @@
 // src/utils/rankUtils.ts
 
 import {PlayerStats} from "../types";
+import {isGroupLeader, isUnitLeader} from "./playerStatus";
 
 export const getRankImagePath = (rank: string | null): string | null => {
     if (!rank) return null;
@@ -12,7 +13,11 @@ export const getRankImagePath = (rank: string | null): string | null => {
         'vaneminspektor': '/images/vaneminspektor.png',
         'üleminspektor': '/images/yleminspektor.png',
         'komissar': '/images/komissar.png',
-        'vanemkomissar': '/images/vanemkomissar.png'
+        'vanemkomissar': '/images/vanemkomissar.png',
+        'politseileitnant': '/images/politseileitnant.png',
+        'politseikapten': '/images/politseikapten.png',
+        'politseimajor': '/images/politseimajor.png',
+        'politseikolonelleitnant': '/images/politseikolonelleitnant.png'
     };
 
     // Convert to lowercase for case-insensitive matching
@@ -28,40 +33,30 @@ export const getRankImagePath = (rank: string | null): string | null => {
  */
 export const getCorrectRank = (playerStats: PlayerStats): string | null => {
     const hasGraduated = playerStats.completedCourses?.includes('lopueksam') || false;
+    if (!hasGraduated) return null;
 
-    // If not graduated, no rank
-    if (!hasGraduated) {
-        return null;
-    }
-
-    // Check if player is a group leader - this takes priority over level
-    const isGroupLeaderPosition = [
-        'grupijuht_patrol',
-        'grupijuht_investigation',
-        'grupijuht_emergency',
-        'grupijuht_k9',
-        'grupijuht_cyber',
-        'grupijuht_crimes'
-    ].includes(playerStats.policePosition || '');
-
-    // Group leaders are always Vanemkomissar regardless of level
-    if (isGroupLeaderPosition) {
-        return 'vanemkomissar';
-    }
-
-    // For non-group leaders, use level-based promotion
     const currentLevel = playerStats.level || 1;
 
-    if (currentLevel >= 80) {
-        return 'komissar';
-    } else if (currentLevel >= 60) {
-        return 'üleminspektor';
-    } else if (currentLevel >= 40) {
-        return 'vaneminspektor';
-    } else {
-        // Default rank after graduation
-        return 'inspektor';
+    // Unit Leaders - Highest priority
+    if (isUnitLeader(playerStats)) {
+        if (currentLevel >= 105) return 'politseikolonelleitnant';
+        if (currentLevel >= 95) return 'politseimajor';
+        return 'politseikapten'; // minimum for unit leaders
     }
+
+    // Group Leaders - Second priority
+    if (isGroupLeader(playerStats)) {
+        if (currentLevel >= 85) return 'politseikapten';
+        if (currentLevel >= 70) return 'politseileitnant';
+        return 'vanemkomissar'; // minimum for group leaders
+    }
+
+    // Standard workers - Level based
+    if (currentLevel >= 100) return 'vanemkomissar';
+    if (currentLevel >= 80) return 'komissar';
+    if (currentLevel >= 60) return 'üleminspektor';
+    if (currentLevel >= 40) return 'vaneminspektor';
+    return 'inspektor';
 };
 
 /**
