@@ -11,12 +11,6 @@ interface PlayerStatsEditorProps {
     onUserUpdated: (updatedUser: PlayerStats) => void;
 }
 
-interface EditableSection {
-    id: string;
-    title: string;
-    isOpen: boolean;
-}
-
 export const PlayerStatsEditor: React.FC<PlayerStatsEditorProps> = ({
                                                                         user,
                                                                         userId,
@@ -34,16 +28,6 @@ export const PlayerStatsEditor: React.FC<PlayerStatsEditorProps> = ({
         inventory: false,
         health: false
     });
-
-    const sections: EditableSection[] = [
-        { id: 'basic', title: 'Põhiandmed', isOpen: openSections.basic },
-        { id: 'police', title: 'Politseiandmed', isOpen: openSections.police },
-        { id: 'game', title: 'Mängustatistika', isOpen: openSections.game },
-        { id: 'training', title: 'Treening & Kursused', isOpen: openSections.training },
-        { id: 'work', title: 'Töö & Tervis', isOpen: openSections.work },
-        { id: 'inventory', title: 'Inventar (vaatamine)', isOpen: openSections.inventory },
-        { id: 'health', title: 'Tervis & Atribuudid', isOpen: openSections.health }
-    ];
 
     const toggleSection = (sectionId: string) => {
         setOpenSections(prev => ({

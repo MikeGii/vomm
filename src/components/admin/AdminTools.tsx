@@ -1,6 +1,5 @@
 // src/components/admin/AdminTools.tsx
 import React from 'react';
-import { useToast } from '../../contexts/ToastContext';
 import { CheatDetector } from './tools/CheatDetector';
 import { LevelRecalculator } from './tools/LevelRecalculator';
 import { WorkManager } from './tools/WorkManager';
@@ -8,7 +7,6 @@ import { CrimeInitializer } from './tools/CrimeInitializer';
 import '../../styles/components/admin/AdminTools.css';
 
 export const AdminTools: React.FC = () => {
-    const { showToast } = useToast();
 
     return (
         <div className="admin-tools">

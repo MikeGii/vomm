@@ -1,6 +1,7 @@
 // src/components/patrol/WorkActivitySelector.tsx
 import React from 'react';
-import { WorkActivity } from '../../types';
+import {PlayerStats, WorkActivity} from '../../types';
+import { CrimeImpactIndicator } from './CrimeImpactIndicator';
 import {calculateSalaryForOfficer, calculateWorkRewards} from '../../data/workActivities';
 import '../../styles/components/patrol/WorkActivitySelector.css';
 
@@ -15,6 +16,7 @@ interface WorkActivitySelectorProps {
     isTutorial?: boolean;
     isKadett?: boolean;
     playerRank?: string | null;
+    playerStats: PlayerStats;
 }
 
 export const WorkActivitySelector: React.FC<WorkActivitySelectorProps> = ({
@@ -28,6 +30,7 @@ export const WorkActivitySelector: React.FC<WorkActivitySelectorProps> = ({
                                                                               isTutorial = false,
                                                                               isKadett = false,
                                                                               playerRank = null,
+                                                                              playerStats
                                                                           }) => {
     const selectedActivityData = activities.find(a => a.id === selectedActivity);
     const expectedRewards = selectedActivityData
@@ -93,6 +96,14 @@ export const WorkActivitySelector: React.FC<WorkActivitySelectorProps> = ({
                             </div>
                         )}
                     </div>
+
+                    {/* ADD CRIME IMPACT INDICATOR */}
+                    {selectedActivityData && selectedHours > 0 && (
+                        <CrimeImpactIndicator
+                            playerStats={playerStats}
+                            selectedHours={selectedHours}
+                        />
+                    )}
 
                     <div className="rewards-preview">
                         <h4>Oodatav tasu:</h4>

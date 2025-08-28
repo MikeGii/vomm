@@ -1,6 +1,6 @@
 // src/services/DepartmentLeaderboardService.ts
 import { getLeaderboard } from './LeaderboardService';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { DEPARTMENT_UNITS } from '../data/departmentUnits';
 import { PREFECTURES } from '../data/prefectures';

@@ -1,5 +1,5 @@
 // src/components/training/CraftingInventory.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { InventoryItem } from '../../types';
 import { CRAFTING_INGREDIENTS } from '../../data/shop/craftingIngredients';
 import { getBaseIdFromInventoryId } from '../../utils/inventoryUtils';
@@ -28,13 +28,13 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
     };
 
     // Check if item can be sold (only produced items, not basic ingredients)
-    const canSellItem = (item: InventoryItem) => {
+    const canSellItem = useCallback((item: InventoryItem) => {
         const details = getItemDetails(item);
         if (!details) return false;
         return details.maxStock === 0;
-    };
+    }, []); // Empty dependency array since getItemDetails is likely stable
 
-    // Initialize quantity inputs when inventory changes
+// Initialize quantity inputs when inventory changes
     useEffect(() => {
         const updates: { [key: string]: string } = {};
         const quantityUpdates: { [key: string]: number } = {};
@@ -50,7 +50,7 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
             setSellQuantityInputs(prev => ({...prev, ...updates}));
             setSellQuantities(prev => ({...prev, ...quantityUpdates}));
         }
-    }, [inventory, sellQuantityInputs]);
+    }, [inventory, sellQuantityInputs, canSellItem]);
 
     const handleQuantityChange = (itemId: string, newQuantity: number, maxQuantity: number) => {
         if (newQuantity >= 1) {
