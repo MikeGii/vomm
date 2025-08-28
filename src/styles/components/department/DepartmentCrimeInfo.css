@@ -1,0 +1,240 @@
+/* src/styles/components/department/DepartmentCrimeInfo.css */
+.crime-info-compact {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.crime-info-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    z-index: 2;
+}
+
+.crime-info-icon {
+    font-size: 1.5rem;
+    min-width: 40px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.crime-info-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.crime-info-title {
+    color: #b0b0b0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.crime-info-percentage {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.crime-percentage-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    line-height: 1;
+    text-shadow: 0 0 10px currentColor;
+}
+
+.crime-info-department {
+    color: #888;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.crime-info-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: #333;
+    border-radius: 0 0 8px 8px;
+    overflow: hidden;
+}
+
+.crime-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, currentColor, rgba(255,255,255,0.1));
+    transition: all 0.8s ease;
+    position: relative;
+}
+
+.crime-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Laadimise olek */
+.crime-info-compact.loading {
+    opacity: 0.7;
+}
+
+.crime-info-compact.loading .crime-info-icon {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(0.95);
+    }
+}
+
+.crime-info-compact.loading .crime-progress-bar {
+    background: #4a90e2;
+    width: 100% !important;
+    animation: loadingBar 1.5s ease-in-out infinite;
+}
+
+@keyframes loadingBar {
+    0%, 100% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* Hover efekt */
+.crime-info-compact:hover {
+    border-color: #444;
+    background-color: #1e1e1e;
+    transform: translateY(-1px);
+    transition: all 0.3s ease;
+}
+
+.crime-info-compact:hover .crime-percentage-number {
+    text-shadow: 0 0 15px currentColor;
+}
+
+/* Mobiilne responsiivsus */
+@media (max-width: 768px) {
+    .crime-info-compact {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .crime-info-content {
+        gap: 0.75rem;
+    }
+
+    .crime-info-icon {
+        font-size: 1.25rem;
+        min-width: 35px;
+    }
+
+    .crime-info-title {
+        font-size: 0.8rem;
+    }
+
+    .crime-percentage-number {
+        font-size: 1.5rem;
+    }
+
+    .crime-info-department {
+        font-size: 0.8rem;
+    }
+
+    .crime-info-percentage {
+        flex-direction: column;
+        gap: 0.25rem;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .crime-info-compact {
+        padding: 0.5rem;
+    }
+
+    .crime-info-content {
+        gap: 0.5rem;
+    }
+
+    .crime-percentage-number {
+        font-size: 1.3rem;
+    }
+
+    .crime-info-icon {
+        font-size: 1.1rem;
+        min-width: 30px;
+    }
+}
+
+/* Erilised animatsioonid erinevate kuritegevuse tasemete jaoks */
+.crime-info-compact[data-crime-level="high"] {
+    box-shadow: 0 0 20px rgba(255, 56, 56, 0.1);
+}
+
+.crime-info-compact[data-crime-level="high"] .crime-info-icon {
+    animation: warning 2s ease-in-out infinite;
+}
+
+@keyframes warning {
+    0%, 100% {
+        transform: scale(1);
+    }
+    25% {
+        transform: scale(1.1);
+    }
+    75% {
+        transform: scale(0.95);
+    }
+}
+
+.crime-info-compact[data-crime-level="low"] {
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.05);
+}
+
+/* Tumeda režiimi tugi */
+@media (prefers-color-scheme: dark) {
+    .crime-info-compact {
+        background-color: #0f0f0f;
+        border-color: #2a2a2a;
+    }
+
+    .crime-info-compact:hover {
+        background-color: #141414;
+        border-color: #3a3a3a;
+    }
+}

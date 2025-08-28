@@ -1,8 +1,8 @@
 // src/components/department/DepartmentCrimeActivity.tsx
 import React, { useState, useEffect } from 'react';
 import { PlayerStats } from '../../types';
-import { getDepartmentCrimeStats } from '../../services/CrimeService';
-import { DepartmentCrimeStats } from '../../types/crimeActivity';
+import { getAllDepartmentData, findDepartmentCrimeStats } from '../../services/DepartmentLeaderboardService';
+import { DepartmentCrimeDisplay } from '../../types/crimeActivity';
 import '../../styles/components/department/DepartmentCrimeActivity.css';
 
 interface DepartmentCrimeActivityProps {
@@ -12,7 +12,7 @@ interface DepartmentCrimeActivityProps {
 export const DepartmentCrimeActivity: React.FC<DepartmentCrimeActivityProps> = ({
                                                                                     playerStats
                                                                                 }) => {
-    const [crimeStats, setCrimeStats] = useState<DepartmentCrimeStats | null>(null);
+    const [crimeStats, setCrimeStats] = useState<DepartmentCrimeDisplay | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -34,13 +34,6 @@ export const DepartmentCrimeActivity: React.FC<DepartmentCrimeActivityProps> = (
         return 'Väga madal';
     };
 
-    // Calculate days until next monthly reset
-    const getDaysUntilReset = (): number => {
-        const now = new Date();
-        const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-        return Math.ceil((nextMonth.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    };
-
     // Load crime stats for player's department
     useEffect(() => {
         const loadCrimeStats = async () => {
@@ -59,12 +52,11 @@ export const DepartmentCrimeActivity: React.FC<DepartmentCrimeActivityProps> = (
                 setLoading(true);
                 setError(null);
 
-                const stats = await getDepartmentCrimeStats(
-                    playerStats.department,
-                    playerStats.prefecture
-                );
+                // Kasuta uut optimeeritud teenust
+                const data = await getAllDepartmentData();
+                const departmentCrimeStats = findDepartmentCrimeStats(data, playerStats.department);
 
-                setCrimeStats(stats);
+                setCrimeStats(departmentCrimeStats);
             } catch (err) {
                 console.error('Error loading crime stats:', err);
                 setError('Viga kuritegevuse andmete laadimisel');
@@ -113,7 +105,7 @@ export const DepartmentCrimeActivity: React.FC<DepartmentCrimeActivityProps> = (
                     <h3>Kuritegevuse tase - {playerStats.department}</h3>
                 </div>
                 <div className="crime-reset-info">
-                    Lähtestamine: {getDaysUntilReset()} päeva pärast
+                    Lähtestamine: {crimeStats.daysUntilReset} päeva pärast
                 </div>
             </div>
 

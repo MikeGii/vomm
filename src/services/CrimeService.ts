@@ -269,44 +269,6 @@ export const updateCrimeLevelAfterWork = async (
 };
 
 /**
- * Get all departments' crime stats for display
- */
-export const getAllDepartmentCrimeStats = async (): Promise<DepartmentCrimeDisplay[]> => {
-    try {
-        const crimeCollection = collection(firestore, CRIME_COLLECTION);
-        const querySnapshot = await getDocs(crimeCollection);
-
-        const results: DepartmentCrimeDisplay[] = [];
-
-        for (const docSnap of querySnapshot.docs) {
-            const data = docSnap.data() as DepartmentCrimeStats;
-            const playerCount = await getDepartmentPlayerCount(data.departmentId);
-
-            // Calculate days until next monthly reset
-            const now = new Date();
-            const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-            const daysUntilReset = Math.ceil((nextMonth.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
-            results.push({
-                departmentId: data.departmentId,
-                prefecture: data.prefecture,
-                currentCrimeLevel: data.currentCrimeLevel,
-                playerCount,
-                lastUpdated: data.lastUpdated.toDate(),
-                daysUntilReset
-            });
-        }
-
-        // Sort by crime level (highest first)
-        return results.sort((a, b) => b.currentCrimeLevel - a.currentCrimeLevel);
-
-    } catch (error) {
-        console.error('Error getting all crime stats:', error);
-        return [];
-    }
-};
-
-/**
  * Manual daily crime increase (will be automated later)
  */
 export const increaseDailyCrime = async (): Promise<void> => {

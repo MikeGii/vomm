@@ -1,8 +1,7 @@
 // src/components/department/DepartmentLeaderboard.tsx
 import React, { useState, useEffect } from 'react';
 import { TabNavigation } from '../ui/TabNavigation';
-import { getDepartmentUnitScores, getPrefectureScores, DepartmentScore } from '../../services/DepartmentLeaderboardService';
-import { getAllDepartmentCrimeStats } from '../../services/CrimeService';
+import { getDepartmentUnitScores, getPrefectureScores, DepartmentScore, getAllDepartmentData } from '../../services/DepartmentLeaderboardService';
 import { DepartmentCrimeDisplay } from '../../types/crimeActivity';
 import '../../styles/components/department/DepartmentLeaderboard.css';
 
@@ -23,16 +22,17 @@ export const DepartmentLeaderboard: React.FC = () => {
         setCrimeStats([]); // Clear previous crime data
 
         try {
+            // PARANDATUD: kasuta ühtset andmete laadimist
+            const data = await getAllDepartmentData();
+
             if (view === 'crime') {
-                const crimeData = await getAllDepartmentCrimeStats();
-                // Sort by crime level (lowest first for leaderboard)
-                const sortedCrimeData = crimeData.sort((a, b) => a.currentCrimeLevel - b.currentCrimeLevel);
+                // PARANDATUD: võta crimeStats objektist ja sorteeri
+                const sortedCrimeData = data.crimeStats.sort((a, b) => a.currentCrimeLevel - b.currentCrimeLevel);
                 setCrimeStats(sortedCrimeData);
-            } else {
-                const data = view === 'units'
-                    ? await getDepartmentUnitScores()
-                    : await getPrefectureScores();
-                setScores(data);
+            } else if (view === 'units') {
+                setScores(data.unitScores);
+            } else { // prefectures
+                setScores(data.prefectureScores);
             }
         } catch (error) {
             console.error('Error loading department scores:', error);
@@ -42,6 +42,8 @@ export const DepartmentLeaderboard: React.FC = () => {
             setIsLoading(false);
         }
     };
+
+    // Ülejäänud kood jääb samaks...
 
     // Get crime level color
     const getCrimeColor = (crimeLevel: number): string => {
