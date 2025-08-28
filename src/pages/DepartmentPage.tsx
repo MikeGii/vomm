@@ -3,6 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { DepartmentHierarchy } from '../components/department/DepartmentHierarchy';
+import { DepartmentCrimeInfo } from '../components/department/DepartmentCrimeInfo';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { DepartmentTabs } from '../components/department/DepartmentTabs';
 import { DepartmentLeaderboard } from '../components/department/DepartmentLeaderboard';
@@ -85,6 +86,9 @@ const DepartmentPage: React.FC = () => {
 
                 {/* Department Hierarchy */}
                 <DepartmentHierarchy currentPlayerStats={playerStats} />
+
+                {/* Compact Crime Activity Info */}
+                <DepartmentCrimeInfo playerStats={playerStats} />
 
                 <DepartmentTabs
                     currentPlayerStats={playerStats}

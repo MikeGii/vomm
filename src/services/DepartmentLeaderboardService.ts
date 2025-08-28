@@ -23,9 +23,44 @@ export interface DepartmentScore {
 export interface DepartmentLeaderboardData {
     unitScores: DepartmentScore[];
     prefectureScores: DepartmentScore[];
+    departmentScores: DepartmentScore[];
     crimeStats: DepartmentCrimeDisplay[];
     lastUpdated: Date;
 }
+
+const calculateDepartmentScores = (players: any[]): DepartmentScore[] => {
+    const departmentScores: Record<string, DepartmentScore> = {};
+
+    // Initialize all departments from all prefectures
+    PREFECTURES.forEach(prefecture => {
+        prefecture.departments.forEach(department => {
+            if (department !== 'Sisekaitseakadeemia') { // Skip academy
+                departmentScores[department] = {
+                    id: department,
+                    name: department,
+                    type: 'unit', // Reusing type, or we could add 'department'
+                    score: 0,
+                    playerCount: 0
+                };
+            }
+        });
+    });
+
+    // Sum up reputation for each department
+    players.forEach(player => {
+        // Skip abipolitseinik and null positions
+        if (player.policePosition === 'abipolitseinik' || player.policePosition === null) return;
+
+        if (player.department && departmentScores[player.department]) {
+            departmentScores[player.department].score += player.reputation || 0;
+            departmentScores[player.department].playerCount += 1;
+        }
+    });
+
+    return Object.values(departmentScores)
+        .filter(score => score.score > 0) // Only show departments with players
+        .sort((a, b) => b.score - a.score);
+};
 
 // Get all possible department + unit combinations
 const getAllDepartmentUnitCombinations = (): Array<{id: string, department: string, unit: string}> => {
@@ -97,7 +132,6 @@ const calculateCrimeStatsFromPlayers = async (players: any[]): Promise<Departmen
 export const getAllDepartmentData = async (forceRefresh: boolean = false): Promise<DepartmentLeaderboardData> => {
     const cacheKey = 'department_leaderboard_data';
 
-    // Kontrolli cache'i
     if (!forceRefresh) {
         const cached = cacheManager.get<DepartmentLeaderboardData>(cacheKey, DEPARTMENT_CACHE_DURATION);
         if (cached) {
@@ -109,44 +143,43 @@ export const getAllDepartmentData = async (forceRefresh: boolean = false): Promi
     console.log('Loading fresh department leaderboard data from Firebase...');
 
     try {
-        // Laadi ainult mängijate andmed - see on ainus päring mis meil vaja!
         const players = await getLeaderboard(1000);
 
-        // Arvuta kõik andmed mängijate listist
-        const [unitScores, prefectureScores, crimeStats] = await Promise.all([
+        // Calculate all scores including the new department scores
+        const [unitScores, prefectureScores, departmentScores, crimeStats] = await Promise.all([
             Promise.resolve(calculateUnitScores(players)),
             Promise.resolve(calculatePrefectureScores(players)),
-            calculateCrimeStatsFromPlayers(players) // See teeb eraldi päringu kuritegevuse dokumentidele
+            Promise.resolve(calculateDepartmentScores(players)),
+            calculateCrimeStatsFromPlayers(players)
         ]);
 
         const data: DepartmentLeaderboardData = {
             unitScores,
             prefectureScores,
+            departmentScores,
             crimeStats,
             lastUpdated: new Date()
         };
 
-        // Salvesta cache'i
         cacheManager.set(cacheKey, data, DEPARTMENT_CACHE_DURATION);
 
-        console.log(`Department data cached: ${unitScores.length} units, ${prefectureScores.length} prefectures, ${crimeStats.length} crime stats`);
+        console.log(`Department data cached: ${unitScores.length} units, ${prefectureScores.length} prefectures, ${departmentScores.length} departments, ${crimeStats.length} crime stats`);
 
         return data;
 
     } catch (error) {
         console.error('Error loading department leaderboard data:', error);
 
-        // Tagasi stale cache vea korral
         const staleCache = cacheManager.get<DepartmentLeaderboardData>(cacheKey, Infinity);
         if (staleCache) {
             console.log('Returning stale cache due to error');
             return staleCache;
         }
 
-        // Tagasta tühjad andmed
         return {
             unitScores: [],
             prefectureScores: [],
+            departmentScores: [],
             crimeStats: [],
             lastUpdated: new Date()
         };
