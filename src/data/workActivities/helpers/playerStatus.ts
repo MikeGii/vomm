@@ -27,8 +27,13 @@ export const getPlayerStatus = (
     if (policePosition === 'grupijuht_cyber') return 'grupijuht_cyber';
     if (policePosition === 'grupijuht_crimes') return 'grupijuht_crimes';
 
-    // Higher positions work as patrullpolitseinik for now
-    if (policePosition === 'talituse_juht') return 'patrullpolitseinik';
+    // Unit leaders
+    if (policePosition === 'talituse_juht_patrol') return 'talituse_juht_patrol';
+    if (policePosition === 'talituse_juht_investigation') return 'talituse_juht_investigation';
+    if (policePosition === 'talituse_juht_emergency') return 'talituse_juht_emergency';
+    if (policePosition === 'talituse_juht_k9') return 'talituse_juht_k9';
+    if (policePosition === 'talituse_juht_cyber') return 'talituse_juht_cyber';
+    if (policePosition === 'talituse_juht_crimes') return 'talituse_juht_crimes';
 
     return 'unknown';
 };

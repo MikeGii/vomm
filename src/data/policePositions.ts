@@ -1,6 +1,9 @@
 // src/data/policePositions.ts
 export interface PolicePosition {
-    id: 'abipolitseinik' | 'kadett' | 'patrullpolitseinik' | 'uurija' | 'kiirreageerija' | 'koerajuht' | 'küberkriminalist' | 'jälitaja' | 'grupijuht_patrol' | 'grupijuht_investigation' | 'grupijuht_emergency' | 'grupijuht_k9' | 'grupijuht_cyber' | 'grupijuht_crimes' | 'talituse_juht';
+    id: 'abipolitseinik' | 'kadett' | 'patrullpolitseinik' | 'uurija' | 'kiirreageerija' | 'koerajuht'
+        | 'küberkriminalist' | 'jälitaja' | 'grupijuht_patrol' | 'grupijuht_investigation' | 'grupijuht_emergency'
+        | 'grupijuht_k9' | 'grupijuht_cyber' | 'grupijuht_crimes' | 'talituse_juht_patrol' | 'talituse_juht_investigation'
+        | 'talituse_juht_emergency' | 'talituse_juht_k9' | 'talituse_juht_cyber' | 'talituse_juht_crimes';
     name: string;
     departmentUnit?: string;
     requirements?: {
@@ -190,15 +193,113 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         }
     },
 
-    // Kõrgem juhtkond
+    // Talituse juhid (one per unit)
     {
-        id: 'talituse_juht',
-        name: 'Talitusejuht',
+        id: 'talituse_juht_patrol',
+        name: 'Talituse juht',
+        departmentUnit: 'patrol',
         requirements: {
-            minimumLevel: 70,
-            completedCourses: ['lopueksam', 'police_ground_leader_course', 'enhanced_law_studies'],
-            minimumWorkedHours: 200,
-            minimumReputation: 2500
+            minimumLevel: 85,
+            completedCourses: ['advanced_leader_course'],
+            minimumWorkedHours: 300,
+            minimumReputation: 8000,
+            attributes: {
+                strength: 200,
+                agility: 175,
+                dexterity: 175,
+                intelligence: 250,
+                endurance: 200
+            }
+        },
+    },
+    {
+        id: 'talituse_juht_investigation',
+        name: 'Talituse juht',
+        departmentUnit: 'procedural_service',
+        requirements: {
+            minimumLevel: 90,
+            completedCourses: ['advanced_leader_course', 'forensics_basics'],
+            minimumWorkedHours: 300,
+            minimumReputation: 8000,
+            attributes: {
+                strength: 175,
+                agility: 175,
+                dexterity: 225,
+                intelligence: 275,
+                endurance: 200
+            }
+        }
+    },
+    {
+        id: 'talituse_juht_emergency',
+        name: 'Talituse juht',
+        departmentUnit: 'emergency_response',
+        requirements: {
+            minimumLevel: 95,
+            completedCourses: ['advanced_leader_course'],
+            minimumWorkedHours: 300,
+            minimumReputation: 8000,
+            attributes: {
+                strength: 275,
+                agility: 225,
+                dexterity: 200,
+                intelligence: 250,
+                endurance: 250
+            }
+        }
+    },
+    {
+        id: 'talituse_juht_k9',
+        name: 'Talituse juht',
+        departmentUnit: 'k9_unit',
+        requirements: {
+            minimumLevel: 90,
+            completedCourses: ['advanced_leader_course', 'dog_specialist_course'],
+            minimumWorkedHours: 300,
+            minimumReputation: 9000,
+            attributes: {
+                strength: 225,
+                agility: 200,
+                dexterity: 200,
+                intelligence: 250,
+                endurance: 275
+            }
+        }
+    },
+    {
+        id: 'talituse_juht_cyber',
+        name: 'Talituse juht',
+        departmentUnit: 'cyber_crime',
+        requirements: {
+            minimumLevel: 95,
+            completedCourses: ['advanced_leader_course', 'cyber_crime_course', 'advanced_computer_skills'],
+            minimumWorkedHours: 300,
+            minimumReputation: 9000,
+            attributes: {
+                strength: 175,
+                agility: 200,
+                dexterity: 175,
+                intelligence: 275,
+                endurance: 200
+            }
+        }
+    },
+    {
+        id: 'talituse_juht_crimes',
+        name: 'Talituse juht',
+        departmentUnit: 'crime_unit',
+        requirements: {
+            minimumLevel: 95,
+            completedCourses: ['advanced_leader_course', 'forensics_basics'],
+            minimumWorkedHours: 300,
+            minimumReputation: 9000,
+            attributes: {
+                strength: 225,
+                agility: 200,
+                dexterity: 225,
+                intelligence: 250,
+                endurance: 200
+            }
         }
     }
 ];

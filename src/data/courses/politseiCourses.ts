@@ -246,6 +246,39 @@ export const POLITSEI_COURSES: Course[] = [
 
     },
     {
+        id: 'dog_specialist_course',
+        name: 'Koerte treeningu ja aretaja spetsialisti koolitus',
+        description: 'Täiendõpe koerte treenerikvalifikatsiooni saamiseks. Õpid tundma koerte kõiki liike, nende omadusi ja käitumismustreid',
+        duration: 18000,
+        requirements: {
+            level: 65,
+            completedCourses: ['dog_handler_course'],
+            totalWorkedHours: 120
+        },
+        rewards: {
+            experience: 6500,
+            reputation: 450,
+            money: 3000,
+            grantsAbility: 'doggys_trainer',
+        },
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Milline omadus on teenistuskoera jaoks kõige olulisem?',
+            answers: [
+                'Kiirus ja vastupidavus rasketeks ülesanneteks',
+                'Kuulekus ja koostöövalmidus oma juhiga',
+                'Koera iseseisvus ilma juhita ka tegutseda',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 1000,
+                money: 750,
+                reputation: 125,
+            }
+        }
+
+    },
+    {
         id: 'basic_computer_course',
         name: 'Arvutisüsteemide algkoolitus',
         description: 'Baasõpe ja sissejuhatus IT süsteemidesse',
@@ -515,5 +548,67 @@ export const POLITSEI_COURSES: Course[] = [
                 reputation: 200,
             }
         }
-    }
+    },
+    {
+        id: 'personal_systems_course',
+        name: 'Personalitöö ja tööaja arvestamise algkursus',
+        description: 'Algkursus tundmaks personalitöö põhimõtteid ja tööaja arvestamist ja töötajate graafiku koostamist',
+        duration: 14400,
+        requirements: {
+            level: 75,
+            completedCourses: ['police_group_leader_course_advanced'],
+            totalWorkedHours: 150
+        },
+        rewards: {
+            experience: 12000,
+            reputation: 600,
+            money: 4500,
+        },
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Milline seadus reguleerib töötaja töö tegemise aega ja palga maksmise korda?',
+            answers: [
+                'Töö- ja puhkeaja seadus',
+                'Töölepingu seadus',
+                'Töötamise seadus',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 1500,
+                money: 500,
+                reputation: 250,
+            }
+        }
+    },
+    {
+        id: 'advanced_leader_course',
+        name: 'Keskastme juhtide algkoolitus',
+        description: 'Algkoolitus õppimaks juhtima suuremat struktuuri koos allüksuste ja nende juhtidega',
+        duration: 28800,
+        requirements: {
+            level: 85,
+            completedCourses: ['police_group_leader_course_advanced', 'personal_systems_course'],
+            totalWorkedHours: 200
+        },
+        rewards: {
+            experience: 30000,
+            reputation: 2000,
+            money: 15000,
+        },
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Milline juhtimisstiil sobib kõige paremini olukorras, kus allüksus peab kiiresti reageerima ootamatule sündmusele?',
+            answers: [
+                'Autokraatlik - kiire otsuste tegemine ja selged käsud',
+                'Demokraatlik – otsuste arutamine kogu meeskonnaga',
+                'Laissez-faire – lasta meeskonnal ise otsuseid teha',
+            ],
+            correctAnswerIndex: 0,
+            rewards: {
+                experience: 3000,
+                money: 2000,
+                reputation: 400,
+            }
+        }
+    },
 ];

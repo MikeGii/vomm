@@ -111,7 +111,12 @@ export interface PlayerStats {
         | 'grupijuht_k9'
         | 'grupijuht_cyber'
         | 'grupijuht_crimes'
-        | 'talituse_juht'
+        | 'talituse_juht_patrol'
+        | 'talituse_juht_investigation'
+        | 'talituse_juht_emergency'
+        | 'talituse_juht_k9'
+        | 'talituse_juht_cyber'
+        | 'talituse_juht_crimes'
         | null;
     badgeNumber: string | null;
     isEmployed: boolean;
@@ -210,7 +215,7 @@ export interface WorkActivity {
     baseExpPerHour: number;
     expGrowthRate: number; // percentage as decimal (0.15 for 15%)
     maxHours: number;
-    allowedFor?: (
+    allowedFor: (
         | 'kadett'
         | 'abipolitseinik'
         | 'patrullpolitseinik'
@@ -225,6 +230,12 @@ export interface WorkActivity {
         | 'grupijuht_k9'
         | 'grupijuht_cyber'
         | 'grupijuht_crimes'
+        | 'talituse_juht_patrol'
+        | 'talituse_juht_investigation'
+        | 'talituse_juht_emergency'
+        | 'talituse_juht_k9'
+        | 'talituse_juht_cyber'
+        | 'talituse_juht_crimes'
         )[];
     moneyReward?: number;
 }

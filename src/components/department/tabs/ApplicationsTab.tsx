@@ -7,6 +7,8 @@ import { getPositionById } from '../../../data/policePositions';
 import {
     getPositionDepartmentUnit,
     getGroupLeaderPositionForUnit,
+    getUnitLeaderPositionForUnit,
+    isGroupLeader
 } from '../../../utils/playerStatus';
 import { useToast } from '../../../contexts/ToastContext';
 import '../../../styles/components/department/tabs/ApplicationsTab.css';
@@ -32,6 +34,7 @@ interface ApplicationData {
     expiresAt: Date;
     status: 'pending' | 'approved' | 'rejected';
     votes: ApplicationVote[];
+    applicationType: 'group_leader' | 'unit_leader';
     applicantData: {
         level: number;
         totalWorkedHours: number;
@@ -53,65 +56,179 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
     const [applications, setApplications] = useState<ApplicationData[]>([]);
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState<string | null>(null);
+    const [selectedCategory, setSelectedCategory] = useState<'all' | 'group_leader' | 'unit_leader'>('all');
+    const [error, setError] = useState<string | null>(null);
 
     const { showToast } = useToast();
 
-    const loadApplications = useCallback(async () => {
-        // Only group leaders can see applications
-        if (!playerStats.policePosition?.startsWith('grupijuht_')) {
-            setLoading(false);
-            return;
-        }
-
-        const currentUnit = getPositionDepartmentUnit(playerStats.policePosition);
-        if (!currentUnit) {
-            setLoading(false);
-            return;
-        }
-
-        const myGroupLeaderPosition = getGroupLeaderPositionForUnit(currentUnit);
-        if (!myGroupLeaderPosition) {
-            setLoading(false);
-            return;
-        }
-
-        setLoading(true);
-
+    // Safe date processing function
+    const safeToDate = (firebaseDate: any): Date => {
         try {
-            // Get all pending applications for the group leader position in my unit
-            const applicationsQuery = query(
-                collection(firestore, 'applications'),
-                where('positionId', '==', myGroupLeaderPosition),
-                where('status', '==', 'pending')
+            if (firebaseDate && typeof firebaseDate.toDate === 'function') {
+                return firebaseDate.toDate();
+            } else if (firebaseDate instanceof Date) {
+                return firebaseDate;
+            } else if (firebaseDate && firebaseDate.seconds) {
+                // Handle Firestore timestamp format
+                return new Date(firebaseDate.seconds * 1000);
+            } else {
+                return new Date();
+            }
+        } catch (error) {
+            console.warn('Error processing date:', error);
+            return new Date();
+        }
+    };
+
+    // Safe vote processing function
+    const processVotes = (votes: any[]): ApplicationVote[] => {
+        if (!Array.isArray(votes)) {
+            return [];
+        }
+
+        return votes
+            .filter(vote => vote && vote.voterId) // Filter out invalid votes
+            .map(vote => ({
+                voterId: vote.voterId || '',
+                voterName: vote.voterName || vote.voterId || 'Tundmatu',
+                vote: vote.vote === 'approve' || vote.vote === 'reject' ? vote.vote : 'approve',
+                votedAt: safeToDate(vote.votedAt)
+            }));
+    };
+
+    const loadApplications = useCallback(async () => {
+        try {
+            setError(null);
+
+            // Only group leaders can see applications
+            if (!isGroupLeader(playerStats)) {
+                setLoading(false);
+                return;
+            }
+
+            const currentUnit = getPositionDepartmentUnit(playerStats.policePosition);
+            if (!currentUnit) {
+                setLoading(false);
+                return;
+            }
+
+            const myGroupLeaderPosition = getGroupLeaderPositionForUnit(currentUnit);
+            const unitLeaderPosition = getUnitLeaderPositionForUnit(currentUnit);
+
+            if (!myGroupLeaderPosition) {
+                setLoading(false);
+                return;
+            }
+
+            setLoading(true);
+
+            const queries = [];
+
+            // Query for group leader applications
+            queries.push(
+                getDocs(query(
+                    collection(firestore, 'applications'),
+                    where('positionId', '==', myGroupLeaderPosition),
+                    where('status', '==', 'pending')
+                ))
             );
 
-            const querySnapshot = await getDocs(applicationsQuery);
+            // Query for unit leader applications if position exists
+            if (unitLeaderPosition) {
+                queries.push(
+                    getDocs(query(
+                        collection(firestore, 'applications'),
+                        where('positionId', '==', unitLeaderPosition),
+                        where('status', '==', 'pending')
+                    ))
+                );
+            }
+
+            const queryResults = await Promise.all(queries);
             const loadedApplications: ApplicationData[] = [];
 
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                const position = getPositionById(data.positionId);
+            // Process group leader applications
+            queryResults[0].forEach((doc) => {
+                try {
+                    const data = doc.data();
+                    const position = getPositionById(data.positionId);
 
-                loadedApplications.push({
-                    id: doc.id,
-                    applicantId: data.applicantId,
-                    applicantUserId: data.applicantUserId,
-                    positionId: data.positionId,
-                    positionName: position?.name || 'Tundmatu positsioon',
-                    appliedAt: data.appliedAt?.toDate() || new Date(),
-                    expiresAt: data.expiresAt?.toDate() || new Date(),
-                    status: data.status || 'pending',
-                    votes: data.votes || [],
-                    applicantData: data.applicantData || {}
-                });
+                    if (data && doc.id) {
+                        loadedApplications.push({
+                            id: doc.id,
+                            applicantId: data.applicantId || '',
+                            applicantUserId: data.applicantUserId || '',
+                            positionId: data.positionId || '',
+                            positionName: position?.name || 'Tundmatu positsioon',
+                            appliedAt: safeToDate(data.appliedAt),
+                            expiresAt: safeToDate(data.expiresAt),
+                            status: data.status || 'pending',
+                            votes: processVotes(data.votes),
+                            applicationType: 'group_leader',
+                            applicantData: data.applicantData || {
+                                level: 0,
+                                totalWorkedHours: 0,
+                                reputation: 0,
+                                completedCourses: [],
+                                currentPosition: '',
+                                currentUnit: ''
+                            }
+                        });
+                    }
+                } catch (docError) {
+                    console.error('Error processing group leader application doc:', docError);
+                }
             });
 
+            // Process unit leader applications if they exist
+            if (queryResults[1]) {
+                queryResults[1].forEach((doc) => {
+                    try {
+                        const data = doc.data();
+                        const position = getPositionById(data.positionId);
+
+                        if (data && doc.id) {
+                            loadedApplications.push({
+                                id: doc.id,
+                                applicantId: data.applicantId || '',
+                                applicantUserId: data.applicantUserId || '',
+                                positionId: data.positionId || '',
+                                positionName: position?.name || 'Tundmatu positsioon',
+                                appliedAt: safeToDate(data.appliedAt),
+                                expiresAt: safeToDate(data.expiresAt),
+                                status: data.status || 'pending',
+                                votes: processVotes(data.votes),
+                                applicationType: 'unit_leader',
+                                applicantData: data.applicantData || {
+                                    level: 0,
+                                    totalWorkedHours: 0,
+                                    reputation: 0,
+                                    completedCourses: [],
+                                    currentPosition: '',
+                                    currentUnit: ''
+                                }
+                            });
+                        }
+                    } catch (docError) {
+                        console.error('Error processing unit leader application doc:', docError);
+                    }
+                });
+            }
+
             // Sort by application date (newest first)
-            loadedApplications.sort((a, b) => b.appliedAt.getTime() - a.appliedAt.getTime());
+            loadedApplications.sort((a, b) => {
+                try {
+                    return b.appliedAt.getTime() - a.appliedAt.getTime();
+                } catch (sortError) {
+                    console.warn('Error sorting applications:', sortError);
+                    return 0;
+                }
+            });
 
             setApplications(loadedApplications);
         } catch (error) {
             console.error('Error loading applications:', error);
+            setError('Viga avalduste laadimisel');
             showToast('Viga avalduste laadimisel', 'error');
             setApplications([]);
         } finally {
@@ -124,7 +241,9 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
     }, [loadApplications]);
 
     const handleVote = async (applicationId: string, vote: 'approve' | 'reject') => {
-        if (!applicationId || processing) return;
+        if (!applicationId || processing || !playerStats?.username) {
+            return;
+        }
 
         setProcessing(applicationId);
 
@@ -139,10 +258,18 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
             }
 
             const currentApp = applicationDoc.data();
-            const existingVotes = currentApp.votes || [];
+            if (!currentApp) {
+                showToast('Avalduse andmed on vigased', 'error');
+                return;
+            }
+
+            const existingVotes = Array.isArray(currentApp.votes) ? currentApp.votes : [];
 
             // Check if user already voted
-            const userAlreadyVoted = existingVotes.some((v: any) => v.voterId === playerStats.username);
+            const userAlreadyVoted = existingVotes.some((v: any) =>
+                v && v.voterId === playerStats.username
+            );
+
             if (userAlreadyVoted) {
                 showToast('Sa oled juba hääletanud', 'warning');
                 return;
@@ -164,8 +291,15 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
 
             showToast(`Hääl edukalt esitatud: ${vote === 'approve' ? 'Toetatakse' : 'Ei toetata'}`, 'success');
 
-            // Refresh applications list
-            loadApplications();
+            // Add delay and error handling for reload
+            setTimeout(async () => {
+                try {
+                    await loadApplications();
+                } catch (reloadError) {
+                    console.error('Error reloading applications:', reloadError);
+                    // Don't show error toast for reload failures
+                }
+            }, 300);
 
         } catch (error) {
             console.error('Error submitting vote:', error);
@@ -175,31 +309,84 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
         }
     };
 
+    const getFilteredApplications = () => {
+        try {
+            return applications.filter(app => {
+                if (!app || !app.id) return false;
+
+                switch (selectedCategory) {
+                    case 'group_leader':
+                        return app.applicationType === 'group_leader';
+                    case 'unit_leader':
+                        return app.applicationType === 'unit_leader';
+                    default:
+                        return true;
+                }
+            });
+        } catch (error) {
+            console.error('Error filtering applications:', error);
+            return [];
+        }
+    };
+
+    const getCategoryCount = (category: string): number => {
+        try {
+            switch (category) {
+                case 'group_leader':
+                    return applications.filter(app => app?.applicationType === 'group_leader').length;
+                case 'unit_leader':
+                    return applications.filter(app => app?.applicationType === 'unit_leader').length;
+                default:
+                    return applications.length;
+            }
+        } catch (error) {
+            console.error('Error counting applications:', error);
+            return 0;
+        }
+    };
+
     const formatDate = (date: Date): string => {
-        return date.toLocaleDateString('et-EE', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        try {
+            if (!(date instanceof Date) || isNaN(date.getTime())) {
+                return 'Tundmatu kuupäev';
+            }
+            return date.toLocaleDateString('et-EE', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (error) {
+            console.warn('Error formatting date:', error);
+            return 'Tundmatu kuupäev';
+        }
     };
 
     const formatTimeRemaining = (expiresAt: Date): string => {
-        const now = new Date();
-        const timeLeft = expiresAt.getTime() - now.getTime();
+        try {
+            if (!(expiresAt instanceof Date) || isNaN(expiresAt.getTime())) {
+                return 'Tundmatu';
+            }
 
-        if (timeLeft <= 0) {
-            return 'Aegunud';
+            const now = new Date();
+            const timeLeft = expiresAt.getTime() - now.getTime();
+
+            if (timeLeft <= 0) {
+                return 'Aegunud';
+            }
+
+            const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+            const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+
+            if (hoursLeft > 0) {
+                return `${hoursLeft}h ${minutesLeft}m`;
+            }
+            return `${minutesLeft}m`;
+        } catch (error) {
+            console.warn('Error calculating time remaining:', error);
+            return 'Tundmatu';
         }
-
-        const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
-        const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-
-        if (hoursLeft > 0) {
-            return `${hoursLeft}h ${minutesLeft}m`;
-        }
-        return `${minutesLeft}m`;
     };
 
     const getAttributeDisplayName = (attrName: string): string => {
@@ -213,8 +400,23 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
         return attrNames[attrName] || attrName;
     };
 
+    // Error state
+    if (error) {
+        return (
+            <div className="applications-tab">
+                <div className="error-state">
+                    <div className="error-icon">⚠️</div>
+                    <div className="error-text">{error}</div>
+                    <button onClick={loadApplications} className="retry-btn">
+                        Proovi uuesti
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     // Only show for group leaders
-    if (!playerStats.policePosition?.startsWith('grupijuht_')) {
+    if (!isGroupLeader(playerStats)) {
         return (
             <div className="applications-tab">
                 <div className="no-access">
@@ -235,43 +437,71 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
         );
     }
 
+    const filteredApplications = getFilteredApplications();
+
     return (
         <div className="applications-tab">
             <div className="tab-header">
                 <h3>Avaldused minu üksusesse</h3>
-                <div className="applications-summary">
-                    <span className="summary-item">
-                        Ootel avaldused: {applications.length}
-                    </span>
+                <div className="category-filters">
+                    <button
+                        className={`filter-btn ${selectedCategory === 'all' ? 'active' : ''}`}
+                        onClick={() => setSelectedCategory('all')}
+                    >
+                        Kõik ({getCategoryCount('all')})
+                    </button>
+                    <button
+                        className={`filter-btn ${selectedCategory === 'group_leader' ? 'active' : ''}`}
+                        onClick={() => setSelectedCategory('group_leader')}
+                    >
+                        Grupijuhid ({getCategoryCount('group_leader')})
+                    </button>
+                    <button
+                        className={`filter-btn ${selectedCategory === 'unit_leader' ? 'active' : ''}`}
+                        onClick={() => setSelectedCategory('unit_leader')}
+                    >
+                        Talituse juhid ({getCategoryCount('unit_leader')})
+                    </button>
                 </div>
             </div>
 
-            {applications.length === 0 ? (
+            {filteredApplications.length === 0 ? (
                 <div className="no-applications">
                     <div className="no-applications-icon">📄</div>
                     <div className="no-applications-text">
-                        Praegu pole ootel olevaid avaldusi
+                        {selectedCategory === 'all' ?
+                            'Praegu pole ootel olevaid avaldusi' :
+                            'Selles kategoorias pole avaldusi'
+                        }
                     </div>
                     <div className="no-applications-hint">
-                        Avaldused ilmuvad siia, kui keegi kandideerib grupijuhi positsioonile sinu üksuses.
+                        Avaldused ilmuvad siia, kui keegi kandideerib {selectedCategory === 'unit_leader' ? 'talituse juhi' : selectedCategory === 'group_leader' ? 'grupijuhi' : ''} positsioonile sinu üksuses.
                     </div>
                 </div>
             ) : (
                 <div className="applications-list">
-                    {applications.map(application => {
-                        const userVote = application.votes?.find(vote => vote.voterId === playerStats.username);
-                        const approveVotes = application.votes?.filter(vote => vote.vote === 'approve').length || 0;
-                        const rejectVotes = application.votes?.filter(vote => vote.vote === 'reject').length || 0;
+                    {filteredApplications.map(application => {
+                        if (!application || !application.id) {
+                            return null;
+                        }
+
+                        const votes = Array.isArray(application.votes) ? application.votes : [];
+                        const userVote = votes.find(vote => vote?.voterId === playerStats.username);
+                        const approveVotes = votes.filter(vote => vote?.vote === 'approve').length;
+                        const rejectVotes = votes.filter(vote => vote?.vote === 'reject').length;
                         const timeRemaining = formatTimeRemaining(application.expiresAt);
-                        const isExpired = new Date() > application.expiresAt;
+                        const isExpired = application.expiresAt && new Date() > application.expiresAt;
 
                         return (
                             <div key={application.id} className="application-card">
                                 <div className="application-header">
                                     <div className="applicant-info">
-                                        <h4 className="applicant-name">{application.applicantId}</h4>
+                                        <h4 className="applicant-name">{application.applicantId || 'Tundmatu'}</h4>
                                         <div className="application-position">
                                             Kandideerib: {application.positionName}
+                                            <span className={`position-type-badge ${application.applicationType}`}>
+                                                {application.applicationType === 'unit_leader' ? 'Talituse juht' : 'Grupijuht'}
+                                            </span>
                                         </div>
                                         <div className="application-date">
                                             Avaldus esitatud: {formatDate(application.appliedAt)}
@@ -316,32 +546,33 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
                                     </div>
                                 </div>
 
+                                {/* Rest of the application details with safe rendering */}
                                 <div className="applicant-details">
                                     <div className="details-section">
                                         <h5>Kandidaadi andmed</h5>
                                         <div className="details-grid">
                                             <div className="detail-item">
                                                 <span className="detail-label">Tase:</span>
-                                                <span className="detail-value">{application.applicantData.level}</span>
+                                                <span className="detail-value">{application.applicantData?.level || 0}</span>
                                             </div>
                                             <div className="detail-item">
                                                 <span className="detail-label">Töötunnid:</span>
-                                                <span className="detail-value">{application.applicantData.totalWorkedHours} tundi</span>
+                                                <span className="detail-value">{application.applicantData?.totalWorkedHours || 0} tundi</span>
                                             </div>
                                             <div className="detail-item">
                                                 <span className="detail-label">Maine:</span>
-                                                <span className="detail-value">{application.applicantData.reputation}</span>
+                                                <span className="detail-value">{application.applicantData?.reputation || 0}</span>
                                             </div>
                                             <div className="detail-item">
                                                 <span className="detail-label">Praegune positsioon:</span>
                                                 <span className="detail-value">
-                                                    {getPositionById(application.applicantData.currentPosition)?.name || 'Tundmatu'}
+                                                    {getPositionById(application.applicantData?.currentPosition)?.name || 'Tundmatu'}
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {application.applicantData.attributes && (
+                                    {application.applicantData?.attributes && (
                                         <div className="details-section">
                                             <h5>Atribuudid</h5>
                                             <div className="attributes-grid">
@@ -350,14 +581,14 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
                                                         <span className="attribute-label">
                                                             {getAttributeDisplayName(attr)}:
                                                         </span>
-                                                        <span className="attribute-value">{value}</span>
+                                                        <span className="attribute-value">{value || 0}</span>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
                                     )}
 
-                                    {application.applicantData.completedCourses && application.applicantData.completedCourses.length > 0 && (
+                                    {application.applicantData?.completedCourses && application.applicantData.completedCourses.length > 0 && (
                                         <div className="details-section">
                                             <h5>Lõpetatud koolitused ({application.applicantData.completedCourses.length})</h5>
                                             <div className="courses-list">
@@ -375,13 +606,13 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
                                         </div>
                                     )}
 
-                                    {application.votes && application.votes.length > 0 && (
+                                    {votes.length > 0 && (
                                         <div className="details-section">
-                                            <h5>Hääled ({application.votes.length})</h5>
+                                            <h5>Hääled ({votes.length})</h5>
                                             <div className="votes-list">
-                                                {application.votes.map((vote, index) => (
+                                                {votes.map((vote, index) => (
                                                     <div key={index} className={`vote-item ${vote.vote}`}>
-                                                        <span className="vote-user">{vote.voterName}</span>
+                                                        <span className="vote-user">{vote.voterName || 'Tundmatu'}</span>
                                                         <span className="vote-decision">
                                                             {vote.vote === 'approve' ? '👍 Toetab' : '👎 Ei toeta'}
                                                         </span>

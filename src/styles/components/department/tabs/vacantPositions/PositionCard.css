@@ -1,0 +1,118 @@
+/* src/styles/components/department/tabs/vacantPositions/PositionCard.css */
+.position-card-compact {
+    background-color: #222;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.position-card-compact:hover {
+    border-color: #4a90e2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.1);
+}
+
+.position-header-compact {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.position-info-compact {
+    flex: 1;
+}
+
+.position-name-compact {
+    margin: 0 0 0.5rem 0;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.position-unit-compact {
+    color: #4a90e2;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.leader-badge-compact {
+    display: inline-block;
+    background-color: #ff6b35;
+    color: white;
+    padding: 0.2rem 0.4rem;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.leader-badge-compact.unit-leader {
+    background-color: #6f42c1;
+}
+
+.position-actions-compact {
+    flex-shrink: 0;
+}
+
+.see-more-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    min-width: 120px;
+}
+
+.see-more-btn.available {
+    background-color: #4a90e2;
+    color: white;
+}
+
+.see-more-btn.available:hover {
+    background-color: #357abd;
+}
+
+.see-more-btn.current-position {
+    background-color: #28a745;
+    color: white;
+    cursor: not-allowed;
+}
+
+.see-more-btn:disabled {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .position-header-compact {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .see-more-btn {
+        width: 100%;
+        min-width: unset;
+    }
+}
+
+@media (max-width: 480px) {
+    .position-name-compact {
+        font-size: 0.95rem;
+    }
+
+    .position-unit-compact {
+        font-size: 0.8rem;
+    }
+
+    .see-more-btn {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+}
