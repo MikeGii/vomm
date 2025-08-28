@@ -5,7 +5,7 @@ export const VIP_ITEMS: ShopItem[] = [
     {
         id: 'vip_work_time_booster',
         name: 'Tööaeg 90%',
-        description: 'Lühendab aktiivset tööaega 95%',
+        description: 'Lühendab aktiivset tööaega 90%',
         category: 'vip',
         price: 0,
         pollidPrice: 20,
@@ -21,7 +21,7 @@ export const VIP_ITEMS: ShopItem[] = [
     {
         id: 'vip_course_time_booster',
         name: 'Kursus 90%',
-        description: 'Lühendab aktiivset kursust 95%',
+        description: 'Lühendab aktiivset kursust 90%',
         category: 'vip',
         price: 0,
         pollidPrice: 20,
