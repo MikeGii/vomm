@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Timestamp } from 'firebase/firestore';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
+import { Pagination } from '../components/ui/Pagination';
 import { HealthDisplay } from '../components/patrol/HealthDisplay';
 import { DepartmentSelector } from '../components/patrol/DepartmentSelector';
 import { WorkActivitySelector } from '../components/patrol/WorkActivitySelector';
@@ -47,6 +48,9 @@ const PatrolPage: React.FC = () => {
     const [isStartingWork, setIsStartingWork] = useState(false);
     const [remainingTime, setRemainingTime] = useState<number>(0);
     const [workHistory, setWorkHistory] = useState<any[]>([]);
+    const [workHistoryTotalCount, setWorkHistoryTotalCount] = useState<number>(0);
+    const [workHistoryCurrentPage, setWorkHistoryCurrentPage] = useState<number>(1);
+    const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(false);
     const [pendingEvent, setPendingEvent] = useState<WorkEvent | null>(null);
     const [eventDocumentId, setEventDocumentId] = useState<string | null>(null);
     const [isProcessingEvent, setIsProcessingEvent] = useState(false);
@@ -64,16 +68,26 @@ const PatrolPage: React.FC = () => {
     }, [playerStats]);
 
     // Load work history
-    const loadWorkHistory = useCallback(async () => {
+    const loadWorkHistory = useCallback(async (page: number = 1) => {
         if (!currentUser) return;
 
         try {
-            const history = await getWorkHistory(currentUser.uid, 10);
-            setWorkHistory(history);
+            setIsLoadingHistory(true);
+            const result = await getWorkHistory(currentUser.uid, page, 10);
+            setWorkHistory(result.entries);
+            setWorkHistoryTotalCount(result.totalCount);
+            setWorkHistoryCurrentPage(page);
         } catch (error) {
             console.error('Error loading work history:', error);
+            showToast('Viga tööajaloo laadimisel', 'error');
+        } finally {
+            setIsLoadingHistory(false);
         }
-    }, [currentUser]);
+    }, [currentUser, showToast]);
+
+    const handleWorkHistoryPageChange = useCallback((page: number) => {
+        loadWorkHistory(page);
+    }, [loadWorkHistory]);
 
     // Check for active events - with protection against multiple calls
     const checkForEvents = useCallback(async () => {
@@ -432,7 +446,13 @@ const PatrolPage: React.FC = () => {
                     </div>
                 )}
 
-                <WorkHistory history={workHistory} />
+                <WorkHistory
+                    history={workHistory}
+                    isLoading={isLoadingHistory}
+                    currentPage={workHistoryCurrentPage}
+                    totalCount={workHistoryTotalCount}
+                    onPageChange={handleWorkHistoryPageChange}
+                />
 
                 {pendingEvent && (
                     <EventModal

@@ -75,3 +75,18 @@
         display: none;
     }
 }
+
+.loading-history {
+    color: #888;
+    text-align: center;
+    padding: 2rem;
+}
+
+.loading-history p {
+    margin: 0;
+}
+
+/* Pagination spacing */
+.work-history .pagination-container {
+    margin-top: 1.5rem;
+}
