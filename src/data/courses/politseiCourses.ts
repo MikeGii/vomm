@@ -145,7 +145,21 @@ export const POLITSEI_COURSES: Course[] = [
             reputation: 200,
             money: 1500,
         },
-        category: 'politsei'
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Mis on drooni lennutamise maksimaalne lubatud kõrgus Eestis?',
+            answers: [
+                '80m',
+                '120m',
+                '150m',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 400,
+                money: 300,
+                reputation: 75,
+            }
+        }
     },
     {
         id: 'police_atv_course',
@@ -180,7 +194,22 @@ export const POLITSEI_COURSES: Course[] = [
             money: 2000,
             grantsAbility: 'doggys_favorite',
         },
-        category: 'politsei'
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Miks on Spanjel hea koeratõug narkootiliste ainete otsimisel?',
+            answers: [
+                'Hea üldise haistingu tunnetusega ja kiire',
+                'Spanjelil on eriline haisting narkootiliste ainete otsimisel',
+                'Väikest tõugu koer mahub kitsastesse kohtadesse',
+            ],
+            correctAnswerIndex: 2,
+            rewards: {
+                experience: 500,
+                money: 500,
+                reputation: 75,
+            }
+        }
+
     },
     {
         id: 'basic_computer_course',
@@ -197,7 +226,22 @@ export const POLITSEI_COURSES: Course[] = [
             reputation: 150,
             money: 1500
         },
-        category: 'politsei'
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Milline on turvaline parool?',
+            answers: [
+                '123qwe!123qwe!123',
+                'k8dFH!8c@Pfv0gB2',
+                'Emasünnipäev15!',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 500,
+                money: 500,
+                reputation: 75,
+            }
+        }
+
     },
     {
         id: 'advanced_computer_skills',
@@ -214,7 +258,22 @@ export const POLITSEI_COURSES: Course[] = [
             reputation: 250,
             money: 2000
         },
-        category: 'politsei'
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Mis on Virtuaalse privaatvõrgu (VPN) peamine funktsioon?',
+            answers: [
+                'Suurendab interneti kiirust ja anonüümsust',
+                'Võimaldab sirvida anonüümselt, maskeerides IP',
+                'Takistab pahavaral pääseda ligi sinu süsteemi',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 750,
+                money: 500,
+                reputation: 80,
+            }
+        }
+
     },
     {
         id: 'cyber_crime_course',
@@ -231,7 +290,22 @@ export const POLITSEI_COURSES: Course[] = [
             reputation: 250,
             money: 2000
         },
-        category: 'politsei'
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Mis on peamine programmeerimise keel, mida häkkerid kasutavad?',
+            answers: [
+                'Java',
+                'Python',
+                'HTML',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 1500,
+                money: 500,
+                reputation: 100,
+            }
+        }
+
     },
     {
         id: 'evidence_place_course',
@@ -248,7 +322,22 @@ export const POLITSEI_COURSES: Course[] = [
             reputation: 300,
             money: 2000,
         },
-        category: 'politsei'
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Miks peab sündmuskohal töötav kriminalist kandma kindaid ja kaitseriietust?',
+            answers: [
+                'Vältida tõendite rikkumist või segamist enda bioloogilise materjaliga',
+                'Kaitsta ennast sündmuskohal olevate ohtude eest',
+                'Selleks, et kiiremini tööd saaks teha ja ei peaks tähelepanu pöörama välistele teguritele',
+            ],
+            correctAnswerIndex: 0,
+            rewards: {
+                experience: 800,
+                money: 700,
+                reputation: 125,
+            }
+        }
+
     },
     {
         id: 'detective_course',
@@ -283,7 +372,21 @@ export const POLITSEI_COURSES: Course[] = [
             reputation: 500,
             money: 4000,
         },
-        category: 'politsei'
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Milline käitlemine on Eestis keelatud narkootiliste ja psühhotroopsetel ainetel?',
+            answers: [
+                'Meditsiinilisel ja teaduslikul eermägil',
+                'Õppeotstarbe kasutamise eesmärgil',
+                'Väärtegude ennetamiseks ja avastamiseks',
+            ],
+            correctAnswerIndex: 2,
+            rewards: {
+                experience: 1500,
+                money: 800,
+                reputation: 125,
+            }
+        }
     },
     {
         id: 'forensics_basics',
@@ -301,7 +404,22 @@ export const POLITSEI_COURSES: Course[] = [
             reputation: 600,
             money: 5000,
         },
-        category: 'politsei'
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Miks on kohtuekspertiisi ametlik lühend Eestis?',
+            answers: [
+                'KEEI - Kohtuekspertiisi Eesti Instituut',
+                'EKEI - Eesti Kohtuekspertiisi Instituut',
+                'KEIE - Kohtuekspertiisi Instituut Eestis',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 1500,
+                money: 1000,
+                reputation: 200,
+            }
+        }
+
     },
     {
         id: 'police_group_leader_course',
@@ -318,6 +436,50 @@ export const POLITSEI_COURSES: Course[] = [
             reputation: 500,
             money: 3000,
         },
-        category: 'politsei'
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Kas grupijuht ja välijuht on samatähenduslik?',
+            answers: [
+                'jah',
+                'ei',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 750,
+                money: 500,
+                reputation: 100,
+            }
+        }
+    },
+    {
+        id: 'police_group_leader_course_advanced',
+        name: 'Grupijuhi täiendkoolitus',
+        description: 'Grupijuhi täiendkoolitus edukaks grupi manageerimiseks ja juhtimiseks koos püshholoogia põhitõdedega',
+        duration: 18000,
+        requirements: {
+            level: 70,
+            completedCourses: ['police_group_leader_course'],
+            totalWorkedHours: 120
+        },
+        rewards: {
+            experience: 10000,
+            reputation: 900,
+            money: 5000,
+        },
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Mis aitab juhil teenistuses usaldust luua?',
+            answers: [
+                'Väljaspool tööaega sõbraks olemine',
+                'Avatud/aus suhtlemine ja lubadustest kinnipidamine',
+                'Distsipliini jälgimine ja kuulamisoskus',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 1250,
+                money: 750,
+                reputation: 200,
+            }
+        }
     }
 ];
