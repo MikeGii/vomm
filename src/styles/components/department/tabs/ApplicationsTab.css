@@ -433,3 +433,79 @@
         gap: 0.5rem;
     }
 }
+.position-type-badge {
+    display: inline-block;
+    padding: 0.2rem 0.4rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-left: 0.5rem;
+}
+
+.position-type-badge.group_leader {
+    background-color: #ff6b35;
+    color: white;
+}
+
+.position-type-badge.unit_leader {
+    background-color: #6f42c1;
+    color: white;
+}
+
+.category-filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.filter-btn {
+    padding: 0.5rem 1rem;
+    background-color: #333;
+    color: #ccc;
+    border: 1px solid #444;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.filter-btn:hover {
+    background-color: #404040;
+    border-color: #4a90e2;
+}
+
+.filter-btn.active {
+    background-color: #4a90e2;
+    color: white;
+    border-color: #4a90e2;
+}
+
+.error-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.error-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.error-text {
+    color: #dc3545;
+    margin-bottom: 1rem;
+}
+
+.retry-btn {
+    padding: 0.5rem 1rem;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.retry-btn:hover {
+    background-color: #357abd;
+}

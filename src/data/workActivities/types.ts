@@ -5,6 +5,7 @@ export type { WorkActivity } from '../../types';
 
 // Player status type - extraheerime see workActivities konteksti
 export type PlayerStatus =
+    | 'unknown'
     | 'kadett'
     | 'abipolitseinik'
     | 'patrullpolitseinik'
@@ -19,7 +20,12 @@ export type PlayerStatus =
     | 'grupijuht_k9'
     | 'grupijuht_cyber'
     | 'grupijuht_crimes'
-    | 'unknown';
+    | 'talituse_juht_patrol'
+    | 'talituse_juht_investigation'
+    | 'talituse_juht_emergency'
+    | 'talituse_juht_k9'
+    | 'talituse_juht_cyber'
+    | 'talituse_juht_crimes';
 
 // Work rewards interface
 export interface WorkRewards {

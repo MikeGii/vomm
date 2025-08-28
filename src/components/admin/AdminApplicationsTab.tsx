@@ -3,7 +3,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { firestore } from '../../config/firebase';
 import { getPositionById } from '../../data/policePositions';
-import { getPositionDepartmentUnit, canUnitAcceptMoreGroupLeaders, getGroupLeaderCountInUnit } from '../../utils/playerStatus';
+import {
+    getPositionDepartmentUnit,
+    canUnitAcceptMoreGroupLeaders,
+    getGroupLeaderCountInUnit,
+    hasUnitLeader, getCurrentUnitLeader
+} from '../../utils/playerStatus';
 import { useToast } from '../../contexts/ToastContext';
 import '../../styles/components/admin/AdminApplicationsTab.css';
 
@@ -152,14 +157,24 @@ export const AdminApplicationsTab: React.FC = () => {
 
         try {
             if (actionType === 'approve') {
-                // Check unit capacity before approving
                 const targetUnit = getPositionDepartmentUnit(selectedApplication.positionId);
-                const canAccept = await canUnitAcceptMoreGroupLeaders(targetUnit || '');
 
-                if (!canAccept) {
-                    const currentCount = await getGroupLeaderCountInUnit(targetUnit || '');
-                    showToast(`Viga: Üksuses on juba maksimum arv grupijuhte (${currentCount}/4)`, 'error');
-                    return;
+                // Check if this is a unit leader position
+                if (selectedApplication.positionId.startsWith('talituse_juht_')) {
+                    const hasLeader = await hasUnitLeader(targetUnit || '');
+                    if (hasLeader) {
+                        const currentLeader = await getCurrentUnitLeader(targetUnit || '');
+                        showToast(`Viga: Üksuses on juba talituse juht: ${currentLeader || 'Keegi'}`, 'error');
+                        return;
+                    }
+                } else if (selectedApplication.positionId.startsWith('grupijuht_')) {
+                    // Group leader - check normal capacity
+                    const canAccept = await canUnitAcceptMoreGroupLeaders(targetUnit || '');
+                    if (!canAccept) {
+                        const currentCount = await getGroupLeaderCountInUnit(targetUnit || '');
+                        showToast(`Viga: Üksuses on juba maksimum arv grupijuhte (${currentCount}/4)`, 'error');
+                        return;
+                    }
                 }
 
                 // Approve application
@@ -284,6 +299,9 @@ export const AdminApplicationsTab: React.FC = () => {
                                         <h4>{application.applicantId}</h4>
                                         <div className="application-details">
                                             <span>Kandideerib: {application.positionName}</span>
+                                            <span className={`position-type-badge ${application.positionId.startsWith('talituse_juht_') ? 'unit-leader' : 'group-leader'}`}>
+                                                {application.positionId.startsWith('talituse_juht_') ? 'Talituse juht' : 'Grupijuht'}
+                                            </span>
                                             <span>Osakond: {application.department}</span>
                                             <span>Prefektuur: {application.prefecture}</span>
                                         </div>
