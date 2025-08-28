@@ -119,12 +119,13 @@ export const POLICE_POSITIONS: PolicePosition[] = [
             minimumLevel: 55,
             completedCourses: ['lopueksam', 'police_group_leader_course'],
             minimumWorkedHours: 150,
+            minimumReputation: 5000,
             attributes: {
-                strength: 40,
-                agility: 40,
-                dexterity: 40,
-                intelligence: 50,
-                endurance: 40
+                strength: 70,
+                agility: 70,
+                dexterity: 70,
+                intelligence: 80,
+                endurance: 60
             }
         }
     },
@@ -136,12 +137,13 @@ export const POLICE_POSITIONS: PolicePosition[] = [
             minimumLevel: 60,
             completedCourses: ['lopueksam', 'police_group_leader_course', 'evidence_place_course', 'enhanced_law_studies'],
             minimumWorkedHours: 150,
+            minimumReputation: 5000,
             attributes: {
-                strength: 40,
-                agility: 40,
-                dexterity: 40,
-                intelligence: 60,
-                endurance: 30
+                strength: 70,
+                agility: 70,
+                dexterity: 70,
+                intelligence: 90,
+                endurance: 50
             }
         }
     },
@@ -153,12 +155,13 @@ export const POLICE_POSITIONS: PolicePosition[] = [
             minimumLevel: 65,
             completedCourses: ['lopueksam', 'police_group_leader_course', 'riot_police_course', 'medical_course_police', 'police_atv_course', 'police_drone_course'],
             minimumWorkedHours: 150,
+            minimumReputation: 5000,
             attributes: {
-                strength: 50,
-                agility: 50,
-                dexterity: 60,
-                intelligence: 40,
-                endurance: 60
+                strength: 100,
+                agility: 80,
+                dexterity: 90,
+                intelligence: 70,
+                endurance: 80
             }
         }
     },
@@ -169,7 +172,15 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         requirements: {
             minimumLevel: 60,
             completedCourses: ['lopueksam', 'police_group_leader_course', 'dog_handler_course'],
-            minimumWorkedHours: 150
+            minimumWorkedHours: 150,
+            minimumReputation: 5000,
+            attributes: {
+                strength: 90,
+                agility: 100,
+                dexterity: 90,
+                intelligence: 70,
+                endurance: 90
+            }
         }
     },
     {
@@ -179,7 +190,15 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         requirements: {
             minimumLevel: 65,
             completedCourses: ['lopueksam', 'police_group_leader_course', 'cyber_crime_course', 'advanced_computer_skills'],
-            minimumWorkedHours: 150
+            minimumWorkedHours: 150,
+            minimumReputation: 5000,
+            attributes: {
+                strength: 70,
+                agility: 80,
+                dexterity: 90,
+                intelligence: 110,
+                endurance: 70
+            }
         }
     },
     {
@@ -189,7 +208,15 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         requirements: {
             minimumLevel: 65,
             completedCourses: ['police_group_leader_course', 'narcotic_psyhotropic_substances', 'forensics_basics'],
-            minimumWorkedHours: 150
+            minimumWorkedHours: 150,
+            minimumReputation: 5000,
+            attributes: {
+                strength: 70,
+                agility: 80,
+                dexterity: 80,
+                intelligence: 100,
+                endurance: 80
+            }
         }
     },
 
@@ -220,7 +247,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
             minimumLevel: 90,
             completedCourses: ['advanced_leader_course', 'forensics_basics'],
             minimumWorkedHours: 300,
-            minimumReputation: 8000,
+            minimumReputation: 9000,
             attributes: {
                 strength: 175,
                 agility: 175,
@@ -238,7 +265,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
             minimumLevel: 95,
             completedCourses: ['advanced_leader_course'],
             minimumWorkedHours: 300,
-            minimumReputation: 8000,
+            minimumReputation: 9000,
             attributes: {
                 strength: 275,
                 agility: 225,
@@ -256,7 +283,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
             minimumLevel: 90,
             completedCourses: ['advanced_leader_course', 'dog_specialist_course'],
             minimumWorkedHours: 300,
-            minimumReputation: 9000,
+            minimumReputation: 10000,
             attributes: {
                 strength: 225,
                 agility: 200,
@@ -274,7 +301,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
             minimumLevel: 95,
             completedCourses: ['advanced_leader_course', 'cyber_crime_course', 'advanced_computer_skills'],
             minimumWorkedHours: 300,
-            minimumReputation: 9000,
+            minimumReputation: 10000,
             attributes: {
                 strength: 175,
                 agility: 200,
@@ -292,7 +319,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
             minimumLevel: 95,
             completedCourses: ['advanced_leader_course', 'forensics_basics'],
             minimumWorkedHours: 300,
-            minimumReputation: 9000,
+            minimumReputation: 10000,
             attributes: {
                 strength: 225,
                 agility: 200,

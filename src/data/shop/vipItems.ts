@@ -4,34 +4,34 @@ import { ShopItem } from '../../types/shop';
 export const VIP_ITEMS: ShopItem[] = [
     {
         id: 'vip_work_time_booster',
-        name: 'Tööaeg 95%',
+        name: 'Tööaeg 90%',
         description: 'Lühendab aktiivset tööaega 95%',
         category: 'vip',
         price: 0,
-        pollidPrice: 10,
+        pollidPrice: 20,
         currency: 'pollid',
         basePrice: 0,
         basePollidPrice: 10,
         maxStock: 100,
         consumableEffect: {
             type: 'workTimeReduction',
-            value: 95
+            value: 90
         }
     },
     {
         id: 'vip_course_time_booster',
-        name: 'Kursus 95%',
+        name: 'Kursus 90%',
         description: 'Lühendab aktiivset kursust 95%',
         category: 'vip',
         price: 0,
-        pollidPrice: 10,
+        pollidPrice: 20,
         currency: 'pollid',
         basePrice: 0,
         basePollidPrice: 10,
         maxStock: 100,
         consumableEffect: {
             type: 'courseTimeReduction',
-            value: 95
+            value: 90
         }
     },
     {

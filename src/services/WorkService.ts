@@ -11,7 +11,9 @@ import {
     orderBy,
     limit,
     getDocs,
-    increment
+    increment,
+    startAfter,
+    getCountFromServer
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats, ActiveWork, WorkHistoryEntry } from '../types';
@@ -230,18 +232,80 @@ export const getRemainingWorkTime = (activeWork: ActiveWork): number => {
 // Get work history
 export const getWorkHistory = async (
     userId: string,
-    limitCount: number = 10
-): Promise<WorkHistoryEntry[]> => {
-    const historyQuery = query(
+    page: number = 1,
+    itemsPerPage: number = 10
+): Promise<{
+    entries: WorkHistoryEntry[];
+    totalCount: number;
+    hasMore: boolean;
+}> => {
+    // Get total count efficiently
+    const countQuery = query(
         collection(firestore, 'workHistory'),
-        where('userId', '==', userId),
-        orderBy('completedAt', 'desc'),
-        limit(limitCount)
+        where('userId', '==', userId)
     );
+    const countSnapshot = await getCountFromServer(countQuery);
+    const totalCount = countSnapshot.data().count;
+
+    // If no history, return empty result
+    if (totalCount === 0) {
+        return {
+            entries: [],
+            totalCount: 0,
+            hasMore: false
+        };
+    }
+
+    // For pagination, we need to get items for the specific page
+    let historyQuery;
+
+    if (page === 1) {
+        // First page - simple query
+        historyQuery = query(
+            collection(firestore, 'workHistory'),
+            where('userId', '==', userId),
+            orderBy('completedAt', 'desc'),
+            limit(itemsPerPage)
+        );
+    } else {
+        // For other pages, we need to get the last document from previous pages
+        const skipCount = (page - 1) * itemsPerPage;
+        const skipQuery = query(
+            collection(firestore, 'workHistory'),
+            where('userId', '==', userId),
+            orderBy('completedAt', 'desc'),
+            limit(skipCount)
+        );
+        const skipSnapshot = await getDocs(skipQuery);
+
+        if (skipSnapshot.docs.length > 0) {
+            const lastDoc = skipSnapshot.docs[skipSnapshot.docs.length - 1];
+            historyQuery = query(
+                collection(firestore, 'workHistory'),
+                where('userId', '==', userId),
+                orderBy('completedAt', 'desc'),
+                startAfter(lastDoc),
+                limit(itemsPerPage)
+            );
+        } else {
+            // No more documents
+            return {
+                entries: [],
+                totalCount,
+                hasMore: false
+            };
+        }
+    }
 
     const snapshot = await getDocs(historyQuery);
-    return snapshot.docs.map(doc => ({
+    const entries = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
     } as WorkHistoryEntry));
+
+    return {
+        entries,
+        totalCount,
+        hasMore: totalCount > page * itemsPerPage
+    };
 };
