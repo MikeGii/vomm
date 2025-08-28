@@ -1,5 +1,5 @@
 // src/components/patrol/CrimeImpactIndicator.tsx
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { PlayerStats } from '../../types';
 import { getAllDepartmentData, findDepartmentCrimeStats } from '../../services/DepartmentLeaderboardService';
 import { DepartmentCrimeDisplay } from '../../types/crimeActivity';
@@ -27,11 +27,7 @@ export const CrimeImpactIndicator: React.FC<CrimeImpactIndicatorProps> = ({
     const [crimeStats, setCrimeStats] = useState<DepartmentCrimeDisplay | null>(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        loadCrimeData();
-    }, [playerStats.department]);
-
-    const loadCrimeData = async () => {
+    const loadCrimeData = useCallback(async () => {
         if (!playerStats.department ||
             playerStats.department === 'Sisekaitseakadeemia' ||
             !playerStats.prefecture) {
@@ -48,7 +44,11 @@ export const CrimeImpactIndicator: React.FC<CrimeImpactIndicatorProps> = ({
         } finally {
             setLoading(false);
         }
-    };
+    }, [playerStats.department, playerStats.prefecture]);
+
+    useEffect(() => {
+        loadCrimeData();
+    }, [loadCrimeData]);
 
     // Don't show for Sisekaitseakadeemia
     if (!playerStats.department ||
