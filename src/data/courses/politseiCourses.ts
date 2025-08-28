@@ -68,6 +68,40 @@ export const POLITSEI_COURSES: Course[] = [
         }
     },
     {
+        id: 'medical_course_police_advanced',
+        name: 'Põhjalik esmaabi ja taktikalise meditsiini koolitus',
+        description: 'Koolitus efektiivse esmaabi andmiseks ja tegutsemine lahingolukorras meedikuna',
+        duration: 18000,
+        requirements: {
+            level: 70,
+            completedCourses: ['medical_course_police'],
+            totalWorkedHours: 120
+        },
+        rewards: {
+            experience: 9500,
+            reputation: 500,
+            money: 4500,
+            grantsItems: [
+                { itemId: 'medical_kit', quantity: 10 }
+            ]
+        },
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Mis on esmane tegevus, kui avastad välikeskkonnas pingelise pneumotooraksi tunnused?',
+            answers: [
+                'Rindkere dekompressioon nõelaga',
+                'Kannatanu asetamine küliliasendisse kahjustatud poolele',
+                'Hapniku manustamine maski kaudu',
+            ],
+            correctAnswerIndex: 0,
+            rewards: {
+                experience: 1500,
+                money: 500,
+                reputation: 200,
+            }
+        }
+    },
+    {
         id: 'riot_police_course',
         name: 'Massiohje koolitus',
         description: 'Koolitus teadmiste omandamiseks ja tegutsemiseks massirahutuste korral',

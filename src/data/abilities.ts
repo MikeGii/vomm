@@ -1,9 +1,9 @@
 // src/data/abilities.ts
 import { IconType } from 'react-icons';
-import {GiPistolGun, GiElectric, GiPoliceCar, GiMachineGunMagazine, GiSniffingDog} from 'react-icons/gi';
+import {GiPistolGun, GiElectric, GiPoliceCar, GiMachineGunMagazine, GiSniffingDog, GiStrong} from 'react-icons/gi';
 import { MdSpeed } from 'react-icons/md';
-import { FaTabletAlt, FaMedkit } from 'react-icons/fa';
-import { FaComputer, FaPeopleGroup } from 'react-icons/fa6';
+import {FaTabletAlt, FaMedkit, FaClinicMedical} from 'react-icons/fa';
+import {FaComputer, FaPeopleGroup, FaPeopleLine} from 'react-icons/fa6';
 import { GoLaw } from 'react-icons/go';
 
 export interface TrainingBonus {
@@ -185,6 +185,18 @@ export const ABILITIES: Ability[] = [
         trainingBonuses: [
             { attribute: 'intelligence', percentage: 0.05 },
             { attribute: 'endurance', percentage: 0.05 }
+        ],
+        replacedBy: 'police_medical_officer_advanced'
+    },
+    {
+        id: 'police_medical_officer_advanced',
+        name: 'Taktikaline meedik',
+        description: 'Oled omandanud põhjalikud TCCC teadmised ja oled oma üksuse meedik ',
+        icon: FaClinicMedical,
+        requiredCourse: 'medical_course_police_advanced',
+        trainingBonuses: [
+            { attribute: 'intelligence', percentage: 0.10 },
+            { attribute: 'endurance', percentage: 0.10 }
         ]
     },
     {
@@ -196,6 +208,29 @@ export const ABILITIES: Ability[] = [
         trainingBonuses: [
             { attribute: 'dexterity', percentage: 0.05 },
             { attribute: 'agility', percentage: 0.05 }
+        ]
+    },
+    {
+        id: 'group_leader',
+        name: 'Grupi liider',
+        description: 'Oled läbinud grupijuhi algkoolituse ja oskad grupi juhtida',
+        icon: GiStrong,
+        requiredCourse: 'police_group_leader_course',
+        trainingBonuses: [
+            { attribute: 'strength', percentage: 0.05 },
+            { attribute: 'intelligence', percentage: 0.05 }
+        ],
+        replacedBy: 'group_leader_advanced'
+    },
+    {
+        id: 'group_leader_advanced',
+        name: 'Grupi mainekas liider',
+        description: 'Oled läbinud grupijuhi täiendkoolituse ja oskad grupi edukalt juhtida',
+        icon: FaPeopleLine,
+        requiredCourse: 'police_group_leader_course_advanced',
+        trainingBonuses: [
+            { attribute: 'strength', percentage: 0.08 },
+            { attribute: 'intelligence', percentage: 0.08 }
         ]
     }
 ];
