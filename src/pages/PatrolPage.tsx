@@ -317,8 +317,8 @@ const PatrolPage: React.FC = () => {
 
     // Get page title
     const getPageTitle = (): string => {
-        if (!playerStats) return 'Patrullteenistus';
-        return playerStatus.isKadett ? 'Praktika ja tööamps' : 'Patrullteenistus';
+        if (!playerStats) return 'Teenistus';
+        return playerStatus.isKadett ? 'Praktika ja tööamps' : 'Teenistus';
     };
 
     if (loading) {
@@ -417,6 +417,7 @@ const PatrolPage: React.FC = () => {
                             isStarting={isStartingWork}
                             isKadett={playerStatus.isKadett}
                             playerRank={playerStats.rank}
+                            playerStats={playerStats}
                         />
                     </div>
                 )}

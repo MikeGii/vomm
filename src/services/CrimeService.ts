@@ -9,7 +9,7 @@ import {
     Timestamp
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
-import { DepartmentCrimeStats, CrimeReductionResult, DepartmentCrimeDisplay } from '../types/crimeActivity';
+import { DepartmentCrimeStats, CrimeReductionResult } from '../types/crimeActivity';
 import { getAllGraduatedPlayers } from './DepartmentService';
 import { PREFECTURES } from '../data/prefectures';
 

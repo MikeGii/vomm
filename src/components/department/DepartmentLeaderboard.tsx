@@ -1,5 +1,5 @@
 // src/components/department/DepartmentLeaderboard.tsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, {useState, useEffect, useMemo, useCallback} from 'react';
 import { TabNavigation } from '../ui/TabNavigation';
 import { Pagination } from '../ui/Pagination';
 import { getAllDepartmentData, DepartmentScore } from '../../services/DepartmentLeaderboardService';
@@ -17,15 +17,11 @@ export const DepartmentLeaderboard: React.FC = () => {
     const itemsPerPage = 10;
 
     useEffect(() => {
-        loadScores();
-    }, [view]);
-
-    useEffect(() => {
         // Reset to page 1 when view changes
         setCurrentPage(1);
     }, [view]);
 
-    const loadScores = async () => {
+    const loadScores = useCallback(async () => {
         setIsLoading(true);
         setScores([]);
         setCrimeStats([]);
@@ -37,11 +33,11 @@ export const DepartmentLeaderboard: React.FC = () => {
                 const sortedCrimeData = data.crimeStats.sort((a, b) => a.currentCrimeLevel - b.currentCrimeLevel);
                 setCrimeStats(sortedCrimeData);
             } else if (view === 'units') {
-                setScores(data.unitScores);
+                setScores(data.unitScores || []);
             } else if (view === 'prefectures') {
-                setScores(data.prefectureScores);
+                setScores(data.prefectureScores || []);
             } else if (view === 'departments') {
-                setScores(data.departmentScores);
+                setScores(data.departmentScores || []);
             }
         } catch (error) {
             console.error('Error loading department scores:', error);
@@ -50,7 +46,11 @@ export const DepartmentLeaderboard: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [view]);
+
+    useEffect(() => {
+        loadScores();
+    }, [loadScores]);
 
     // Pagination logic
     const { paginatedData, totalPages, totalItems } = useMemo(() => {

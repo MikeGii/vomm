@@ -1,0 +1,134 @@
+/* src/styles/components/patrol/CrimeImpactIndicator.css */
+.crime-impact-indicator {
+    background: linear-gradient(135deg, #2a2a2a, #1e1e1e);
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 1rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.crime-impact-indicator::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #ff6b35, #f7931e);
+}
+
+.crime-impact-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.crime-icon {
+    font-size: 1.1rem;
+}
+
+.crime-title {
+    color: #f0f0f0;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.crime-impact-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.crime-before-after {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.crime-current,
+.crime-after {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.crime-label {
+    color: #888;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+.crime-percentage {
+    font-family: 'Courier New', monospace;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.crime-arrow {
+    color: #4a90e2;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.crime-reduction {
+    text-align: center;
+    padding: 0.5rem;
+    background: rgba(46, 204, 113, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.reduction-amount {
+    color: #2ecc71;
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+
+.reduction-label {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.crime-department-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #333;
+}
+
+.department-name {
+    color: #4a90e2;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.player-count {
+    color: #666;
+    font-size: 0.8rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .crime-before-after {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .crime-arrow {
+        transform: rotate(90deg);
+    }
+
+    .crime-department-info {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+}

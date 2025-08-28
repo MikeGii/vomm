@@ -1,5 +1,5 @@
 // src/components/department/DepartmentCrimeInfo.tsx
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { PlayerStats } from '../../types';
 import { getAllDepartmentData, findDepartmentCrimeStats } from '../../services/DepartmentLeaderboardService';
 import { DepartmentCrimeDisplay } from '../../types/crimeActivity';
@@ -15,11 +15,7 @@ export const DepartmentCrimeInfo: React.FC<DepartmentCrimeInfoProps> = ({
     const [crimeStats, setCrimeStats] = useState<DepartmentCrimeDisplay | null>(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        loadCrimeStats();
-    }, [playerStats.department, playerStats.prefecture]);
-
-    const loadCrimeStats = async () => {
+    const loadCrimeStats = useCallback(async () => {
         if (!playerStats.department ||
             playerStats.department === 'Sisekaitseakadeemia' ||
             !playerStats.prefecture) {
@@ -29,13 +25,8 @@ export const DepartmentCrimeInfo: React.FC<DepartmentCrimeInfoProps> = ({
 
         try {
             setLoading(true);
-
-            // Kasuta uut optimeeritud teenust (kasutab sama cache'i mis leaderboard)
             const data = await getAllDepartmentData();
-
-            // Leia oma osakonna kuritegevuse andmed
             const departmentCrime = findDepartmentCrimeStats(data, playerStats.department);
-
             setCrimeStats(departmentCrime);
         } catch (error) {
             console.error('Error loading crime stats:', error);
@@ -43,7 +34,11 @@ export const DepartmentCrimeInfo: React.FC<DepartmentCrimeInfoProps> = ({
         } finally {
             setLoading(false);
         }
-    };
+    }, [playerStats.department, playerStats.prefecture]);
+
+    useEffect(() => {
+        loadCrimeStats();
+    }, [loadCrimeStats]);
 
     const getCrimeColor = (crimeLevel: number): string => {
         if (crimeLevel >= 80) return '#ff3838';
