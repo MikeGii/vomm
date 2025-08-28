@@ -3,7 +3,6 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Timestamp } from 'firebase/firestore';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
-import { Pagination } from '../components/ui/Pagination';
 import { HealthDisplay } from '../components/patrol/HealthDisplay';
 import { DepartmentSelector } from '../components/patrol/DepartmentSelector';
 import { WorkActivitySelector } from '../components/patrol/WorkActivitySelector';
@@ -394,6 +393,7 @@ const PatrolPage: React.FC = () => {
                                     : new Date(playerStats.activeWork.endsAt)
                             }
                             onBoosterApplied={handleBoosterApplied}
+                            boosterAlreadyUsed={playerStats.activeWork.boosterUsed || false}
                         />
                     </div>
                 )}

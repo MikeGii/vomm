@@ -252,6 +252,7 @@ export interface ActiveWork {
     expectedMoney?: number;
     status: 'in_progress' | 'completed';
     workSessionId?: string;
+    boosterUsed?: boolean;
 }
 
 export interface WorkHistoryEntry {

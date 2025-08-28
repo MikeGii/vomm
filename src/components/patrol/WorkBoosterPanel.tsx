@@ -1,4 +1,4 @@
-// src/components/work/WorkBoosterPanel.tsx
+// src/components/patrol/WorkBoosterPanel.tsx
 import React, { useState } from 'react';
 import { InventoryItem } from '../../types';
 import { getWorkTimeBoosters, applyWorkTimeBooster } from '../../services/WorkBoosterService';
@@ -10,13 +10,15 @@ interface WorkBoosterPanelProps {
     currentUserId: string;
     activeWorkEndTime: Date;
     onBoosterApplied: () => void;
+    boosterAlreadyUsed?: boolean;
 }
 
 export const WorkBoosterPanel: React.FC<WorkBoosterPanelProps> = ({
                                                                       inventory,
                                                                       currentUserId,
                                                                       activeWorkEndTime,
-                                                                      onBoosterApplied
+                                                                      onBoosterApplied,
+                                                                      boosterAlreadyUsed = false
                                                                   }) => {
     const [isApplying, setIsApplying] = useState(false);
     const { showToast } = useToast();
@@ -59,18 +61,43 @@ export const WorkBoosterPanel: React.FC<WorkBoosterPanelProps> = ({
         }
     };
 
-    if (workBoosters.length === 0) {
+    // Check if booster was already used for this work
+    if (boosterAlreadyUsed) {
         return (
             <div className="work-booster-panel">
                 <h3 className="booster-title">🚀 Tööaja Kiirendajad</h3>
+                <div className="work-status">
+                    <p className="time-remaining">
+                        Aega jäänud: <span className="time-value">{formatTimeRemaining(activeWorkEndTime)}</span>
+                    </p>
+                </div>
                 <div className="no-boosters">
-                    <p>Sul pole tööaja kiirendajaid.</p>
-                    <p className="booster-hint">Osta VIP pooest Pollidega!</p>
+                    <p style={{ color: '#9c27b0' }}>✅ Kiirendaja juba kasutatud selle tööülesande jaoks!</p>
+                    <p className="booster-hint">Iga tööülesande kohta saab kasutada ainult ühe kiirendaja.</p>
                 </div>
             </div>
         );
     }
 
+    // If no boosters in inventory
+    if (workBoosters.length === 0) {
+        return (
+            <div className="work-booster-panel">
+                <h3 className="booster-title">🚀 Tööaja Kiirendajad</h3>
+                <div className="work-status">
+                    <p className="time-remaining">
+                        Aega jäänud: <span className="time-value">{formatTimeRemaining(activeWorkEndTime)}</span>
+                    </p>
+                </div>
+                <div className="no-boosters">
+                    <p>Sul pole tööaja kiirendajaid.</p>
+                    <p className="booster-hint">Osta VIP pooest Pollidega või valmista Köök/Labor ruumis!</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Show available boosters
     return (
         <div className="work-booster-panel">
             <h3 className="booster-title">🚀 Tööaja Kiirendajad</h3>
@@ -84,7 +111,7 @@ export const WorkBoosterPanel: React.FC<WorkBoosterPanelProps> = ({
                 {workBoosters.map((booster) => (
                     <div key={booster.id} className="booster-item">
                         <div className="booster-info">
-                            <h4 className="booster-name">{booster.name}</h4>
+                            <h4 className="booster-name">{booster.name} ({booster.quantity}x)</h4>
                             <p className="booster-description">{booster.description}</p>
                             <div className="booster-effect">
                                 -{booster.consumableEffect?.value}% tööaeg
