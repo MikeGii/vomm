@@ -37,6 +37,13 @@ export const applyWorkTimeBooster = async (
             };
         }
 
+        if (stats.activeWork.boosterUsed) {
+            return {
+                success: false,
+                message: 'Sa oled juba kasutanud kiirendajat selle tööülesande jaoks!'
+            };
+        }
+
         // Find the booster item in inventory
         const inventory = stats.inventory || [];
         const boosterIndex = inventory.findIndex(item =>
@@ -83,7 +90,8 @@ export const applyWorkTimeBooster = async (
         // Update active work end time
         const updatedActiveWork = {
             ...stats.activeWork,
-            endsAt: Timestamp.fromDate(finalEndTime)
+            endsAt: Timestamp.fromDate(finalEndTime),
+            boosterUsed: true
         };
 
         // Update inventory - handle quantity properly
