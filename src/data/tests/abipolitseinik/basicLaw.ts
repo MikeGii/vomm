@@ -6,7 +6,7 @@ export const BASIC_LAW_TEST: Test = {
     name: 'Abipolitseiniku seadusandlus',
     description: 'Test põhiliste õigusaktide ja seaduste kohta abipolitseinikele',
     category: 'abipolitseinik',
-    requiredCourses: ['basic_police'],
+    requiredCourses: ['basic_police_training_abipolitseinik'],
     baseReward: {
         experience: 50,
         reputation: 10
@@ -18,7 +18,7 @@ export const BASIC_LAW_TEST: Test = {
     questions: [
         {
             id: 'q1',
-            question: 'Abipolitseinikuks võib nimetada?',
+            question: 'Millised on abipolitseinikule esitatavad nõuded?',
             answers: [
                 'Abipolitseinikuks võib nimetada 18-aastaseks saanud vähemalt algharidusega Eesti kodaniku, ' +
                 'kes oskab eesti keelt vähemalt C2-tasemel ning kes vastab abipolitseiniku kutsesobivuse nõuetele.',
@@ -91,53 +91,67 @@ export const BASIC_LAW_TEST: Test = {
         },
         {
             id: 'q6',
-            question: 'Abipolitseiniku kandidaat peab läbima esimese astme õppe, kui kaua kestab esimese astme koolitus?',
+            question: 'Kes ja millistel tingimustel nimetab isiku abipolitseinikuks?',
             answers: [
-                '40 tundi',
-                '48 tundi',
-                '50 tundi'
+                'Kui kandidaat on abipolitseinikule esitatavatele nõuetele vastav ning esmase väljaõppe läbinud, seejärel ' +
+                'nimetatakse abipolitseinikuks siseministri või tema volitatud ametniku otsusega.',
+
+                'Kui kandidaat on abipolitseinikule esitatavatele nõuetele vastav ning esmase väljaõppe läbinud ja arvestuse sooritanud, seejärel ' +
+                'nimetatakse abipolitseinikuks Politsei- ja Piirivalveameti peadirektori või tema volitatud ametniku otsusega.',
+
+                'Kui kandidaat on abipolitseinikule esitatavatele nõuetele vastav ning esmase väljaõppe läbinud ja arvestuse sooritanud, seejärel ' +
+                'nimetatakse abipolitseinikuks prefekti või tema volitatud ametniku otsusega.'
             ],
-            correctAnswerIndex: 0
+            correctAnswerIndex: 1
         },
         {
             id: 'q7',
-            question: 'Abipolitseiniku kandidaat peab läbima esimese astme õppe, kui kaua kestab esimese astme koolitus?',
+            question: 'Kes, kellele ja kui tihti esitatakse abipolitseinike tegevusest ülevaade?',
             answers: [
-                '40 tundi',
-                '48 tundi',
-                '50 tundi'
+                'Politsei- ja Piirivalveameti peadirektor esitab neli korda kalendriaastas valdkonna eest vastutavale ministrile ' +
+                'ülevaate abipolitseinike tegevusest.',
+
+                'Prefekt esitab kaks korda kalendriaastas valdkonna eest vastutavale ministrile ' +
+                'ülevaate abipolitseinike tegevusest.',
+
+                'Politsei- ja Piirivalveameti peadirektor esitab kaks korda kalendriaastas valdkonna eest vastutavale ministrile ' +
+                'ülevaate abipolitseinike tegevusest.'
             ],
-            correctAnswerIndex: 0
+            correctAnswerIndex: 2
         },
         {
             id: 'q8',
-            question: 'Abipolitseiniku kandidaat peab läbima esimese astme õppe, kui kaua kestab esimese astme koolitus?',
+            question: 'Milline vormiriietus on abipolitseinikule lubatud abipolitseiniku ülesande täitmise ajal?',
             answers: [
-                '40 tundi',
-                '48 tundi',
-                '50 tundi'
+                'Politseiametniku vormiriietust politseiametniku eritunnustega',
+                'Politseiametniku vormiriietust abipolitseiniku eritunnustega, kui ta kannab abipolitseiniku ülesande täitmise ajal tulirelva',
+                'Politseiametniku vormiriietust abipolitseiniku eritunnustega, kui ta kannab abipolitseiniku ülesande täitmise ajal tugirelva'
             ],
-            correctAnswerIndex: 0
+            correctAnswerIndex: 1
         },
         {
             id: 'q9',
-            question: 'Abipolitseiniku kandidaat peab läbima esimese astme õppe, kui kaua kestab esimese astme koolitus?',
+            question: 'Millisele abipolitseinikule ei saa määrata kriisirolli?',
             answers: [
-                '40 tundi',
-                '48 tundi',
-                '50 tundi'
+                'Kriisirolli ei saa määrata abipolitseinikule, kes asub riigikaitselise töökohustusega ameti- või töökohal ' +
+                'või on nimetatud sõjaväelise auastmega sõjaaja ametikohale',
+
+                'Kriisirolli ei saa määrata abipolitseinikule, kes töötab erasektoris ja on abipolitseinik',
+
+                'Kriisirolli ei saa määrata abipolitseinikule, kellel puudub tugirelva kandmise õigus ja ei ole läbinud ' +
+                'massiohje koolitust.'
             ],
             correctAnswerIndex: 0
         },
         {
             id: 'q10',
-            question: 'Abipolitseiniku kandidaat peab läbima esimese astme õppe, kui kaua kestab esimese astme koolitus?',
+            question: 'Kelle otsusega vabastatakse abipolitseinik staatusest?',
             answers: [
-                '40 tundi',
-                '48 tundi',
-                '50 tundi'
+                'Prefekti või tema volitatud ametniku otsusega',
+                'Politsei- ja Piirivalveameti peadirektori või tema volitatud ametniku otsusega',
+                'Abipolitseinike koordinaatori või tema volitatud ametniku otsusega'
             ],
-            correctAnswerIndex: 0
+            correctAnswerIndex: 1
         },
     ]
 };

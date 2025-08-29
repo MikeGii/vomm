@@ -246,7 +246,7 @@ export const finishTest = async (userId: string): Promise<CompletedTest> => {
 
     // Add pollid if earned (assuming pollid is stored in money field based on your context)
     if (pollid > 0) {
-        updateData.money = increment(pollid);
+        updateData.pollid = increment(pollid);
     }
 
     await updateDoc(playerStatsRef, updateData);

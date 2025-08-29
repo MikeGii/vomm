@@ -1,11 +1,11 @@
-/* src/styles/components/tests/TestResultsModal.css */
+/* src/styles/components/tests/TestResultsModal.css - Updated to match dark theme */
 .test-results-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.8);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -14,13 +14,13 @@
 }
 
 .test-results-modal {
-    background: white;
-    border-radius: 20px;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 12px;
     max-width: 500px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     animation: modalAppear 0.3s ease-out;
 }
 
@@ -38,7 +38,7 @@
 .results-header {
     padding: 30px 25px 20px;
     text-align: center;
-    border-radius: 20px 20px 0 0;
+    border-radius: 12px 12px 0 0;
     position: relative;
     overflow: hidden;
 }
@@ -55,23 +55,27 @@
 }
 
 .results-header.excellent {
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: white;
+    background-color: #1a2e1a;
+    border-bottom: 2px solid #10b981;
+    color: #10b981;
 }
 
 .results-header.good {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    color: white;
+    background-color: #1a252a;
+    border-bottom: 2px solid #4a90e2;
+    color: #4a90e2;
 }
 
 .results-header.average {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: white;
+    background-color: #2a241a;
+    border-bottom: 2px solid #ffd700;
+    color: #ffd700;
 }
 
 .results-header.poor {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: white;
+    background-color: #2a1a1a;
+    border-bottom: 2px solid #ff6b6b;
+    color: #ff6b6b;
 }
 
 .header-content {
@@ -103,6 +107,7 @@
     font-weight: bold;
     margin-bottom: 10px;
     line-height: 1.3;
+    color: #f0f0f0;
 }
 
 .score-message {
@@ -130,8 +135,8 @@
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-    border: 4px solid #e2e8f0;
+    background-color: #1a1a1a;
+    border: 4px solid #666;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -141,138 +146,70 @@
 
 .results-header.excellent + .results-content .score-circle {
     border-color: #10b981;
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
+    background-color: rgba(16, 185, 129, 0.1);
 }
 
 .results-header.good + .results-content .score-circle {
-    border-color: #3b82f6;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(29, 78, 216, 0.05));
+    border-color: #4a90e2;
+    background-color: rgba(74, 144, 226, 0.1);
 }
 
 .results-header.average + .results-content .score-circle {
-    border-color: #f59e0b;
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.05));
+    border-color: #ffd700;
+    background-color: rgba(255, 215, 0, 0.1);
 }
 
 .results-header.poor + .results-content .score-circle {
-    border-color: #ef4444;
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05));
+    border-color: #ff6b6b;
+    background-color: rgba(255, 107, 107, 0.1);
 }
 
 .score-number {
     font-size: 2rem;
     font-weight: bold;
-    color: #1f2937;
+    color: #f0f0f0;
     line-height: 1;
 }
 
 .score-percentage {
     font-size: 1rem;
-    color: #6b7280;
-    font-weight: 600;
+    color: #b0b0b0;
+    margin-top: 8px;
 }
 
 .score-details {
-    width: 100%;
-}
-
-.score-breakdown {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 15px;
-}
-
-.breakdown-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 15px;
-    border-radius: 8px;
-    background: #f8fafc;
-}
-
-.breakdown-item.correct {
-    background: rgba(16, 185, 129, 0.1);
-}
-
-.breakdown-item.incorrect {
-    background: rgba(239, 68, 68, 0.1);
-}
-
-.breakdown-icon {
-    font-size: 1.1rem;
-}
-
-.breakdown-text {
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: #374151;
-}
-
-.time-taken {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px;
-    background: #f1f5f9;
-    border-radius: 8px;
-    color: #475569;
-    font-weight: 500;
-}
-
-.time-icon {
-    font-size: 1rem;
-}
-
-.rewards-section {
-    margin-bottom: 30px;
-}
-
-.rewards-title {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #1f2937;
-    margin-bottom: 15px;
+    justify-content: space-between;
+    gap: 20px;
     text-align: center;
 }
 
-.rewards-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.reward-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 15px;
-    background: #f8fafc;
+.detail-item {
+    flex: 1;
+    padding: 15px;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
     border-radius: 8px;
-    border-left: 4px solid #e2e8f0;
 }
 
-.reward-item.bonus {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.05));
-    border-left-color: #f59e0b;
+.detail-label {
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.reward-icon {
-    font-size: 1.2rem;
-}
-
-.reward-text {
-    font-size: 1rem;
-    font-weight: 500;
-    color: #374151;
+.detail-value {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #f0f0f0;
 }
 
 .perfect-score-celebration {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
-    border: 2px solid rgba(16, 185, 129, 0.2);
-    border-radius: 12px;
+    background-color: rgba(16, 185, 129, 0.1);
+    border: 2px solid #10b981;
+    border-radius: 8px;
     padding: 20px;
     margin-bottom: 20px;
 }
@@ -291,13 +228,13 @@
 .celebration-text h4 {
     font-size: 1.2rem;
     font-weight: bold;
-    color: #065f46;
+    color: #10b981;
     margin-bottom: 5px;
 }
 
 .celebration-text p {
     font-size: 0.95rem;
-    color: #047857;
+    color: #10b981;
     margin: 0;
 }
 
@@ -307,10 +244,10 @@
 }
 
 .close-button {
-    background: linear-gradient(135deg, #6b7280, #4b5563);
+    background-color: #666;
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 4px;
     padding: 12px 30px;
     font-size: 1rem;
     font-weight: 600;
@@ -325,7 +262,7 @@
 }
 
 .close-button:hover {
-    background: linear-gradient(135deg, #4b5563, #374151);
+    background-color: #777;
     transform: translateY(-1px);
 }
 
@@ -362,6 +299,11 @@
 
     .score-number {
         font-size: 1.6rem;
+    }
+
+    .score-details {
+        flex-direction: column;
+        gap: 10px;
     }
 
     .celebration-content {

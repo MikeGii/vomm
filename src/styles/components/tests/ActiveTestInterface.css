@@ -1,7 +1,7 @@
-/* src/styles/components/tests/ActiveTestInterface.css */
+/* src/styles/components/tests/ActiveTestInterface.css - Updated to match dark theme */
 .active-test-interface {
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-color: #1a1a1a;
     padding: 20px;
 }
 
@@ -10,22 +10,20 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 25px;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 20px 25px;
-    border-radius: 16px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #333;
 }
 
 .test-info h1.test-name {
     font-size: 1.8rem;
     font-weight: bold;
-    color: #1f2937;
+    color: #f0f0f0;
     margin: 0 0 5px 0;
 }
 
 .test-info .test-category {
     font-size: 1rem;
-    color: #6b7280;
+    color: #b0b0b0;
     margin: 0;
     text-transform: capitalize;
 }
@@ -41,8 +39,9 @@
     align-items: center;
     justify-content: center;
     min-height: 400px;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 16px;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
     margin: 50px auto;
     max-width: 500px;
     padding: 40px;
@@ -50,13 +49,13 @@
 }
 
 .test-error h2 {
-    color: #dc2626;
+    color: #ff6b6b;
     font-size: 1.5rem;
     margin-bottom: 10px;
 }
 
 .test-error p {
-    color: #6b7280;
+    color: #b0b0b0;
     font-size: 1rem;
 }
 
