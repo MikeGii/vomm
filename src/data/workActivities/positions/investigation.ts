@@ -13,5 +13,16 @@ export const INVESTIGATION_ACTIVITIES: WorkActivity[] = [
         expGrowthRate: 0.10,
         maxHours: 8,
         allowedFor: ['uurija'],
+    },
+    {
+        id: 'procedural_unit_work_02',
+        name: 'Menetle lihtsamaid kuriteo materjale',
+        description: 'Uurijana pead koguma tõendeid, kuulama üle kahtlusaluseid ja tegema kuriteo materjale prokuratuuri',
+        minLevel: 55,
+        requiredCourses: ['enhanced_law_studies_advanced'],
+        baseExpPerHour: 900,
+        expGrowthRate: 0.10,
+        maxHours: 8,
+        allowedFor: ['uurija'],
     }
 ];
