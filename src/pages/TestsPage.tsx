@@ -195,6 +195,34 @@ const TestsPage: React.FC = () => {
                     <p>Lõpeta koolitusi, et avada uusi teste. Iga test sisaldab 10 küsimust ja aega on 15 minutit.</p>
                 </div>
 
+                {/* NEW INFO SECTION */}
+                <div className="tests-info-section">
+                    <div className="info-header">
+                        <span className="info-icon">ℹ️</span>
+                        <h2 className="info-title">Testide süsteemi kohta</h2>
+                    </div>
+                    <div className="info-content">
+                        <ul className="info-list">
+                            <li>
+                                Testid on puhtalt mängijate enda koostatud ja mängu autor ei vastuta testide korrektuse eest.
+                            </li>
+                            <li>
+                                Testid on loodud puhtalt seadusandluse õppimise ja tundmise eesmärgil, et luua juurde mängu temaatilist kontenti.
+                            </li>
+                            <li>
+                                Teste saab teha iga mängija ühe korra mängu jooksul ja testi sooritamisel on ajaline piirang.
+                            </li>
+                            <li>
+                                Kui soovid ka oma testi mängijatele koostada anna sellest märku. Test peab koosnema 10 küsimusest ja testid avanevad kui mängija läbib mõne koolituse mängusiseselt. Test peaks olema ka antud koolituse temaatiline. Tasud ja boonused testi lahendamisel sõltub testi keerukusest ja mängus seonduva koolituse nõuetest.
+                            </li>
+                        </ul>
+                        <div className="contact-highlight">
+                            💡 Soovituse korral võta ühendust administraatoriga uue testi loomiseks.
+                        </div>
+                    </div>
+                </div>
+                {/* END NEW INFO SECTION */}
+
                 <TestTabs
                     activeTab={activeTab}
                     onTabChange={setActiveTab}

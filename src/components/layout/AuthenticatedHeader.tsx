@@ -176,7 +176,7 @@ export const AuthenticatedHeader: React.FC = () => {
                                         className="menu-item"
                                     >
                                         <span className="menu-icon">📝</span>
-                                        <span>Testid - tulekul</span>
+                                        <span>Testid</span>
                                     </button>
                                     <button
                                         onClick={() => {
