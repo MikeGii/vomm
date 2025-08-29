@@ -1,16 +1,187 @@
-// src/pages/TestsPage.tsx
-import React from 'react';
+// src/pages/TestsPage.tsx - Updated to match existing page structure
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
+import { TestTabs } from '../components/tests/TestTabs';
+import { TestsList } from '../components/tests/TestsList';
+import { ActiveTestInterface } from '../components/tests/ActiveTestInterface';
+import { TestResultsModal } from '../components/tests/TestResultsModal';
+import { useAuth } from '../contexts/AuthContext';
+import { usePlayerStats } from '../contexts/PlayerStatsContext';
+import { useToast } from '../contexts/ToastContext';
+import { Test,CompletedTest } from '../types';
+import {
+    getAvailableTests,
+    startTest,
+    finishTest,
+    forceFinishExpiredTest,
+    getRemainingTime
+} from '../services/TestService';
 import '../styles/pages/Tests.css';
+
+type TabType = 'abipolitseinik' | 'sisekaitseakadeemia' | 'politsei';
 
 const TestsPage: React.FC = () => {
     const navigate = useNavigate();
+    const { currentUser } = useAuth();
+    const { playerStats, loading, refreshStats } = usePlayerStats();
+    const { showToast } = useToast();
+
+    const [activeTab, setActiveTab] = useState<TabType>('abipolitseinik');
+    const [availableTests, setAvailableTests] = useState<Test[]>([]);
+    const [isStartingTest, setIsStartingTest] = useState(false);
+    const [completedTest, setCompletedTest] = useState<CompletedTest | null>(null);
+    const [showResultsModal, setShowResultsModal] = useState(false);
+
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Load available tests when player stats change
+    useEffect(() => {
+        if (playerStats && !loading) {
+            const tests = getAvailableTests(playerStats);
+            setAvailableTests(tests);
+        }
+    }, [playerStats, loading]);
+
+    // Check for expired test on mount and set up timer
+    useEffect(() => {
+        if (!currentUser || !playerStats) return;
+
+        const checkExpiredTest = async () => {
+            if (playerStats.activeTest) {
+                const remainingTime = getRemainingTime(playerStats.activeTest);
+                if (remainingTime <= 0) {
+                    try {
+                        const result = await forceFinishExpiredTest(currentUser.uid);
+                        if (result) {
+                            setCompletedTest(result);
+                            setShowResultsModal(true);
+                            showToast('Test lõpetati automaatselt - aeg sai otsa!', 'info');
+                            await refreshStats();
+                        }
+                    } catch (error) {
+                        console.error('Error finishing expired test:', error);
+                    }
+                }
+            }
+        };
+
+        checkExpiredTest();
+
+        // Set up interval to check for expired tests
+        if (playerStats.activeTest) {
+            intervalRef.current = setInterval(checkExpiredTest, 5000);
+        }
+
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+        };
+    }, [currentUser, playerStats, refreshStats, showToast]);
+
+    // Handle starting a test
+    const handleStartTest = useCallback(async (testId: string) => {
+        if (!currentUser || !playerStats) return;
+
+        setIsStartingTest(true);
+        try {
+            await startTest(currentUser.uid, testId);
+            await refreshStats();
+            showToast('Test alustatud! Sul on 15 minutit aega.', 'success');
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Viga testi alustamisel';
+            showToast(errorMessage, 'error');
+        } finally {
+            setIsStartingTest(false);
+        }
+    }, [currentUser, playerStats, refreshStats, showToast]);
+
+    // Handle finishing a test
+    const handleFinishTest = useCallback(async () => {
+        if (!currentUser) return;
+
+        try {
+            const result = await finishTest(currentUser.uid);
+            setCompletedTest(result);
+            setShowResultsModal(true);
+            await refreshStats();
+
+            const scorePercentage = Math.round((result.score / result.totalQuestions) * 100);
+            showToast(`Test lõpetatud! Skoor: ${result.score}/${result.totalQuestions} (${scorePercentage}%)`, 'success');
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Viga testi lõpetamisel';
+            showToast(errorMessage, 'error');
+        }
+    }, [currentUser, refreshStats, showToast]);
+
+    // Handle closing results modal
+    const handleCloseResults = useCallback(() => {
+        setShowResultsModal(false);
+        setCompletedTest(null);
+    }, []);
+
+    // Get tests for current tab
+    const getTestsForTab = useCallback((tab: TabType): Test[] => {
+        return availableTests.filter(test => test.category === tab);
+    }, [availableTests]);
+
+    if (loading) {
+        return (
+            <div className="page">
+                <AuthenticatedHeader />
+                <div className="tests-container">
+                    <div className="loading">Laen teste...</div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!playerStats) {
+        return (
+            <div className="page">
+                <AuthenticatedHeader />
+                <div className="tests-container">
+                    <div className="loading">Viga andmete laadimisel</div>
+                </div>
+            </div>
+        );
+    }
+
+    // If player has active test, show test interface
+    if (playerStats.activeTest) {
+        return (
+            <div className="page">
+                <AuthenticatedHeader />
+                <div className="tests-container">
+                    <button
+                        className="back-to-dashboard"
+                        onClick={() => navigate('/dashboard')}
+                    >
+                        ← Tagasi töölauale
+                    </button>
+
+                    <ActiveTestInterface
+                        activeTest={playerStats.activeTest}
+                        onFinishTest={handleFinishTest}
+                        onRefreshStats={refreshStats}
+                    />
+                </div>
+                {showResultsModal && completedTest && (
+                    <TestResultsModal
+                        completedTest={completedTest}
+                        onClose={handleCloseResults}
+                    />
+                )}
+            </div>
+        );
+    }
 
     return (
         <div className="page">
             <AuthenticatedHeader />
-            <main className="tests-container">
+            <div className="tests-container">
                 <button
                     className="back-to-dashboard"
                     onClick={() => navigate('/dashboard')}
@@ -20,52 +191,34 @@ const TestsPage: React.FC = () => {
 
                 <h1 className="tests-title">Testid</h1>
 
-                <div className="tests-hero">
-                    <div className="hero-icon">📝</div>
-                    <h2>Testide lahendamine on tulekul</h2>
-                    <p className="hero-description">
-                        Siin saab treenida oma teadmisi, et saada boonus auhindu mängus
-                    </p>
+                <div className="tests-description">
+                    <p>Lõpeta koolitusi, et avada uusi teste. Iga test sisaldab 10 küsimust ja aega on 15 minutit.</p>
                 </div>
 
-                <div className="tests-features">
-                    <div className="feature-grid">
-                        <div className="feature-card">
-                            <div className="feature-icon">🧠</div>
-                            <h3>Teadmiste test</h3>
-                            <p>Kontrolli oma teadmisi politsei ja õigusteaduse valdkonnas</p>
-                        </div>
+                <TestTabs
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    testCounts={{
+                        abipolitseinik: getTestsForTab('abipolitseinik').length,
+                        sisekaitseakadeemia: getTestsForTab('sisekaitseakadeemia').length,
+                        politsei: getTestsForTab('politsei').length
+                    }}
+                />
 
-                        <div className="feature-card">
-                            <div className="feature-icon">🏆</div>
-                            <h3>Boonus auhinnad</h3>
-                            <p>Eduka testide sooritamise eest saad väärtuslikke auhindu</p>
-                        </div>
-                    </div>
-                </div>
+                <TestsList
+                    tests={getTestsForTab(activeTab)}
+                    playerStats={playerStats}
+                    onStartTest={handleStartTest}
+                    isStartingTest={isStartingTest}
+                />
+            </div>
 
-                <div className="coming-soon-info">
-                    <div className="info-card">
-                        <h3>Mis ootab sind testides?</h3>
-                        <ul>
-                            <li>📚 Mitmekesised küsimused politsei valdkonnast</li>
-                            <li>💰 Lisaraha ja kogemuspunktide teenimise võimalus</li>
-                            <li>🎖️ Eriti keeruliste testide eest spetsiaalsed auhinnad</li>
-                            <li>📈 Võimalus tõsta oma mainet</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div className="update-notice">
-                    <div className="notice-content">
-                        <div className="notice-icon">🔔</div>
-                        <div className="notice-text">
-                            <strong>Uuendus tulemas!</strong>
-                            <p>Testide funktsioon lisatakse peagi mängu. Jälgi uuendusi ja ole valmis oma teadmisi proovile panema!</p>
-                        </div>
-                    </div>
-                </div>
-            </main>
+            {showResultsModal && completedTest && (
+                <TestResultsModal
+                    completedTest={completedTest}
+                    onClose={handleCloseResults}
+                />
+            )}
         </div>
     );
 };

@@ -473,7 +473,7 @@ export const POLITSEI_COURSES: Course[] = [
         },
         category: 'politsei',
         completionQuestion: {
-            question: 'Miks on kohtuekspertiisi ametlik lühend Eestis?',
+            question: 'Mis on kohtuekspertiisi ametlik lühend Eestis?',
             answers: [
                 'KEEI - Kohtuekspertiisi Eesti Instituut',
                 'EKEI - Eesti Kohtuekspertiisi Instituut',

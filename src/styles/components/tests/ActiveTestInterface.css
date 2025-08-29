@@ -1,0 +1,77 @@
+/* src/styles/components/tests/ActiveTestInterface.css - Updated to match dark theme */
+.active-test-interface {
+    min-height: 100vh;
+    background-color: #1a1a1a;
+    padding: 20px;
+}
+
+.test-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #333;
+}
+
+.test-info h1.test-name {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #f0f0f0;
+    margin: 0 0 5px 0;
+}
+
+.test-info .test-category {
+    font-size: 1rem;
+    color: #b0b0b0;
+    margin: 0;
+    text-transform: capitalize;
+}
+
+.test-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.test-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    margin: 50px auto;
+    max-width: 500px;
+    padding: 40px;
+    text-align: center;
+}
+
+.test-error h2 {
+    color: #ff6b6b;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.test-error p {
+    color: #b0b0b0;
+    font-size: 1rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .active-test-interface {
+        padding: 15px;
+    }
+
+    .test-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .test-info h1.test-name {
+        font-size: 1.5rem;
+    }
+}
