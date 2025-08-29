@@ -134,6 +134,37 @@ export const POLITSEI_COURSES: Course[] = [
         }
     },
     {
+        id: 'emergency_police_course_houses',
+        name: 'Ohtlikes hoonetes liikumine ja paiknemine',
+        description: 'Koolitus välitöötajatele ja kiirreageerijatele, kuidas liikuda ohtlikes hoonetes, kus võib olla relvastatud isikuid',
+        duration: 14000,
+        requirements: {
+            level: 50,
+            completedCourses: ['medical_course_police'],
+            totalWorkedHours: 80
+        },
+        rewards: {
+            experience: 4500,
+            reputation: 250,
+            money: 2500
+        },
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Kuidas nimetatakse politseis ruumi sisenemise eelset kontrolli ukseava juures?',
+            answers: [
+                '"Tagala puhastus" (Clearing the back)',
+                '"Viisteist kraadi" (fiftteen degrees)',
+                '"Tordi lõikamine" (Slicing the Pie)',
+            ],
+            correctAnswerIndex: 2,
+            rewards: {
+                experience: 700,
+                money: 500,
+                reputation: 100,
+            }
+        }
+    },
+    {
         id: 'enhanced_law_studies',
         name: 'Süüteomenetluse täiendkoolitus',
         description: 'Koolitus põhjalikumaks süüteomenetluse läbiviimiseks',
@@ -161,6 +192,37 @@ export const POLITSEI_COURSES: Course[] = [
                 experience: 600,
                 money: 600,
                 reputation: 75,
+            }
+        }
+    },
+    {
+        id: 'enhanced_law_studies_advanced',
+        name: 'Süüteomenetluse koolitus edasijõudnutele',
+        description: 'Õpid tundma kõiki politseitööks vajalike õigusakte ning oskad prokuratuuriga teha efektiivselt koostööd kuritegude lahendamisel',
+        duration: 18000,
+        requirements: {
+            level: 55,
+            completedCourses: ['enhanced_law_studies'],
+            totalWorkedHours: 110
+        },
+        rewards: {
+            experience: 7000,
+            reputation: 550,
+            money: 3500,
+        },
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Millal saab kahtlustatavast isikust süüdistatav isik?',
+            answers: [
+                'Kui Politsei- ja Piirivalveamet on koostanud süüdistusakti kriminaalmenetluse seadustiku kohaselt',
+                'Kui kohus on koostanud süüdistusakti kriminaalmenetluse seadustiku § 226 kohaselt',
+                'Kui prokuratuur on koostanud süüdistusakti kriminaalmenetluse seadustiku kohaselt',
+            ],
+            correctAnswerIndex: 2,
+            rewards: {
+                experience: 1000,
+                money: 800,
+                reputation: 150,
             }
         }
     },
