@@ -1,0 +1,78 @@
+/* src/styles/components/tests/ActiveTestInterface.css */
+.active-test-interface {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+}
+
+.test-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px 25px;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.test-info h1.test-name {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #1f2937;
+    margin: 0 0 5px 0;
+}
+
+.test-info .test-category {
+    font-size: 1rem;
+    color: #6b7280;
+    margin: 0;
+    text-transform: capitalize;
+}
+
+.test-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.test-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    margin: 50px auto;
+    max-width: 500px;
+    padding: 40px;
+    text-align: center;
+}
+
+.test-error h2 {
+    color: #dc2626;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.test-error p {
+    color: #6b7280;
+    font-size: 1rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .active-test-interface {
+        padding: 15px;
+    }
+
+    .test-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .test-info h1.test-name {
+        font-size: 1.5rem;
+    }
+}

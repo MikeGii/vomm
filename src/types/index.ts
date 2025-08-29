@@ -140,6 +140,8 @@ export interface PlayerStats {
     fightClubStats?: FightClubStats;
     fightClubData?: FightClubData;
     isVip?: boolean;
+    completedTests?: string[];
+    activeTest?: ActiveTest | null;
     casinoData?: {
         playsUsed: number;
         lastPlayTime: number;
@@ -337,6 +339,54 @@ export interface FightClubData {
     remainingFights: number;
     totalFights: number;
     lastFightTime?: Timestamp;
+}
+
+export interface TestQuestion {
+    id: string;
+    question: string;
+    answers: string[];
+    correctAnswerIndex: number;
+}
+
+export interface Test {
+    id: string;
+    name: string;
+    description: string;
+    category: 'abipolitseinik' | 'sisekaitseakadeemia' | 'politsei';
+    requiredCourses: string[]; // Courses needed to unlock this test
+    baseReward: {
+        experience: number;
+        reputation: number;
+    };
+    perfectScoreBonus: {
+        pollid: number; // 20 pollid for 100% correct
+    };
+    questions: TestQuestion[];
+    timeLimit: number; // Time limit in minutes (15)
+}
+
+export interface ActiveTest {
+    testId: string;
+    userId: string;
+    startedAt: Date | Timestamp;
+    expiresAt: Date | Timestamp;
+    currentQuestionIndex: number;
+    answers: (number | null)[]; // Array of selected answer indices, null = not answered
+    timeRemaining: number; // Seconds remaining
+}
+
+export interface CompletedTest {
+    testId: string;
+    userId: string;
+    score: number; // Number of correct answers (0-10)
+    totalQuestions: number; // Always 10
+    completedAt: Date | Timestamp;
+    earnedRewards: {
+        experience: number;
+        reputation: number;
+        pollid?: number;
+    };
+    timeTaken: number; // Time taken in seconds
 }
 
 export * from './events.types';
