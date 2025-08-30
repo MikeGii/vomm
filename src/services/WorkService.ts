@@ -13,7 +13,8 @@ import {
     getDocs,
     increment,
     startAfter,
-    getCountFromServer
+    getCountFromServer,
+    runTransaction
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats, ActiveWork, WorkHistoryEntry } from '../types';
@@ -126,97 +127,142 @@ export const checkAndCompleteWork = async (userId: string): Promise<{
 
     if (!eventTriggered) {
         // No event, complete work immediately
-        await completeWork(userId);
-        return { completed: true, hasEvent: false };
+        const completionResult = await completeWork(userId);
+
+        if (completionResult.success && !completionResult.wasAlreadyCompleted) {
+            return { completed: true, hasEvent: false };
+        } else if (completionResult.wasAlreadyCompleted) {
+            // Work was already completed by another process
+            console.log('Work completion prevented - already completed by another process');
+            return { completed: false, hasEvent: false };
+        } else {
+            // Completion failed for some reason
+            console.error('Work completion failed:', completionResult.message);
+            return { completed: false, hasEvent: false };
+        }
     }
 
     return { completed: false, hasEvent: true };
 };
 
 // Complete work and give rewards
-export const completeWork = async (userId: string): Promise<void> => {
+export const completeWork = async (userId: string): Promise<{
+    success: boolean;
+    message?: string;
+    wasAlreadyCompleted?: boolean;
+    rewards?: any;
+}> => {
     const statsRef = doc(firestore, 'playerStats', userId);
-    const statsDoc = await getDoc(statsRef);
 
-    if (!statsDoc.exists()) return;
+    try {
+        // Use runTransaction to prevent race conditions
+        const result = await runTransaction(firestore, async (transaction) => {
+            const statsDoc = await transaction.get(statsRef);
 
-    const stats = statsDoc.data() as PlayerStats;
-    if (!stats.activeWork) return;
-
-    const workActivity = getWorkActivityById(stats.activeWork.workId);
-    if (!workActivity) return;
-
-    // Calculate actual rewards based on current player rank
-    const actualRewards = calculateWorkRewards(workActivity, stats.activeWork.totalHours, stats.rank);
-
-    // Calculate new stats
-    const newExp = stats.experience + actualRewards.experience;
-    const newLevel = calculateLevelFromExp(newExp);
-    const newTotalWorkedHours = (stats.totalWorkedHours || 0) + stats.activeWork.totalHours;
-
-    // Add to history
-    const historyEntry: WorkHistoryEntry = {
-        userId,
-        workId: stats.activeWork.workId,
-        workName: workActivity.name,
-        prefecture: stats.activeWork.prefecture,
-        department: stats.activeWork.department,
-        startedAt: stats.activeWork.startedAt,
-        completedAt: Timestamp.now(),
-        hoursWorked: stats.activeWork.totalHours,
-        expEarned: actualRewards.experience,
-        moneyEarned: actualRewards.money
-    };
-
-    await addDoc(collection(firestore, 'workHistory'), historyEntry);
-
-    // NEW: Update department crime level if player has a department
-    // Only for graduated officers (not abipolitseinik or kadett)
-    if (stats.department &&
-        stats.policePosition &&
-        stats.policePosition !== 'abipolitseinik' &&
-        stats.policePosition !== 'kadett') {
-
-        try {
-            const crimeResult = await updateCrimeLevelAfterWork(
-                stats.activeWork.prefecture,
-                stats.activeWork.department,
-                stats.activeWork.totalHours
-            );
-
-            // Log the crime reduction for debugging (optional)
-            if (crimeResult.success) {
-                console.log(`Crime reduction: ${crimeResult.message}`);
+            if (!statsDoc.exists()) {
+                return { success: false, message: 'Player stats not found' };
             }
-        } catch (error) {
-            // Don't fail the work completion if crime update fails
-            console.error('Crime level update failed, but work completed successfully:', error);
+
+            const stats = statsDoc.data() as PlayerStats;
+
+            // Critical check: if no active work, this has already been completed
+            if (!stats.activeWork) {
+                return { success: false, wasAlreadyCompleted: true, message: 'Work already completed' };
+            }
+
+            const workActivity = getWorkActivityById(stats.activeWork.workId);
+            if (!workActivity) {
+                return { success: false, message: 'Work activity not found' };
+            }
+
+            // Calculate actual rewards based on current player rank
+            const actualRewards = calculateWorkRewards(workActivity, stats.activeWork.totalHours, stats.rank);
+
+            // Calculate new stats
+            const newExp = stats.experience + actualRewards.experience;
+            const newLevel = calculateLevelFromExp(newExp);
+            const newTotalWorkedHours = (stats.totalWorkedHours || 0) + stats.activeWork.totalHours;
+
+            // VIP LOGIC: Keep your original VIP logic
+            const nonWorkingClicks = stats.isVip ? 100 : 50;
+
+            // Prepare update data
+            const updateData: any = {
+                activeWork: null, // ❗ Critical: Remove active work first
+                experience: newExp,
+                level: newLevel,
+                totalWorkedHours: newTotalWorkedHours,
+                'trainingData.isWorking': false,
+                'trainingData.remainingClicks': nonWorkingClicks,
+                'kitchenLabTrainingData.remainingClicks': nonWorkingClicks,
+                'handicraftTrainingData.remainingClicks': nonWorkingClicks
+            };
+
+            // Add money if there's a reward (using increment like your original)
+            if (actualRewards.money > 0) {
+                updateData.money = increment(actualRewards.money);
+            }
+
+            // Apply the update within the transaction
+            transaction.update(statsRef, updateData);
+
+            // Create work history entry (same as your original)
+            const historyEntry: WorkHistoryEntry = {
+                userId,
+                workId: stats.activeWork.workId,
+                workName: workActivity.name,
+                prefecture: stats.activeWork.prefecture,
+                department: stats.activeWork.department,
+                startedAt: stats.activeWork.startedAt,
+                completedAt: Timestamp.now(),
+                hoursWorked: stats.activeWork.totalHours,
+                expEarned: actualRewards.experience,
+                moneyEarned: actualRewards.money
+            };
+
+            const historyRef = doc(collection(firestore, 'workHistory'));
+            transaction.set(historyRef, historyEntry);
+
+            return {
+                success: true,
+                rewards: actualRewards,
+                newLevel,
+                wasAlreadyCompleted: false,
+                workData: stats.activeWork // Store for crime update outside transaction
+            };
+        });
+
+        // Handle crime level update OUTSIDE the transaction (like your original)
+        if (result.success && result.workData) {
+            const stats = (await getDoc(statsRef)).data() as PlayerStats;
+
+            if (stats.department &&
+                stats.policePosition &&
+                stats.policePosition !== 'abipolitseinik' &&
+                stats.policePosition !== 'kadett') {
+
+                try {
+                    const crimeResult = await updateCrimeLevelAfterWork(
+                        result.workData.prefecture,
+                        result.workData.department,
+                        result.workData.totalHours
+                    );
+
+                    if (crimeResult.success) {
+                        console.log(`Crime reduction: ${crimeResult.message}`);
+                    }
+                } catch (error) {
+                    console.error('Crime level update failed, but work completed successfully:', error);
+                }
+            }
         }
+
+        return result;
+
+    } catch (error) {
+        console.error('Error completing work:', error);
+        return { success: false, message: `Transaction failed: ${error}` };
     }
-
-
-    // VIP LOGIC: Determine non-working clicks based on VIP status
-    const nonWorkingClicks = stats.isVip ? 100 : 50;
-
-
-    // Update stats - clear work and update rewards
-    const updateData: any = {
-        activeWork: null,
-        experience: newExp,
-        level: newLevel,
-        totalWorkedHours: newTotalWorkedHours,
-        'trainingData.isWorking': false,
-        'trainingData.remainingClicks': nonWorkingClicks,
-        'kitchenLabTrainingData.remainingClicks': nonWorkingClicks,
-        'handicraftTrainingData.remainingClicks': nonWorkingClicks
-    };
-
-    // Only update money if there's a monetary reward
-    if (actualRewards.money > 0) {
-        updateData.money = increment(actualRewards.money);
-    }
-
-    await updateDoc(statsRef, updateData);
 };
 
 // Get remaining time in milliseconds
