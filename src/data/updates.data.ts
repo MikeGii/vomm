@@ -4,13 +4,39 @@ import { GameUpdate } from '../types';
 export const gameUpdates: GameUpdate[] = [
 
     {
+        id: '13',
+        title: 'Mängu uuenduesd',
+        description: 'Lisatud testide leht ja testi lahendamise süsteem. Lisatud paar uut koolitust politsei kategooriasse seoses uute töötegevuste lisandumisega' +
+            ' K9, uurijate, kiirreageerijate ja küberkriminalistide üksustesse.',
+        date: '2025-08-29',
+        isNew: true
+    },
+    {
+        id: '13',
+        title: 'Mängu uuenduesd',
+        description: 'Lisatud kuritegevuse statistika ja edetabeli funktisoon osakonna lehele. Lisatud juurde talituse juhi ametikoht ja uus palgasüsteem erinevatele ametikoha tasemetele. Palgasüsteem' +
+            ' võtab arvesse mängija ametikohta + auastet. Tasakaalustatud grupijuhi kohale kandideerimise nõudeid ja nüüd maine vajalik. VIP boosterite süsteemi tasakaalustatud ja lisatud limiit ühe' +
+            ' boosteri kasutamise ühe töö tegevuse kohta. Lisatud mitmeid uusi koolitusi ja boonusküsimusi koolitustele.',
+        date: '2025-08-28',
+
+    },
+    {
+        id: '12',
+        title: 'Mängu uuenduesd',
+        description: 'Lisatud kasutaja seadete leht. Mängija saab muuta nime ja e-posti. Võitlusklubis vastaste nimekirja osa optimiseeritud. Köögi & Labori ning ' +
+            'käsitöö osas saab inventuuris ja ka poes koguseid paremini hallata (varasem viga oli eeltäidetud nr. 1 ja ei lubanud sisestada koguseid, mida mängija osta ei saa).' +
+            ' Poe süsteemis kaotatud ära lao seis esmatarvetel. Mängijate toodetud asjadel endiselt muutuv lao seis. Loodud VIP lehekülg. Muudetud kogu mängija leveli xp arvutamise süsteem ' +
+            'paindliku kurvi pealt lineaarsele 9%-le (vajaliku xp tõus uue leveli jaoks).',
+        date: '2025-08-27',
+    },
+    {
         id: '11',
         title: 'Mängu uuenduesd',
         description: 'Lisatud testide lehekülg kuhu tulevikus lisandub teste boonus tasudega. Lisatud kaks uut arendatavat käsitöö oskust (3D printimine ja laserlõikamine,' +
             ' mis avanevad tulevikus uute mängu funtksioonidega. Lisatud uusi tegevusi käsitöö ja köögi alla. Parandused profiili lehel oskuste all. Tõstetud edetabeli ' +
             'kuvamiste arvu 200 peale. Lisatud uus koolitus politsei kategoorias.',
         date: '2025-08-26',
-        isNew: true
+
     },
     {
         id: '10',
