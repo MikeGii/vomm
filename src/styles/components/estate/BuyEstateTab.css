@@ -1,0 +1,267 @@
+/* src/styles/components/estate/BuyEstateTab.css - COMPACT VERSION */
+.buy-estate-tab {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.tab-header h2 {
+    color: #f0f0f0;
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.player-money {
+    background: linear-gradient(45deg, #4a90e2, #357abd);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.estates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.estate-card {
+    background: linear-gradient(135deg, #2a2a2a 0%, #252525 100%);
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.estate-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    border-color: #4a90e2;
+}
+
+.estate-card.unaffordable {
+    opacity: 0.6;
+    border-color: #ff6b6b;
+}
+
+.estate-card.current-estate {
+    border-color: #ff9800;
+    background: linear-gradient(135deg, #2a2a2a 0%, #3a2a1a 100%);
+}
+
+.estate-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.estate-name {
+    color: #f0f0f0;
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.current-badge {
+    background: #ff9800;
+    color: white;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.estate-description {
+    margin-bottom: 1rem;
+}
+
+.estate-description p {
+    color: #b0b0b0;
+    line-height: 1.5;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.feature {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.feature.active {
+    background: linear-gradient(45deg, #4a90e2, #357abd);
+    color: white;
+}
+
+.feature.inactive {
+    background-color: #1a1a1a;
+    color: #666;
+    border: 1px dashed #333;
+}
+
+.feature-icon {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.feature-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.feature-name {
+    font-weight: bold;
+    font-size: 0.7rem;
+}
+
+.feature-value {
+    font-size: 0.65rem;
+    opacity: 0.9;
+}
+
+.pricing-section {
+    border-top: 1px solid #444;
+    padding-top: 1rem;
+}
+
+.price-breakdown {
+    margin-bottom: 1rem;
+}
+
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+    font-size: 0.9rem;
+}
+
+.price-row.credit {
+    color: #4a90e2;
+}
+
+.price-row.final {
+    border-top: 1px solid #444;
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.price-value {
+    font-weight: bold;
+}
+
+.price-value.credit {
+    color: #4a90e2;
+}
+
+.purchase-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.purchase-button {
+    background: linear-gradient(45deg, #4a90e2, #357abd);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 100px;
+}
+
+.purchase-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3);
+}
+
+.purchase-button.disabled {
+    background: #666;
+    cursor: not-allowed;
+}
+
+.purchase-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.insufficient-funds {
+    color: #ff6b6b;
+    font-weight: bold;
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .estates-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .estate-card {
+        padding: 1.25rem;
+    }
+
+    .tab-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .features-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+    }
+
+    .estate-card-header {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .estate-card {
+        padding: 1rem;
+    }
+
+    .estate-name {
+        font-size: 1.1rem;
+    }
+
+    .features-grid {
+        gap: 0.3rem;
+    }
+
+    .feature {
+        padding: 0.4rem;
+    }
+}

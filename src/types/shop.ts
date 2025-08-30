@@ -18,17 +18,20 @@ export interface ShopItem {
         dexterity?: number;
         intelligence?: number;
         endurance?: number;
+        printing?: number;
+        lasercutting?: number;
     };
-    equipmentSlot?: 'head' | 'upperBody' | 'lowerBody' | 'hands' | 'belt' | 'weaponHolster' | 'shoes';
+    equipmentSlot?: 'head' | 'upperBody' | 'lowerBody' | 'hands' | 'belt' | 'weaponHolster' | 'shoes' | '3d_printer_slot' | 'laser_cutter_slot';
     consumableEffect?: ConsumableEffect;
 }
 
 export type ShopCategory =
+    | 'crafting'
     | 'protection'
     | 'trainingBooster'
     | 'medical'
     | 'vip'
-    | 'crafting'
+    | 'workshop';
 
 export interface ConsumableEffect {
     type: 'trainingClicks' | 'kitchenClicks' | 'handicraftClicks' | 'heal' | 'energy' | 'experience' | 'temporary_boost' | 'workTimeReduction' | 'courseTimeReduction';
@@ -75,6 +78,11 @@ export const SHOP_CATEGORIES: Record<ShopCategory, ShopCategoryInfo> = {
         id: 'crafting',
         name: 'Erinevate toodete valmistamise toorained',
         description: 'Koostisosad toidu, jookide ja keemia valmistamiseks',
+    },
+    workshop: {
+        id: 'workshop',
+        name: 'Töökoja seadmed',
+        description: 'Seadmed millega saad valmistada käsitöö kategoorias omale uusi esemeid'
     }
 };
 

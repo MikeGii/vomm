@@ -9,7 +9,7 @@ export interface InventoryItem {
     shopPrice: number;
     marketPrice?: number;
     equipped?: boolean;
-    equipmentSlot?: 'head' | 'upperBody' | 'lowerBody' | 'hands' | 'belt' | 'weaponHolster' | 'shoes';
+    equipmentSlot?: 'head' | 'upperBody' | 'lowerBody' | 'hands' | 'belt' | 'weaponHolster' | 'shoes' | '3d_printer_slot' | 'laser_cutter_slot';
     source?: 'shop' | 'quest' | 'achievement' | 'training' | 'event';
     obtainedAt?: Date;
     stats?: {
@@ -18,6 +18,8 @@ export interface InventoryItem {
         dexterity?: number;
         intelligence?: number;
         endurance?: number;
+        printing?: number;
+        lasercutting?: number;
     };
     consumableEffect?: {
         type: 'trainingClicks' | 'kitchenClicks' | 'handicraftClicks' | 'heal' | 'energy' | 'experience' | 'temporary_boost' | 'workTimeReduction' | 'courseTimeReduction';

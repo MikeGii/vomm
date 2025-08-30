@@ -56,6 +56,7 @@ const ShopPage: React.FC = () => {
         { id: 'trainingBooster', label: SHOP_CATEGORIES.trainingBooster.name },
         { id: 'medical', label: SHOP_CATEGORIES.medical.name },
         { id: 'protection', label: SHOP_CATEGORIES.protection.name },
+        { id: 'workshop', label: SHOP_CATEGORIES.workshop.name },
         { id: 'vip', label: SHOP_CATEGORIES.vip.name }
     ];
 

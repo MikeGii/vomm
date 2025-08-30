@@ -1,6 +1,6 @@
 // src/services/EquipmentBonusService.ts - Cleaned version
 
-import { CharacterEquipment, EquipmentItem } from '../types/equipment';
+import { CharacterEquipment, EquipmentItem } from '../types';
 import { PlayerAttributes } from '../types';
 
 export interface EquipmentBonuses {
@@ -9,6 +9,8 @@ export interface EquipmentBonuses {
     dexterity: number;
     intelligence: number;
     endurance: number;
+    printing: number;
+    lasercutting: number;
 }
 
 /**
@@ -20,7 +22,9 @@ export const calculateEquipmentBonuses = (equipment: CharacterEquipment): Equipm
         agility: 0,
         dexterity: 0,
         intelligence: 0,
-        endurance: 0
+        endurance: 0,
+        printing: 0,
+        lasercutting: 0,
     };
 
     // Go through each equipment slot
@@ -31,6 +35,8 @@ export const calculateEquipmentBonuses = (equipment: CharacterEquipment): Equipm
             bonuses.dexterity += item.stats.dexterity || 0;
             bonuses.intelligence += item.stats.intelligence || 0;
             bonuses.endurance += item.stats.endurance || 0;
+            bonuses.printing += item.stats.printing || 0;
+            bonuses.lasercutting += item.stats.lasercutting || 0;
         }
     });
 

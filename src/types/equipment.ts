@@ -1,5 +1,4 @@
-// src/types/equipment.ts
-
+// src/types/equipment.ts (UPDATE)
 export type EquipmentSlot =
     | 'head'
     | 'upperBody'
@@ -7,7 +6,9 @@ export type EquipmentSlot =
     | 'hands'
     | 'belt'
     | 'weaponHolster'
-    | 'shoes';
+    | 'shoes'
+    | '3d_printer_slot'
+    | 'laser_cutter_slot';
 
 export interface EquipmentItem {
     id: string;
@@ -22,6 +23,8 @@ export interface EquipmentItem {
         dexterity?: number;
         intelligence?: number;
         endurance?: number;
+        printing?: number;
+        lasercutting?: number;
     };
     equipped: boolean;
 }
@@ -34,6 +37,8 @@ export interface CharacterEquipment {
     belt?: EquipmentItem;
     weaponHolster?: EquipmentItem;
     shoes?: EquipmentItem;
+    '3d_printer_slot'?: EquipmentItem;
+    'laser_cutter_slot'?: EquipmentItem;
 }
 
 export const EQUIPMENT_SLOT_NAMES: Record<EquipmentSlot, string> = {
@@ -43,5 +48,7 @@ export const EQUIPMENT_SLOT_NAMES: Record<EquipmentSlot, string> = {
     hands: 'Käed',
     belt: 'Vöö',
     weaponHolster: 'Relva kabuur',
-    shoes: 'Jalatsid'
+    shoes: 'Jalatsid',
+    '3d_printer_slot': '3D Printer',
+    'laser_cutter_slot': 'Laser Cutter'
 };
