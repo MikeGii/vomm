@@ -165,7 +165,7 @@ export const DebugMenu: React.FC = () => {
     const fillTrainingClicks = async () => {
         const statsRef = doc(firestore, 'playerStats', currentUser.uid);
         await updateDoc(statsRef, {
-            'trainingData.remainingClicks': 50
+            'trainingData.remainingClicks': 50,
         });
     };
 
