@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
             <div className="footer-container">
                 <div className="footer-links">
 
-                   <a href="https://discord.gg/XzGxe6wC"
+                   <a href="https://discord.gg/ZhFrVgvcAC"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="footer-discord-link"

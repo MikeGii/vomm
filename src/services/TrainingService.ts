@@ -178,18 +178,21 @@ const updateInventoryForCrafting = (
 
     // Add produced items
     producedItems.forEach(produced => {
-        // Check if item already exists by base ID - FIXED
+        // Check if item already exists by base ID - WORKS FOR ALL CATEGORIES
         const existingIndex = updatedInventory.findIndex(item => {
             const baseId = getBaseIdFromInventoryId(item.id);
-            return baseId === produced.id && item.category === 'crafting';
+            // Match by base ID regardless of category (equipment can stack too)
+            return baseId === produced.id && !item.equipped; // Don't stack with equipped items
         });
 
         if (existingIndex >= 0) {
+            // Stack with existing item
             updatedInventory[existingIndex] = {
                 ...updatedInventory[existingIndex],
                 quantity: updatedInventory[existingIndex].quantity + produced.quantity
             };
         } else {
+            // Create new item
             const newItem = createInventoryItemFromId(produced.id, produced.quantity);
             updatedInventory.push(newItem);
         }
