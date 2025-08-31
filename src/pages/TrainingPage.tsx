@@ -20,6 +20,7 @@ import { getAvailableHandicraftActivities, getHandicraftActivityById } from '../
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
+import { useEstate } from '../contexts/EstateContext';
 import { useNavigate } from 'react-router-dom';
 import {PlayerAttributes, PlayerStats, TrainingActivity} from '../types';
 import { InventoryItem } from '../types';
@@ -53,6 +54,7 @@ const TrainingPage: React.FC = () => {
     const { showToast } = useToast();
     const { playerStats, loading, refreshStats } = usePlayerStats();
 
+    const { canUse3DPrinter, canUseLaserCutter } = useEstate();
     const [availableActivities, setAvailableActivities] = useState<TrainingActivity[]>([]);
     const [selectedActivity, setSelectedActivity] = useState<string>('');
     const [isTraining, setIsTraining] = useState(false);
@@ -427,8 +429,16 @@ const TrainingPage: React.FC = () => {
                             displayAttributes={[
                                 { key: 'sewing', name: 'Õmblemine', icon: '🪡' },
                                 { key: 'medicine', name: 'Meditsiin', icon: '🏥' },
-                                { key: 'printing', name: '3D Printimine - Esmalt osta kinnisvara (tulekul)', icon: '🔒' },
-                                { key: 'lasercutting', name: 'Laserilõikus - Esmalt osta kinnisvara (tulekul)', icon: '🔒' }
+                                {
+                                    key: 'printing',
+                                    name: canUse3DPrinter() ? '3D Printimine' : '3D Printimine - Vajab seadet',
+                                    icon: canUse3DPrinter() ? '🖨️' : '🔒'
+                                },
+                                {
+                                    key: 'lasercutting',
+                                    name: canUseLaserCutter() ? 'Laserlõikus' : 'Laserlõikus - Vajab seadet',
+                                    icon: canUseLaserCutter() ? '✂️' : '🔒'
+                                }
                             ]}
                         />
 

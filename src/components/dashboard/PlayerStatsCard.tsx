@@ -22,6 +22,7 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
     const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
     const hasCompletedBasicTraining = stats.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
 
+    const equipmentBonuses = stats.equipment ? calculateEquipmentBonuses(stats.equipment) : null;
 
     // Calculate health recovery timer
     useEffect(() => {
@@ -101,8 +102,6 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
         }
         return '—';
     };
-
-    const equipmentBonuses = stats.equipment ? calculateEquipmentBonuses(stats.equipment) : null;
 
     const getHealthStatus = () => {
         if (!stats.health) return { text: '—', color: '', showRecovery: false };

@@ -26,10 +26,17 @@ export const getPlayerEstate = async (userId: string): Promise<PlayerEstate | nu
     }
 };
 
-export const initializePlayerEstate = async (userId: string): Promise<PlayerEstate> => {
+export const ensurePlayerEstate = async (userId: string): Promise<PlayerEstate> => {
+    // Check if estate record already exists
+    const existingEstate = await getPlayerEstate(userId);
+    if (existingEstate) {
+        return existingEstate;
+    }
+
+    // Create new estate record (works for both new and existing players)
     const newEstate: PlayerEstate = {
         userId,
-        currentEstate: null,
+        currentEstate: null, // No property initially
         ownedDevices: {
             has3DPrinter: false,
             hasLaserCutter: false
@@ -50,6 +57,9 @@ export const initializePlayerEstate = async (userId: string): Promise<PlayerEsta
 
     return newEstate;
 };
+
+// Keep the old name as an alias for backward compatibility
+export const initializePlayerEstate = ensurePlayerEstate;
 
 export const calculateEstateTransaction = (
     newEstate: EstateProperty,
@@ -91,76 +101,219 @@ export const scanInventoryForWorkshopDevices = (inventory: InventoryItem[]): {
     return { threeDPrinters, laserCutters };
 };
 
+export const getDetailedWorkshopDevices = (inventory: InventoryItem[]): {
+    threeDPrinters: InventoryItem[];
+    laserCutters: InventoryItem[];
+} => {
+    const threeDPrinters: InventoryItem[] = [];
+    const laserCutters: InventoryItem[] = [];
+
+    inventory.forEach(item => {
+        if (item.equipped) return; // Skip equipped items
+
+        const baseId = getBaseIdFromInventoryId(item.id);
+
+        // Check if this is a workshop device based on baseId
+        if (baseId.includes('3d_printer') || baseId === 'workshop_3d_printer') {
+            threeDPrinters.push(item);
+        } else if (baseId.includes('laser_cutter') || baseId === 'workshop_laser_cutter') {
+            laserCutters.push(item);
+        }
+    });
+
+    return { threeDPrinters, laserCutters };
+};
+
 // Function to equip a workshop device
 export const equipWorkshopDevice = async (
     userId: string,
-    deviceType: '3d_printer' | 'laser_cutter'
+    deviceType: '3d_printer' | 'laser_cutter',
+    specificItemId?: string
 ): Promise<void> => {
     try {
-        const estateRef = doc(firestore, 'playerEstates', userId);
-        const estate = await getPlayerEstate(userId);
+        return await runTransaction(firestore, async (transaction) => {
+            const estateRef = doc(firestore, 'playerEstates', userId);
+            const playerRef = doc(firestore, 'playerStats', userId);
 
-        if (!estate) {
-            throw new Error('Estate not found');
-        }
+            const estateDoc = await transaction.get(estateRef);
+            const playerDoc = await transaction.get(playerRef);
 
-        if (!estate.currentEstate?.hasWorkshop) {
-            throw new Error('Töökoda on vajalik seadme paigaldamiseks');
-        }
+            if (!estateDoc.exists() || !playerDoc.exists()) {
+                throw new Error('Estate or player data not found');
+            }
 
-        // Check if device is available in unequipped devices
-        const deviceKey = deviceType === '3d_printer' ? 'threeDPrinters' : 'laserCutters';
-        if (estate.unequippedDevices[deviceKey] <= 0) {
-            throw new Error('Seade ei ole saadaval laos');
-        }
+            const estate = estateDoc.data() as PlayerEstate;
+            const playerStats = playerDoc.data();
 
-        // Update estate
-        const updates: any = {
-            updatedAt: Timestamp.now()
-        };
+            if (!estate.currentEstate?.hasWorkshop) {
+                throw new Error('Töökoda on vajalik seadme paigaldamiseks');
+            }
 
-        if (deviceType === '3d_printer') {
-            updates['ownedDevices.has3DPrinter'] = true;
-            updates['unequippedDevices.threeDPrinters'] = estate.unequippedDevices.threeDPrinters - 1;
-        } else {
-            updates['ownedDevices.hasLaserCutter'] = true;
-            updates['unequippedDevices.laserCutters'] = estate.unequippedDevices.laserCutters - 1;
-        }
+            // Check if device is already equipped
+            const isAlreadyEquipped = deviceType === '3d_printer'
+                ? estate.ownedDevices?.has3DPrinter
+                : estate.ownedDevices?.hasLaserCutter;
 
-        await updateDoc(estateRef, updates);
+            if (isAlreadyEquipped) {
+                throw new Error('Seade on juba paigaldatud');
+            }
+
+            // Find and remove specific device from player inventory
+            const inventory = [...(playerStats.inventory || [])];
+            let deviceRemoved = false;
+            let targetItemIndex = -1;
+            let originalItem: InventoryItem | null = null;
+
+            if (specificItemId) {
+                targetItemIndex = inventory.findIndex(item => item.id === specificItemId);
+                if (targetItemIndex >= 0 && inventory[targetItemIndex].quantity > 0) {
+                    originalItem = { ...inventory[targetItemIndex] }; // STORE ORIGINAL ITEM
+                    deviceRemoved = true;
+                }
+            } else {
+                // Look for any device of this type (fallback)
+                for (let i = 0; i < inventory.length; i++) {
+                    const item = inventory[i];
+                    const baseId = getBaseIdFromInventoryId(item.id);
+
+                    const isTargetDevice = (deviceType === '3d_printer' &&
+                            (baseId.includes('3d_printer') || baseId === 'workshop_3d_printer')) ||
+                        (deviceType === 'laser_cutter' &&
+                            (baseId.includes('laser_cutter') || baseId === 'workshop_laser_cutter'));
+
+                    if (isTargetDevice && item.quantity > 0 && !item.equipped) {
+                        targetItemIndex = i;
+                        originalItem = { ...inventory[i] }; // STORE ORIGINAL ITEM
+                        deviceRemoved = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!deviceRemoved || targetItemIndex === -1 || !originalItem) {
+                throw new Error('Seadet ei õnnestunud inventarist leida');
+            }
+
+            // Remove one quantity from the found item
+            if (inventory[targetItemIndex].quantity > 1) {
+                inventory[targetItemIndex] = {
+                    ...inventory[targetItemIndex],
+                    quantity: inventory[targetItemIndex].quantity - 1
+                };
+            } else {
+                inventory.splice(targetItemIndex, 1);
+            }
+
+            // Update player inventory
+            transaction.update(playerRef, {
+                inventory: inventory
+            });
+
+            // Update estate with device status AND original item data
+            const estateUpdates: any = {
+                updatedAt: Timestamp.now()
+            };
+
+            if (deviceType === '3d_printer') {
+                estateUpdates['ownedDevices.has3DPrinter'] = true;
+                estateUpdates['equippedDeviceDetails.printer'] = originalItem; // STORE ORIGINAL
+            } else {
+                estateUpdates['ownedDevices.hasLaserCutter'] = true;
+                estateUpdates['equippedDeviceDetails.laserCutter'] = originalItem; // STORE ORIGINAL
+            }
+
+            transaction.update(estateRef, estateUpdates);
+        });
     } catch (error) {
         console.error('Error equipping workshop device:', error);
         throw error;
     }
 };
 
-// Function to unequip a workshop device
 export const unequipWorkshopDevice = async (
     userId: string,
     deviceType: '3d_printer' | 'laser_cutter'
 ): Promise<void> => {
     try {
-        const estateRef = doc(firestore, 'playerEstates', userId);
-        const estate = await getPlayerEstate(userId);
+        return await runTransaction(firestore, async (transaction) => {
+            const estateRef = doc(firestore, 'playerEstates', userId);
+            const playerRef = doc(firestore, 'playerStats', userId);
 
-        if (!estate) {
-            throw new Error('Estate not found');
-        }
+            const estateDoc = await transaction.get(estateRef);
+            const playerDoc = await transaction.get(playerRef);
 
-        // Update estate
-        const updates: any = {
-            updatedAt: Timestamp.now()
-        };
+            if (!estateDoc.exists() || !playerDoc.exists()) {
+                throw new Error('Estate or player data not found');
+            }
 
-        if (deviceType === '3d_printer') {
-            updates['ownedDevices.has3DPrinter'] = false;
-            updates['unequippedDevices.threeDPrinters'] = estate.unequippedDevices.threeDPrinters + 1;
-        } else {
-            updates['ownedDevices.hasLaserCutter'] = false;
-            updates['unequippedDevices.laserCutters'] = estate.unequippedDevices.laserCutters + 1;
-        }
+            const estate = estateDoc.data() as PlayerEstate;
+            const playerStats = playerDoc.data();
 
-        await updateDoc(estateRef, updates);
+            // Check if device is currently equipped
+            const isEquipped = deviceType === '3d_printer'
+                ? estate.ownedDevices?.has3DPrinter
+                : estate.ownedDevices?.hasLaserCutter;
+
+            if (!isEquipped) {
+                throw new Error('Seade ei ole paigaldatud');
+            }
+
+            // Get original item data
+            const originalItem = deviceType === '3d_printer'
+                ? estate.equippedDeviceDetails?.printer
+                : estate.equippedDeviceDetails?.laserCutter;
+
+            if (!originalItem) {
+                throw new Error('Originaal seadme andmed puuduvad');
+            }
+
+            // Add device back to player inventory using ORIGINAL data
+            const inventory = [...(playerStats.inventory || [])];
+
+            // Find existing item with same base properties or create with original data
+            const existingItemIndex = inventory.findIndex(item =>
+                item.name === originalItem.name &&
+                item.description === originalItem.description &&
+                item.shopPrice === originalItem.shopPrice
+            );
+
+            if (existingItemIndex >= 0) {
+                // Increase quantity of existing item
+                inventory[existingItemIndex] = {
+                    ...inventory[existingItemIndex],
+                    quantity: inventory[existingItemIndex].quantity + 1
+                };
+            } else {
+                // Add original item back to inventory with new unique ID
+                const restoredItem: InventoryItem = {
+                    ...originalItem,
+                    id: originalItem.id,
+                    quantity: 1,
+                    equipped: false
+                };
+                inventory.push(restoredItem);
+            }
+
+            // Update player inventory
+            transaction.update(playerRef, {
+                inventory: inventory
+            });
+
+            // Update estate - remove device and clear stored data
+            const estateUpdates: any = {
+                updatedAt: Timestamp.now()
+            };
+
+            if (deviceType === '3d_printer') {
+                estateUpdates['ownedDevices.has3DPrinter'] = false;
+                estateUpdates['equippedDeviceDetails.printer'] = null;
+            } else {
+                estateUpdates['ownedDevices.hasLaserCutter'] = false;
+                estateUpdates['equippedDeviceDetails.laserCutter'] = null;
+            }
+
+            transaction.update(estateRef, estateUpdates);
+        });
     } catch (error) {
         console.error('Error unequipping workshop device:', error);
         throw error;

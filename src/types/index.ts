@@ -320,6 +320,7 @@ export interface PlayerProfileModalData {
     attributes?: PlayerAttributes;
     createdAt?: Date | Timestamp | FirestoreTimestamp;
     completedCourses?: string[];
+    totalWorkedHours?: number;
 }
 
 export interface FirestoreTimestamp {

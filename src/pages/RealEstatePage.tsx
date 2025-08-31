@@ -10,6 +10,7 @@ import { useToast } from '../contexts/ToastContext';
 import { BuyEstateTab } from '../components/estate/BuyEstateTab';
 import { OwnedEstateTab } from '../components/estate/OwnedEstateTab';
 import '../styles/pages/RealEstate.css';
+import {GarageTab} from "../components/estate/GarageTab";
 
 const REAL_ESTATE_TABS = [
     { id: 'owned', label: 'Minu kinnisvara', icon: '🏠' },
@@ -47,10 +48,7 @@ const RealEstatePage: React.FC = () => {
         );
     }
 
-    const availableTabs = REAL_ESTATE_TABS.filter(tab => {
-        if (tab.id === 'garage' && !hasGarageAccess) return false;
-        return true;
-    });
+    const availableTabs = REAL_ESTATE_TABS;
 
     return (
         <div className="real-estate-page">
@@ -75,7 +73,7 @@ const RealEstatePage: React.FC = () => {
                 <div className="tab-content">
                     <div className="tab-content">
                         {activeTab === 'owned' && <OwnedEstateTab />}
-                        {activeTab === 'garage' && <div>Garage Component</div>}
+                        {activeTab === 'garage' && <GarageTab />}
                         {activeTab === 'buy' && <BuyEstateTab />}
                     </div>
                 </div>

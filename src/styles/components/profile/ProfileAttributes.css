@@ -159,3 +159,30 @@
 .attribute-card.locked .attribute-name {
     font-style: italic;
 }
+
+.unlock-hint {
+    font-size: 0.7rem;
+    color: #f0ad4e;
+    font-style: italic;
+    margin-left: 0.5rem;
+}
+
+.locked-message {
+    text-align: center;
+    padding: 0.75rem;
+    background: rgba(240, 173, 78, 0.1);
+    border: 1px solid #f0ad4e;
+    border-radius: 4px;
+    color: #f0ad4e;
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+.attribute-card.locked {
+    opacity: 0.7;
+    border-color: #f0ad4e;
+}
+
+.attribute-card.locked .attribute-header {
+    color: #f0ad4e;
+}

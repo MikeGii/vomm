@@ -50,7 +50,8 @@ export const getPlayerProfileData = async (userId: string): Promise<PlayerProfil
             policePosition: playerStats.policePosition,
             attributes: playerStats.attributes,
             createdAt: createdAtDate,
-            completedCourses: playerStats.completedCourses || []
+            completedCourses: playerStats.completedCourses || [],
+            totalWorkedHours: playerStats.totalWorkedHours || 0,
         };
     } catch (error) {
         console.error('Error fetching player profile data:', error);

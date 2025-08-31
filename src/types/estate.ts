@@ -1,4 +1,6 @@
 // src/types/estate.ts (COMPLETE)
+import {InventoryItem} from "./inventory";
+
 export interface EstateProperty {
     id: string;
     name: string;
@@ -17,10 +19,14 @@ export interface PlayerEstate {
         has3DPrinter: boolean;
         hasLaserCutter: boolean;
     };
-    // Track what devices are available in inventory but not equipped
+
+    equippedDeviceDetails?: {
+        printer?: InventoryItem;
+        laserCutter?: InventoryItem;
+    };
     unequippedDevices: {
-        threeDPrinters: number; // Count of 3D printers in inventory
-        laserCutters: number; // Count of laser cutters in inventory
+        threeDPrinters: number;
+        laserCutters: number;
     };
     createdAt: Date;
     updatedAt: Date;

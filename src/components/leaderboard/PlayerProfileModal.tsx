@@ -1,8 +1,12 @@
 // src/components/modals/PlayerProfileModal.tsx
-import React, { useEffect } from 'react';
-import { Timestamp } from 'firebase/firestore';
-import {PlayerProfileModalData, FirestoreTimestamp, PlayerStats} from '../../types';
+import React, { useEffect, useState } from 'react';
+import { doc, getDoc, Timestamp } from 'firebase/firestore';
+import { firestore } from '../../config/firebase';
+import { PlayerProfileModalData, FirestoreTimestamp, PlayerStats } from '../../types';
+import { PlayerEstate } from '../../types/estate';
 import { getPlayerDisplayStatus } from '../../utils/playerStatus';
+import { useEstate } from '../../contexts/EstateContext';
+import { useAuth } from "../../contexts/AuthContext";
 import '../../styles/components/leaderboard/PlayerProfileModal.css';
 
 interface PlayerProfileModalProps {
@@ -12,14 +16,22 @@ interface PlayerProfileModalProps {
     loading?: boolean;
 }
 
-const getPlayerStatus = (playerData: PlayerProfileModalData): string => {
-    // Create a minimal PlayerStats object for the utility function
-    const playerStats = {
-        policePosition: playerData.policePosition || null,
-        completedCourses: playerData.completedCourses || []
-    } as PlayerStats;
-
-    return getPlayerDisplayStatus(playerStats);
+const getPlayerEstateInfo = async (userId: string): Promise<PlayerEstate | null> => {
+    try {
+        const estateDoc = await getDoc(doc(firestore, 'playerEstates', userId));
+        if (estateDoc.exists()) {
+            const data = estateDoc.data();
+            return {
+                ...data,
+                createdAt: data.createdAt.toDate(),
+                updatedAt: data.updatedAt.toDate()
+            } as PlayerEstate;
+        }
+        return null;
+    } catch (error) {
+        console.error('Error fetching player estate:', error);
+        return null;
+    }
 };
 
 export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
@@ -28,55 +40,78 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
                                                                           playerData,
                                                                           loading = false
                                                                       }) => {
+    const { playerEstate, canUse3DPrinter, canUseLaserCutter } = useEstate();
+    const { currentUser } = useAuth();
+    const [otherPlayerEstate, setOtherPlayerEstate] = useState<PlayerEstate | null>(null);
+    const [estateLoading, setEstateLoading] = useState(false);
+
+    const isCurrentUserProfile = currentUser?.uid === playerData?.userId;
+
+    // Load estate data for other players
     useEffect(() => {
-        const handleEscKey = (event: KeyboardEvent) => {
-            if (event.key === 'Escape' && isOpen) {
-                onClose();
-            }
-        };
-
-        if (isOpen) {
-            document.addEventListener('keydown', handleEscKey);
+        if (isOpen && playerData && !isCurrentUserProfile) {
+            const loadOtherPlayerEstate = async () => {
+                setEstateLoading(true);
+                try {
+                    const estate = await getPlayerEstateInfo(playerData.userId);
+                    setOtherPlayerEstate(estate);
+                } catch (error) {
+                    console.error('Failed to load other player estate:', error);
+                    setOtherPlayerEstate(null);
+                } finally {
+                    setEstateLoading(false);
+                }
+            };
+            loadOtherPlayerEstate();
+        } else if (!isOpen) {
+            setOtherPlayerEstate(null);
+            setEstateLoading(false);
         }
+    }, [isOpen, playerData, isCurrentUserProfile]);
 
-        return () => {
-            document.removeEventListener('keydown', handleEscKey);
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleEscKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') onClose();
         };
+
+        document.addEventListener('keydown', handleEscKey);
+        return () => document.removeEventListener('keydown', handleEscKey);
     }, [isOpen, onClose]);
 
-    if (!isOpen || !playerData) return null;
+    // Get the appropriate estate data
+    const getEstateData = () => {
+        if (isCurrentUserProfile) {
+            return playerEstate;
+        }
+        return otherPlayerEstate;
+    };
+
+    const estateData = getEstateData();
 
     const formatDate = (date: Date | Timestamp | FirestoreTimestamp | undefined): string => {
         if (!date) return 'Teadmata';
 
-        let actualDate: Date;
-
         try {
+            let actualDate: Date;
             if (date instanceof Timestamp) {
                 actualDate = date.toDate();
             } else if (typeof date === 'object' && date !== null && 'seconds' in date) {
-                // Type guard and cast to FirestoreTimestamp
-                const firestoreTimestamp = date as FirestoreTimestamp;
-                actualDate = new Date(firestoreTimestamp.seconds * 1000);
+                actualDate = new Date((date as FirestoreTimestamp).seconds * 1000);
             } else if (date instanceof Date) {
                 actualDate = date;
             } else {
-                // Fallback
                 actualDate = new Date(date as any);
             }
 
-            // Check if date is valid
-            if (isNaN(actualDate.getTime())) {
-                return 'Teadmata';
-            }
-
-            return new Intl.DateTimeFormat('et-EE', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            }).format(actualDate);
-        } catch (error) {
-            console.error('Error formatting date:', error);
+            return isNaN(actualDate.getTime()) ? 'Teadmata' :
+                new Intl.DateTimeFormat('et-EE', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }).format(actualDate);
+        } catch {
             return 'Teadmata';
         }
     };
@@ -89,6 +124,44 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
             maximumFractionDigits: 0,
         }).format(amount);
     };
+
+    const getPlayerStatus = (): string => {
+        const playerStats = {
+            policePosition: playerData?.policePosition || null,
+            completedCourses: playerData?.completedCourses || []
+        } as PlayerStats;
+        return getPlayerDisplayStatus(playerStats);
+    };
+
+    const getAttributeIcon = (attributeKey: string): string => {
+        const standardIcons = { printing: '🖨️', lasercutting: '✂️' };
+
+        if (!isCurrentUserProfile) {
+            return standardIcons[attributeKey as keyof typeof standardIcons] || '📊';
+        }
+
+        const icons = {
+            printing: canUse3DPrinter() ? '🖨️' : '🔒',
+            lasercutting: canUseLaserCutter() ? '✂️' : '🔒'
+        };
+        return icons[attributeKey as keyof typeof icons] || '📊';
+    };
+
+    const getAttributeValue = (attributeKey: string): string | number => {
+        if (!playerData?.attributes) return 0;
+
+        const attr = playerData.attributes[attributeKey as keyof typeof playerData.attributes];
+        const level = attr?.level || 0;
+
+        if (!isCurrentUserProfile) return level;
+
+        if (attributeKey === 'printing' && !canUse3DPrinter()) return '🔒';
+        if (attributeKey === 'lasercutting' && !canUseLaserCutter()) return '🔒';
+
+        return level;
+    };
+
+    if (!isOpen || !playerData) return null;
 
     return (
         <div className="modal-backdrop" onClick={onClose}>
@@ -114,9 +187,7 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
                     {/* Status */}
                     <div className="profile-field">
                         <label>Staatus:</label>
-                        <span className="status-badge">
-                                {getPlayerStatus(playerData)}
-                            </span>
+                        <span className="status-badge">{getPlayerStatus()}</span>
                     </div>
 
                     {/* Level */}
@@ -137,6 +208,32 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
                         <span className="money-amount">{formatMoney(playerData.money)}</span>
                     </div>
 
+                    {/* Completed Courses */}
+                    <div className="profile-field">
+                        <label>Läbitud koolitusi:</label>
+                        <span className="courses-count">{playerData.completedCourses?.length || 0} tk</span>
+                    </div>
+
+                    {/* Work Hours */}
+                    <div className="profile-field">
+                        <label>Töötunnid:</label>
+                        <span className="work-hours">{playerData.totalWorkedHours || 0}h</span>
+                    </div>
+
+                    {/* Estate Information - NOW PUBLIC FOR ALL PLAYERS */}
+                    <div className="profile-field">
+                        <label>Kinnisvara:</label>
+                        <span>
+                            {(!isCurrentUserProfile && estateLoading) ? (
+                                <span className="estate-loading">Laen andmeid...</span>
+                            ) : estateData?.currentEstate ? (
+                                estateData.currentEstate.name
+                            ) : (
+                                <span className="no-estate-text">Pole kinnisasja</span>
+                            )}
+                        </span>
+                    </div>
+
                     {/* Creation Date */}
                     <div className="profile-field">
                         <label>Liitunud:</label>
@@ -147,62 +244,47 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
                     {playerData.attributes && (
                         <div className="attributes-section">
                             <h3 className="section-title">Atribuudid</h3>
-                            <div className="attributes-compact-grid">
+                            <div className="attributes-extended-grid">
                                 {/* Physical Attributes */}
-                                <div className="attribute-compact">
-                                    <span className="attribute-emoji">💪</span>
-                                    <span className="attribute-name">Jõud</span>
-                                    <span className="attribute-value">{playerData.attributes.strength?.level || 0}</span>
-                                </div>
-                                <div className="attribute-compact">
-                                    <span className="attribute-emoji">🏃</span>
-                                    <span className="attribute-name">Kiirus</span>
-                                    <span className="attribute-value">{playerData.attributes.agility?.level || 0}</span>
-                                </div>
-                                <div className="attribute-compact">
-                                    <span className="attribute-emoji">🎯</span>
-                                    <span className="attribute-name">Osavus</span>
-                                    <span className="attribute-value">{playerData.attributes.dexterity?.level || 0}</span>
-                                </div>
-                                <div className="attribute-compact">
-                                    <span className="attribute-emoji">🧠</span>
-                                    <span className="attribute-name">Int.</span>
-                                    <span className="attribute-value">{playerData.attributes.intelligence?.level || 0}</span>
-                                </div>
-                                <div className="attribute-compact">
-                                    <span className="attribute-emoji">🏋️</span>
-                                    <span className="attribute-name">Vast.</span>
-                                    <span className="attribute-value">{playerData.attributes.endurance?.level || 0}</span>
-                                </div>
+                                {[
+                                    { key: 'strength', emoji: '💪', name: 'Jõud' },
+                                    { key: 'agility', emoji: '🏃', name: 'Kiirus' },
+                                    { key: 'dexterity', emoji: '🎯', name: 'Osavus' },
+                                    { key: 'intelligence', emoji: '🧠', name: 'Int.' },
+                                    { key: 'endurance', emoji: '🏋️', name: 'Vast.' },
+                                    { key: 'cooking', emoji: '🍳', name: 'Söök' },
+                                    { key: 'brewing', emoji: '🥤', name: 'Jook' },
+                                    { key: 'chemistry', emoji: '🧪', name: 'Keem.' },
+                                    { key: 'sewing', emoji: '🪡', name: 'Õmbl.' },
+                                    { key: 'medicine', emoji: '🏥', name: 'Med.' }
+                                ].map(attr => (
+                                    <div key={attr.key} className="attribute-compact">
+                                        <span className="attribute-emoji">{attr.emoji}</span>
+                                        <span className="attribute-name">{attr.name}</span>
+                                        <span className="attribute-value">
+                                            {playerData.attributes?.[attr.key as keyof typeof playerData.attributes]?.level || 0}
+                                        </span>
+                                    </div>
+                                ))}
 
-                                {/* Kitchen/Lab Skills */}
-                                <div className="attribute-compact">
-                                    <span className="attribute-emoji">🍳</span>
-                                    <span className="attribute-name">Söök</span>
-                                    <span className="attribute-value">{playerData.attributes.cooking?.level || 0}</span>
-                                </div>
-                                <div className="attribute-compact">
-                                    <span className="attribute-emoji">🥤</span>
-                                    <span className="attribute-name">Jook</span>
-                                    <span className="attribute-value">{playerData.attributes.brewing?.level || 0}</span>
-                                </div>
-                                <div className="attribute-compact">
-                                    <span className="attribute-emoji">🧪</span>
-                                    <span className="attribute-name">Keem.</span>
-                                    <span className="attribute-value">{playerData.attributes.chemistry?.level || 0}</span>
-                                </div>
-
-                                {/* Handicraft Skills */}
-                                <div className="attribute-compact">
-                                    <span className="attribute-emoji">🪡</span>
-                                    <span className="attribute-name">Õmbl.</span>
-                                    <span className="attribute-value">{playerData.attributes.sewing?.level || 0}</span>
-                                </div>
-                                <div className="attribute-compact">
-                                    <span className="attribute-emoji">🏥</span>
-                                    <span className="attribute-name">Med.</span>
-                                    <span className="attribute-value">{playerData.attributes.medicine?.level || 0}</span>
-                                </div>
+                                {/* Workshop Attributes */}
+                                {['printing', 'lasercutting'].map(skill => (
+                                    <div
+                                        key={skill}
+                                        className={`attribute-compact ${
+                                            isCurrentUserProfile &&
+                                            ((skill === 'printing' && !canUse3DPrinter()) ||
+                                                (skill === 'lasercutting' && !canUseLaserCutter()))
+                                                ? 'locked' : ''
+                                        }`}
+                                    >
+                                        <span className="attribute-emoji">{getAttributeIcon(skill)}</span>
+                                        <span className="attribute-name">
+                                            {skill === 'printing' ? '3D Print' : 'Laser'}
+                                        </span>
+                                        <span className="attribute-value">{getAttributeValue(skill)}</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}

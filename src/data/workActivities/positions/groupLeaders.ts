@@ -5,12 +5,47 @@ import { WorkActivity } from '../types';
 export const GROUP_LEADER_ACTIVITIES: WorkActivity[] = [
     {
         id: 'patrol_group_leader_01',
-        name: 'Grupijuhi kohustused jaoskonnas',
-        description: 'Grupijuhina täidad töökohustusi jaoskonnas, viid läbi arenguvestluseid, osaled koosolekutel ja parendad grupi toimivust',
+        name: 'Grupijuhina viid läbi arenguvestluseid',
+        description: 'Grupijuhina täidad töökohustusi jaoskonnas, viid läbi arenguvestluseid ja parendad grupi toimivust',
         minLevel: 55,
         requiredCourses: ['police_group_leader_course'],
         baseExpPerHour: 1050,
         expGrowthRate: 0.10,
+        maxHours: 12,
+        allowedFor: ['grupijuht_patrol']
+    },
+    {
+        id: 'patrol_group_leader_02',
+        name: 'Grupijuhina parendad grupi toimivust',
+        description: 'Grupijuhina täidad töökohustusi jaoskonnas, osaled koosolekutel ja parendad grupi toimivust',
+        minLevel: 65,
+        requiredCourses: ['police_group_leader_course'],
+        baseExpPerHour: 1350,
+        expGrowthRate: 0.09,
+        maxHours: 12,
+        allowedFor: ['grupijuht_patrol']
+    },
+    {
+        id: 'patrol_group_leader_03',
+        name: 'Grupijuhina osaled koosolekutel juhtkonnaga',
+        description: 'Grupijuhina täidad töökohustusi jaoskonnas ja osaled koosolekutel, et tuua sisse uusi innovaatilisi meetmeid ja ' +
+            'töövõtteid grupijuhina',
+        minLevel: 75,
+        requiredCourses: ['police_group_leader_course'],
+        baseExpPerHour: 1550,
+        expGrowthRate: 0.09,
+        maxHours: 12,
+        allowedFor: ['grupijuht_patrol']
+    },
+    {
+        id: 'patrol_group_leader_04',
+        name: 'Grupijuhi kohustused jaoskonnas',
+        description: 'Grupijuhina täidad töökohustusi enda jaoskonnas viies läbi arenguvestluseid, parendad grupi toimivust, osaled koosolekutel' +
+            ' ja tõstad oma grupiliikmete moraali',
+        minLevel: 85,
+        requiredCourses: ['police_group_leader_course'],
+        baseExpPerHour: 1700,
+        expGrowthRate: 0.09,
         maxHours: 12,
         allowedFor: ['grupijuht_patrol']
     },
