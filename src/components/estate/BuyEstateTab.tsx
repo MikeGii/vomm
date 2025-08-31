@@ -33,7 +33,7 @@ export const BuyEstateTab: React.FC = () => {
         setPurchasingEstate(estateId);
 
         try {
-            const result = await purchaseEstate(currentUser.uid, estateId, playerStats.money);
+            const result = await purchaseEstate(currentUser.uid, estateId);
 
             if (result.success) {
                 await refreshEstate();

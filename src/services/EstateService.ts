@@ -1,10 +1,10 @@
 // src/services/EstateService.ts
-import { doc, getDoc, setDoc, updateDoc, Timestamp, runTransaction } from 'firebase/firestore';
+import { doc, getDoc, setDoc, Timestamp, runTransaction } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
-import { PlayerEstate, EstateProperty, EstateTransaction, WorkshopDevice } from '../types/estate';
+import { PlayerEstate, EstateProperty, EstateTransaction } from '../types/estate';
 import { InventoryItem } from '../types';
 import { getBaseIdFromInventoryId } from '../utils/inventoryUtils';
-import {AVAILABLE_ESTATES} from "../data/estates";
+import { AVAILABLE_ESTATES } from "../data/estates";
 
 export const getPlayerEstate = async (userId: string): Promise<PlayerEstate | null> => {
     try {
@@ -76,30 +76,6 @@ export const calculateEstateTransaction = (
     };
 };
 
-// Utility function to scan inventory for workshop devices
-export const scanInventoryForWorkshopDevices = (inventory: InventoryItem[]): {
-    threeDPrinters: number;
-    laserCutters: number;
-} => {
-    let threeDPrinters = 0;
-    let laserCutters = 0;
-
-    inventory.forEach(item => {
-        if (item.equipped) return; // Skip equipped items
-
-        const baseId = getBaseIdFromInventoryId(item.id);
-
-        // Check if this is a workshop device based on baseId
-        // We'll define the workshop device IDs when we create them
-        if (baseId.includes('3d_printer') || baseId === 'workshop_3d_printer') {
-            threeDPrinters += item.quantity;
-        } else if (baseId.includes('laser_cutter') || baseId === 'workshop_laser_cutter') {
-            laserCutters += item.quantity;
-        }
-    });
-
-    return { threeDPrinters, laserCutters };
-};
 
 export const getDetailedWorkshopDevices = (inventory: InventoryItem[]): {
     threeDPrinters: InventoryItem[];
@@ -113,7 +89,6 @@ export const getDetailedWorkshopDevices = (inventory: InventoryItem[]): {
 
         const baseId = getBaseIdFromInventoryId(item.id);
 
-        // Check if this is a workshop device based on baseId
         if (baseId.includes('3d_printer') || baseId === 'workshop_3d_printer') {
             threeDPrinters.push(item);
         } else if (baseId.includes('laser_cutter') || baseId === 'workshop_laser_cutter') {
@@ -167,7 +142,7 @@ export const equipWorkshopDevice = async (
             if (specificItemId) {
                 targetItemIndex = inventory.findIndex(item => item.id === specificItemId);
                 if (targetItemIndex >= 0 && inventory[targetItemIndex].quantity > 0) {
-                    originalItem = { ...inventory[targetItemIndex] }; // STORE ORIGINAL ITEM
+                    originalItem = { ...inventory[targetItemIndex] };
                     deviceRemoved = true;
                 }
             } else {
@@ -183,7 +158,7 @@ export const equipWorkshopDevice = async (
 
                     if (isTargetDevice && item.quantity > 0 && !item.equipped) {
                         targetItemIndex = i;
-                        originalItem = { ...inventory[i] }; // STORE ORIGINAL ITEM
+                        originalItem = { ...inventory[i] };
                         deviceRemoved = true;
                         break;
                     }
@@ -209,17 +184,17 @@ export const equipWorkshopDevice = async (
                 inventory: inventory
             });
 
-            // Update estate with device status AND original item data
+            // Update estate with device status and equipped device details
             const estateUpdates: any = {
                 updatedAt: Timestamp.now()
             };
 
             if (deviceType === '3d_printer') {
                 estateUpdates['ownedDevices.has3DPrinter'] = true;
-                estateUpdates['equippedDeviceDetails.printer'] = originalItem; // STORE ORIGINAL
+                estateUpdates['equippedDeviceDetails.printer'] = originalItem;
             } else {
                 estateUpdates['ownedDevices.hasLaserCutter'] = true;
-                estateUpdates['equippedDeviceDetails.laserCutter'] = originalItem; // STORE ORIGINAL
+                estateUpdates['equippedDeviceDetails.laserCutter'] = originalItem;
             }
 
             transaction.update(estateRef, estateUpdates);
@@ -267,7 +242,7 @@ export const unequipWorkshopDevice = async (
                 throw new Error('Originaal seadme andmed puuduvad');
             }
 
-            // Add device back to player inventory using ORIGINAL data
+            // Add device back to player inventory
             const inventory = [...(playerStats.inventory || [])];
 
             // Find existing item with same base properties or create with original data
@@ -284,7 +259,7 @@ export const unequipWorkshopDevice = async (
                     quantity: inventory[existingItemIndex].quantity + 1
                 };
             } else {
-                // Add original item back to inventory with new unique ID
+                // Add original item back to inventory
                 const restoredItem: InventoryItem = {
                     ...originalItem,
                     id: originalItem.id,
@@ -320,26 +295,9 @@ export const unequipWorkshopDevice = async (
     }
 };
 
-export const updateEstateDeviceInventory = async (userId: string, inventory: InventoryItem[]): Promise<void> => {
-    try {
-        const devices = scanInventoryForWorkshopDevices(inventory);
-        const estateRef = doc(firestore, 'playerEstates', userId);
-
-        await updateDoc(estateRef, {
-            'unequippedDevices.threeDPrinters': devices.threeDPrinters,
-            'unequippedDevices.laserCutters': devices.laserCutters,
-            updatedAt: Timestamp.now()
-        });
-    } catch (error) {
-        console.error('Error updating estate device inventory:', error);
-        throw error;
-    }
-};
-
 export const purchaseEstate = async (
     userId: string,
     newEstateId: string,
-    playerMoney: number
 ): Promise<{ success: boolean; message: string; newBalance?: number }> => {
     try {
         const newEstate = AVAILABLE_ESTATES.find(e => e.id === newEstateId);

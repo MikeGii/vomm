@@ -54,7 +54,7 @@ const TrainingPage: React.FC = () => {
     const { currentUser } = useAuth();
     const { showToast } = useToast();
     const { playerStats, loading, refreshStats } = usePlayerStats();
-    const { canUse3DPrinter, canUseLaserCutter } = useEstate();
+    const { canUse3DPrinter, canUseLaserCutter, playerEstate } = useEstate();
 
     // Consolidated training states
     const [trainingStates, setTrainingStates] = useState({
@@ -384,20 +384,36 @@ const TrainingPage: React.FC = () => {
     const WorkshopStatus: React.FC = useCallback(() => {
         if (activeTab !== 'handcraft') return null;
 
+        const getPrinterSuccessRate = (): number => {
+            const rate = playerEstate?.equippedDeviceDetails?.printer?.workshopStats?.successRate;
+            return rate || 0;
+        };
+
+        const getLaserSuccessRate = (): number => {
+            const rate = playerEstate?.equippedDeviceDetails?.laserCutter?.workshopStats?.successRate;
+            return rate || 0;
+        };
+
         return (
             <div className="workshop-status">
                 <h3>Töökoja seadmed:</h3>
                 <div className="workshop-devices-status">
                     <div className={`device-status ${canUse3DPrinter() ? 'available' : 'unavailable'}`}>
-                        {canUse3DPrinter() ? '🖨️ 3D Printer: Saadaval' : '🔒 3D Printer: Pole paigaldatud'}
+                        {canUse3DPrinter()
+                            ? `🖨️ 3D Printer: Saadaval (${getPrinterSuccessRate()}% õnnestumismäär)`
+                            : '🔒 3D Printer: Pole paigaldatud'
+                        }
                     </div>
                     <div className={`device-status ${canUseLaserCutter() ? 'available' : 'unavailable'}`}>
-                        {canUseLaserCutter() ? '⚡ Laserlõikur: Saadaval' : '🔒 Laserlõikur: Pole paigaldatud'}
+                        {canUseLaserCutter()
+                            ? `⚡ Laserlõikur: Saadaval (${getLaserSuccessRate()}% õnnestumismäär)`
+                            : '🔒 Laserlõikur: Pole paigaldatud'
+                        }
                     </div>
                 </div>
             </div>
         );
-    }, [activeTab, canUse3DPrinter, canUseLaserCutter]);
+    }, [activeTab, canUse3DPrinter, canUseLaserCutter, playerEstate]);
 
     // One-time initialization effect
     useEffect(() => {

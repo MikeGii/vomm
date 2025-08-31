@@ -39,7 +39,8 @@ const shopItemToInventoryItem = (shopItem: ShopItem): InventoryItem => {
         description: shopItem.description,
         category: shopItem.category === 'crafting' ? 'crafting' :
             (shopItem.category === 'protection' ? 'equipment' :
-                (shopItem.category === 'trainingBooster' || shopItem.category === 'medical' || shopItem.category === 'vip') ? 'consumable' : 'misc'),
+                (shopItem.category === 'workshop' ? 'equipment' : // Added workshop category
+                    (shopItem.category === 'trainingBooster' || shopItem.category === 'medical' || shopItem.category === 'vip') ? 'consumable' : 'misc')),
         quantity: 1,
         shopPrice: shopItem.currency === 'pollid' ? staticPrice : staticPrice,
         equipped: false,
@@ -53,6 +54,11 @@ const shopItemToInventoryItem = (shopItem: ShopItem): InventoryItem => {
 
     if (shopItem.stats) {
         inventoryItem.stats = shopItem.stats;
+    }
+
+    // ADD THIS MISSING SECTION FOR WORKSHOP DEVICES:
+    if (shopItem.workshopStats) {
+        inventoryItem.workshopStats = shopItem.workshopStats;
     }
 
     // Add consumable effect for training boosters

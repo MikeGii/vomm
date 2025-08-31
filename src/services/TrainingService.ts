@@ -235,7 +235,7 @@ const updateInventoryForCrafting = (
 };
 
 // NEW: Get workshop device success rate from estate
-const getWorkshopSuccessRate = async (
+export const getWorkshopSuccessRate = async (
     userId: string,
     activityRewards: { printing?: number; lasercutting?: number }
 ): Promise<number> => {
@@ -255,51 +255,30 @@ const getWorkshopSuccessRate = async (
         if (activityRewards.printing && playerEstate.equippedDeviceDetails?.printer) {
             const device = playerEstate.equippedDeviceDetails.printer;
 
-            // DEBUG: Log device details
-            console.log('Equipped 3D printer device:', device);
-            console.log('Device workshopStats:', device.workshopStats);
-            console.log('Device old stats:', device.stats);
-
-            // Check for new workshopStats first
+            // Use new workshopStats system only
             if (device.workshopStats?.successRate !== undefined) {
                 const rate = device.workshopStats.successRate;
-                console.log('Using new workshopStats success rate:', rate);
                 return Math.max(0, Math.min(100, Math.floor(rate)));
             }
 
-            // FALLBACK: Convert old stats.printing to success rate for existing devices
-            if (device.stats && 'printing' in device.stats) {
-                const oldBonus = (device.stats as any).printing;
-                const successRate = Math.min(95, 50 + (oldBonus * 2)); // Convert old bonus to success rate
-                console.log(`Converting old printing bonus ${oldBonus} to success rate: ${successRate}`);
-                return successRate;
-            }
-
-            console.log('No workshop stats found, defaulting to 100%');
+            // No fallback - if no workshopStats, return default low success rate
+            console.warn('3D printer device missing workshopStats, using default 50% success rate');
+            return 50;
         }
 
         // Check if activity requires laser cutting
         if (activityRewards.lasercutting && playerEstate.equippedDeviceDetails?.laserCutter) {
             const device = playerEstate.equippedDeviceDetails.laserCutter;
 
-            // DEBUG: Log device details
-            console.log('Equipped laser cutter device:', device);
-
+            // Use new workshopStats system only
             if (device.workshopStats?.successRate !== undefined) {
                 const rate = device.workshopStats.successRate;
-                console.log('Using new workshopStats success rate:', rate);
                 return Math.max(0, Math.min(100, Math.floor(rate)));
             }
 
-            // FALLBACK: Convert old stats.lasercutting to success rate
-            if (device.stats && 'lasercutting' in device.stats) {
-                const oldBonus = (device.stats as any).lasercutting;
-                const successRate = Math.min(95, 50 + (oldBonus * 2));
-                console.log(`Converting old lasercutting bonus ${oldBonus} to success rate: ${successRate}`);
-                return successRate;
-            }
-
-            console.log('No workshop stats found, defaulting to 100%');
+            // No fallback - if no workshopStats, return default low success rate
+            console.warn('Laser cutter device missing workshopStats, using default 50% success rate');
+            return 50;
         }
 
         return 100; // Default for non-workshop activities or when no equipment
