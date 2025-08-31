@@ -36,7 +36,6 @@ import {
 } from '../services/TrainingService';
 import { getAvailableActivities, getActivityById } from '../data/trainingActivities';
 import { sellCraftedItem } from '../services/SellService';
-import { getBaseIdFromInventoryId } from '../utils/inventoryUtils';
 import '../styles/pages/Training.css';
 
 const getVipAwareMaxClicks = (playerStats: PlayerStats | null): number => {
@@ -124,30 +123,6 @@ const TrainingPage: React.FC = () => {
 
         return { isValid: true };
     }, [currentUser, playerStats, trainingStates, activeTab]);
-
-    // Helper function to check if workshop items were produced
-    const checkIfItemsWereProduced = useCallback((
-        inventoryBefore: InventoryItem[],
-        inventoryAfter: InventoryItem[],
-        activity: TrainingActivity
-    ): boolean => {
-        if (!activity.producedItems) return false;
-
-        for (const producedItem of activity.producedItems) {
-            const countBefore = inventoryBefore
-                .filter(item => getBaseIdFromInventoryId(item.id) === producedItem.id)
-                .reduce((sum, item) => sum + item.quantity, 0);
-
-            const countAfter = inventoryAfter
-                .filter(item => getBaseIdFromInventoryId(item.id) === producedItem.id)
-                .reduce((sum, item) => sum + item.quantity, 0);
-
-            if (countAfter > countBefore) {
-                return true;
-            }
-        }
-        return false;
-    }, []);
 
     // Simplified state setters
     const setActiveTrainingState = useCallback((isTraining: boolean) => {
@@ -310,9 +285,6 @@ const TrainingPage: React.FC = () => {
             return;
         }
 
-        // Store inventory before training for workshop feedback
-        const inventoryBefore = playerStats?.inventory ? [...playerStats.inventory] : [];
-
         setActiveTrainingState(true);
 
         try {
@@ -340,12 +312,10 @@ const TrainingPage: React.FC = () => {
         activeTab,
         trainingStates,
         remainingClicks,
-        playerStats,
         refreshStats,
         showToast,
         validateTrainingState,
-        setActiveTrainingState,
-        checkIfItemsWereProduced
+        setActiveTrainingState
     ]);
 
     // Handle selling crafted items

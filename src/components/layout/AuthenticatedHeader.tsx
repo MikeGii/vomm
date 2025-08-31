@@ -201,6 +201,28 @@ export const AuthenticatedHeader: React.FC = () => {
                                     <span>Pood</span>
                                 </button>
 
+                                {/* Minu kodu - Level 60 required */}
+                                <button
+                                    onClick={() => {
+                                        if (playerStats && playerStats.level >= 60) {
+                                            navigate('/real-estate');
+                                            setIsMenuOpen(false);
+                                        }
+                                    }}
+                                    className={`menu-item ${playerStats && playerStats.level >= 60 ? '' : 'menu-item-locked'}`}
+                                    disabled={!playerStats || playerStats.level < 60}
+                                >
+                                    <span className="menu-icon">
+                                        {playerStats && playerStats.level >= 60 ? '🏡' : '🔒'}
+                                    </span>
+                                    <span>
+                                        Minu kodu
+                                        {playerStats && playerStats.level < 60 && (
+                                            <span className="menu-item-level-req"> (Tase 60)</span>
+                                        )}
+                                    </span>
+                                </button>
+
                                 <div className="menu-divider"></div>
 
                                 <div className="menu-section">
@@ -229,16 +251,28 @@ export const AuthenticatedHeader: React.FC = () => {
                                     </button>
                                 </div>
 
+                                {/* Võitlusklubi - Level 20 required */}
                                 <button
                                     onClick={() => {
-                                        navigate('/fight-club');
-                                        setIsMenuOpen(false);
+                                        if (playerStats && playerStats.level >= 20) {
+                                            navigate('/fight-club');
+                                            setIsMenuOpen(false);
+                                        }
                                     }}
-                                    className="menu-item"
+                                    className={`menu-item ${playerStats && playerStats.level >= 20 ? '' : 'menu-item-locked'}`}
+                                    disabled={!playerStats || playerStats.level < 20}
                                 >
-                                    <span className="menu-icon">🥊</span>
-                                    <span>Võitlusklubi</span>
+                                    <span className="menu-icon">
+                                        {playerStats && playerStats.level >= 20 ? '🥊' : '🔒'}
+                                    </span>
+                                    <span>
+                                        Võitlusklubi
+                                        {playerStats && playerStats.level < 20 && (
+                                            <span className="menu-item-level-req"> (Tase 20)</span>
+                                        )}
+                                    </span>
                                 </button>
+
 
                                 <div className="menu-divider"></div>
 

@@ -1,4 +1,4 @@
-/* src/styles/components/estate/BuyEstateTab.css - COMPACT VERSION */
+/* src/styles/components/estate/BuyEstateTab.css */
 .buy-estate-tab {
     max-width: 1200px;
     margin: 0 auto;
@@ -8,7 +8,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
+    padding: 0 1rem;
     flex-wrap: wrap;
     gap: 1rem;
 }
@@ -16,252 +17,245 @@
 .tab-header h2 {
     color: #f0f0f0;
     margin: 0;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
 }
 
 .player-money {
     background: linear-gradient(45deg, #4a90e2, #357abd);
     color: white;
-    padding: 0.75rem 1.5rem;
+    padding: 0.5rem 1rem;
     border-radius: 6px;
     font-weight: bold;
-    font-size: 1.1rem;
 }
 
-.estates-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 1.5rem;
+/* List Layout */
+.estates-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
-.estate-card {
+.estate-list-item {
     background: linear-gradient(135deg, #2a2a2a 0%, #252525 100%);
     border: 1px solid #444;
     border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
 }
 
-.estate-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+.estate-list-item:hover {
     border-color: #4a90e2;
 }
 
-.estate-card.unaffordable {
-    opacity: 0.6;
-    border-color: #ff6b6b;
+.estate-list-item.unaffordable {
+    opacity: 0.7;
 }
 
-.estate-card.current-estate {
+.estate-list-item.current-estate {
     border-color: #ff9800;
     background: linear-gradient(135deg, #2a2a2a 0%, #3a2a1a 100%);
 }
 
-.estate-card-header {
+/* Main Row */
+.estate-main-row {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    align-items: center;
+    padding: 1rem;
+    cursor: pointer;
+    gap: 1rem;
 }
 
-.estate-name {
+.estate-expand-icon {
+    color: #888;
+    font-size: 0.75rem;
+    min-width: 20px;
+}
+
+.estate-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.estate-name-section {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.estate-list-name {
     color: #f0f0f0;
-    margin: 0;
-    font-size: 1.2rem;
+    font-weight: 600;
+    font-size: 1.3rem;  /* Smaller font size for the list */
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .estate-list-name {
+        font-size: 1.3rem;  /* Even smaller on mobile */
+    }
 }
 
 .current-badge {
     background: #ff9800;
     color: white;
-    padding: 0.25rem 0.6rem;
-    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
     font-size: 0.75rem;
     font-weight: bold;
 }
 
-.estate-description {
-    margin-bottom: 1rem;
-}
-
-.estate-description p {
-    color: #b0b0b0;
-    line-height: 1.5;
-    margin: 0;
-    font-size: 0.9rem;
-}
-
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.feature {
+.estate-features-row {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0.5rem;
-    border-radius: 6px;
-    text-align: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
-.feature.active {
-    background: linear-gradient(45deg, #4a90e2, #357abd);
-    color: white;
+.feature-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
 }
 
-.feature.inactive {
-    background-color: #1a1a1a;
+.feature-badge.active {
+    background: rgba(74, 144, 226, 0.2);
+    color: #4a90e2;
+    border: 1px solid #4a90e2;
+}
+
+.feature-badge.inactive {
+    background: rgba(102, 102, 102, 0.2);
     color: #666;
-    border: 1px dashed #333;
+    border: 1px solid #666;
 }
 
-.feature-icon {
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
+.estate-price-action {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
-.feature-info {
+.estate-price {
     display: flex;
     flex-direction: column;
-    gap: 0.1rem;
+    align-items: flex-end;
 }
 
-.feature-name {
-    font-weight: bold;
-    font-size: 0.7rem;
+.price-label {
+    color: #888;
+    font-size: 0.75rem;
 }
 
-.feature-value {
-    font-size: 0.65rem;
-    opacity: 0.9;
-}
-
-.pricing-section {
-    border-top: 1px solid #444;
-    padding-top: 1rem;
-}
-
-.price-breakdown {
-    margin-bottom: 1rem;
-}
-
-.price-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.25rem 0;
-    font-size: 0.9rem;
-}
-
-.price-row.credit {
-    color: #4a90e2;
-}
-
-.price-row.final {
-    border-top: 1px solid #444;
-    margin-top: 0.5rem;
-    padding-top: 0.75rem;
-    font-weight: bold;
-    font-size: 1rem;
-}
-
-.price-value {
+.price-amount {
+    color: #f0f0f0;
     font-weight: bold;
 }
 
-.price-value.credit {
-    color: #4a90e2;
-}
-
-.purchase-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.purchase-button {
+.purchase-btn {
     background: linear-gradient(45deg, #4a90e2, #357abd);
     color: white;
     border: none;
-    padding: 0.75rem 1.5rem;
+    padding: 0.5rem 1rem;
     border-radius: 6px;
-    font-weight: bold;
-    font-size: 0.9rem;
     cursor: pointer;
+    font-weight: bold;
     transition: all 0.3s ease;
-    min-width: 100px;
+    white-space: nowrap;
 }
 
-.purchase-button:hover:not(:disabled) {
+.purchase-btn:hover:not(.disabled) {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3);
 }
 
-.purchase-button.disabled {
+.purchase-btn.disabled {
     background: #666;
     cursor: not-allowed;
+    opacity: 0.5;
 }
 
-.purchase-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+/* Expandable Details */
+.estate-details {
+    padding: 0 1rem 1rem 3rem;
+    border-top: 1px solid #333;
 }
 
-.insufficient-funds {
-    color: #ff6b6b;
+.estate-description {
+    color: #b0b0b0;
+    margin: 0.75rem 0;
+    line-height: 1.5;
+}
+
+.price-breakdown-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    color: #888;
+    margin-top: 0.75rem;
+}
+
+.price-breakdown-compact .final-price {
+    color: #4a90e2;
     font-weight: bold;
-    text-align: center;
-    font-size: 0.8rem;
 }
 
-/* Responsive Design */
+.insufficient-funds-compact {
+    color: #ff6b6b;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+/* Mobile Responsiveness */
 @media (max-width: 768px) {
-    .estates-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
+    .estate-main-row {
+        flex-wrap: wrap;
+        padding: 0.75rem;
     }
 
-    .estate-card {
-        padding: 1.25rem;
+    .estate-info {
+        width: 100%;
+        margin-bottom: 0.5rem;
     }
 
-    .tab-header {
-        flex-direction: column;
-        text-align: center;
+    .estate-price-action {
+        width: 100%;
+        justify-content: space-between;
     }
 
-    .features-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.4rem;
+    .estate-details {
+        padding: 0.75rem;
     }
 
-    .estate-card-header {
-        flex-direction: column;
-        text-align: center;
+    .estate-name {
+        font-size: 0.9rem;
+    }
+
+    .feature-badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
     }
 }
 
 @media (max-width: 480px) {
-    .estate-card {
-        padding: 1rem;
+    .tab-header {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
     }
 
-    .estate-name {
-        font-size: 1.1rem;
+    .player-money {
+        text-align: center;
     }
 
-    .features-grid {
-        gap: 0.3rem;
+    .estate-name-section {
+        flex-direction: column;
+        align-items: flex-start;
     }
 
-    .feature {
-        padding: 0.4rem;
+    .purchase-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.875rem;
     }
 }

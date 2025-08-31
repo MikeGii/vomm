@@ -1,5 +1,5 @@
 // src/components/department/tabs/VacantPositionsTab.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { PlayerStats } from '../../../types';
 import { PositionProcessor, PositionInfo } from '../../../utils/positionProcessor';
 import { PositionApplicationService } from '../../../services/PositionApplicationService';
@@ -29,8 +29,9 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
     const [selectedPosition, setSelectedPosition] = useState<PositionInfo | null>(null);
     const [processing, setProcessing] = useState<string | null>(null);
 
-    const positionProcessor = new PositionProcessor(playerStats);
-    const applicationService = new PositionApplicationService();
+    // Memoize these objects so they don't change on every render
+    const positionProcessor = useMemo(() => new PositionProcessor(playerStats), [playerStats]);
+    const applicationService = useMemo(() => new PositionApplicationService(), []);
 
     const loadPositions = useCallback(async () => {
         setLoading(true);
@@ -58,7 +59,7 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
         } finally {
             setLoading(false);
         }
-    }, [playerStats]);
+    }, [playerStats, applicationService, positionProcessor, showToast]);
 
     useEffect(() => {
         loadPositions();

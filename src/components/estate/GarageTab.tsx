@@ -1,11 +1,9 @@
 // src/components/estate/GarageTab.tsx
 import React from 'react';
-import { usePlayerStats } from '../../contexts/PlayerStatsContext';
 import { useEstate } from '../../contexts/EstateContext';
 import '../../styles/components/estate/GarageTab.css';
 
 export const GarageTab: React.FC = () => {
-    const { playerStats } = usePlayerStats();
     const { playerEstate } = useEstate();
 
     // Check if player has garage access

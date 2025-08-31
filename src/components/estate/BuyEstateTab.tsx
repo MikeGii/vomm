@@ -1,4 +1,4 @@
-// src/components/estate/BuyEstateTab.tsx (NEW FILE)
+// src/components/estate/BuyEstateTab.tsx
 import React, { useState } from 'react';
 import { useEstate } from '../../contexts/EstateContext';
 import { usePlayerStats } from '../../contexts/PlayerStatsContext';
@@ -14,6 +14,7 @@ export const BuyEstateTab: React.FC = () => {
     const { playerStats, refreshStats } = usePlayerStats();
     const { showToast } = useToast();
     const [purchasingEstate, setPurchasingEstate] = useState<string | null>(null);
+    const [expandedEstate, setExpandedEstate] = useState<string | null>(null);
 
     const handlePurchaseEstate = async (estateId: string) => {
         if (!currentUser?.uid || !playerStats) return;
@@ -21,10 +22,8 @@ export const BuyEstateTab: React.FC = () => {
         const newEstate = AVAILABLE_ESTATES.find(e => e.id === estateId);
         if (!newEstate) return;
 
-        // Calculate transaction
         const transaction = calculateEstateTransaction(newEstate, playerEstate?.currentEstate || null);
 
-        // Check if player has enough money
         if (playerStats.money < transaction.finalPrice) {
             showToast('Sul pole piisavalt raha selle kinnisvara ostmiseks!', 'error');
             return;
@@ -49,106 +48,91 @@ export const BuyEstateTab: React.FC = () => {
         }
     };
 
-    const renderEstateCard = (estate: any) => {
+    const toggleExpanded = (estateId: string) => {
+        setExpandedEstate(expandedEstate === estateId ? null : estateId);
+    };
+
+    const renderEstateRow = (estate: any) => {
         const transaction = calculateEstateTransaction(estate, playerEstate?.currentEstate || null);
         const canAfford = playerStats ? playerStats.money >= transaction.finalPrice : false;
         const isCurrentEstate = playerEstate?.currentEstate?.id === estate.id;
+        const isExpanded = expandedEstate === estate.id;
 
         return (
-            <div key={estate.id} className={`estate-card ${!canAfford ? 'unaffordable' : ''} ${isCurrentEstate ? 'current-estate' : ''}`}>
-                <div className="estate-card-header">
-                    <h3 className="estate-name">{estate.name}</h3>
-                    {isCurrentEstate && (
-                        <div className="current-badge">Praegune kinnisvara</div>
-                    )}
-                </div>
-
-                <div className="estate-description">
-                    <p>{estate.description}</p>
-                </div>
-
-                <div className="estate-features">
-                    <div className="features-grid">
-                        <div className={`feature ${estate.hasGarage ? 'active' : 'inactive'}`}>
-                            <span className="feature-icon">🚗</span>
-                            <div className="feature-info">
-                                <span className="feature-name">Garaaž</span>
-                                <span className="feature-value">
-                                    {estate.hasGarage ? `${estate.garageCapacity} kohta` : 'Puudub'}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className={`feature ${estate.hasWorkshop ? 'active' : 'inactive'}`}>
-                            <span className="feature-icon">🔧</span>
-                            <div className="feature-info">
-                                <span className="feature-name">Töökoda</span>
-                                <span className="feature-value">
-                                    {estate.hasWorkshop ? 'Saadaval' : 'Puudub'}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="feature active">
-                            <span className="feature-icon">🍳</span>
-                            <div className="feature-info">
-                                <span className="feature-name">Köök</span>
-                                <span className="feature-value">
-                                    {estate.kitchenSpace === 'small' && 'Väike'}
-                                    {estate.kitchenSpace === 'medium' && 'Keskmine'}
-                                    {estate.kitchenSpace === 'large' && 'Suur'}
-                                </span>
-                            </div>
-                        </div>
+            <div key={estate.id} className={`estate-list-item ${!canAfford ? 'unaffordable' : ''} ${isCurrentEstate ? 'current-estate' : ''}`}>
+                {/* Main Row - Always Visible */}
+                <div className="estate-main-row" onClick={() => toggleExpanded(estate.id)}>
+                    <div className="estate-expand-icon">
+                        {isExpanded ? '▼' : '▶'}
                     </div>
-                </div>
 
-                <div className="pricing-section">
-                    <div className="price-breakdown">
-                        <div className="price-row">
-                            <span>Kinnisvara hind:</span>
-                            <span className="price-value">💰 {estate.price.toLocaleString()}</span>
+                    <div className="estate-info">
+                        <div className="estate-name-section">
+                            <span className="estate-list-name">{estate.name}</span>
+                            {isCurrentEstate && (
+                                <span className="current-badge">Praegune</span>
+                            )}
                         </div>
 
-                        {transaction.currentEstate && (
-                            <div className="price-row credit">
-                                <span>Praeguse väärtus (90%):</span>
-                                <span className="price-value">-💰 {transaction.currentEstateValue.toLocaleString()}</span>
-                            </div>
-                        )}
-
-                        <div className="price-row final">
-                            <span>Lõplik hind:</span>
-                            <span className={`price-value ${transaction.finalPrice < 0 ? 'credit' : ''}`}>
-                                {transaction.finalPrice < 0 ? '+' : ''}💰 {Math.abs(transaction.finalPrice).toLocaleString()}
+                        <div className="estate-features-row">
+                            <span className={`feature-badge ${estate.hasGarage ? 'active' : 'inactive'}`}>
+                                {estate.hasGarage ? `🚗 ${estate.garageCapacity} kohta` : '🚗 ❌'}
+                            </span>
+                            <span className={`feature-badge ${estate.hasWorkshop ? 'active' : 'inactive'}`}>
+                                {estate.hasWorkshop ? '🔧 ✓' : '🔧 ❌'}
+                            </span>
+                            <span className="feature-badge active">
+                                🍳 {estate.kitchenSpace === 'small' ? 'S' : estate.kitchenSpace === 'medium' ? 'M' : 'L'}
                             </span>
                         </div>
                     </div>
 
-                    <div className="purchase-section">
+                    <div className="estate-price-action">
+                        <div className="estate-price">
+                            <span className="price-label">Hind:</span>
+                            <span className="price-amount">💰 {transaction.finalPrice.toLocaleString()}</span>
+                        </div>
+
                         {!isCurrentEstate && (
                             <button
-                                className={`purchase-button ${!canAfford ? 'disabled' : ''}`}
-                                onClick={() => handlePurchaseEstate(estate.id)}
+                                className={`purchase-btn ${!canAfford ? 'disabled' : ''}`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handlePurchaseEstate(estate.id);
+                                }}
                                 disabled={!canAfford || purchasingEstate === estate.id}
                             >
-                                {purchasingEstate === estate.id ? (
-                                    'Ostan...'
-                                ) : transaction.currentEstate ? (
-                                    transaction.finalPrice < 0 ? 'Müü alla' : 'Uuenda'
-                                ) : (
-                                    'Osta'
-                                )}
+                                {purchasingEstate === estate.id ? '...' :
+                                    transaction.currentEstate ?
+                                        (transaction.finalPrice < 0 ? 'Vaheta' : 'Uuenda') :
+                                        'Osta'}
                             </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Expandable Details */}
+                {isExpanded && (
+                    <div className="estate-details">
+                        <p className="estate-description">{estate.description}</p>
+
+                        {transaction.currentEstate && (
+                            <div className="price-breakdown-compact">
+                                <span>Kinnisvara hind: 💰 {estate.price.toLocaleString()}</span>
+                                <span>Omandatud kinnisvara väärtus: -💰 {transaction.currentEstateValue.toLocaleString()}</span>
+                                <span className="final-price">
+                                    Lõplik hind: {transaction.finalPrice < 0 ? '+' : ''}💰 {Math.abs(transaction.finalPrice).toLocaleString()}
+                                </span>
+                            </div>
                         )}
 
                         {!canAfford && !isCurrentEstate && (
-                            <div className="insufficient-funds">
+                            <div className="insufficient-funds-compact">
                                 Puudub: 💰 {(transaction.finalPrice - (playerStats?.money || 0)).toLocaleString()}
                             </div>
                         )}
                     </div>
-                </div>
+                )}
             </div>
         );
     };
@@ -158,12 +142,12 @@ export const BuyEstateTab: React.FC = () => {
             <div className="tab-header">
                 <h2>🏪 Saadaolevad kinnisvarad</h2>
                 <div className="player-money">
-                    Sinu raha: 💰 {playerStats?.money?.toLocaleString() || 0}
+                    💰 {playerStats?.money?.toLocaleString() || 0}
                 </div>
             </div>
 
-            <div className="estates-grid">
-                {AVAILABLE_ESTATES.map(renderEstateCard)}
+            <div className="estates-list">
+                {AVAILABLE_ESTATES.map(renderEstateRow)}
             </div>
         </div>
     );

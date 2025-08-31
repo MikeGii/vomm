@@ -3,14 +3,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { TabNavigation } from '../components/ui/TabNavigation';
-import { useAuth } from '../contexts/AuthContext';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { useEstate } from '../contexts/EstateContext';
-import { useToast } from '../contexts/ToastContext';
 import { BuyEstateTab } from '../components/estate/BuyEstateTab';
 import { OwnedEstateTab } from '../components/estate/OwnedEstateTab';
+import { GarageTab } from '../components/estate/GarageTab';
 import '../styles/pages/RealEstate.css';
-import {GarageTab} from "../components/estate/GarageTab";
 
 const REAL_ESTATE_TABS = [
     { id: 'owned', label: 'Minu kinnisvara', icon: '🏠' },
@@ -20,19 +18,13 @@ const REAL_ESTATE_TABS = [
 
 const RealEstatePage: React.FC = () => {
     const navigate = useNavigate();
-    const { currentUser } = useAuth();
     const { playerStats, loading: statsLoading } = usePlayerStats();
-    const { playerEstate, loading: estateLoading, hasWorkshop, canUse3DPrinter, canUseLaserCutter } = useEstate();
-    const { showToast } = useToast();
+    const { loading: estateLoading } = useEstate();
 
     const [activeTab, setActiveTab] = useState('owned');
 
     // Level 60 requirement check
     const canAccessRealEstate = (playerStats?.level || 0) >= 60;
-    const isTabDisabled = !canAccessRealEstate;
-
-    // Garage tab availability
-    const hasGarageAccess = playerEstate?.currentEstate?.hasGarage || false;
 
     if (statsLoading || estateLoading) {
         return (
@@ -54,6 +46,13 @@ const RealEstatePage: React.FC = () => {
         <div className="real-estate-page">
             <AuthenticatedHeader />
             <main className="real-estate-content">
+
+                <button
+                    className="back-to-dashboard"
+                    onClick={() => navigate('/dashboard')}
+                >
+                    ← Tagasi töölauale
+                </button>
                 <div className="page-header">
                     <h1 className="page-title">🏠 Kinnisvara</h1>
                     {!canAccessRealEstate && (
@@ -71,11 +70,9 @@ const RealEstatePage: React.FC = () => {
                 />
 
                 <div className="tab-content">
-                    <div className="tab-content">
-                        {activeTab === 'owned' && <OwnedEstateTab />}
-                        {activeTab === 'garage' && <GarageTab />}
-                        {activeTab === 'buy' && <BuyEstateTab />}
-                    </div>
+                    {activeTab === 'owned' && <OwnedEstateTab />}
+                    {activeTab === 'garage' && <GarageTab />}
+                    {activeTab === 'buy' && <BuyEstateTab />}
                 </div>
             </main>
         </div>
