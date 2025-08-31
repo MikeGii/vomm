@@ -7,7 +7,7 @@ import {
     AttributeData,
     TrainingData,
     KitchenLabTrainingData,
-    HandicraftTrainingData
+    HandicraftTrainingData, TrainingActivity
 } from '../types';
 import {calculateLevelFromExp, calculatePlayerHealth} from "./PlayerService";
 import { getTrainingBonusForAttribute} from "../data/abilities";
@@ -83,13 +83,18 @@ const hasRequiredMaterials = (
     const missing: { id: string; needed: number; has: number }[] = [];
 
     for (const required of requiredItems) {
-        // Sum quantities of all items with matching base ID - FIXED
+        // SECURITY: Validate input to prevent negative quantities
+        if (required.quantity < 0) {
+            throw new Error('Invalid required quantity');
+        }
+
+        // Sum quantities of all items with matching base ID
         const totalQuantity = inventory
             .filter(item => {
                 const baseId = getBaseIdFromInventoryId(item.id);
-                return baseId === required.id && item.category === 'crafting';
+                return baseId === required.id && item.category === 'crafting' && item.quantity > 0;
             })
-            .reduce((sum, item) => sum + item.quantity, 0);
+            .reduce((sum, item) => sum + Math.max(0, item.quantity), 0); // Ensure no negative quantities
 
         if (totalQuantity < required.quantity) {
             missing.push({
@@ -108,6 +113,11 @@ const hasRequiredMaterials = (
 
 // Helper function to create proper InventoryItem from shop data
 const createInventoryItemFromId = (itemId: string, quantity: number): InventoryItem => {
+    // SECURITY: Validate inputs
+    if (!itemId || quantity <= 0) {
+        throw new Error('Invalid item creation parameters');
+    }
+
     // First check CRAFTING_INGREDIENTS
     let shopItem = CRAFTING_INGREDIENTS.find(item => item.id === itemId);
 
@@ -124,8 +134,9 @@ const createInventoryItemFromId = (itemId: string, quantity: number): InventoryI
         id: createTimestampedId(itemId),
         name: shopItem.name,
         description: shopItem.description,
-        category: shopItem.category === 'protection' ? 'equipment' : 'crafting',
-        quantity: quantity,
+        category: shopItem.category === 'protection' ? 'equipment' :
+            shopItem.category === 'workshop' ? 'equipment' : 'crafting',
+        quantity: Math.max(1, Math.floor(quantity)), // Ensure positive integer
         shopPrice: shopItem.basePrice,
         source: 'training',
         obtainedAt: new Date()
@@ -137,6 +148,9 @@ const createInventoryItemFromId = (itemId: string, quantity: number): InventoryI
     }
     if (shopItem.stats) {
         inventoryItem.stats = shopItem.stats;
+    }
+    if (shopItem.workshopStats) {
+        inventoryItem.workshopStats = shopItem.workshopStats;
     }
     if (shopItem.consumableEffect) {
         inventoryItem.consumableEffect = shopItem.consumableEffect;
@@ -153,13 +167,23 @@ const updateInventoryForCrafting = (
 ): InventoryItem[] => {
     let updatedInventory = [...inventory];
 
+    // SECURITY: Validate inventory isn't null/undefined
+    if (!Array.isArray(updatedInventory)) {
+        updatedInventory = [];
+    }
+
     // Remove required materials by base ID
     requiredItems.forEach(required => {
-        let remainingToRemove = required.quantity;
+        // SECURITY: Validate quantities
+        if (required.quantity <= 0) return;
+
+        let remainingToRemove = Math.floor(required.quantity); // Ensure integer
 
         for (let i = updatedInventory.length - 1; i >= 0 && remainingToRemove > 0; i--) {
             const item = updatedInventory[i];
-            const baseId = getBaseIdFromInventoryId(item.id); // FIXED
+            if (!item || item.quantity <= 0) continue; // Skip invalid items
+
+            const baseId = getBaseIdFromInventoryId(item.id);
 
             if (baseId === required.id && item.category === 'crafting') {
                 if (item.quantity <= remainingToRemove) {
@@ -168,7 +192,7 @@ const updateInventoryForCrafting = (
                 } else {
                     updatedInventory[i] = {
                         ...item,
-                        quantity: item.quantity - remainingToRemove
+                        quantity: Math.max(0, item.quantity - remainingToRemove)
                     };
                     remainingToRemove = 0;
                 }
@@ -178,31 +202,171 @@ const updateInventoryForCrafting = (
 
     // Add produced items
     producedItems.forEach(produced => {
-        // Check if item already exists by base ID - WORKS FOR ALL CATEGORIES
+        // SECURITY: Validate produced items
+        if (produced.quantity <= 0) return;
+
+        const safeQuantity = Math.max(1, Math.floor(produced.quantity));
+
+        // Check if item already exists by base ID
         const existingIndex = updatedInventory.findIndex(item => {
             const baseId = getBaseIdFromInventoryId(item.id);
-            // Match by base ID regardless of category (equipment can stack too)
-            return baseId === produced.id && !item.equipped; // Don't stack with equipped items
+            return baseId === produced.id && !item.equipped && item.quantity > 0;
         });
 
         if (existingIndex >= 0) {
             // Stack with existing item
             updatedInventory[existingIndex] = {
                 ...updatedInventory[existingIndex],
-                quantity: updatedInventory[existingIndex].quantity + produced.quantity
+                quantity: updatedInventory[existingIndex].quantity + safeQuantity
             };
         } else {
             // Create new item
-            const newItem = createInventoryItemFromId(produced.id, produced.quantity);
-            updatedInventory.push(newItem);
+            try {
+                const newItem = createInventoryItemFromId(produced.id, safeQuantity);
+                updatedInventory.push(newItem);
+            } catch (error) {
+                console.error(`Failed to create item ${produced.id}:`, error);
+                // Continue without adding the item rather than failing completely
+            }
         }
     });
 
     return updatedInventory;
 };
 
+// NEW: Get workshop device success rate from estate
+const getWorkshopSuccessRate = async (
+    userId: string,
+    activityRewards: { printing?: number; lasercutting?: number }
+): Promise<number> => {
+    try {
+        // SECURITY: Validate user ID
+        if (!userId || typeof userId !== 'string') {
+            return 100;
+        }
+
+        // Import estate service to get player estate
+        const { getPlayerEstate } = await import('./EstateService');
+        const playerEstate = await getPlayerEstate(userId);
+
+        if (!playerEstate) return 100; // Default success for non-workshop activities
+
+        // Check if activity requires 3D printing
+        if (activityRewards.printing && playerEstate.equippedDeviceDetails?.printer) {
+            const device = playerEstate.equippedDeviceDetails.printer;
+
+            // DEBUG: Log device details
+            console.log('Equipped 3D printer device:', device);
+            console.log('Device workshopStats:', device.workshopStats);
+            console.log('Device old stats:', device.stats);
+
+            // Check for new workshopStats first
+            if (device.workshopStats?.successRate !== undefined) {
+                const rate = device.workshopStats.successRate;
+                console.log('Using new workshopStats success rate:', rate);
+                return Math.max(0, Math.min(100, Math.floor(rate)));
+            }
+
+            // FALLBACK: Convert old stats.printing to success rate for existing devices
+            if (device.stats && 'printing' in device.stats) {
+                const oldBonus = (device.stats as any).printing;
+                const successRate = Math.min(95, 50 + (oldBonus * 2)); // Convert old bonus to success rate
+                console.log(`Converting old printing bonus ${oldBonus} to success rate: ${successRate}`);
+                return successRate;
+            }
+
+            console.log('No workshop stats found, defaulting to 100%');
+        }
+
+        // Check if activity requires laser cutting
+        if (activityRewards.lasercutting && playerEstate.equippedDeviceDetails?.laserCutter) {
+            const device = playerEstate.equippedDeviceDetails.laserCutter;
+
+            // DEBUG: Log device details
+            console.log('Equipped laser cutter device:', device);
+
+            if (device.workshopStats?.successRate !== undefined) {
+                const rate = device.workshopStats.successRate;
+                console.log('Using new workshopStats success rate:', rate);
+                return Math.max(0, Math.min(100, Math.floor(rate)));
+            }
+
+            // FALLBACK: Convert old stats.lasercutting to success rate
+            if (device.stats && 'lasercutting' in device.stats) {
+                const oldBonus = (device.stats as any).lasercutting;
+                const successRate = Math.min(95, 50 + (oldBonus * 2));
+                console.log(`Converting old lasercutting bonus ${oldBonus} to success rate: ${successRate}`);
+                return successRate;
+            }
+
+            console.log('No workshop stats found, defaulting to 100%');
+        }
+
+        return 100; // Default for non-workshop activities or when no equipment
+    } catch (error) {
+        console.error('Error getting workshop success rate:', error);
+        return 100; // Default to 100% success on error
+    }
+};
+
+// NEW: Perform workshop crafting with success rate
+const performWorkshopCrafting = async (
+    userId: string,
+    activity: TrainingActivity,
+    inventory: InventoryItem[]
+): Promise<{ success: boolean; itemsProduced: boolean; updatedInventory: InventoryItem[] }> => {
+
+    // SECURITY: Validate inputs
+    if (!userId || !activity || !Array.isArray(inventory)) {
+        throw new Error('Invalid workshop crafting parameters');
+    }
+
+    // Get success rate for this workshop activity
+    const successRate = await getWorkshopSuccessRate(userId, activity.rewards);
+
+    // Always consume materials first (regardless of success)
+    let updatedInventory = [...inventory];
+    if (activity.requiredItems && activity.requiredItems.length > 0) {
+        updatedInventory = updateInventoryForCrafting(
+            updatedInventory,
+            activity.requiredItems,
+            [] // Don't add items yet, wait for success check
+        );
+    }
+
+    // Roll for crafting success with cryptographically secure random if available
+    const roll = (typeof crypto !== 'undefined' && crypto.getRandomValues)
+        ? crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1) * 100
+        : Math.random() * 100;
+
+    const craftingSuccess = roll < successRate;
+
+    // DEBUG: Log the roll and success rate for testing
+    console.log(`Workshop crafting: roll=${roll.toFixed(2)}, successRate=${successRate}, success=${craftingSuccess}`);
+
+    // If successful, add produced items to inventory
+    if (craftingSuccess && activity.producedItems && activity.producedItems.length > 0) {
+        updatedInventory = updateInventoryForCrafting(
+            updatedInventory,
+            [], // No materials to remove
+            activity.producedItems // Add produced items
+        );
+    }
+
+    return {
+        success: true, // Training always succeeds (gives XP)
+        itemsProduced: craftingSuccess,
+        updatedInventory
+    };
+};
+
 // Check if training clicks should reset (every full hour)
 export const checkAndResetTrainingClicks = async (userId: string): Promise<TrainingData> => {
+    // SECURITY: Validate user ID
+    if (!userId || typeof userId !== 'string') {
+        throw new Error('Invalid user ID');
+    }
+
     const statsRef = doc(firestore, 'playerStats', userId);
     const statsDoc = await getDoc(statsRef);
 
@@ -215,9 +379,9 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
 
     // COMPREHENSIVE SAFETY CHECK: Clean all undefined values
     trainingData = {
-        remainingClicks: trainingData.remainingClicks ?? 50,
+        remainingClicks: Math.max(0, Math.floor(trainingData.remainingClicks ?? 50)),
         lastResetTime: trainingData.lastResetTime || Timestamp.now(),
-        totalTrainingsDone: trainingData.totalTrainingsDone ?? 0,
+        totalTrainingsDone: Math.max(0, Math.floor(trainingData.totalTrainingsDone ?? 0)),
         isWorking: trainingData.isWorking ?? false
     };
 
@@ -252,7 +416,7 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
 
     if (currentHour.getTime() > lastResetHour.getTime()) {
         trainingData = {
-            remainingClicks: maxClicks, // Use VIP-aware maxClicks
+            remainingClicks: maxClicks,
             lastResetTime: Timestamp.now(),
             totalTrainingsDone: trainingData.totalTrainingsDone ?? 0,
             isWorking: !!stats.activeWork
@@ -275,6 +439,11 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
 };
 
 export const checkAndResetKitchenLabTrainingClicks = async (userId: string): Promise<KitchenLabTrainingData> => {
+    // SECURITY: Validate user ID
+    if (!userId || typeof userId !== 'string') {
+        throw new Error('Invalid user ID');
+    }
+
     const statsRef = doc(firestore, 'playerStats', userId);
     const statsDoc = await getDoc(statsRef);
 
@@ -287,20 +456,19 @@ export const checkAndResetKitchenLabTrainingClicks = async (userId: string): Pro
 
     // COMPREHENSIVE SAFETY CHECK: Clean all undefined values
     kitchenLabTrainingData = {
-        remainingClicks: kitchenLabTrainingData.remainingClicks ?? 50,
+        remainingClicks: Math.max(0, Math.floor(kitchenLabTrainingData.remainingClicks ?? 50)),
         lastResetTime: kitchenLabTrainingData.lastResetTime || Timestamp.now(),
-        totalTrainingsDone: kitchenLabTrainingData.totalTrainingsDone ?? 0
+        totalTrainingsDone: Math.max(0, Math.floor(kitchenLabTrainingData.totalTrainingsDone ?? 0))
     };
 
     // VIP LOGIC: Determine max clicks based on VIP status and work status
     let maxClicks: number;
     if (stats.isVip) {
-        // VIP benefits: 100 clicks when not working, 30 when working
         maxClicks = stats.activeWork ? 30 : 100;
     } else {
-        // Regular players: 50 clicks when not working, 10 when working
         maxClicks = stats.activeWork ? 10 : 50;
     }
+
     const now = new Date();
     const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
 
@@ -328,7 +496,6 @@ export const checkAndResetKitchenLabTrainingClicks = async (userId: string): Pro
             totalTrainingsDone: kitchenLabTrainingData.totalTrainingsDone ?? 0
         };
 
-        // GUARANTEED SAFE UPDATE: Explicitly construct clean object
         const safeUpdateData = {
             kitchenLabTrainingData: {
                 remainingClicks: Number(kitchenLabTrainingData.remainingClicks) || maxClicks,
@@ -344,6 +511,11 @@ export const checkAndResetKitchenLabTrainingClicks = async (userId: string): Pro
 };
 
 export const checkAndResetHandicraftTrainingClicks = async (userId: string): Promise<HandicraftTrainingData> => {
+    // SECURITY: Validate user ID
+    if (!userId || typeof userId !== 'string') {
+        throw new Error('Invalid user ID');
+    }
+
     const statsRef = doc(firestore, 'playerStats', userId);
     const statsDoc = await getDoc(statsRef);
 
@@ -356,20 +528,19 @@ export const checkAndResetHandicraftTrainingClicks = async (userId: string): Pro
 
     // COMPREHENSIVE SAFETY CHECK: Clean all undefined values
     handicraftTrainingData = {
-        remainingClicks: handicraftTrainingData.remainingClicks ?? 50,
+        remainingClicks: Math.max(0, Math.floor(handicraftTrainingData.remainingClicks ?? 50)),
         lastResetTime: handicraftTrainingData.lastResetTime || Timestamp.now(),
-        totalTrainingsDone: handicraftTrainingData.totalTrainingsDone ?? 0
+        totalTrainingsDone: Math.max(0, Math.floor(handicraftTrainingData.totalTrainingsDone ?? 0))
     };
 
     // VIP LOGIC: Determine max clicks based on VIP status and work status
     let maxClicks: number;
     if (stats.isVip) {
-        // VIP benefits: 100 clicks when not working, 30 when working
         maxClicks = stats.activeWork ? 30 : 100;
     } else {
-        // Regular players: 50 clicks when not working, 10 when working
         maxClicks = stats.activeWork ? 10 : 50;
     }
+
     const now = new Date();
     const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
 
@@ -397,7 +568,6 @@ export const checkAndResetHandicraftTrainingClicks = async (userId: string): Pro
             totalTrainingsDone: handicraftTrainingData.totalTrainingsDone ?? 0
         };
 
-        // GUARANTEED SAFE UPDATE: Explicitly construct clean object
         const safeUpdateData = {
             handicraftTrainingData: {
                 remainingClicks: Number(handicraftTrainingData.remainingClicks) || maxClicks,
@@ -412,6 +582,7 @@ export const checkAndResetHandicraftTrainingClicks = async (userId: string): Pro
     return handicraftTrainingData;
 };
 
+// Main training function with material checking and crafting
 // Main training function with material checking and crafting
 export const performTraining = async (
     userId: string,
@@ -432,7 +603,18 @@ export const performTraining = async (
         playerExp: number;
     },
     trainingType: 'sports' | 'kitchen-lab' | 'handicraft' = 'sports'
-): Promise<PlayerStats> => {
+): Promise<{ updatedStats: PlayerStats; craftingResult?: { itemsProduced: boolean } }> => {
+    // SECURITY: Validate all inputs
+    if (!userId || typeof userId !== 'string') {
+        throw new Error('Invalid user ID');
+    }
+    if (!activityId || typeof activityId !== 'string') {
+        throw new Error('Invalid activity ID');
+    }
+    if (!rewards || typeof rewards.playerExp !== 'number' || rewards.playerExp < 0) {
+        throw new Error('Invalid rewards data');
+    }
+
     const statsRef = doc(firestore, 'playerStats', userId);
     const statsDoc = await getDoc(statsRef);
 
@@ -454,7 +636,7 @@ export const performTraining = async (
             throw new Error('Treeningkordi pole enam järel! Oota järgmist täistundi.');
         }
 
-        // NEW: Check materials for kitchen/lab activities
+        // Check materials for kitchen/lab activities
         const activity = getKitchenLabActivityById(activityId);
         if (activity && activity.requiredItems) {
             const materialCheck = hasRequiredMaterials(stats.inventory || [], activity.requiredItems);
@@ -475,7 +657,7 @@ export const performTraining = async (
             throw new Error('Käsitöö treeningkordi pole enam järel! Oota järgmist täistundi.');
         }
 
-        // NEW: Check materials for handicraft activities
+        // Check materials for handicraft activities
         const activity = getHandicraftActivityById(activityId);
         if (activity && activity.requiredItems) {
             const materialCheck = hasRequiredMaterials(stats.inventory || [], activity.requiredItems);
@@ -497,96 +679,105 @@ export const performTraining = async (
 
     // Update attributes based on rewards
     const updateAttribute = (attr: AttributeData, expGained: number): { updatedAttribute: AttributeData, levelsGained: number } => {
-        let newExp = attr.experience + expGained;
+        // SECURITY: Validate experience gain
+        const safeExpGained = Math.max(0, Math.floor(expGained));
+
+        let newExp = attr.experience + safeExpGained;
         let newLevel = attr.level;
         let expForNext = attr.experienceForNextLevel;
-        let levelsGained = 0; // Track how many levels were gained
+        let levelsGained = 0;
 
-        while (newExp >= expForNext) {
+        while (newExp >= expForNext && levelsGained < 10) { // SECURITY: Prevent infinite loops
             newExp -= expForNext;
             newLevel++;
-            levelsGained++; // Count each level gained
+            levelsGained++;
             expForNext = calculateExpForNextLevel(newLevel);
         }
 
         return {
             updatedAttribute: {
-                level: newLevel,
-                experience: newExp,
-                experienceForNextLevel: expForNext
+                level: Math.max(0, newLevel),
+                experience: Math.max(0, newExp),
+                experienceForNextLevel: Math.max(1, expForNext)
             },
-            levelsGained
+            levelsGained: Math.max(0, levelsGained)
         };
     };
 
     let totalAttributeLevelsGained = 0;
 
     const applyBonusToReward = (baseReward: number, attribute: 'strength' | 'agility' | 'dexterity' | 'intelligence' | 'endurance'): number => {
+        // SECURITY: Validate base reward
+        if (baseReward <= 0) return 0;
+
         const bonus = getTrainingBonusForAttribute(stats.completedCourses || [], attribute);
-        return Math.floor(baseReward * (1 + bonus));
+        // SECURITY: Cap bonus to prevent excessive multipliers
+        const cappedBonus = Math.max(0, Math.min(10, bonus)); // Max 10x multiplier
+        return Math.floor(baseReward * (1 + cappedBonus));
     };
 
-    if (rewards.strength) {
+    // Process all attribute rewards with validation
+    if (rewards.strength && rewards.strength > 0) {
         const bonusedReward = applyBonusToReward(rewards.strength, 'strength');
         const result = updateAttribute(attributes.strength, bonusedReward);
         attributes.strength = result.updatedAttribute;
         totalAttributeLevelsGained += result.levelsGained;
     }
-    if (rewards.agility) {
+    if (rewards.agility && rewards.agility > 0) {
         const bonusedReward = applyBonusToReward(rewards.agility, 'agility');
         const result = updateAttribute(attributes.agility, bonusedReward);
         attributes.agility = result.updatedAttribute;
         totalAttributeLevelsGained += result.levelsGained;
     }
-    if (rewards.dexterity) {
+    if (rewards.dexterity && rewards.dexterity > 0) {
         const bonusedReward = applyBonusToReward(rewards.dexterity, 'dexterity');
         const result = updateAttribute(attributes.dexterity, bonusedReward);
         attributes.dexterity = result.updatedAttribute;
         totalAttributeLevelsGained += result.levelsGained;
     }
-    if (rewards.intelligence) {
+    if (rewards.intelligence && rewards.intelligence > 0) {
         const bonusedReward = applyBonusToReward(rewards.intelligence, 'intelligence');
         const result = updateAttribute(attributes.intelligence, bonusedReward);
         attributes.intelligence = result.updatedAttribute;
         totalAttributeLevelsGained += result.levelsGained;
     }
-    if (rewards.endurance) {
+    if (rewards.endurance && rewards.endurance > 0) {
         const bonusedReward = applyBonusToReward(rewards.endurance, 'endurance');
         const result = updateAttribute(attributes.endurance, bonusedReward);
         attributes.endurance = result.updatedAttribute;
         totalAttributeLevelsGained += result.levelsGained;
     }
-    if (rewards.cooking) {
+    if (rewards.cooking && rewards.cooking > 0) {
         const result = updateAttribute(attributes.cooking, rewards.cooking);
         attributes.cooking = result.updatedAttribute;
         totalAttributeLevelsGained += result.levelsGained;
     }
-    if (rewards.brewing) {
+    if (rewards.brewing && rewards.brewing > 0) {
         const result = updateAttribute(attributes.brewing, rewards.brewing);
         attributes.brewing = result.updatedAttribute;
         totalAttributeLevelsGained += result.levelsGained;
     }
-    if (rewards.chemistry) {
+    if (rewards.chemistry && rewards.chemistry > 0) {
         const result = updateAttribute(attributes.chemistry, rewards.chemistry);
         attributes.chemistry = result.updatedAttribute;
         totalAttributeLevelsGained += result.levelsGained;
     }
-    if (rewards.sewing) {
+    if (rewards.sewing && rewards.sewing > 0) {
         const result = updateAttribute(attributes.sewing, rewards.sewing);
         attributes.sewing = result.updatedAttribute;
         totalAttributeLevelsGained += result.levelsGained;
     }
-    if (rewards.medicine) {
+    if (rewards.medicine && rewards.medicine > 0) {
         const result = updateAttribute(attributes.medicine, rewards.medicine);
         attributes.medicine = result.updatedAttribute;
         totalAttributeLevelsGained += result.levelsGained;
     }
-    if (rewards.printing) {
+    if (rewards.printing && rewards.printing > 0) {
         const result = updateAttribute(attributes.printing, rewards.printing);
         attributes.printing = result.updatedAttribute;
         totalAttributeLevelsGained += result.levelsGained;
     }
-    if (rewards.lasercutting) {
+    if (rewards.lasercutting && rewards.lasercutting > 0) {
         const result = updateAttribute(attributes.lasercutting, rewards.lasercutting);
         attributes.lasercutting = result.updatedAttribute;
         totalAttributeLevelsGained += result.levelsGained;
@@ -609,32 +800,32 @@ export const performTraining = async (
 
         updatedHealth = {
             ...newHealthData,
-            current: oldCurrentHealth + healthIncrease
+            current: Math.min(oldCurrentHealth + healthIncrease, newHealthData.max)
         };
-
-        updatedHealth.current = Math.min(updatedHealth.current, updatedHealth.max);
 
         if (updatedHealth.current >= updatedHealth.max) {
             healthUpdates.lastHealthUpdate = null;
         }
     }
 
-    // Update player experience and level
-    const newPlayerExp = stats.experience + rewards.playerExp;
+    // Update player experience and level with validation
+    const safePlayerExp = Math.max(0, Math.floor(rewards.playerExp));
+    const newPlayerExp = (stats.experience || 0) + safePlayerExp;
     const newPlayerLevel = calculateLevelFromExp(newPlayerExp);
 
     // Prepare updates object
     let updates: any = {
         attributes: attributes,
-        experience: newPlayerExp,
-        level: newPlayerLevel,
+        experience: Math.max(0, newPlayerExp),
+        level: Math.max(1, newPlayerLevel),
         health: updatedHealth,
         ...healthUpdates
     };
 
+    // Handle reputation gains with cap
     if (totalAttributeLevelsGained > 0) {
-        const reputationGained = totalAttributeLevelsGained * 2;
-        const currentReputation = stats.reputation || 0;
+        const reputationGained = Math.min(100, totalAttributeLevelsGained * 2); // Cap at 100 per training
+        const currentReputation = Math.max(0, stats.reputation || 0);
         updates.reputation = currentReputation + reputationGained;
     }
 
@@ -651,15 +842,35 @@ export const performTraining = async (
         }
     }
 
+    // NEW: Handle handicraft activities with workshop success rate system
+    let craftingResult: { itemsProduced: boolean } | undefined;
+
     if (trainingType === 'handicraft') {
         const activity = getHandicraftActivityById(activityId);
-        if (activity && activity.requiredItems && activity.producedItems) {
-            const updatedInventory = updateInventoryForCrafting(
-                stats.inventory || [],
-                activity.requiredItems,
-                activity.producedItems
-            );
-            updates.inventory = updatedInventory;
+        if (activity && activity.requiredItems) {
+            // Check if this is a workshop activity (printing or laser cutting)
+            if (activity.rewards.printing || activity.rewards.lasercutting) {
+                // Use workshop crafting with success rate
+                const workshopResult = await performWorkshopCrafting(userId, activity, stats.inventory || []);
+                updates.inventory = workshopResult.updatedInventory;
+                craftingResult = { itemsProduced: workshopResult.itemsProduced };
+
+                // Log crafting outcome for debugging/monitoring
+                if (!workshopResult.itemsProduced) {
+                    console.log(`Workshop crafting failed for activity ${activityId} - materials consumed but no items produced`);
+                }
+            } else {
+                // Non-workshop handicraft activities (sewing, medicine) - 100% success
+                if (activity.producedItems) {
+                    const updatedInventory = updateInventoryForCrafting(
+                        stats.inventory || [],
+                        activity.requiredItems,
+                        activity.producedItems
+                    );
+                    updates.inventory = updatedInventory;
+                    craftingResult = { itemsProduced: true };
+                }
+            }
         }
     }
 
@@ -667,26 +878,26 @@ export const performTraining = async (
     if (trainingType === 'sports') {
         const trainingData = await checkAndResetTrainingClicks(userId);
         const updatedTrainingData: TrainingData = {
-            remainingClicks: Number(trainingData.remainingClicks - 1) || 0,
+            remainingClicks: Math.max(0, Number(trainingData.remainingClicks - 1) || 0),
             lastResetTime: trainingData.lastResetTime,
-            totalTrainingsDone: Number(trainingData.totalTrainingsDone + 1) || 1,
+            totalTrainingsDone: Math.max(0, Number(trainingData.totalTrainingsDone + 1) || 1),
             isWorking: Boolean(stats.activeWork)
         };
         updates.trainingData = updatedTrainingData;
     } else if (trainingType === 'kitchen-lab') {
         const kitchenLabData = await checkAndResetKitchenLabTrainingClicks(userId);
         const updatedKitchenLabData: KitchenLabTrainingData = {
-            remainingClicks: Number(kitchenLabData.remainingClicks - 1) || 0,
+            remainingClicks: Math.max(0, Number(kitchenLabData.remainingClicks - 1) || 0),
             lastResetTime: kitchenLabData.lastResetTime,
-            totalTrainingsDone: Number(kitchenLabData.totalTrainingsDone + 1) || 1
+            totalTrainingsDone: Math.max(0, Number(kitchenLabData.totalTrainingsDone + 1) || 1)
         };
         updates.kitchenLabTrainingData = updatedKitchenLabData;
     } else if (trainingType === 'handicraft') {
         const handicraftData = await checkAndResetHandicraftTrainingClicks(userId);
         const updatedHandicraftData: HandicraftTrainingData = {
-            remainingClicks: Number(handicraftData.remainingClicks - 1) || 0,
+            remainingClicks: Math.max(0, Number(handicraftData.remainingClicks - 1) || 0),
             lastResetTime: handicraftData.lastResetTime,
-            totalTrainingsDone: Number(handicraftData.totalTrainingsDone + 1) || 1
+            totalTrainingsDone: Math.max(0, Number(handicraftData.totalTrainingsDone + 1) || 1)
         };
         updates.handicraftTrainingData = updatedHandicraftData;
     }
@@ -694,9 +905,14 @@ export const performTraining = async (
     // Save to database
     await updateDoc(statsRef, updates);
 
-    return {
+    const finalStats = {
         ...stats,
         ...updates
+    };
+
+    return {
+        updatedStats: finalStats,
+        craftingResult
     };
 };
 
@@ -706,8 +922,8 @@ export const getTimeUntilReset = (): string => {
     const nextHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1);
     const diff = nextHour.getTime() - now.getTime();
 
-    const minutes = Math.floor(diff / 60000);
-    const seconds = Math.floor((diff % 60000) / 1000);
+    const minutes = Math.max(0, Math.floor(diff / 60000));
+    const seconds = Math.max(0, Math.floor((diff % 60000) / 1000));
 
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };

@@ -116,8 +116,8 @@ export const OwnedEstateTab: React.FC = () => {
                             <div className="feature-content">
                                 <span className="feature-name">Garaaž</span>
                                 <span className="feature-value">
-                                    {estate.hasGarage ? `${estate.garageCapacity} kohta` : 'Puudub'}
-                                </span>
+                                {estate.hasGarage ? `${estate.garageCapacity} kohta` : 'Puudub'}
+                            </span>
                             </div>
                         </div>
 
@@ -126,8 +126,8 @@ export const OwnedEstateTab: React.FC = () => {
                             <div className="feature-content">
                                 <span className="feature-name">Töökoda</span>
                                 <span className="feature-value">
-                                    {estate.hasWorkshop ? 'Saadaval' : 'Puudub'}
-                                </span>
+                                {estate.hasWorkshop ? 'Saadaval' : 'Puudub'}
+                            </span>
                             </div>
                         </div>
 
@@ -136,10 +136,10 @@ export const OwnedEstateTab: React.FC = () => {
                             <div className="feature-content">
                                 <span className="feature-name">Köök</span>
                                 <span className="feature-value">
-                                    {estate.kitchenSpace === 'small' && 'Väike'}
+                                {estate.kitchenSpace === 'small' && 'Väike'}
                                     {estate.kitchenSpace === 'medium' && 'Keskmine'}
                                     {estate.kitchenSpace === 'large' && 'Suur'}
-                                </span>
+                            </span>
                             </div>
                         </div>
                     </div>
@@ -163,6 +163,23 @@ export const OwnedEstateTab: React.FC = () => {
                                 <div className={`status-indicator ${canUse3DPrinter() ? 'active' : 'inactive'}`}>
                                     {canUse3DPrinter() ? '✅ Paigaldatud' : '❌ Paigaldamata'}
                                 </div>
+
+                                {/* NEW: Show equipped device details */}
+                                {canUse3DPrinter() && playerEstate?.equippedDeviceDetails?.printer && (
+                                    <div className="equipped-device-info">
+                                        <div className="equipped-device-name">
+                                            <strong>{playerEstate.equippedDeviceDetails.printer.name}</strong>
+                                        </div>
+                                        <div className="equipped-device-description">
+                                            {playerEstate.equippedDeviceDetails.printer.description}
+                                        </div>
+                                        {playerEstate.equippedDeviceDetails.printer.workshopStats?.successRate !== undefined && (
+                                            <div className="equipped-device-stats">
+                                                🖨️ Õnnestumise määr: {playerEstate.equippedDeviceDetails.printer.workshopStats.successRate}%
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 <div className="device-inventory">
                                     Laos: {availableDevices.threeDPrinters.length} erinevat seadet
@@ -234,6 +251,23 @@ export const OwnedEstateTab: React.FC = () => {
                                 <div className={`status-indicator ${canUseLaserCutter() ? 'active' : 'inactive'}`}>
                                     {canUseLaserCutter() ? '✅ Paigaldatud' : '❌ Paigaldamata'}
                                 </div>
+
+                                {/* NEW: Show equipped device details */}
+                                {canUseLaserCutter() && playerEstate?.equippedDeviceDetails?.laserCutter && (
+                                    <div className="equipped-device-info">
+                                        <div className="equipped-device-name">
+                                            <strong>{playerEstate.equippedDeviceDetails.laserCutter.name}</strong>
+                                        </div>
+                                        <div className="equipped-device-description">
+                                            {playerEstate.equippedDeviceDetails.laserCutter.description}
+                                        </div>
+                                        {playerEstate.equippedDeviceDetails.laserCutter.workshopStats?.successRate !== undefined && (
+                                            <div className="equipped-device-stats">
+                                                🔧 Õnnestumise määr: {playerEstate.equippedDeviceDetails.laserCutter.workshopStats.successRate}%
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 <div className="device-inventory">
                                     Laos: {availableDevices.laserCutters.length} erinevat seadet

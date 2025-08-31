@@ -23,8 +23,6 @@ export interface EquipmentItem {
         dexterity?: number;
         intelligence?: number;
         endurance?: number;
-        printing?: number;
-        lasercutting?: number;
     };
     equipped: boolean;
 }

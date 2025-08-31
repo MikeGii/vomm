@@ -18,9 +18,13 @@ export interface ShopItem {
         dexterity?: number;
         intelligence?: number;
         endurance?: number;
-        printing?: number;
-        lasercutting?: number;
     };
+
+    workshopStats?: {
+        successRate: number;
+        deviceType: 'printing' | 'lasercutting';
+    };
+
     equipmentSlot?: 'head' | 'upperBody' | 'lowerBody' | 'hands' | 'belt' | 'weaponHolster' | 'shoes' | '3d_printer_slot' | 'laser_cutter_slot';
     consumableEffect?: ConsumableEffect;
 }

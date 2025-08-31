@@ -2,6 +2,7 @@
 import { ShopItem } from '../../types/shop';
 
 export const WORKSHOP_DEVICES: ShopItem[] = [
+    // 3D PRINTERS
     {
         id: 'basic_cheap_3d_printer',
         name: 'Ender-3',
@@ -11,8 +12,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         currency: 'money',
         basePrice: 15000,
         maxStock: 150,
-        stats: {
-            printing: 0
+        workshopStats: {
+            successRate: 60,
+            deviceType: 'printing'
         }
     },
     {
@@ -24,8 +26,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         currency: 'money',
         basePrice: 25000,
         maxStock: 150,
-        stats: {
-            printing: 2
+        workshopStats: {
+            successRate: 65,
+            deviceType: 'printing'
         }
     },
     {
@@ -37,8 +40,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         currency: 'money',
         basePrice: 40000,
         maxStock: 120,
-        stats: {
-            printing: 4
+        workshopStats: {
+            successRate: 70,
+            deviceType: 'printing'
         }
     },
     {
@@ -50,8 +54,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         currency: 'money',
         basePrice: 65000,
         maxStock: 130,
-        stats: {
-            printing: 7
+        workshopStats: {
+            successRate: 75,
+            deviceType: 'printing'
         }
     },
     {
@@ -63,8 +68,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         currency: 'money',
         basePrice: 85000,
         maxStock: 100,
-        stats: {
-            printing: 10
+        workshopStats: {
+            successRate: 80,
+            deviceType: 'printing'
         }
     },
     {
@@ -76,8 +82,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         currency: 'money',
         basePrice: 150000,
         maxStock: 90,
-        stats: {
-            printing: 15
+        workshopStats: {
+            successRate: 85,
+            deviceType: 'printing'
         }
     },
     {
@@ -89,8 +96,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         currency: 'money',
         basePrice: 250000,
         maxStock: 60,
-        stats: {
-            printing: 20
+        workshopStats: {
+            successRate: 90,
+            deviceType: 'printing'
         }
     },
     {
@@ -102,8 +110,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         currency: 'money',
         basePrice: 400000,
         maxStock: 50,
-        stats: {
-            printing: 30
+        workshopStats: {
+            successRate: 92,
+            deviceType: 'printing'
         }
     },
     {
@@ -117,8 +126,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         basePrice: 0,
         basePollidPrice: 30,
         maxStock: 30,
-        stats: {
-            printing: 45
+        workshopStats: {
+            successRate: 95,
+            deviceType: 'printing'
         }
     },
     {
@@ -132,10 +142,13 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         basePrice: 0,
         basePollidPrice: 50,
         maxStock: 15,
-        stats: {
-            printing: 60
+        workshopStats: {
+            successRate: 98,
+            deviceType: 'printing'
         }
     },
+
+    // LASER CUTTERS
     {
         id: 'basic_cheap_laser_cutter',
         name: 'Atomstack A10',
@@ -145,8 +158,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         currency: 'money',
         basePrice: 20000,
         maxStock: 150,
-        stats: {
-            lasercutting: 0
+        workshopStats: {
+            successRate: 55,
+            deviceType: 'lasercutting'
         }
     },
     {
@@ -158,8 +172,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         currency: 'money',
         basePrice: 30000,
         maxStock: 150,
-        stats: {
-            lasercutting: 2
+        workshopStats: {
+            successRate: 62,
+            deviceType: 'lasercutting'
         }
     },
     {
@@ -171,8 +186,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         currency: 'money',
         basePrice: 45000,
         maxStock: 150,
-        stats: {
-            lasercutting: 4
+        workshopStats: {
+            successRate: 68,
+            deviceType: 'lasercutting'
         }
     },
     {
@@ -184,8 +200,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         currency: 'money',
         basePrice: 65000,
         maxStock: 120,
-        stats: {
-            lasercutting: 7
+        workshopStats: {
+            successRate: 73,
+            deviceType: 'lasercutting'
         }
     },
     {
@@ -197,8 +214,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         currency: 'money',
         basePrice: 85000,
         maxStock: 100,
-        stats: {
-            lasercutting: 10
+        workshopStats: {
+            successRate: 78,
+            deviceType: 'lasercutting'
         }
     },
     {
@@ -210,8 +228,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         currency: 'money',
         basePrice: 150000,
         maxStock: 80,
-        stats: {
-            lasercutting: 15
+        workshopStats: {
+            successRate: 83,
+            deviceType: 'lasercutting'
         }
     },
     {
@@ -223,8 +242,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         currency: 'money',
         basePrice: 250000,
         maxStock: 60,
-        stats: {
-            lasercutting: 20
+        workshopStats: {
+            successRate: 88,
+            deviceType: 'lasercutting'
         }
     },
     {
@@ -236,8 +256,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         currency: 'money',
         basePrice: 400000,
         maxStock: 40,
-        stats: {
-            lasercutting: 30
+        workshopStats: {
+            successRate: 92,
+            deviceType: 'lasercutting'
         }
     },
     {
@@ -251,8 +272,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         basePrice: 0,
         basePollidPrice: 30,
         maxStock: 25,
-        stats: {
-            lasercutting: 45
+        workshopStats: {
+            successRate: 96,
+            deviceType: 'lasercutting'
         }
     },
     {
@@ -266,8 +288,9 @@ export const WORKSHOP_DEVICES: ShopItem[] = [
         basePrice: 0,
         basePollidPrice: 50,
         maxStock: 15,
-        stats: {
-            lasercutting: 60
+        workshopStats: {
+            successRate: 99,
+            deviceType: 'lasercutting'
         }
     }
 ];

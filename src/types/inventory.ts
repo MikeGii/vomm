@@ -18,8 +18,10 @@ export interface InventoryItem {
         dexterity?: number;
         intelligence?: number;
         endurance?: number;
-        printing?: number;
-        lasercutting?: number;
+    };
+    workshopStats?: {
+        successRate: number;
+        deviceType: 'printing' | 'lasercutting';
     };
     consumableEffect?: {
         type: 'trainingClicks' | 'kitchenClicks' | 'handicraftClicks' | 'heal' | 'energy' | 'experience' | 'temporary_boost' | 'workTimeReduction' | 'courseTimeReduction';

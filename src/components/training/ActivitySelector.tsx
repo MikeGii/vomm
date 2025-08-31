@@ -1,10 +1,11 @@
-// src/components/training/ActivitySelector.tsx - UUENDUS
+// src/components/training/ActivitySelector.tsx - CORRECTED
 import React from 'react';
 import { TrainingActivity, PlayerStats } from '../../types';
 import { calculateEquipmentBonuses } from '../../services/EquipmentBonusService';
 import { CRAFTING_INGREDIENTS } from '../../data/shop/craftingIngredients';
 import { getBaseIdFromInventoryId } from '../../utils/inventoryUtils';
 import '../../styles/components/training/ActivitySelector.css';
+import { useEstate } from '../../contexts/EstateContext';
 import { ALL_SHOP_ITEMS } from '../../data/shop';
 
 interface ActivitySelectorProps {
@@ -31,6 +32,7 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
     const selectedActivityData = activities.find(a => a.id === selectedActivity);
     const equipmentBonuses = playerStats?.equipment ? calculateEquipmentBonuses(playerStats.equipment) : null;
     const playerLevel = playerStats?.level || 1;
+    const { canUse3DPrinter, canUseLaserCutter } = useEstate();
 
     const remainingClicks = trainingType === 'sports'
         ? (playerStats?.trainingData?.remainingClicks || 0)
@@ -38,9 +40,35 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
             ? (playerStats?.kitchenLabTrainingData?.remainingClicks || 0)
             : (playerStats?.handicraftTrainingData?.remainingClicks || 0);
 
+    const hasWorkshopEquipment = (type: 'printing' | 'lasercutting'): boolean => {
+        if (type === 'printing') {
+            return canUse3DPrinter();
+        } else if (type === 'lasercutting') {
+            return canUseLaserCutter();
+        }
+        return false;
+    };
+
     const canTrainActivity = (activity: TrainingActivity): boolean => {
         if (!playerStats) return false;
-        return playerLevel >= activity.requiredLevel;
+
+        // Check level requirement
+        if (playerLevel < activity.requiredLevel) return false;
+
+        // Check workshop equipment requirements for handicraft activities
+        if (trainingType === 'handicraft') {
+            // Check if activity requires 3D printing but printer not equipped
+            if (activity.rewards.printing && !hasWorkshopEquipment('printing')) {
+                return false;
+            }
+
+            // Check if activity requires laser cutting but cutter not equipped
+            if (activity.rewards.lasercutting && !hasWorkshopEquipment('lasercutting')) {
+                return false;
+            }
+        }
+
+        return true;
     };
 
     // Check if player has required materials
@@ -52,7 +80,6 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
         const missing: string[] = [];
 
         for (const required of activity.requiredItems) {
-            // Sum quantities of all items with matching base ID - FIXED
             const totalQuantity = playerStats.inventory
                 .filter(item => {
                     const baseId = getBaseIdFromInventoryId(item.id);
@@ -103,19 +130,33 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                 <>
                     {activity.rewards.sewing && (<li>🪡 Õmblemine: +{activity.rewards.sewing}</li>)}
                     {activity.rewards.medicine && (<li>🏥 Meditsiin: +{activity.rewards.medicine}</li>)}
-                    {activity.rewards.printing && (<li>🔒 3D Printimine - Esmalt osta kinnisvara (tulekul)</li>)}
-                    {activity.rewards.lasercutting && (<li>🔒 Laserilõikus - Esmalt osta kinnisvara (tulekul)</li>)}
+                    {activity.rewards.printing && (
+                        <li>
+                            {hasWorkshopEquipment('printing') ? (
+                                <>🖨️ 3D Printimine: +{activity.rewards.printing}</>
+                            ) : (
+                                <>🔒 3D Printimine - Paigalda 3D printer töökodas</>
+                            )}
+                        </li>
+                    )}
+                    {activity.rewards.lasercutting && (
+                        <li>
+                            {hasWorkshopEquipment('lasercutting') ? (
+                                <>🔧 Laserilõikus: +{activity.rewards.lasercutting}</>
+                            ) : (
+                                <>🔒 Laserilõikus - Paigalda laser cutter töökodas</>
+                            )}
+                        </li>
+                    )}
                 </>
             );
         }
     };
 
     const getItemName = (itemId: string): string => {
-        // First try to find in CRAFTING_INGREDIENTS
         const craftingItem = CRAFTING_INGREDIENTS.find(item => item.id === itemId);
         if (craftingItem) return craftingItem.name;
 
-        // Fallback to ALL_SHOP_ITEMS
         const shopItem = ALL_SHOP_ITEMS.find(item => item.id === itemId);
         return shopItem?.name || itemId;
     };
@@ -131,11 +172,10 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                     <h4>Vajalikud materjalid:</h4>
                     <ul>
                         {activity.requiredItems.map((item, index) => {
-                            // Sum quantities using base ID extraction - FIXED
                             const currentQuantity = playerStats?.inventory
                                 ? playerStats.inventory
                                     .filter(invItem => {
-                                        const baseId = getBaseIdFromInventoryId(invItem.id); // FIXED
+                                        const baseId = getBaseIdFromInventoryId(invItem.id);
                                         return baseId === item.id && invItem.category === 'crafting';
                                     })
                                     .reduce((sum, invItem) => sum + invItem.quantity, 0)
@@ -180,8 +220,6 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
         );
     };
 
-
-    // Rest of component remains the same...
     const groupedActivities = activities.reduce((groups, activity) => {
         const level = activity.requiredLevel;
         if (!groups[level]) {
@@ -191,43 +229,52 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
         return groups;
     }, {} as Record<number, TrainingActivity[]>);
 
-    // NEW: Filter for sports - show only last 2 unlocked levels
     const getFilteredLevels = () => {
         const allLevels = Object.keys(groupedActivities).map(Number).sort((a, b) => a - b);
 
         if (trainingType !== 'sports') {
-            // Kitchen/lab shows all levels
             return allLevels;
         }
 
-        // For sports: show only last 2 unlocked levels
         const unlockedLevels = allLevels.filter(level => level <= playerLevel);
 
         if (unlockedLevels.length <= 2) {
             return unlockedLevels;
         }
 
-        // Take last 2 unlocked levels
         return unlockedLevels.slice(-2);
     };
 
     const sortedLevels = getFilteredLevels();
 
-    // NEW: Enhanced button logic
+    // FIXED: Enhanced button logic with workshop equipment checks
     const getButtonState = () => {
         if (!selectedActivityData) return { disabled: true, text: 'Vali tegevus' };
 
         if (isTraining) return { disabled: true, text: 'Treenid...' };
 
         if (!canTrainActivity(selectedActivityData)) {
-            return { disabled: true, text: `Nõutav tase ${selectedActivityData.requiredLevel}` };
+            // Check specific reason for inability to train
+            if (playerLevel < selectedActivityData.requiredLevel) {
+                return { disabled: true, text: `Nõutav tase ${selectedActivityData.requiredLevel}` };
+            }
+
+            // Check workshop equipment for handicraft
+            if (trainingType === 'handicraft') {
+                if (selectedActivityData.rewards.printing && !hasWorkshopEquipment('printing')) {
+                    return { disabled: true, text: '3D printer puudub' };
+                }
+                if (selectedActivityData.rewards.lasercutting && !hasWorkshopEquipment('lasercutting')) {
+                    return { disabled: true, text: 'Laser cutter puudub' };
+                }
+            }
         }
 
         if (remainingClicks === 0) {
             return { disabled: true, text: 'Treeningud otsas' };
         }
 
-        // NEW: Check materials for kitchen/lab
+        // Check materials for kitchen/lab and handicraft
         if (trainingType === 'kitchen-lab' || trainingType === 'handicraft') {
             const materialCheck = hasRequiredMaterials(selectedActivityData);
             if (!materialCheck.hasAll) {
@@ -287,9 +334,24 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                         <div className="requirement-warning">
                             <span className="warning-icon">⚠️</span>
                             <div className="warning-content">
-                                <strong>Treeningut ei saa sooritada</strong>
-                                <p>Nõutav tase: {selectedActivityData.requiredLevel}</p>
-                                <p>Sinu tase: {playerLevel}</p>
+                                <strong>Tegevust ei saa sooritada</strong>
+                                {playerLevel < selectedActivityData.requiredLevel && (
+                                    <>
+                                        <p>Nõutav tase: {selectedActivityData.requiredLevel}</p>
+                                        <p>Sinu tase: {playerLevel}</p>
+                                    </>
+                                )}
+                                {/* FIXED: Workshop equipment warnings */}
+                                {trainingType === 'handicraft' && (
+                                    <>
+                                        {selectedActivityData.rewards.printing && !hasWorkshopEquipment('printing') && (
+                                            <p>🖨️ Vajad paigaldatud 3D printerit töökodas</p>
+                                        )}
+                                        {selectedActivityData.rewards.lasercutting && !hasWorkshopEquipment('lasercutting') && (
+                                            <p>🔧 Vajad paigaldatud laser cutterit töökodas</p>
+                                        )}
+                                    </>
+                                )}
                             </div>
                         </div>
                     )}
