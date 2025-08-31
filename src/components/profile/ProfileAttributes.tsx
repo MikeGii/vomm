@@ -3,6 +3,7 @@ import React from 'react';
 import { PlayerAttributes } from '../../types';
 import { CharacterEquipment } from '../../types';
 import { calculateEquipmentBonuses } from '../../services/EquipmentBonusService';
+import { useEstate } from '../../contexts/EstateContext';
 import '../../styles/components/profile/ProfileAttributes.css';
 
 interface ProfileAttributesProps {
@@ -12,6 +13,7 @@ interface ProfileAttributesProps {
 
 export const ProfileAttributes: React.FC<ProfileAttributesProps> = ({ attributes, equipment }) => {
 
+    const { canUse3DPrinter, canUseLaserCutter } = useEstate();
     const equipmentBonuses = equipment ? calculateEquipmentBonuses(equipment) : null;
 
     const getAttributeName = (key: string): string => {
@@ -26,8 +28,8 @@ export const ProfileAttributes: React.FC<ProfileAttributesProps> = ({ attributes
             chemistry: 'Keemia valmistamine',
             sewing: 'Õmblemine',
             medicine: 'Meditsiin',
-            printing: '3D Printimine - (tulekul)',
-            lasercutting: 'Laserlõikus - (tulekul)'
+            printing: '3D Printimine',
+            lasercutting: 'Laserlõikus'
         };
         return names[key] || key;
     };
@@ -44,8 +46,8 @@ export const ProfileAttributes: React.FC<ProfileAttributesProps> = ({ attributes
             chemistry: '🧪',
             sewing: '🪡',
             medicine: '🏥',
-            printing: '🔒',
-            lasercutting: '🔒'
+            printing: canUse3DPrinter() ? '🖨️' : '🔒',
+            lasercutting: canUseLaserCutter() ? '✂️' : '🔒'
         };
         return icons[key] || '📊';
     };
@@ -54,6 +56,18 @@ export const ProfileAttributes: React.FC<ProfileAttributesProps> = ({ attributes
         if (['cooking', 'brewing', 'chemistry'].includes(key)) return 'kitchen-lab';
         if (['sewing', 'medicine', 'printing', 'lasercutting'].includes(key)) return 'handicraft';
         return 'physical';
+    };
+
+    // Check if attribute is unlocked based on equipment
+    const isAttributeUnlocked = (key: string): boolean => {
+        switch (key) {
+            case 'printing':
+                return canUse3DPrinter();
+            case 'lasercutting':
+                return canUseLaserCutter();
+            default:
+                return true;
+        }
     };
 
     // Separate attributes into categories
@@ -72,13 +86,18 @@ export const ProfileAttributes: React.FC<ProfileAttributesProps> = ({ attributes
     const renderAttributeCard = ([key, data]: [string, any]) => {
         const bonus = equipmentBonuses ? equipmentBonuses[key as keyof typeof equipmentBonuses] : 0;
         const totalLevel = data.level + bonus;
-        const isLocked = key === 'printing' || key === 'lasercutting';
+        const isUnlocked = isAttributeUnlocked(key);
 
         return (
-            <div key={key} className={`attribute-card ${isLocked ? 'locked' : ''}`}>
+            <div key={key} className={`attribute-card ${!isUnlocked ? 'locked' : ''}`}>
                 <div className="attribute-header">
                     <span className="attribute-emoji">{getAttributeIcon(key)}</span>
                     <span className="attribute-name">{getAttributeName(key)}</span>
+                    {!isUnlocked && (
+                        <span className="unlock-hint">
+                            Vajab seadet
+                        </span>
+                    )}
                 </div>
                 <div className="attribute-level">
                     <span className="level-label">Tase:</span>
@@ -92,17 +111,23 @@ export const ProfileAttributes: React.FC<ProfileAttributesProps> = ({ attributes
                         )}
                     </span>
                 </div>
-                <div className="attribute-progress">
-                    <div className="progress-bar">
-                        <div
-                            className="progress-fill"
-                            style={{ width: `${(data.experience / data.experienceForNextLevel) * 100}%` }}
-                        />
+                {isUnlocked ? (
+                    <div className="attribute-progress">
+                        <div className="progress-bar">
+                            <div
+                                className="progress-fill"
+                                style={{ width: `${(data.experience / data.experienceForNextLevel) * 100}%` }}
+                            />
+                        </div>
+                        <span className="progress-text">
+                            {data.experience} / {data.experienceForNextLevel} XP
+                        </span>
                     </div>
-                    <span className="progress-text">
-                        {data.experience} / {data.experienceForNextLevel} XP
-                    </span>
-                </div>
+                ) : (
+                    <div className="locked-message">
+                        <span>Paigalda seade kinnisvara lehel</span>
+                    </div>
+                )}
             </div>
         );
     };
@@ -142,9 +167,10 @@ export const ProfileAttributes: React.FC<ProfileAttributesProps> = ({ attributes
                     <div className="bonus-summary">
                         {Object.entries(equipmentBonuses).map(([attr, bonus]) =>
                             bonus > 0 ? (
-                                <span key={attr} className="bonus-pill">
-                                    {getAttributeName(attr)}: +{bonus}
-                                </span>
+                                <div key={attr} className="bonus-item">
+                                    <span className="bonus-attribute">{getAttributeName(attr)}:</span>
+                                    <span className="bonus-value">+{bonus}</span>
+                                </div>
                             ) : null
                         )}
                     </div>

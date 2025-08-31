@@ -153,7 +153,63 @@ export const HANDICRAFT_ACTIVITIES: TrainingActivity[] = [
         producedItems: [
             { id: 'emergency_trauma_kit', quantity: 1 }
         ]
-    }
+    },
+
+    // 3D printing recipes
+
+    {
+        id: 'plastic_details',
+        name: 'Plastik detailid',
+        description: '3D prindid erinevaid plastikust detaile, et nendest ehitada keerukamaid detaile',
+        requiredLevel: 60,
+        rewards: {
+            printing: 20,
+            playerExp: 15
+        },
+        requiredItems: [
+            { id: 'filament_pla', quantity: 2 },
+            { id: 'filament_abs', quantity: 1 },
+        ],
+        producedItems: [
+            { id: 'plastic_details_product', quantity: 1 },
+        ]
+    },
+    {
+        id: 'plastic_details_strong',
+        name: 'Tugevad 3D prinditud detailid',
+        description: '3D prinditud detailid ABS-ist ja PA-CF materjalist eriti vastupidavate näitajatega',
+        requiredLevel: 80,
+        rewards: {
+            printing: 50,
+            playerExp: 25
+        },
+        requiredItems: [
+            { id: 'filament_abs', quantity: 2 },
+            { id: 'filament_nylon_carbon', quantity: 1 },
+        ],
+        producedItems: [
+            { id: 'plastic_details_strong_product', quantity: 1 },
+        ]
+    },
+
+    // Laser cutting recipes
+
+    {
+        id: 'wooden_details',
+        name: 'Puidust lõigatud detailid',
+        description: 'Vineerist lõigatud erinevaid puidust detailid, et nendest ehitada keerukamaid detaile',
+        requiredLevel: 60,
+        rewards: {
+            lasercutting: 20,
+            playerExp: 15
+        },
+        requiredItems: [
+            { id: 'plywood_table', quantity: 2 },
+        ],
+        producedItems: [
+            { id: 'wooden_details_product', quantity: 1 },
+        ]
+    },
 
 ];
 

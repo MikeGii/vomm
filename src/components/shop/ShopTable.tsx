@@ -35,21 +35,44 @@ export const ShopTable: React.FC<ShopTableProps> = ({
         return item.maxStock === 0;
     };
 
-    const formatStats = (stats: any): React.ReactElement => {
-        if (!stats) return <span className="no-data">-</span>;
-        const statParts = [];
-        if (stats.strength) statParts.push(`Jõud +${stats.strength}`);
-        if (stats.agility) statParts.push(`Kiirus ${stats.agility > 0 ? '+' : ''}${stats.agility}`);
-        if (stats.dexterity) statParts.push(`Osavus +${stats.dexterity}`);
-        if (stats.intelligence) statParts.push(`Intel ${stats.intelligence > 0 ? '+' : ''}${stats.intelligence}`);
-        if (stats.endurance) statParts.push(`Vastup ${stats.endurance > 0 ? '+' : ''}${stats.endurance}`);
+    const formatStats = (stats: any, workshopStats?: any): React.ReactElement => {
+        if (!stats && !workshopStats) return <span className="no-data">-</span>;
 
-        if (statParts.length === 0) return <span className="no-data">-</span>;
+        const statParts = [];
+
+        // Traditional combat/training stats
+        if (stats?.strength) statParts.push(`Jõud +${stats.strength}`);
+        if (stats?.agility) statParts.push(`Kiirus ${stats.agility > 0 ? '+' : ''}${stats.agility}`);
+        if (stats?.dexterity) statParts.push(`Osavus +${stats.dexterity}`);
+        if (stats?.intelligence) statParts.push(`Intel ${stats.intelligence > 0 ? '+' : ''}${stats.intelligence}`);
+        if (stats?.endurance) statParts.push(`Vastup ${stats.endurance > 0 ? '+' : ''}${stats.endurance}`);
+
+        // Kitchen/lab stats (if you have them)
+        if (stats?.cooking) statParts.push(`🍳 Toit +${stats.cooking}`);
+        if (stats?.brewing) statParts.push(`🥤 Jook +${stats.brewing}`);
+        if (stats?.chemistry) statParts.push(`🧪 Keemia +${stats.chemistry}`);
+
+        // Handicraft stats (if you have them)
+        if (stats?.sewing) statParts.push(`🪡 Õmbl +${stats.sewing}`);
+        if (stats?.medicine) statParts.push(`🏥 Med +${stats.medicine}`);
+
+        // NEW: Workshop success rates instead of bonuses
+        if (workshopStats?.deviceType === 'printing') {
+            statParts.push(`🖨️ Õnnestumise määr: ${workshopStats.successRate}%`);
+        } else if (workshopStats?.deviceType === 'lasercutting') {
+            statParts.push(`🔧 Õnnestumise määr: ${workshopStats.successRate}%`);
+        }
+
+        if (statParts.length === 0) {
+            return <span className="no-data">Boonuseid pole</span>;
+        }
 
         return (
-            <div className="stat-list-compact">
+            <div className="item-stats">
                 {statParts.map((stat, index) => (
-                    <span key={index} className="stat-item-compact">{stat}</span>
+                    <span key={index} className="stat-bonus">
+                    {stat}
+                </span>
                 ))}
             </div>
         );
@@ -199,7 +222,7 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                                 )}
                             </td>
                             <td className="td-bonus">
-                                {item.stats ? formatStats(item.stats) : formatEffect(item)}
+                                {(item.stats || item.workshopStats) ? formatStats(item.stats, item.workshopStats) : formatEffect(item)}
                             </td>
                             <td className="td-price">
                                 <div className="price-compact">
@@ -258,21 +281,14 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                                 )}
                             </div>
 
-                            {(item.stats || item.consumableEffect) && (
+                            {(item.stats || item.workshopStats || item.consumableEffect) && (
                                 <div className="mobile-stats">
-                                    {item.stats ? (
-                                        <div className="mobile-stat-list">
-                                            {item.stats.strength && <span>Jõud +{item.stats.strength}</span>}
-                                            {item.stats.agility && <span>Kiirus +{item.stats.agility}</span>}
-                                            {item.stats.dexterity && <span>Osavus +{item.stats.dexterity}</span>}
-                                            {item.stats.intelligence && <span>Intel +{item.stats.intelligence}</span>}
-                                            {item.stats.endurance && <span>Vastup +{item.stats.endurance}</span>}
-                                        </div>
-                                    ) : (
-                                        <div className="mobile-effect">
-                                            {formatEffect(item)}
-                                        </div>
-                                    )}
+                                    {(item.stats || item.workshopStats) ?
+                                        formatStats(item.stats, item.workshopStats) : (
+                                            <div className="mobile-effect">
+                                                {formatEffect(item)}
+                                            </div>
+                                        )}
                                 </div>
                             )}
 

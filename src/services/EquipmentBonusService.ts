@@ -1,6 +1,6 @@
 // src/services/EquipmentBonusService.ts - Cleaned version
 
-import { CharacterEquipment, EquipmentItem } from '../types/equipment';
+import { CharacterEquipment, EquipmentItem } from '../types';
 import { PlayerAttributes } from '../types';
 
 export interface EquipmentBonuses {
@@ -20,7 +20,7 @@ export const calculateEquipmentBonuses = (equipment: CharacterEquipment): Equipm
         agility: 0,
         dexterity: 0,
         intelligence: 0,
-        endurance: 0
+        endurance: 0,
     };
 
     // Go through each equipment slot

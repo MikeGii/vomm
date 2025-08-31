@@ -432,3 +432,22 @@
 .menu-item-vip .menu-icon {
     filter: brightness(1.2);
 }
+
+.menu-item-locked {
+    opacity: 0.6;
+    cursor: not-allowed !important;
+}
+
+.menu-item-locked:hover {
+    background-color: transparent;
+}
+
+.menu-item-level-req {
+    font-size: 0.75rem;
+    color: #888;
+    margin-left: 4px;
+}
+
+.menu-item[disabled] {
+    pointer-events: none;
+}

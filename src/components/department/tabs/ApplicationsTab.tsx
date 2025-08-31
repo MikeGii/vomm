@@ -69,7 +69,6 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
             } else if (firebaseDate instanceof Date) {
                 return firebaseDate;
             } else if (firebaseDate && firebaseDate.seconds) {
-                // Handle Firestore timestamp format
                 return new Date(firebaseDate.seconds * 1000);
             } else {
                 return new Date();
@@ -80,27 +79,26 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
         }
     };
 
-    // Safe vote processing function
-    const processVotes = (votes: any[]): ApplicationVote[] => {
-        if (!Array.isArray(votes)) {
-            return [];
-        }
-
-        return votes
-            .filter(vote => vote && vote.voterId) // Filter out invalid votes
-            .map(vote => ({
-                voterId: vote.voterId || '',
-                voterName: vote.voterName || vote.voterId || 'Tundmatu',
-                vote: vote.vote === 'approve' || vote.vote === 'reject' ? vote.vote : 'approve',
-                votedAt: safeToDate(vote.votedAt)
-            }));
-    };
-
     const loadApplications = useCallback(async () => {
+        // Process votes function moved inside to fix dependency issue
+        const processVotes = (votes: any[]): ApplicationVote[] => {
+            if (!Array.isArray(votes)) {
+                return [];
+            }
+
+            return votes
+                .filter(vote => vote && vote.voterId)
+                .map(vote => ({
+                    voterId: vote.voterId || '',
+                    voterName: vote.voterName || vote.voterId || 'Tundmatu',
+                    vote: vote.vote === 'approve' || vote.vote === 'reject' ? vote.vote : 'approve',
+                    votedAt: safeToDate(vote.votedAt)
+                }));
+        };
+
         try {
             setError(null);
 
-            // Only group leaders can see applications
             if (!isGroupLeader(playerStats)) {
                 setLoading(false);
                 return;
@@ -124,7 +122,6 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
 
             const queries = [];
 
-            // Query for group leader applications
             queries.push(
                 getDocs(query(
                     collection(firestore, 'applications'),
@@ -133,7 +130,6 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
                 ))
             );
 
-            // Query for unit leader applications if position exists
             if (unitLeaderPosition) {
                 queries.push(
                     getDocs(query(
@@ -147,7 +143,6 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
             const queryResults = await Promise.all(queries);
             const loadedApplications: ApplicationData[] = [];
 
-            // Process group leader applications
             queryResults[0].forEach((doc) => {
                 try {
                     const data = doc.data();
@@ -180,7 +175,6 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
                 }
             });
 
-            // Process unit leader applications if they exist
             if (queryResults[1]) {
                 queryResults[1].forEach((doc) => {
                     try {
@@ -215,7 +209,6 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
                 });
             }
 
-            // Sort by application date (newest first)
             loadedApplications.sort((a, b) => {
                 try {
                     return b.appliedAt.getTime() - a.appliedAt.getTime();
@@ -248,7 +241,6 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
         setProcessing(applicationId);
 
         try {
-            // Get current application data directly
             const applicationRef = doc(firestore, 'applications', applicationId);
             const applicationDoc = await getDoc(applicationRef);
 
@@ -265,7 +257,6 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
 
             const existingVotes = Array.isArray(currentApp.votes) ? currentApp.votes : [];
 
-            // Check if user already voted
             const userAlreadyVoted = existingVotes.some((v: any) =>
                 v && v.voterId === playerStats.username
             );
@@ -275,7 +266,6 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
                 return;
             }
 
-            // Add new vote
             const newVote = {
                 voterId: playerStats.username,
                 voterName: playerStats.username,
@@ -291,13 +281,11 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
 
             showToast(`Hääl edukalt esitatud: ${vote === 'approve' ? 'Toetatakse' : 'Ei toetata'}`, 'success');
 
-            // Add delay and error handling for reload
             setTimeout(async () => {
                 try {
                     await loadApplications();
                 } catch (reloadError) {
                     console.error('Error reloading applications:', reloadError);
-                    // Don't show error toast for reload failures
                 }
             }, 300);
 
@@ -347,7 +335,7 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
 
     const formatDate = (date: Date): string => {
         try {
-            if (!(date instanceof Date) || isNaN(date.getTime())) {
+            if (!date || isNaN(date.getTime())) {
                 return 'Tundmatu kuupäev';
             }
             return date.toLocaleDateString('et-EE', {
@@ -365,7 +353,7 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
 
     const formatTimeRemaining = (expiresAt: Date): string => {
         try {
-            if (!(expiresAt instanceof Date) || isNaN(expiresAt.getTime())) {
+            if (!expiresAt || isNaN(expiresAt.getTime())) {
                 return 'Tundmatu';
             }
 
@@ -400,7 +388,6 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
         return attrNames[attrName] || attrName;
     };
 
-    // Error state
     if (error) {
         return (
             <div className="applications-tab">
@@ -415,7 +402,6 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
         );
     }
 
-    // Only show for group leaders
     if (!isGroupLeader(playerStats)) {
         return (
             <div className="applications-tab">
@@ -546,7 +532,6 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
                                     </div>
                                 </div>
 
-                                {/* Rest of the application details with safe rendering */}
                                 <div className="applicant-details">
                                     <div className="details-section">
                                         <h5>Kandidaadi andmed</h5>

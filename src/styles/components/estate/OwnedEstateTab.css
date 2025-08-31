@@ -1,0 +1,383 @@
+/* src/styles/components/estate/OwnedEstateTab.css */
+.owned-estate-tab {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.no-estate-message {
+    text-align: center;
+    padding: 4rem 2rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+}
+
+.no-estate-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+}
+
+.no-estate-message h2 {
+    color: #f0f0f0;
+    margin-bottom: 1rem;
+}
+
+.no-estate-message p {
+    color: #b0b0b0;
+    font-size: 1.1rem;
+}
+
+.current-estate-card {
+    background: linear-gradient(135deg, #2a2a2a 0%, #252525 100%);
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.estate-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.estate-name {
+    color: #f0f0f0;
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.estate-value {
+    background: linear-gradient(45deg, #4a90e2, #357abd);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.estate-description {
+    margin-bottom: 2rem;
+}
+
+.estate-description p {
+    color: #b0b0b0;
+    line-height: 1.6;
+    font-size: 1rem;
+}
+
+.estate-features h3 {
+    color: white;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.feature-card {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.feature-card.active {
+    background: linear-gradient(45deg, #4a90e2, #357abd);
+    color: white;
+}
+
+.feature-card.inactive {
+    background-color: #2a2a2a;
+    color: #666;
+    border: 2px dashed #444;
+}
+
+.feature-icon {
+    font-size: 1.5rem;
+    margin-right: 0.75rem;
+}
+
+.feature-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.feature-name {
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+.feature-value {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.workshop-management {
+    background: linear-gradient(135deg, #2a2a2a 0%, #252525 100%);
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.workshop-management h2 {
+    color: #f0f0f0;
+    margin-bottom: 2rem;
+    font-size: 1.6rem;
+}
+
+.workshop-devices {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.device-management-card {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.device-management-card:hover {
+    border-color: #4a90e2;
+    transform: translateY(-2px);
+}
+
+.device-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.device-icon {
+    font-size: 1.5rem;
+    margin-right: 0.75rem;
+}
+
+.device-header h3 {
+    margin: 0;
+    color: #f0f0f0;
+    font-size: 1.2rem;
+}
+
+.device-status {
+    margin-bottom: 1rem;
+}
+
+.status-indicator {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.status-indicator.active {
+    background: linear-gradient(45deg, #4a90e2, #357abd);
+    color: white;
+}
+
+.status-indicator.inactive {
+    background-color: #ff6b6b;
+    color: white;
+}
+
+.device-inventory {
+    color: #b0b0b0;
+    font-size: 0.9rem;
+}
+
+.device-actions {
+    margin-bottom: 1rem;
+}
+
+.equip-button {
+    background: linear-gradient(45deg, #4a90e2, #357abd);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.equip-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3);
+}
+
+.equip-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.unequip-button {
+    background: linear-gradient(45deg, #ff6b6b, #ff5252);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.unequip-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+}
+
+.unequip-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.no-device-message {
+    color: #666;
+    font-style: italic;
+    padding: 0.75rem;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.unlocked-feature {
+    background: linear-gradient(45deg, #ff9800, #f57c00);
+    color: white;
+    padding: 0.75rem;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .workshop-devices {
+        grid-template-columns: 1fr;
+    }
+
+    .device-management-card {
+        padding: 1rem;
+    }
+
+    .estate-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .owned-estate-tab {
+        padding: 0;
+    }
+
+    .current-estate-card,
+    .workshop-management {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .estate-name {
+        font-size: 1.4rem;
+    }
+
+    .workshop-management h2 {
+        font-size: 1.3rem;
+    }
+}
+
+.device-selection {
+    margin: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.device-selection label {
+    color: #f0f0f0;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.device-dropdown {
+    padding: 0.75rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #f0f0f0;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.device-dropdown:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.device-dropdown option {
+    background-color: #2a2a2a;
+    color: #f0f0f0;
+    padding: 0.5rem;
+}
+
+/* Mobile responsiveness for dropdowns */
+@media (max-width: 768px) {
+    .device-selection {
+        margin: 0.75rem 0;
+    }
+
+    .device-dropdown {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+}
+
+.equipped-device-info {
+    background: #2a2a2a;
+    border: 1px solid #4a90e2;
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.equipped-device-name {
+    color: #4a90e2;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.equipped-device-description {
+    color: #ccc;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+.equipped-device-stats {
+    color: #4a9e4a;
+    font-weight: 600;
+    font-size: 0.9rem;
+}

@@ -462,6 +462,105 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
             type: 'heal',
             value: 25
         }
-    }
+    },
 
+    // 3D printing ingredients
+    {
+        id: 'filament_pla',
+        name: 'PLA Filament',
+        description: 'Biolagunev lihtsasti 3D prinditav filament',
+        category: 'crafting',
+        price: 25,
+        currency: 'money',
+        basePrice: 25,
+        maxStock: 8000
+    },
+    {
+        id: 'filament_abs',
+        name: 'ABS Filament',
+        description: 'ABS filament paremate tugevus ja temperatuuri näitajatega',
+        category: 'crafting',
+        price: 30,
+        currency: 'money',
+        basePrice: 30,
+        maxStock: 8000
+    },
+    {
+        id: 'filament_nylon_carbon',
+        name: 'PA-CF Filament',
+        description: 'Nailon karbon filament eriti tugevate asjade printimiseks. Kohati asendab metallist detaile',
+        category: 'crafting',
+        price: 75,
+        currency: 'money',
+        basePrice: 75,
+        maxStock: 8000
+    },
+
+    // 3D printing products
+
+    {
+        id: 'plastic_details_product',
+        name: 'Plastikust detailid',
+        description: '3D prinditud plastikust detailid',
+        category: 'crafting',
+        price: 125,
+        currency: 'money',
+        basePrice: 125,
+        maxStock: 0,
+    },
+    {
+        id: 'plastic_details_strong_product',
+        name: 'Tugevad plastik detailid',
+        description: '3D prinditud detailid, mis on valmistatud nailon ja karbon filamendist kõrgete mehhaaniliste omadustega',
+        category: 'crafting',
+        price: 275,
+        currency: 'money',
+        basePrice: 275,
+        maxStock: 0,
+    },
+
+    // Laser engraving materials
+    {
+        id: 'plywood_table',
+        name: 'Vineertahvel',
+        description: 'Kvaliteetne kasevineeris tahvel laserlõikamiseks ja graveerimiseks',
+        category: 'crafting',
+        price: 25,
+        currency: 'money',
+        basePrice: 25,
+        maxStock: 8000
+    },
+    {
+        id: 'pvc_plastic_table',
+        name: 'Pleksiklaas',
+        description: 'Akrüültahvel ehk pleksiklaas erinevate detailide lõikamiseks ja graveerimiseks',
+        category: 'crafting',
+        price: 45,
+        currency: 'money',
+        basePrice: 45,
+        maxStock: 8000
+    },
+    {
+        id: 'stainless_steel_table',
+        name: 'Roostevabast terasest plaat',
+        description: 'Roostevabast terasest plaat, millest saab lõigata erinevaid terasest detaile',
+        category: 'crafting',
+        price: 45,
+        currency: 'money',
+        basePrice: 45,
+        maxStock: 8000
+    },
+
+    // Laser engraving recipes
+
+    {
+        id: 'wooden_details_product',
+        name: 'Puidust lõigatud detailid',
+        description: 'Laserlõikuriga lõigatud detailid puidust keerukamate asjade komplekteerimiseks',
+        category: 'crafting',
+        price: 95,
+        currency: 'money',
+        basePrice: 95,
+        maxStock: 0,
+    },
 ];

@@ -1,6 +1,6 @@
 // src/utils/positionProcessor.ts
 import { PlayerStats } from '../types';
-import { POLICE_POSITIONS, getPositionById } from '../data/policePositions';
+import { POLICE_POSITIONS } from '../data/policePositions';
 import { getUnitById } from '../data/departmentUnits';
 import { getCourseById } from '../data/courses';
 import {

@@ -1,6 +1,6 @@
-// src/pages/TrainingPage.tsx
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { updateDoc, doc } from 'firebase/firestore';
+// src/pages/TrainingPage.tsx - CORRECTED VERSION
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import {updateDoc, doc} from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { AttributesDisplay } from '../components/training/AttributesDisplay';
@@ -20,6 +20,7 @@ import { getAvailableHandicraftActivities, getHandicraftActivityById } from '../
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
+import { useEstate } from '../contexts/EstateContext';
 import { useNavigate } from 'react-router-dom';
 import {PlayerAttributes, PlayerStats, TrainingActivity} from '../types';
 import { InventoryItem } from '../types';
@@ -52,28 +53,91 @@ const TrainingPage: React.FC = () => {
     const { currentUser } = useAuth();
     const { showToast } = useToast();
     const { playerStats, loading, refreshStats } = usePlayerStats();
+    const { canUse3DPrinter, canUseLaserCutter, playerEstate } = useEstate();
 
-    const [availableActivities, setAvailableActivities] = useState<TrainingActivity[]>([]);
-    const [selectedActivity, setSelectedActivity] = useState<string>('');
-    const [isTraining, setIsTraining] = useState(false);
-    const [trainingBoosters, setTrainingBoosters] = useState<InventoryItem[]>([]);
-    const [kitchenBoosters, setKitchenBoosters] = useState<InventoryItem[]>([]);
-    const [handicraftBoosters, setHandicraftBoosters] = useState<InventoryItem[]>([]);
+    // Consolidated training states
+    const [trainingStates, setTrainingStates] = useState({
+        sports: { isTraining: false, selectedActivity: '' },
+        food: { isTraining: false, selectedActivity: '' },
+        handcraft: { isTraining: false, selectedActivity: '' }
+    });
+
     const [activeTab, setActiveTab] = useState<string>('sports');
-    const [kitchenLabActivities, setKitchenLabActivities] = useState<TrainingActivity[]>([]);
-    const [selectedKitchenLabActivity, setSelectedKitchenLabActivity] = useState<string>('');
-    const [isKitchenLabTraining, setIsKitchenLabTraining] = useState(false);
     const [initializationDone, setInitializationDone] = useState(false);
     const clicksCheckedRef = useRef(false);
-    const [handicraftActivities, setHandicraftActivities] = useState<TrainingActivity[]>([]);
-    const [selectedHandicraftActivity, setSelectedHandicraftActivity] = useState<string>('');
-    const [isHandicraftTraining, setIsHandicraftTraining] = useState(false);
+
+    // Fixed memoized calculations with proper dependencies
+    const maxClicks = useMemo(() => getVipAwareMaxClicks(playerStats), [playerStats]);
+
+    const remainingClicks = useMemo(() => {
+        if (!playerStats) return 0;
+
+        switch (activeTab) {
+            case 'sports': return playerStats.trainingData?.remainingClicks || 0;
+            case 'food': return playerStats.kitchenLabTrainingData?.remainingClicks || 0;
+            case 'handcraft': return playerStats.handicraftTrainingData?.remainingClicks || 0;
+            default: return 0;
+        }
+    }, [playerStats, activeTab]);
+
+    // Fixed memoized activities with proper dependencies
+    const availableActivities = useMemo(() =>
+            playerStats ? getAvailableActivities(playerStats.level) : [],
+        [playerStats]
+    );
+
+    const kitchenLabActivities = useMemo(() =>
+            playerStats ? getAvailableKitchenLabActivities(playerStats.level) : [],
+        [playerStats]
+    );
+
+    const handicraftActivities = useMemo(() =>
+            playerStats ? getAvailableHandicraftActivities(playerStats.level) : [],
+        [playerStats]
+    );
+
+    const currentBoosters = useMemo(() => {
+        if (!playerStats?.inventory) return [];
+
+        switch (activeTab) {
+            case 'sports': return getTrainingBoosters(playerStats.inventory);
+            case 'food': return getKitchenBoosters(playerStats.inventory);
+            case 'handcraft': return getHandicraftBoosters(playerStats.inventory);
+            default: return [];
+        }
+    }, [playerStats, activeTab]);
 
     const tabs = [
         { id: 'sports', label: 'Sporditreening' },
         { id: 'food', label: 'Köök & Labor' },
         { id: 'handcraft', label: 'Käsitöö' }
     ];
+
+    // Validation helper - moved outside useCallback to avoid dependency issues
+    const validateTrainingState = useCallback((): { isValid: boolean; error?: string } => {
+        if (!currentUser) return { isValid: false, error: 'Kasutaja ei ole sisse logitud' };
+        if (!playerStats) return { isValid: false, error: 'Mängija andmed puuduvad' };
+        if (trainingStates[activeTab as keyof typeof trainingStates].isTraining) {
+            return { isValid: false, error: 'Treening juba käib' };
+        }
+
+        return { isValid: true };
+    }, [currentUser, playerStats, trainingStates, activeTab]);
+
+    // Simplified state setters
+    const setActiveTrainingState = useCallback((isTraining: boolean) => {
+        setTrainingStates(prev => ({
+            ...prev,
+            [activeTab]: { ...prev[activeTab as keyof typeof prev], isTraining }
+        }));
+    }, [activeTab]);
+
+    const setSelectedActivityForTab = useCallback((activityId: string) => {
+        setTrainingStates(prev => ({
+            ...prev,
+            [activeTab]: { ...prev[activeTab as keyof typeof prev], selectedActivity: activityId }
+        }));
+    }, [activeTab]);
 
     // One-time initialization for missing attributes
     useEffect(() => {
@@ -89,7 +153,6 @@ const TrainingPage: React.FC = () => {
                 updates.attributes = initializeAttributes();
                 needsUpdate = true;
             } else {
-                // Ensure all attributes exist
                 const defaultAttributes = initializeAttributes();
                 const currentAttributes = { ...playerStats.attributes };
                 let attributesUpdated = false;
@@ -167,98 +230,99 @@ const TrainingPage: React.FC = () => {
 
         updateClicksIfNeeded();
 
-        // Update UI elements based on playerStats
-        setTrainingBoosters(getTrainingBoosters(playerStats.inventory || []));
-        setKitchenBoosters(getKitchenBoosters(playerStats.inventory || []));
-        setAvailableActivities(getAvailableActivities(playerStats.level));
-        setKitchenLabActivities(getAvailableKitchenLabActivities(playerStats.level));
-        setHandicraftActivities(getAvailableHandicraftActivities(playerStats.level));
-        setHandicraftBoosters(getHandicraftBoosters(playerStats.inventory || []));
-
         return () => {
             abortController.abort();
         };
     }, [playerStats, currentUser]);
 
-// Reset flag when user changes
+    // Reset flag when user changes
     useEffect(() => {
         clicksCheckedRef.current = false;
     }, [currentUser]);
 
-    // Handle training action
+    // Fixed training handler with proper dependencies
     const handleTrain = useCallback(async () => {
-        if (!currentUser || isTraining || !playerStats) return;
-
-        // Check clicks based on active tab
-        let hasClicks = false;
-        if (activeTab === 'sports') {
-            hasClicks = (playerStats.trainingData?.remainingClicks || 0) > 0;
-        } else if (activeTab === 'food') {
-            hasClicks = (playerStats.kitchenLabTrainingData?.remainingClicks || 0) > 0;
-        } else if (activeTab === 'handcraft') {
-            hasClicks = (playerStats.handicraftTrainingData?.remainingClicks || 0) > 0;
+        const validation = validateTrainingState();
+        if (!validation.isValid) {
+            if (validation.error) {
+                showToast(validation.error, 'error');
+            }
+            return;
         }
 
-        if (!hasClicks) {
+        // Check clicks based on active tab
+        if (remainingClicks <= 0) {
             showToast('Treeningkordi pole enam järel! Oota järgmist täistundi.', 'warning');
             return;
         }
 
-        let activityId = '';
-        let activity = null;
+        const currentTrainingState = trainingStates[activeTab as keyof typeof trainingStates];
+        let activity: TrainingActivity | null = null;
 
         // Determine which activity to use
         if (activeTab === 'sports') {
-            if (!selectedActivity) {
+            if (!currentTrainingState.selectedActivity) {
                 showToast('Vali esmalt treeningtegevus!', 'warning');
                 return;
             }
-            activityId = selectedActivity;
-            activity = getActivityById(selectedActivity);
+            activity = getActivityById(currentTrainingState.selectedActivity) || null;
         } else if (activeTab === 'food') {
-            if (!selectedKitchenLabActivity) {
+            if (!currentTrainingState.selectedActivity) {
                 showToast('Vali esmalt köök & labor tegevus!', 'warning');
                 return;
             }
-            activityId = selectedKitchenLabActivity;
-            activity = getKitchenLabActivityById(selectedKitchenLabActivity);
+            activity = getKitchenLabActivityById(currentTrainingState.selectedActivity) || null;
         } else if (activeTab === 'handcraft') {
-            if (!selectedHandicraftActivity) {
+            if (!currentTrainingState.selectedActivity) {
                 showToast('Vali esmalt käsitöö tegevus!', 'warning');
                 return;
             }
-            activityId = selectedHandicraftActivity;
-            activity = getHandicraftActivityById(selectedHandicraftActivity);
+            activity = getHandicraftActivityById(currentTrainingState.selectedActivity) || null;
         }
 
-        if (!activity) return;
-
-        setIsTraining(true);
-        if (activeTab === 'food') {
-            setIsKitchenLabTraining(true);
-        } else if (activeTab === 'handcraft') {
-            setIsHandicraftTraining(true);
+        if (!activity) {
+            showToast('Tegevust ei leitud!', 'error');
+            return;
         }
+
+        setActiveTrainingState(true);
 
         try {
             const trainingType = activeTab === 'sports' ? 'sports' :
                 activeTab === 'food' ? 'kitchen-lab' : 'handicraft';
-            await performTraining(currentUser.uid, activityId, activity.rewards, trainingType);
-            await refreshStats(); // Update stats after training
+
+            const result = await performTraining(currentUser!.uid, currentTrainingState.selectedActivity, activity.rewards, trainingType);
+            await refreshStats();
+
+// Enhanced feedback based on actual result
+            if (activeTab === 'handcraft' && result.craftingResult && (activity.rewards.printing || activity.rewards.lasercutting)) {
+                if (!result.craftingResult.itemsProduced) {
+                    showToast('Käsitöö ebaõnnestus - materjalid kulutatud, kuid esemeid ei saadud.', 'warning');
+                }
+            }
+
         } catch (error: any) {
+            console.error('Training error:', error);
             showToast(error.message || 'Treenimine ebaõnnestus', 'error');
         } finally {
-            setIsTraining(false);
-            setIsKitchenLabTraining(false);
-            setIsHandicraftTraining(false);
+            setActiveTrainingState(false);
         }
-    }, [currentUser, selectedActivity, selectedKitchenLabActivity, selectedHandicraftActivity, activeTab,
-        isTraining, playerStats, refreshStats, showToast]);
+    }, [
+        currentUser,
+        activeTab,
+        trainingStates,
+        remainingClicks,
+        refreshStats,
+        showToast,
+        validateTrainingState,
+        setActiveTrainingState
+    ]);
 
     // Handle selling crafted items
     const handleSellItem = useCallback(async (itemId: string, quantity: number) => {
         if (!currentUser) {
-            throw new Error('Kasutaja ei ole sisse logitud');
+            showToast('Kasutaja ei ole sisse logitud', 'error');
+            return;
         }
 
         try {
@@ -268,18 +332,154 @@ const TrainingPage: React.FC = () => {
                 showToast(result.message, 'success');
                 await refreshStats();
             } else {
-                throw new Error(result.message);
+                showToast(result.message, 'error');
             }
         } catch (error: any) {
             showToast(error.message || 'Müük ebaõnnestus', 'error');
-            throw error;
         }
     }, [currentUser, refreshStats, showToast]);
 
     // Handle booster used
     const handleBoosterUsed = useCallback(async () => {
-        await refreshStats();
-    }, [refreshStats]);
+        try {
+            await refreshStats();
+            showToast('Booster kasutatud!', 'success');
+        } catch (error) {
+            console.error('Error refreshing after booster use:', error);
+            showToast('Viga boosteri kasutamisel', 'error');
+        }
+    }, [refreshStats, showToast]);
+
+    // Workshop status component
+    const WorkshopStatus: React.FC = useCallback(() => {
+        if (activeTab !== 'handcraft') return null;
+
+        const getPrinterSuccessRate = (): number => {
+            const rate = playerEstate?.equippedDeviceDetails?.printer?.workshopStats?.successRate;
+            return rate || 0;
+        };
+
+        const getLaserSuccessRate = (): number => {
+            const rate = playerEstate?.equippedDeviceDetails?.laserCutter?.workshopStats?.successRate;
+            return rate || 0;
+        };
+
+        return (
+            <div className="workshop-status">
+                <h3>Töökoja seadmed:</h3>
+                <div className="workshop-devices-status">
+                    <div className={`device-status ${canUse3DPrinter() ? 'available' : 'unavailable'}`}>
+                        {canUse3DPrinter()
+                            ? `🖨️ 3D Printer: Saadaval (${getPrinterSuccessRate()}% õnnestumismäär)`
+                            : '🔒 3D Printer: Pole paigaldatud'
+                        }
+                    </div>
+                    <div className={`device-status ${canUseLaserCutter() ? 'available' : 'unavailable'}`}>
+                        {canUseLaserCutter()
+                            ? `⚡ Laserlõikur: Saadaval (${getLaserSuccessRate()}% õnnestumismäär)`
+                            : '🔒 Laserlõikur: Pole paigaldatud'
+                        }
+                    </div>
+                </div>
+            </div>
+        );
+    }, [activeTab, canUse3DPrinter, canUseLaserCutter, playerEstate]);
+
+    // One-time initialization effect
+    useEffect(() => {
+        if (!currentUser || !playerStats || initializationDone) return;
+
+        const initializeIfNeeded = async () => {
+            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+            let needsUpdate = false;
+            const updates: any = {};
+
+            if (!playerStats.attributes) {
+                updates.attributes = initializeAttributes();
+                needsUpdate = true;
+            } else {
+                const defaultAttributes = initializeAttributes();
+                const currentAttributes = { ...playerStats.attributes };
+                let attributesUpdated = false;
+
+                Object.keys(defaultAttributes).forEach(key => {
+                    if (!currentAttributes[key as keyof PlayerAttributes]) {
+                        currentAttributes[key as keyof PlayerAttributes] =
+                            defaultAttributes[key as keyof PlayerAttributes];
+                        attributesUpdated = true;
+                    }
+                });
+
+                if (attributesUpdated) {
+                    updates.attributes = currentAttributes;
+                    needsUpdate = true;
+                }
+            }
+
+            if (!playerStats.trainingData) {
+                updates.trainingData = initializeTrainingData();
+                needsUpdate = true;
+            }
+
+            if (!playerStats.kitchenLabTrainingData) {
+                updates.kitchenLabTrainingData = initializeKitchenLabTrainingData();
+                needsUpdate = true;
+            }
+
+            if (!playerStats.handicraftTrainingData) {
+                updates.handicraftTrainingData = initializeHandicraftTrainingData();
+                needsUpdate = true;
+            }
+
+            if (needsUpdate) {
+                try {
+                    await updateDoc(statsRef, updates);
+                    await refreshStats();
+                } catch (error) {
+                    console.error('Error initializing training data:', error);
+                    showToast('Viga treeningandmete initsialiseerimisel', 'error');
+                }
+            }
+
+            setInitializationDone(true);
+        };
+
+        initializeIfNeeded();
+    }, [currentUser, playerStats, initializationDone, refreshStats, showToast]);
+
+    // Update clicks when needed
+    useEffect(() => {
+        if (!playerStats || !currentUser) return;
+
+        const abortController = new AbortController();
+
+        const updateClicksIfNeeded = async () => {
+            if (abortController.signal.aborted || clicksCheckedRef.current) return;
+
+            try {
+                clicksCheckedRef.current = true;
+                await checkAndResetTrainingClicks(currentUser.uid);
+                await checkAndResetKitchenLabTrainingClicks(currentUser.uid);
+                await checkAndResetHandicraftTrainingClicks(currentUser.uid);
+            } catch (error) {
+                if (!abortController.signal.aborted) {
+                    console.error('Error checking clicks:', error);
+                    clicksCheckedRef.current = false;
+                }
+            }
+        };
+
+        updateClicksIfNeeded();
+
+        return () => {
+            abortController.abort();
+        };
+    }, [playerStats, currentUser]);
+
+    // Reset flag when user changes
+    useEffect(() => {
+        clicksCheckedRef.current = false;
+    }, [currentUser]);
 
     if (loading) {
         return (
@@ -302,6 +502,8 @@ const TrainingPage: React.FC = () => {
             </div>
         );
     }
+
+    const currentTrainingState = trainingStates[activeTab as keyof typeof trainingStates];
 
     return (
         <div className="page">
@@ -326,8 +528,8 @@ const TrainingPage: React.FC = () => {
                 {activeTab === 'sports' && (
                     <>
                         <TrainingCounter
-                            remainingClicks={playerStats.trainingData?.remainingClicks || 0}
-                            maxClicks={getVipAwareMaxClicks(playerStats)}
+                            remainingClicks={remainingClicks}
+                            maxClicks={maxClicks}
                             lastResetTime={playerStats.trainingData?.lastResetTime}
                         />
 
@@ -346,19 +548,19 @@ const TrainingPage: React.FC = () => {
 
                         <ActivitySelector
                             activities={availableActivities}
-                            selectedActivity={selectedActivity}
-                            onActivitySelect={setSelectedActivity}
+                            selectedActivity={currentTrainingState.selectedActivity}
+                            onActivitySelect={setSelectedActivityForTab}
                             onTrain={handleTrain}
-                            isTraining={isTraining}
-                            canTrain={(playerStats.trainingData?.remainingClicks || 0) > 0}
+                            isTraining={currentTrainingState.isTraining}
+                            canTrain={remainingClicks > 0}
                             playerStats={playerStats}
                             trainingType="sports"
                         />
 
                         <TrainingBoosters
-                            boosters={trainingBoosters}
-                            currentClicks={playerStats.trainingData?.remainingClicks || 0}
-                            maxClicks={getVipAwareMaxClicks(playerStats)}
+                            boosters={currentBoosters as InventoryItem[]}
+                            currentClicks={remainingClicks}
+                            maxClicks={maxClicks}
                             onBoosterUsed={handleBoosterUsed}
                         />
                     </>
@@ -368,8 +570,8 @@ const TrainingPage: React.FC = () => {
                 {activeTab === 'food' && (
                     <>
                         <TrainingCounter
-                            remainingClicks={playerStats.kitchenLabTrainingData?.remainingClicks || 0}
-                            maxClicks={getVipAwareMaxClicks(playerStats)}
+                            remainingClicks={remainingClicks}
+                            maxClicks={maxClicks}
                             label="Köök & Labor klikke jäänud"
                             lastResetTime={playerStats.kitchenLabTrainingData?.lastResetTime}
                         />
@@ -388,11 +590,11 @@ const TrainingPage: React.FC = () => {
 
                         <ActivitySelector
                             activities={kitchenLabActivities}
-                            selectedActivity={selectedKitchenLabActivity}
-                            onActivitySelect={setSelectedKitchenLabActivity}
+                            selectedActivity={currentTrainingState.selectedActivity}
+                            onActivitySelect={setSelectedActivityForTab}
                             onTrain={handleTrain}
-                            isTraining={isKitchenLabTraining}
-                            canTrain={(playerStats.kitchenLabTrainingData?.remainingClicks || 0) > 0}
+                            isTraining={currentTrainingState.isTraining}
+                            canTrain={remainingClicks > 0}
                             playerStats={playerStats}
                             trainingType="kitchen-lab"
                         />
@@ -403,9 +605,9 @@ const TrainingPage: React.FC = () => {
                         />
 
                         <KitchenBoosters
-                            boosters={kitchenBoosters}
-                            currentClicks={playerStats.kitchenLabTrainingData?.remainingClicks || 0}
-                            maxClicks={getVipAwareMaxClicks(playerStats)}
+                            boosters={currentBoosters as InventoryItem[]}
+                            currentClicks={remainingClicks}
+                            maxClicks={maxClicks}
                             onBoosterUsed={handleBoosterUsed}
                         />
                     </>
@@ -415,11 +617,13 @@ const TrainingPage: React.FC = () => {
                 {activeTab === 'handcraft' && (
                     <>
                         <TrainingCounter
-                            remainingClicks={playerStats.handicraftTrainingData?.remainingClicks || 0}
-                            maxClicks={getVipAwareMaxClicks(playerStats)}
+                            remainingClicks={remainingClicks}
+                            maxClicks={maxClicks}
                             label="Käsitöö klikke jäänud"
                             lastResetTime={playerStats.handicraftTrainingData?.lastResetTime}
                         />
+
+                        <WorkshopStatus />
 
                         <AttributesDisplay
                             attributes={playerStats.attributes || initializeAttributes()}
@@ -427,8 +631,16 @@ const TrainingPage: React.FC = () => {
                             displayAttributes={[
                                 { key: 'sewing', name: 'Õmblemine', icon: '🪡' },
                                 { key: 'medicine', name: 'Meditsiin', icon: '🏥' },
-                                { key: 'printing', name: '3D Printimine - Esmalt osta kinnisvara (tulekul)', icon: '🔒' },
-                                { key: 'lasercutting', name: 'Laserilõikus - Esmalt osta kinnisvara (tulekul)', icon: '🔒' }
+                                {
+                                    key: 'printing',
+                                    name: canUse3DPrinter() ? '3D Printimine' : '3D Printimine - Vajab seadet',
+                                    icon: canUse3DPrinter() ? '🖨️' : '🔒'
+                                },
+                                {
+                                    key: 'lasercutting',
+                                    name: canUseLaserCutter() ? 'Laserlõikus' : 'Laserlõikus - Vajab seadet',
+                                    icon: canUseLaserCutter() ? '✂️' : '🔒'
+                                }
                             ]}
                         />
 
@@ -436,11 +648,11 @@ const TrainingPage: React.FC = () => {
 
                         <ActivitySelector
                             activities={handicraftActivities}
-                            selectedActivity={selectedHandicraftActivity}
-                            onActivitySelect={setSelectedHandicraftActivity}
+                            selectedActivity={currentTrainingState.selectedActivity}
+                            onActivitySelect={setSelectedActivityForTab}
                             onTrain={handleTrain}
-                            isTraining={isHandicraftTraining}
-                            canTrain={(playerStats.handicraftTrainingData?.remainingClicks || 0) > 0}
+                            isTraining={currentTrainingState.isTraining}
+                            canTrain={remainingClicks > 0}
                             playerStats={playerStats}
                             trainingType="handicraft"
                         />
@@ -451,9 +663,9 @@ const TrainingPage: React.FC = () => {
                         />
 
                         <HandicraftBoosters
-                            boosters={handicraftBoosters}
-                            currentClicks={playerStats.handicraftTrainingData?.remainingClicks || 0}
-                            maxClicks={getVipAwareMaxClicks(playerStats)}
+                            boosters={currentBoosters as InventoryItem[]}
+                            currentClicks={remainingClicks}
+                            maxClicks={maxClicks}
                             onBoosterUsed={handleBoosterUsed}
                         />
                     </>
