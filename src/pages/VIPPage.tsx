@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import '../styles/pages/VIP.css';
+import {MonthlyTopPlayers} from "../components/vip/MonthlyTopPlayers";
 
 const VIPPage: React.FC = () => {
     const navigate = useNavigate();
@@ -124,6 +125,8 @@ const VIPPage: React.FC = () => {
                                         kuul ei saanud, tagades kõigile võrdsed võimalused.
                                     </div>
                                 </div>
+
+                                <MonthlyTopPlayers />
 
                                 <div className="method-card donation-packages">
                                     <div className="method-header">
