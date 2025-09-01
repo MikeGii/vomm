@@ -5,8 +5,9 @@ import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { TransactionForm } from '../components/bank/TransactionForm';
 import { TransactionList } from '../components/bank/TransactionList';
 import { useAuth } from '../contexts/AuthContext';
-import { usePlayerStats } from '../contexts/PlayerStatsContext'; // NEW IMPORT
+import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { getPlayerTransactions } from '../services/BankService';
+import { PollConverter} from "../components/bank/PollConverter";
 import { BankTransaction } from '../types';
 import { formatMoney } from '../utils/currencyUtils';
 import '../styles/pages/Bank.css';
@@ -87,11 +88,24 @@ const BankPage: React.FC = () => {
                             <span className="balance-label">Saldo:</span>
                             <span className="balance-amount">{formatMoney(playerStats.money || 0)}</span>
                         </div>
+                        <div className="balance-info polls">
+                            <span className="balance-label">Pollid:</span>
+                            <span className="balance-amount">{playerStats.pollid || 0}</span>
+                        </div>
                     </div>
                 </div>
 
                 {currentUser && (
                     <>
+                        <PollConverter
+                            currentUserId={currentUser.uid}
+                            playerPollid={playerStats.pollid || 0}
+                            playerMoney={playerStats.money || 0}
+                            onConversionComplete={() => {
+                            loadTransactions();
+                        }}
+                        />
+
                         <TransactionForm
                             currentUserId={currentUser.uid}
                             playerMoney={playerStats.money || 0}

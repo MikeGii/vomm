@@ -1,5 +1,5 @@
 // src/contexts/EstateContext.tsx
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerEstate } from '../types/estate';
@@ -33,7 +33,9 @@ export const EstateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [playerEstate, setPlayerEstate] = useState<PlayerEstate | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [initializedUsers, setInitializedUsers] = useState<Set<string>>(new Set());
+
+    // Use useRef instead of state to avoid re-renders
+    const initializedUsersRef = useRef<Set<string>>(new Set());
 
     const refreshEstate = useCallback(async () => {
         if (!currentUser) return;
@@ -60,66 +62,75 @@ export const EstateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return hasWorkshop() && (playerEstate?.ownedDevices.hasLaserCutter || false);
     }, [playerEstate, hasWorkshop]);
 
-    // Initialize estate for existing users
-    const initializeEstateIfNeeded = useCallback(async (userId: string) => {
-        // Avoid multiple initialization attempts for the same user
-        if (initializedUsers.has(userId)) return;
-
-        try {
-            console.log('Initializing estate for existing user:', userId);
-            const newEstate = await initializePlayerEstate(userId);
-            setInitializedUsers(prev => new Set(prev).add(userId));
-            return newEstate;
-        } catch (error) {
-            console.error('Error initializing estate for existing user:', error);
-            throw error;
-        }
-    }, [initializedUsers]);
-
     useEffect(() => {
         if (!currentUser) {
             setPlayerEstate(null);
             setLoading(false);
-            setInitializedUsers(new Set());
+            setError(null);
+            // Clear the ref when user logs out
+            initializedUsersRef.current = new Set();
             return;
         }
 
-        // Set up real-time listener
-        const unsubscribe = onSnapshot(
-            doc(firestore, 'playerEstates', currentUser.uid),
-            async (doc) => {
-                if (doc.exists()) {
-                    const data = doc.data();
-                    setPlayerEstate({
-                        ...data,
-                        createdAt: data.createdAt.toDate(),
-                        updatedAt: data.updatedAt.toDate()
-                    } as PlayerEstate);
-                    setLoading(false);
-                    setError(null);
-                } else {
-                    // Document doesn't exist - initialize for existing player
-                    try {
-                        setLoading(true);
-                        await initializeEstateIfNeeded(currentUser.uid);
-                        // The onSnapshot will fire again with the new document
-                    } catch (error) {
-                        console.error('Failed to initialize estate:', error);
-                        setError('Failed to initialize estate data');
-                        setPlayerEstate(null);
+        let unsubscribe: (() => void) | undefined;
+
+        const setupListener = async () => {
+            try {
+                unsubscribe = onSnapshot(
+                    doc(firestore, 'playerEstates', currentUser.uid),
+                    async (doc) => {
+                        if (doc.exists()) {
+                            const data = doc.data();
+                            setPlayerEstate({
+                                ...data,
+                                createdAt: data.createdAt.toDate(),
+                                updatedAt: data.updatedAt.toDate()
+                            } as PlayerEstate);
+                            setLoading(false);
+                            setError(null);
+                        } else {
+                            // Document doesn't exist - initialize for existing player
+                            // Check if we've already tried to initialize
+                            if (!initializedUsersRef.current.has(currentUser.uid)) {
+                                try {
+                                    setLoading(true);
+                                    console.log('Initializing estate for existing user:', currentUser.uid);
+                                    initializedUsersRef.current.add(currentUser.uid);
+                                    await initializePlayerEstate(currentUser.uid);
+                                    // The onSnapshot will fire again with the new document
+                                } catch (error) {
+                                    console.error('Failed to initialize estate:', error);
+                                    setError('Failed to initialize estate data');
+                                    setPlayerEstate(null);
+                                    setLoading(false);
+                                }
+                            } else {
+                                // Already tried to initialize, just set loading to false
+                                setLoading(false);
+                            }
+                        }
+                    },
+                    (error) => {
+                        console.error('Estate listener error:', error);
+                        setError(error.message);
                         setLoading(false);
                     }
-                }
-            },
-            (error) => {
-                console.error('Estate listener error:', error);
-                setError(error.message);
+                );
+            } catch (error) {
+                console.error('Error setting up estate listener:', error);
+                setError('Failed to setup estate listener');
                 setLoading(false);
             }
-        );
+        };
 
-        return () => unsubscribe();
-    }, [currentUser, initializeEstateIfNeeded]);
+        setupListener();
+
+        return () => {
+            if (unsubscribe) {
+                unsubscribe();
+            }
+        };
+    }, [currentUser]); // Only depend on currentUser
 
     return (
         <EstateContext.Provider value={{
