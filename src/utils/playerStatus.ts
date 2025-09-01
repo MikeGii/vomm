@@ -212,18 +212,45 @@ export const canUnitAcceptMoreGroupLeaders = async (unitId: string): Promise<boo
 /**
  * NEW: Checks if unit already has a unit leader (talituse juht)
  * @param unitId - The department unit ID
+ * @param department - The department name
+ * @param prefecture - The prefecture name
  * @returns Promise<boolean> - True if unit already has a unit leader
  */
-export const hasUnitLeader = async (unitId: string): Promise<boolean> => {
+export const hasUnitLeader = async (
+    unitId: string,
+    department?: string | null,
+    prefecture?: string | null
+): Promise<boolean> => {
     const unitLeaderPosition = getUnitLeaderPositionForUnit(unitId);
     if (!unitLeaderPosition) return false;
 
     try {
-        const playersQuery = query(
-            collection(firestore, 'playerStats'),
-            where('policePosition', '==', unitLeaderPosition),
-            where('departmentUnit', '==', unitId)
-        );
+        let playersQuery;
+
+        // Build query with optional department and prefecture filters
+        if (department && prefecture) {
+            playersQuery = query(
+                collection(firestore, 'playerStats'),
+                where('policePosition', '==', unitLeaderPosition),
+                where('departmentUnit', '==', unitId),
+                where('department', '==', department),
+                where('prefecture', '==', prefecture)
+            );
+        } else if (department) {
+            playersQuery = query(
+                collection(firestore, 'playerStats'),
+                where('policePosition', '==', unitLeaderPosition),
+                where('departmentUnit', '==', unitId),
+                where('department', '==', department)
+            );
+        } else {
+            // Fallback to original behavior if no department/prefecture provided
+            playersQuery = query(
+                collection(firestore, 'playerStats'),
+                where('policePosition', '==', unitLeaderPosition),
+                where('departmentUnit', '==', unitId)
+            );
+        }
 
         const querySnapshot = await getDocs(playersQuery);
         return querySnapshot.size > 0;
@@ -236,18 +263,45 @@ export const hasUnitLeader = async (unitId: string): Promise<boolean> => {
 /**
  * NEW: Gets the current unit leader for a specific unit
  * @param unitId - The department unit ID
+ * @param department - The department name
+ * @param prefecture - The prefecture name
  * @returns Promise<string | null> - Username of current unit leader, or null if none
  */
-export const getCurrentUnitLeader = async (unitId: string): Promise<string | null> => {
+export const getCurrentUnitLeader = async (
+    unitId: string,
+    department?: string | null,
+    prefecture?: string | null
+): Promise<string | null> => {
     const unitLeaderPosition = getUnitLeaderPositionForUnit(unitId);
     if (!unitLeaderPosition) return null;
 
     try {
-        const playersQuery = query(
-            collection(firestore, 'playerStats'),
-            where('policePosition', '==', unitLeaderPosition),
-            where('departmentUnit', '==', unitId)
-        );
+        let playersQuery;
+
+        // Build query with optional department and prefecture filters
+        if (department && prefecture) {
+            playersQuery = query(
+                collection(firestore, 'playerStats'),
+                where('policePosition', '==', unitLeaderPosition),
+                where('departmentUnit', '==', unitId),
+                where('department', '==', department),
+                where('prefecture', '==', prefecture)
+            );
+        } else if (department) {
+            playersQuery = query(
+                collection(firestore, 'playerStats'),
+                where('policePosition', '==', unitLeaderPosition),
+                where('departmentUnit', '==', unitId),
+                where('department', '==', department)
+            );
+        } else {
+            // Fallback to original behavior
+            playersQuery = query(
+                collection(firestore, 'playerStats'),
+                where('policePosition', '==', unitLeaderPosition),
+                where('departmentUnit', '==', unitId)
+            );
+        }
 
         const querySnapshot = await getDocs(playersQuery);
         if (querySnapshot.size > 0) {

@@ -161,18 +161,18 @@ export const AdminApplicationsTab: React.FC = () => {
 
                 // Check if this is a unit leader position
                 if (selectedApplication.positionId.startsWith('talituse_juht_')) {
-                    const hasLeader = await hasUnitLeader(targetUnit || '');
+                    const hasLeader = await hasUnitLeader(
+                        targetUnit || '',
+                        selectedApplication.department,
+                        selectedApplication.prefecture
+                    );
                     if (hasLeader) {
-                        const currentLeader = await getCurrentUnitLeader(targetUnit || '');
+                        const currentLeader = await getCurrentUnitLeader(
+                            targetUnit || '',
+                            selectedApplication.department,
+                            selectedApplication.prefecture
+                        );
                         showToast(`Viga: Üksuses on juba talituse juht: ${currentLeader || 'Keegi'}`, 'error');
-                        return;
-                    }
-                } else if (selectedApplication.positionId.startsWith('grupijuht_')) {
-                    // Group leader - check normal capacity
-                    const canAccept = await canUnitAcceptMoreGroupLeaders(targetUnit || '');
-                    if (!canAccept) {
-                        const currentCount = await getGroupLeaderCountInUnit(targetUnit || '');
-                        showToast(`Viga: Üksuses on juba maksimum arv grupijuhte (${currentCount}/4)`, 'error');
                         return;
                     }
                 }
