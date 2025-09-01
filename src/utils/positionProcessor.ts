@@ -99,9 +99,19 @@ export class PositionProcessor {
     private async processUnitLeaderPosition(baseInfo: PositionInfo, position: any): Promise<PositionInfo> {
         this.processRequirements(baseInfo, position.requirements);
 
-        const hasLeader = await hasUnitLeader(position.departmentUnit || '');
+        // Pass department and prefecture to the check
+        const hasLeader = await hasUnitLeader(
+            position.departmentUnit || '',
+            this.playerStats.department,
+            this.playerStats.prefecture
+        );
+
         if (hasLeader) {
-            const currentLeader = await getCurrentUnitLeader(position.departmentUnit || '');
+            const currentLeader = await getCurrentUnitLeader(
+                position.departmentUnit || '',
+                this.playerStats.department,
+                this.playerStats.prefecture
+            );
             baseInfo.availabilityStatus = 'Koht hõivatud';
             baseInfo.missingRequirements.push(`Üksuses on juba talituse juht: ${currentLeader || 'Keegi'}`);
             return baseInfo;
