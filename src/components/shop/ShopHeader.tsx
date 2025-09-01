@@ -20,13 +20,13 @@ export const ShopHeader: React.FC<ShopHeaderProps> = ({
             <div className="shop-header-content">
                 <h1 className="shop-title">Pood</h1>
                 <div className="shop-header-info">
-                    <div className="player-money">
+                    <div className="player-money-shop">
                         <span className="money-label">Sinu raha:</span>
-                        <span className="money-amount regular">€{playerMoney.toFixed(2)}</span>
+                        <span className="money-amount-shop regular">€{playerMoney.toFixed(2)}</span>
                     </div>
-                    <div className="player-pollid">
+                    <div className="player-pollid-shop">
                         <span className="pollid-label">Pollid:</span>
-                        <span className="pollid-amount">💎 {playerPollid.toLocaleString('et-EE')}</span>
+                        <span className="pollid-amount-shop">💎 {playerPollid.toLocaleString('et-EE')}</span>
                     </div>
                     {onRefresh && (
                         <button
