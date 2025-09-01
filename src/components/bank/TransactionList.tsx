@@ -26,7 +26,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({
         });
     };
 
-    const getTransactionType = (transaction: BankTransaction): 'incoming' | 'outgoing' => {
+    const getTransactionType = (transaction: BankTransaction): 'incoming' | 'outgoing' | 'conversion' => {
+        // Check if it's a poll conversion
+        if (transaction.type === 'poll_conversion') {
+            return 'conversion';
+        }
         return transaction.toUserId === currentUserId ? 'incoming' : 'outgoing';
     };
 
@@ -68,25 +72,37 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                     <div className="table-body">
                         {transactions.map((transaction) => {
                             const type = getTransactionType(transaction);
-                            const otherPlayer = getOtherPlayerInfo(transaction);
+                            const otherPlayer = type === 'conversion' ? null : getOtherPlayerInfo(transaction);
 
                             return (
                                 <div key={transaction.id} className={`transaction-row ${type}`}>
                                     <div className="transaction-type">
                                         {type === 'incoming' ? (
                                             <span className="type-badge incoming">Sisse</span>
-                                        ) : (
+                                        ) : type === 'outgoing' ? (
                                             <span className="type-badge outgoing">Välja</span>
+                                        ) : (
+                                            <span className="type-badge conversion">Vahetus</span>
                                         )}
                                     </div>
 
                                     <div className="transaction-player">
-                                        <div className="player-name">{otherPlayer.name}</div>
-                                        <div className="player-badge">#{otherPlayer.badgeNumber}</div>
+                                        {type === 'conversion' ? (
+                                            <>
+                                                <div className="player-name">Poll → Raha</div>
+                                                <div className="player-badge">Vahetus</div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="player-name">{otherPlayer?.name}</div>
+                                                <div className="player-badge">#{otherPlayer?.badgeNumber}</div>
+                                            </>
+                                        )}
                                     </div>
 
                                     <div className={`transaction-amount ${type}`}>
-                                        {type === 'incoming' ? '+' : '-'}{transaction.amount}€
+                                        {type === 'conversion' ? '+' : type === 'incoming' ? '+' : '-'}
+                                        {transaction.amount}€
                                     </div>
 
                                     <div className="transaction-description">

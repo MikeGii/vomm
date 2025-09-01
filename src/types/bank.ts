@@ -12,6 +12,8 @@ export interface BankTransaction {
     amount: number;
     description: string;
     timestamp: Timestamp;
+    type?: 'poll_conversion' | 'transfer';
+    pollsConverted?: number;
 }
 
 export interface BankTransactionFormData {

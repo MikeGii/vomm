@@ -5,8 +5,6 @@ import { firestore } from '../../config/firebase';
 import { getPositionById } from '../../data/policePositions';
 import {
     getPositionDepartmentUnit,
-    canUnitAcceptMoreGroupLeaders,
-    getGroupLeaderCountInUnit,
     hasUnitLeader, getCurrentUnitLeader
 } from '../../utils/playerStatus';
 import { useToast } from '../../contexts/ToastContext';

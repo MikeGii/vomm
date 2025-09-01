@@ -158,7 +158,8 @@ export const processTransaction = async (
                 toPlayerName: targetPlayer.username,
                 amount: amount,
                 description: description.trim(),
-                timestamp: Timestamp.now()
+                timestamp: Timestamp.now(),
+                type: 'transfer'
             };
 
             const transactionsRef = collection(firestore, 'bankTransactions');
@@ -191,8 +192,9 @@ export const processTransaction = async (
 export const getPlayerTransactions = async (userId: string): Promise<BankTransaction[]> => {
     try {
         const transactionsRef = collection(firestore, 'bankTransactions');
+        const allTransactions: BankTransaction[] = [];
 
-        // Get transactions where user is sender
+        // Query 1: Get sent transactions (regular money transfers)
         const sentQuery = query(
             transactionsRef,
             where('fromUserId', '==', userId),
@@ -200,7 +202,7 @@ export const getPlayerTransactions = async (userId: string): Promise<BankTransac
             limit(50)
         );
 
-        // Get transactions where user is receiver
+        // Query 2: Get received transactions
         const receivedQuery = query(
             transactionsRef,
             where('toUserId', '==', userId),
@@ -213,21 +215,42 @@ export const getPlayerTransactions = async (userId: string): Promise<BankTransac
             getDocs(receivedQuery)
         ]);
 
-        const sentTransactions = sentSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        } as BankTransaction));
+        // Process sent transactions
+        sentSnapshot.docs.forEach(doc => {
+            const data = doc.data();
+            // Skip duplicates for poll conversions (where from and to are same)
+            if (data.type === 'poll_conversion' && data.toUserId === userId) {
+                // Skip this one, we'll get it from received
+                return;
+            }
+            allTransactions.push({
+                id: doc.id,
+                ...data
+            } as BankTransaction);
+        });
 
-        const receivedTransactions = receivedSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        } as BankTransaction));
+        // Process received transactions
+        receivedSnapshot.docs.forEach(doc => {
+            const data = doc.data();
+            allTransactions.push({
+                id: doc.id,
+                ...data
+            } as BankTransaction);
+        });
 
-        // Combine and sort by timestamp
-        const allTransactions = [...sentTransactions, ...receivedTransactions];
-        allTransactions.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
+        // Remove any remaining duplicates by ID
+        const uniqueTransactions = Array.from(
+            new Map(allTransactions.map(t => [t.id, t])).values()
+        );
 
-        return allTransactions;
+        // Sort by timestamp
+        uniqueTransactions.sort((a, b) => {
+            const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
+            const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
+            return timeB - timeA;
+        });
+
+        return uniqueTransactions;
 
     } catch (error) {
         console.error('Error getting player transactions:', error);
