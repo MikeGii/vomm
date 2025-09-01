@@ -108,29 +108,41 @@ export const consumeTrainingBooster = async (
 
         // If already at max clicks
         const currentClicks = trainingData.remainingClicks || 0;
-        if (currentClicks >= maxClicks) {
+        const availableSpace = maxClicks - currentClicks;
+
+        if (availableSpace <= 0) {
             return {
                 success: false,
                 message: 'Sul on juba maksimaalne arv treeningklõpse!'
             };
         }
 
-        // Calculate clicks restoration
+        // Calculate how many boosters we actually need
         const clicksPerItem = booster.consumableEffect.value;
-        const totalClicksToAdd = clicksPerItem * quantity;
+        const maxUsefulQuantity = Math.ceil(availableSpace / clicksPerItem);
+        const actualQuantityToUse = Math.min(quantity, maxUsefulQuantity);
+
+        // Warn if trying to use more than needed
+        if (quantity > actualQuantityToUse) {
+            // Optional: You could add a different message here
+            // For now, we'll just use what's actually needed
+        }
+
+        // Calculate actual clicks to add
+        const totalClicksToAdd = clicksPerItem * actualQuantityToUse;
         const newClicks = Math.min(currentClicks + totalClicksToAdd, maxClicks);
         const actualClicksAdded = newClicks - currentClicks;
 
         // Update inventory
         const updatedInventory = [...inventory];
-        if (booster.quantity === quantity) {
+        if (booster.quantity === actualQuantityToUse) {
             // Remove item completely if using all of them
             updatedInventory.splice(boosterIndex, 1);
         } else {
             // Reduce quantity
             updatedInventory[boosterIndex] = {
                 ...booster,
-                quantity: booster.quantity - quantity
+                quantity: booster.quantity - actualQuantityToUse
             };
         }
 
@@ -143,10 +155,10 @@ export const consumeTrainingBooster = async (
 
         return {
             success: true,
-            message: `Kasutasid ${quantity}x ${booster.name}. Taastati ${actualClicksAdded} treeningklõpsu!`,
+            message: `Kasutasid ${actualQuantityToUse}x ${booster.name}. Taastati ${actualClicksAdded} treeningklõpsu!`,
             clicksAdded: actualClicksAdded,
             newRemainingClicks: newClicks,
-            itemsUsed: quantity
+            itemsUsed: actualQuantityToUse
         };
 
     } catch (error) {
@@ -219,29 +231,35 @@ export const consumeKitchenBooster = async (
 
         // If already at max clicks
         const currentClicks = kitchenLabTrainingData.remainingClicks || 0;
-        if (currentClicks >= maxClicks) {
+        const availableSpace = maxClicks - currentClicks;
+
+        if (availableSpace <= 0) {
             return {
                 success: false,
                 message: 'Sul on juba maksimaalne arv köök/labor klõpse!'
             };
         }
 
-        // Calculate clicks restoration
+        // Calculate how many boosters we actually need
         const clicksPerItem = booster.consumableEffect.value;
-        const totalClicksToAdd = clicksPerItem * quantity;
+        const maxUsefulQuantity = Math.ceil(availableSpace / clicksPerItem);
+        const actualQuantityToUse = Math.min(quantity, maxUsefulQuantity);
+
+        // Calculate actual clicks to add
+        const totalClicksToAdd = clicksPerItem * actualQuantityToUse;
         const newClicks = Math.min(currentClicks + totalClicksToAdd, maxClicks);
         const actualClicksAdded = newClicks - currentClicks;
 
         // Update inventory
         const updatedInventory = [...inventory];
-        if (booster.quantity === quantity) {
+        if (booster.quantity === actualQuantityToUse) {
             // Remove item completely if using all of them
             updatedInventory.splice(boosterIndex, 1);
         } else {
             // Reduce quantity
             updatedInventory[boosterIndex] = {
                 ...booster,
-                quantity: booster.quantity - quantity
+                quantity: booster.quantity - actualQuantityToUse
             };
         }
 
@@ -254,10 +272,10 @@ export const consumeKitchenBooster = async (
 
         return {
             success: true,
-            message: `Kasutasid ${quantity}x ${booster.name}. Taastati ${actualClicksAdded} köök/labor klõpsu!`,
+            message: `Kasutasid ${actualQuantityToUse}x ${booster.name}. Taastati ${actualClicksAdded} klõpsu!`,
             clicksAdded: actualClicksAdded,
             newRemainingClicks: newClicks,
-            itemsUsed: quantity
+            itemsUsed: actualQuantityToUse
         };
 
     } catch (error) {
@@ -329,29 +347,35 @@ export const consumeHandicraftBooster = async (
 
         // If already at max clicks
         const currentClicks = handicraftTrainingData.remainingClicks || 0;
-        if (currentClicks >= maxClicks) {
+        const availableSpace = maxClicks - currentClicks;
+
+        if (availableSpace <= 0) {
             return {
                 success: false,
                 message: 'Sul on juba maksimaalne arv käsitöö klõpse!'
             };
         }
 
-        // Calculate clicks restoration
+        // Calculate how many boosters we actually need
         const clicksPerItem = booster.consumableEffect.value;
-        const totalClicksToAdd = clicksPerItem * quantity;
+        const maxUsefulQuantity = Math.ceil(availableSpace / clicksPerItem);
+        const actualQuantityToUse = Math.min(quantity, maxUsefulQuantity);
+
+        // Calculate actual clicks to add
+        const totalClicksToAdd = clicksPerItem * actualQuantityToUse;
         const newClicks = Math.min(currentClicks + totalClicksToAdd, maxClicks);
         const actualClicksAdded = newClicks - currentClicks;
 
         // Update inventory
         const updatedInventory = [...inventory];
-        if (booster.quantity === quantity) {
+        if (booster.quantity === actualQuantityToUse) {
             // Remove item completely if using all of them
             updatedInventory.splice(boosterIndex, 1);
         } else {
             // Reduce quantity
             updatedInventory[boosterIndex] = {
                 ...booster,
-                quantity: booster.quantity - quantity
+                quantity: booster.quantity - actualQuantityToUse
             };
         }
 
@@ -364,10 +388,10 @@ export const consumeHandicraftBooster = async (
 
         return {
             success: true,
-            message: `Kasutasid ${quantity}x ${booster.name}. Taastati ${actualClicksAdded} käsitöö klõpsu!`,
+            message: `Kasutasid ${actualQuantityToUse}x ${booster.name}. Taastati ${actualClicksAdded} klõpsu!`,
             clicksAdded: actualClicksAdded,
             newRemainingClicks: newClicks,
-            itemsUsed: quantity
+            itemsUsed: actualQuantityToUse
         };
 
     } catch (error) {
