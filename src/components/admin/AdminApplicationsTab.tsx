@@ -161,14 +161,12 @@ export const AdminApplicationsTab: React.FC = () => {
                 if (selectedApplication.positionId.startsWith('talituse_juht_')) {
                     const hasLeader = await hasUnitLeader(
                         targetUnit || '',
-                        selectedApplication.department,
-                        selectedApplication.prefecture
+                        selectedApplication.department
                     );
                     if (hasLeader) {
                         const currentLeader = await getCurrentUnitLeader(
                             targetUnit || '',
-                            selectedApplication.department,
-                            selectedApplication.prefecture
+                            selectedApplication.department
                         );
                         showToast(`Viga: Üksuses on juba talituse juht: ${currentLeader || 'Keegi'}`, 'error');
                         return;

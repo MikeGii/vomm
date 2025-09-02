@@ -223,6 +223,51 @@ export const TRAINING_ACTIVITIES: TrainingActivity[] = [
             intelligence: 300,
             playerExp: 40
         }
+    },
+
+    // Level 90 activities
+    {
+        id: 'advanced_03_strength_training',
+        name: 'Rammumehe Eesti meistrivõistlused',
+        description: 'Võistlused, kus pead tõstma enneolematult suuri raskuseid',
+        requiredLevel: 90,
+        rewards: {
+            strength: 450,
+            endurance: 200,
+            playerExp: 50
+        }
+    },
+    {
+        id: 'advanced_training_running_01',
+        name: 'Osaled Ironman triatlonil',
+        description: 'Osaled Ironman triatlonil, kus jooksed, sõidad jalgrattaga ja ujud',
+        requiredLevel: 90,
+        rewards: {
+            endurance: 450,
+            agility: 200,
+            playerExp: 50
+        }
+    },
+    {
+        id: 'advanced_03_weapon_technics',
+        name: 'Kaitseväe eriüksuslate treening',
+        description: 'Treenid koos kaitseväe erioperatsioonide väejuhatusega maastikul ja õhus',
+        requiredLevel: 90,
+        rewards: {
+            dexterity: 450,
+            agility: 200,
+            playerExp: 50
+        }
+    },
+    {
+        id: 'advanced_03_intelligence_training',
+        name: 'Osaled katsealusena laboris',
+        description: 'Teadlased teevad laboris sinu aju osas katseid, et tõsta IQ taset',
+        requiredLevel: 90,
+        rewards: {
+            intelligence: 450,
+            playerExp: 50
+        }
     }
 ];
 

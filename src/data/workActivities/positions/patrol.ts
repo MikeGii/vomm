@@ -52,7 +52,7 @@ export const PATROL_ACTIVITIES: WorkActivity[] = [
         name: 'Alusta patrullvahetust välijuhina',
         description: 'Tugeva patrullitöö kogemuse ja vaneminspektorina on sul võimalus alustada teenistust välijuhina',
         minLevel: 40,
-        requiredCourses: ['police_ground_leader_course'],
+        requiredCourses: ['police_ground_leader_course_02'],
         baseExpPerHour: 650,
         expGrowthRate: 0.10,
         maxHours: 12,
