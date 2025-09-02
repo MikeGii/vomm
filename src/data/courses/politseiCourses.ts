@@ -4,17 +4,21 @@ import { Course } from '../../types';
 export const POLITSEI_COURSES: Course[] = [
     {
         id: 'police_ground_leader_course',
-        name: 'Välijuhi koolitus',
+        name: 'Välijuhi koolitus 1. päev',
         description: 'Koolitus edukaks välitöö juhtimiseks',
         duration: 10800,
         requirements: {
             level: 35,
             completedCourses: ['lopueksam'],
-            totalWorkedHours: 60
+            totalWorkedHours: 60,
+            attributes: {
+                intelligence: 50,
+                dexterity: 40,
+            }
         },
         rewards: {
             experience: 1500,
-            reputation: 200,
+            reputation: 150,
             money: 2000
         },
         category: 'politsei',
@@ -24,6 +28,40 @@ export const POLITSEI_COURSES: Course[] = [
                 'Delegeerida ülesandeid politsei, kiirabi ja pääste üksustele sündmuskohal',
                 'Juhtida politsei tegevusi sündmuskohal',
                 'Lahendada olukorda sündmuse keskel koos oma kolleegidega hea ülevaate saamiseks',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 400,
+                money: 500,
+                reputation: 75,
+            }
+        }
+    },
+    {
+        id: 'police_ground_leader_course_02',
+        name: 'Välijuhi koolitus 2. päev',
+        description: 'Koolitus edukaks välitöö juhtimiseks',
+        duration: 14400,
+        requirements: {
+            level: 38,
+            completedCourses: ['police_ground_leader_course'],
+            totalWorkedHours: 60,
+            attributes: {
+                intelligence: 53,
+                dexterity: 42,
+            }
+        },
+        rewards: {
+            experience: 2000,
+            reputation: 150,
+            money: 2000
+        },
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Mis on "välijuht" kui sõna definitsioon?',
+            answers: [
+                'Ametikoht',
+                'Tööülesanne',
             ],
             correctAnswerIndex: 1,
             rewards: {
@@ -103,13 +141,17 @@ export const POLITSEI_COURSES: Course[] = [
     },
     {
         id: 'riot_police_course',
-        name: 'Massiohje koolitus',
+        name: 'Massiohje koolitus 1. päev',
         description: 'Koolitus teadmiste omandamiseks ja tegutsemiseks massirahutuste korral',
         duration: 10800,
         requirements: {
             level: 40,
             completedCourses: ['medical_course_police'],
-            totalWorkedHours: 50
+            totalWorkedHours: 50,
+            attributes: {
+                strength: 40,
+                endurance: 50,
+            }
         },
         rewards: {
             experience: 1500,
@@ -128,6 +170,41 @@ export const POLITSEI_COURSES: Course[] = [
             correctAnswerIndex: 0,
             rewards: {
                 experience: 500,
+                money: 500,
+                reputation: 75,
+            }
+        }
+    },
+    {
+        id: 'riot_police_course_02',
+        name: 'Massiohje koolitus 2. päev',
+        description: 'Koolitus teadmiste omandamiseks ja tegutsemiseks massirahutuste korral',
+        duration: 10800,
+        requirements: {
+            level: 42,
+            completedCourses: ['riot_police_course'],
+            totalWorkedHours: 50,
+            attributes: {
+                strength: 45,
+                endurance: 55,
+            }
+        },
+        rewards: {
+            experience: 2000,
+            reputation: 175,
+            money: 1500,
+        },
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Mis riigi massiohje taktikat ja algoritmi Eestis kasutatakse 2025 aastast?',
+            answers: [
+                'Läti',
+                'Soome',
+                'Norra',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 550,
                 money: 500,
                 reputation: 75,
             }

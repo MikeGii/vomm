@@ -19,7 +19,7 @@ export const EMERGENCY_ACTIVITIES: WorkActivity[] = [
         name: 'Julgesta erinevate ametkondade läbiotsinguid',
         description: 'Julgestad erinevaid uurimisasutusi ohtlike kurjategijate kodus, kus on oht ametnike elule või tervisele',
         minLevel: 60,
-        requiredCourses: ['riot_police_course', 'emergency_police_course_houses'],
+        requiredCourses: ['riot_police_course_02', 'emergency_police_course_houses'],
         baseExpPerHour: 950,
         expGrowthRate: 0.10,
         maxHours: 12,

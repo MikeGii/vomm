@@ -99,18 +99,15 @@ export class PositionProcessor {
     private async processUnitLeaderPosition(baseInfo: PositionInfo, position: any): Promise<PositionInfo> {
         this.processRequirements(baseInfo, position.requirements);
 
-        // Pass department and prefecture to the check
         const hasLeader = await hasUnitLeader(
             position.departmentUnit || '',
-            this.playerStats.department,
-            this.playerStats.prefecture
+            this.playerStats.department || ''
         );
 
         if (hasLeader) {
             const currentLeader = await getCurrentUnitLeader(
                 position.departmentUnit || '',
-                this.playerStats.department,
-                this.playerStats.prefecture
+                this.playerStats.department || ''
             );
             baseInfo.availabilityStatus = 'Koht hõivatud';
             baseInfo.missingRequirements.push(`Üksuses on juba talituse juht: ${currentLeader || 'Keegi'}`);
@@ -137,8 +134,14 @@ export class PositionProcessor {
         this.processRequirements(baseInfo, position.requirements);
 
         if (this.currentUnit === position.departmentUnit) {
-            const canAcceptMore = await canUnitAcceptMoreGroupLeaders(position.departmentUnit || '');
-            const currentCount = await getGroupLeaderCountInUnit(position.departmentUnit || '');
+            const canAcceptMore = await canUnitAcceptMoreGroupLeaders(
+                position.departmentUnit || '',
+                this.playerStats.department || ''
+            );
+            const currentCount = await getGroupLeaderCountInUnit(
+                position.departmentUnit || '',
+                this.playerStats.department || ''
+            );
 
             if (canAcceptMore) {
                 baseInfo.availabilityStatus = 'Koht saadaval';
@@ -154,7 +157,10 @@ export class PositionProcessor {
                 baseInfo.missingRequirements.push(`Üksuses on juba maksimum arv grupijuhte (${currentCount}/4)`);
             }
         } else {
-            const canAcceptMore = await canUnitAcceptMoreGroupLeaders(position.departmentUnit || '');
+            const canAcceptMore = await canUnitAcceptMoreGroupLeaders(
+                position.departmentUnit || '',
+                this.playerStats.department || ''
+            );
             baseInfo.availabilityStatus = canAcceptMore ? 'Koht saadaval' : 'Kohad täis';
             const unit = getUnitById(position.departmentUnit || '');
             baseInfo.missingRequirements.push(`Pead töötama ${unit?.name} üksuses`);
