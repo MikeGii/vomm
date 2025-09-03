@@ -451,7 +451,7 @@ export const POLITSEI_COURSES: Course[] = [
     },
     {
         id: 'advanced_computer_skills',
-        name: 'Arvutisüsteemide täiendkoolitus',
+        name: 'Arvutisüsteemide täiendkoolitus 1. osa',
         description: 'Täiendkoolitus arvutivõrkude ja IT süsteemidest edasijõudnutele',
         duration: 14400,
         requirements: {
@@ -482,8 +482,40 @@ export const POLITSEI_COURSES: Course[] = [
 
     },
     {
+        id: 'advanced_computer_skills_02',
+        name: 'Arvutisüsteemide täiendkoolituse 2. osa',
+        description: 'Täiendkoolitus arvutivõrkude ja IT süsteemidest edasijõudnutele 2. osa',
+        duration: 18000,
+        requirements: {
+            level: 55,
+            completedCourses: ['advanced_computer_skills'],
+            totalWorkedHours: 80
+        },
+        rewards: {
+            experience: 7500,
+            reputation: 350,
+            money: 3000
+        },
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Mis on peamine erinevus 32-bitise ja 64-bitise operatsioonisüsteemi vahel?',
+            answers: [
+                '32-bit saab kasutada kuni 4GB mälu, 64-bit saab kasutada palju rohkem mälu',
+                '32-bit töötab ainult vanemate programmidega, 64-bit ainult uute programmidega',
+                '32-bit on kiirem igapäevasteks ülesanneteks, 64-bit on aeglasem',
+            ],
+            correctAnswerIndex: 0,
+            rewards: {
+                experience: 1000,
+                money: 700,
+                reputation: 120,
+            }
+        }
+
+    },
+    {
         id: 'cyber_crime_course',
-        name: 'Küberturvalisuse baaskursus',
+        name: 'Küberturvalisuse baaskursus 1. osa',
         description: 'Baaskoolitus küberturvalisuse teadmistest',
         duration: 18000,
         requirements: {
@@ -505,6 +537,39 @@ export const POLITSEI_COURSES: Course[] = [
                 'HTML',
             ],
             correctAnswerIndex: 1,
+            rewards: {
+                experience: 1500,
+                money: 500,
+                reputation: 100,
+            }
+        }
+
+    },
+    {
+        id: 'cyber_crime_course_02',
+        name: 'Küberturvalisuse baaskursus 2. osa',
+        description: 'Baaskoolitus küberturvalisuse teadmistest 2. osa',
+        duration: 21600,
+        requirements: {
+            level: 60,
+            completedCourses: ['cyber_crime_course'],
+            totalWorkedHours: 100
+        },
+        rewards: {
+            experience: 7500,
+            reputation: 250,
+            money: 3000
+        },
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Mis on peamine erinevus SQL injektiooni (SQL Injection) ja Cross-Site Scripting (XSS) ' +
+                'rünnakute vahel küberjulgeoleku kontekstis?',
+            answers: [
+                'SQL injection ründab andmebaasi struktuuri, XSS ründab kasutaja brauserit',
+                'SQL injection töötab serveripoolel, XSS töötab kliendipoolel',
+                'SQL injection kasutab pahatahtlikke SQL käske, XSS kasutab pahatahtlikku JavaScripti',
+            ],
+            correctAnswerIndex: 0,
             rewards: {
                 experience: 1500,
                 money: 500,
