@@ -24,5 +24,16 @@ export const CYBERCRIME_ACTIVITIES: WorkActivity[] = [
         expGrowthRate: 0.12,
         maxHours: 8,
         allowedFor: ['küberkriminalist'],
+    },
+    {
+        id: 'cyber_crime_work_03',
+        name: 'Lahenda küberturvalisuse probleeme',
+        description: 'Kogenud küberkriminalistina tead, kuidas lahendada turvaauke tarkvaras ja jälitada küberkurjategijaid',
+        minLevel: 75,
+        requiredCourses: ['cyber_crime_course_02', 'advanced_computer_skills_02'],
+        baseExpPerHour: 1200,
+        expGrowthRate: 0.12,
+        maxHours: 8,
+        allowedFor: ['küberkriminalist'],
     }
 ];
