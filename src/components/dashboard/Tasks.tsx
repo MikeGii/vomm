@@ -1,15 +1,19 @@
 // src/components/dashboard/Tasks.tsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { usePlayerStats } from '../../contexts/PlayerStatsContext';
 import { getPlayerTasks, claimRewards } from '../../services/TaskService';
 import { PlayerTasks, Task } from '../../types';
 import '../../styles/components/Tasks.css';
 
 export const Tasks: React.FC = () => {
     const { currentUser } = useAuth();
+    const { playerStats } = usePlayerStats();
     const [tasks, setTasks] = useState<PlayerTasks | null>(null);
     const [loading, setLoading] = useState(true);
     const [claiming, setClaiming] = useState<string | null>(null);
+
+    const isVip = playerStats?.isVip || false;
 
     useEffect(() => {
         loadTasks();
@@ -48,8 +52,10 @@ export const Tasks: React.FC = () => {
     if (!tasks) return <div className="tasks-error">Ülesanded pole saadaval</div>;
 
     return (
-        <div className="tasks-container">
-            <h2 className="tasks-title">Ülesanded</h2>
+        <div className={`tasks-container ${isVip ? 'vip-tasks' : ''}`}>
+            <div className="tasks-header">
+                <h2 className="section-title">Ülesanded</h2>
+            </div>
 
             <div className="tasks-grid">
                 {tasks.daily && (
@@ -58,6 +64,7 @@ export const Tasks: React.FC = () => {
                         type="daily"
                         onClaim={() => handleClaimRewards('daily')}
                         claiming={claiming === 'daily'}
+                        isVip={isVip}
                     />
                 )}
 
@@ -67,12 +74,13 @@ export const Tasks: React.FC = () => {
                         type="weekly"
                         onClaim={() => handleClaimRewards('weekly')}
                         claiming={claiming === 'weekly'}
+                        isVip={isVip}
                     />
                 )}
             </div>
 
             {tasks.streak > 0 && (
-                <div className="streak-display">
+                <div className={`streak-display ${isVip ? 'vip-streak' : ''}`}>
                     <span className="streak-icon">🔥</span>
                     <span>{tasks.streak} päeva järjest</span>
                 </div>
@@ -86,65 +94,91 @@ interface TaskCardProps {
     type: 'daily' | 'weekly';
     onClaim: () => void;
     claiming: boolean;
+    isVip: boolean;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, type, onClaim, claiming }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, type, onClaim, claiming, isVip }) => {
     const isComplete = task.completed;
 
-    // Calculate individual progress percentages
+    // Calculate individual progress percentages using existing structure
     const courseProgress = Math.min(100, (task.progress.coursesCompleted / task.requirements.courses) * 100);
     const workProgress = Math.min(100, (task.progress.hoursWorked / task.requirements.workHours) * 100);
     const trainingProgress = Math.min(100, (task.progress.attributeLevelsGained / task.requirements.attributeLevels) * 100);
 
     return (
-        <div className={`task-card ${type} ${isComplete ? 'completed' : ''}`}>
+        <div className={`task-card ${type} ${isComplete ? 'completed' : ''} ${isVip ? 'vip-enhanced' : ''}`}>
+            {isVip && <div className="vip-glow"></div>}
+
             <div className="task-header">
-                <span className="task-type">{type === 'daily' ? 'Päevane' : 'Nädalane'}</span>
-                {isComplete && <span className="task-status">✓ Valmis</span>}
+                <div className="task-type-section">
+                    <span className="task-type">{type === 'daily' ? 'Igapäevane' : 'Iganädalane'}</span>
+                    {isVip && <span className="vip-bonus-indicator">✨ +50% XP</span>}
+                </div>
+                {isComplete && (
+                    <span className="task-status">✓ Valmis</span>
+                )}
             </div>
 
-            <h3 className="task-title">{task.title}</h3>
-            <p className="task-description">{task.description}</p>
+            <div className="task-content">
+                <h3 className="task-title">{task.title}</h3>
+                <p className="task-description">{task.description}</p>
+            </div>
 
-            {/* Three separate progress bars */}
             <div className="task-progress-container">
                 <div className="progress-item">
-                    <span className="progress-label">Kursused: {task.progress.coursesCompleted}/{task.requirements.courses}</span>
+                    <div className="progress-label">
+                        <span className="progress-text">📚 Kursused</span>
+                        <span className="progress-numbers">
+                            {task.progress.coursesCompleted}/{task.requirements.courses}
+                        </span>
+                    </div>
                     <div className="progress-bar">
                         <div className="progress-fill" style={{ width: `${courseProgress}%` }} />
                     </div>
                 </div>
 
                 <div className="progress-item">
-                    <span className="progress-label">Tööaeg: {task.progress.hoursWorked}h/{task.requirements.workHours}h</span>
+                    <div className="progress-label">
+                        <span className="progress-text">💼 Tööaeg</span>
+                        <span className="progress-numbers">
+                            {task.progress.hoursWorked}h/{task.requirements.workHours}h
+                        </span>
+                    </div>
                     <div className="progress-bar">
                         <div className="progress-fill" style={{ width: `${workProgress}%` }} />
                     </div>
                 </div>
 
                 <div className="progress-item">
-                    <span className="progress-label">Atribuudid: {task.progress.attributeLevelsGained}/{task.requirements.attributeLevels}</span>
+                    <div className="progress-label">
+                        <span className="progress-text">💪 Atribuudid</span>
+                        <span className="progress-numbers">
+                            {task.progress.attributeLevelsGained}/{task.requirements.attributeLevels}
+                        </span>
+                    </div>
                     <div className="progress-bar">
                         <div className="progress-fill" style={{ width: `${trainingProgress}%` }} />
                     </div>
                 </div>
             </div>
 
-            <div className="task-rewards">
-                <span>{task.rewards.experience} XP</span>
-                <span>{task.rewards.money}€</span>
-                <span>{task.rewards.reputation} mainet</span>
-            </div>
+            <div className="task-footer">
+                <div className="task-rewards">
+                    <span className="reward-experience">⭐ {task.rewards.experience} XP</span>
+                    <span className="reward-money">💰 €{task.rewards.money}</span>
+                    <span className="reward-reputation">🏆 {task.rewards.reputation} mainet</span>
+                </div>
 
-            {isComplete && (
-                <button
-                    className="claim-button"
-                    onClick={onClaim}
-                    disabled={claiming}
-                >
-                    {claiming ? 'Võtan...' : 'Võta preemia'}
-                </button>
-            )}
+                {isComplete && (
+                    <button
+                        className={`claim-button ${isVip ? 'vip-claim' : ''}`}
+                        onClick={onClaim}
+                        disabled={claiming}
+                    >
+                        {claiming ? 'Nõuan...' : 'Nõua auhind'}
+                    </button>
+                )}
+            </div>
         </div>
     );
 };
