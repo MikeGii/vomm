@@ -394,3 +394,4 @@ export * from './events.types';
 export * from './inventory';
 export * from './equipment';
 export * from './bank';
+export * from './tasks';

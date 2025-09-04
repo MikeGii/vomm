@@ -14,6 +14,7 @@ import {calculateLevelFromExp} from "./PlayerService";
 import { ABILITIES} from "../data/abilities";
 import { ABIPOLITSEINIK_UNIFORM, POLITSEI_UNIFORM, RIOT_POLICE_EQUIPMENT } from '../data/equipment';
 import {getShopItemById} from "./ShopService";
+import { updateProgress } from "./TaskService";
 
 // Get courses available for player
 export const getAvailableCourses = (playerStats: PlayerStats): Course[] => {
@@ -313,6 +314,14 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
         }
 
         await updateDoc(playerStatsRef, updates);
+
+        // Update task progress after successful course completion
+        try {
+            await updateProgress(userId, 'course', 1);
+            console.log(`Task progress updated: 1 course completed (${course.id})`);
+        } catch (error) {
+            console.error('Task progress update failed, but course completed successfully:', error);
+        }
 
         // Update active course record
         const activeCourseRef = doc(firestore, 'activeCourses', `${userId}_${course.id}`);

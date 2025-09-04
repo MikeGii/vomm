@@ -21,6 +21,7 @@ import { getWorkActivityById, calculateWorkRewards } from '../data/workActivitie
 import { calculateLevelFromExp } from "./PlayerService";
 import { triggerWorkEvent } from "./EventService";
 import {updateCrimeLevelAfterWork} from "./CrimeService";
+import { updateProgress } from "./TaskService";
 
 // Start work
 export const startWork = async (
@@ -253,6 +254,14 @@ export const completeWork = async (userId: string): Promise<{
                 } catch (error) {
                     console.error('Crime level update failed, but work completed successfully:', error);
                 }
+            }
+
+            // Update task progress after successful work completion
+            try {
+                await updateProgress(userId, 'work', result.workData.totalHours);
+                console.log(`Task progress updated: ${result.workData.totalHours} work hours`);
+            } catch (error) {
+                console.error('Task progress update failed, but work completed successfully:', error);
             }
         }
 

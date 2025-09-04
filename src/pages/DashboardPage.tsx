@@ -19,6 +19,7 @@ import { checkCourseCompletion } from '../services/CourseService';
 import { PlayerAbilities } from "../components/dashboard/PlayerAbilities";
 import { InstructionsModal } from '../components/dashboard/InstructionsModal';
 import { getActiveEvent } from "../services/EventService";
+import { Tasks } from '../components/dashboard/Tasks';
 import Footer from "../components/layout/footer";
 
 
@@ -198,6 +199,9 @@ function DashboardPage() {
                             username={userData.username}
                             onHealthUpdate={handleHealthUpdate}
                         />
+
+                        <Tasks />
+
                         <QuickActions
                             stats={playerStats}
                             onShowInstructions={() => setShowInstructionsModal(true)}
