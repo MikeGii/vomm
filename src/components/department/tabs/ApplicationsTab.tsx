@@ -11,6 +11,7 @@ import {
     isGroupLeader
 } from '../../../utils/playerStatus';
 import { useToast } from '../../../contexts/ToastContext';
+import { useAuth } from '../../../contexts/AuthContext';
 import '../../../styles/components/department/tabs/ApplicationsTab.css';
 
 interface ApplicationVote {
@@ -60,6 +61,7 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
     const [error, setError] = useState<string | null>(null);
 
     const { showToast } = useToast();
+    const { currentUser } = useAuth();
 
     // Safe date processing function
     const safeToDate = (firebaseDate: any): Date => {
@@ -257,12 +259,19 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
 
             const existingVotes = Array.isArray(currentApp.votes) ? currentApp.votes : [];
 
+            // Check if user already voted
             const userAlreadyVoted = existingVotes.some((v: any) =>
                 v && v.voterId === playerStats.username
             );
 
             if (userAlreadyVoted) {
                 showToast('Sa oled juba hääletanud', 'warning');
+                return;
+            }
+
+            // Prevent self-voting
+            if (currentApp.applicantUserId === currentUser?.uid) {
+                showToast('Sa ei saa enda avaldusele hääletada', 'warning');
                 return;
             }
 
@@ -377,17 +386,6 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
         }
     };
 
-    const getAttributeDisplayName = (attrName: string): string => {
-        const attrNames: Record<string, string> = {
-            'strength': 'Jõud',
-            'agility': 'Kiirus',
-            'dexterity': 'Osavus',
-            'intelligence': 'Intelligentsus',
-            'endurance': 'Vastupidavus'
-        };
-        return attrNames[attrName] || attrName;
-    };
-
     if (error) {
         return (
             <div className="applications-tab">
@@ -477,6 +475,7 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
                         const rejectVotes = votes.filter(vote => vote?.vote === 'reject').length;
                         const timeRemaining = formatTimeRemaining(application.expiresAt);
                         const isExpired = application.expiresAt && new Date() > application.expiresAt;
+                        const isOwnApplication = application.applicantUserId === currentUser?.uid;
 
                         return (
                             <div key={application.id} className="application-card">
@@ -511,14 +510,14 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
                                             <button
                                                 className={`btn-vote btn-vote-approve ${userVote?.vote === 'approve' ? 'voted' : ''}`}
                                                 onClick={() => handleVote(application.id, 'approve')}
-                                                disabled={processing === application.id || !!userVote || isExpired}
+                                                disabled={processing === application.id || !!userVote || isExpired || isOwnApplication}
                                             >
                                                 {userVote?.vote === 'approve' ? 'Toetad' : 'Toetan'}
                                             </button>
                                             <button
                                                 className={`btn-vote btn-vote-reject ${userVote?.vote === 'reject' ? 'voted' : ''}`}
                                                 onClick={() => handleVote(application.id, 'reject')}
-                                                disabled={processing === application.id || !!userVote || isExpired}
+                                                disabled={processing === application.id || !!userVote || isExpired || isOwnApplication}
                                             >
                                                 {userVote?.vote === 'reject' ? 'Ei toeta' : 'Ei toeta'}
                                             </button>
@@ -527,6 +526,11 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
                                         {userVote && (
                                             <div className="user-vote-status">
                                                 Sinu hääl: {userVote.vote === 'approve' ? 'Toetad' : 'Ei toeta'}
+                                            </div>
+                                        )}
+                                        {isOwnApplication && !userVote && (
+                                            <div className="user-vote-status">
+                                                Sa ei saa enda avaldusele hääletada
                                             </div>
                                         )}
                                     </div>
@@ -556,40 +560,6 @@ export const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ playerStats })
                                             </div>
                                         </div>
                                     </div>
-
-                                    {application.applicantData?.attributes && (
-                                        <div className="details-section">
-                                            <h5>Atribuudid</h5>
-                                            <div className="attributes-grid">
-                                                {Object.entries(application.applicantData.attributes).map(([attr, value]) => (
-                                                    <div key={attr} className="attribute-item">
-                                                        <span className="attribute-label">
-                                                            {getAttributeDisplayName(attr)}:
-                                                        </span>
-                                                        <span className="attribute-value">{value || 0}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {application.applicantData?.completedCourses && application.applicantData.completedCourses.length > 0 && (
-                                        <div className="details-section">
-                                            <h5>Lõpetatud koolitused ({application.applicantData.completedCourses.length})</h5>
-                                            <div className="courses-list">
-                                                {application.applicantData.completedCourses.slice(0, 5).map((courseId, index) => (
-                                                    <span key={index} className="course-badge">
-                                                        {courseId}
-                                                    </span>
-                                                ))}
-                                                {application.applicantData.completedCourses.length > 5 && (
-                                                    <span className="course-badge more">
-                                                        +{application.applicantData.completedCourses.length - 5} veel
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
 
                                     {votes.length > 0 && (
                                         <div className="details-section">

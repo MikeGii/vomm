@@ -24,5 +24,17 @@ export const INVESTIGATION_ACTIVITIES: WorkActivity[] = [
         expGrowthRate: 0.10,
         maxHours: 8,
         allowedFor: ['uurija'],
+    },
+    {
+        id: 'procedural_unit_work_03',
+        name: 'Menetle kuriteo materjale',
+        description: 'Uurijana tegeled kuriteomaterjalidega, mis jäävad lahendada jaoskonnale ja ei liigu prefektuuri tasandile teistele raskete kuritegudega' +
+            ' tegelevatele talitustele',
+        minLevel: 65,
+        requiredCourses: ['enhanced_law_studies_advanced', 'narcotic_psyhotropic_substances', 'evidence_place_course'],
+        baseExpPerHour: 1000,
+        expGrowthRate: 0.11,
+        maxHours: 8,
+        allowedFor: ['uurija'],
     }
 ];

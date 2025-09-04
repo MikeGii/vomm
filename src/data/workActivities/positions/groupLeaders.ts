@@ -98,7 +98,7 @@ export const GROUP_LEADER_ACTIVITIES: WorkActivity[] = [
         name: 'Grupijuhi kohustused jaoskonnas',
         description: 'Grupijuhina täidad töökohustusi jaoskonnas, viid läbi arenguvestluseid, osaled koosolekutel ja parendad grupi toimivust',
         minLevel: 65,
-        requiredCourses: ['police_group_leader_course', 'forensics_basics', 'narcotic_psyhotropic_substances' ],
+        requiredCourses: ['police_group_leader_course', 'anatomic_basic_course'],
         baseExpPerHour: 1450,
         expGrowthRate: 0.10,
         maxHours: 8,

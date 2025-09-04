@@ -24,5 +24,16 @@ export const CRIME_ACTIVITIES: WorkActivity[] = [
         expGrowthRate: 0.12,
         maxHours: 12,
         allowedFor: ['jälitaja'],
+    },
+    {
+        id: 'crime_unit_work_03',
+        name: 'Lahenda isikuvastaseid süütegusid',
+        description: 'Tegeled menetlustega, kus on toime pandud isikuvastased kuriteod nagu tapmised, raskete kehavigastuste tekitamine ja vägistamised.',
+        minLevel: 75,
+        requiredCourses: ['narcotic_psyhotropic_substances', 'anatomic_basic_course'],
+        baseExpPerHour: 1150,
+        expGrowthRate: 0.12,
+        maxHours: 12,
+        allowedFor: ['jälitaja'],
     }
 ];
