@@ -3,22 +3,318 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
+    background-color: #0a0a0a;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
 }
 
-.loading {
-    text-align: center;
-    color: #888;
-    font-size: 1.2rem;
-    padding: 3rem;
+/* Make page patterns much more visible */
+.page {
+    background: #0a0a0a;
+    position: relative;
+    min-height: 100vh;
+    overflow-x: hidden;
 }
+
+.page::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background:
+        /* Much stronger diagonal stripes */
+            repeating-linear-gradient(
+                    45deg,
+                    transparent 0px,
+                    transparent 60px,
+                    rgba(255, 255, 255, 0.07) 60px,
+                    rgba(255, 255, 255, 0.07) 61px,
+                    transparent 61px,
+                    transparent 120px
+            ),
+                /* Fewer vertical lines */
+            repeating-linear-gradient(
+                    90deg,
+                    transparent 0px,
+                    transparent 120px,
+                    rgba(255, 255, 255, 0.04) 120px,
+                    rgba(255, 255, 255, 0.04) 121px
+            );
+    pointer-events: none;
+    z-index: 0;
+    animation: patternMove 60s linear infinite;
+}
+
+@keyframes patternMove {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(0, 0); }
+}
+
+.page::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background:
+        /* Larger, fewer grid lines */
+            repeating-linear-gradient(
+                    0deg,
+                    transparent 0px,
+                    transparent 200px,
+                    rgba(255, 255, 255, 0.02) 200px,
+                    rgba(255, 255, 255, 0.02) 201px,
+                    transparent 201px,
+                    transparent 400px
+            ),
+            repeating-linear-gradient(
+                    90deg,
+                    transparent 0px,
+                    transparent 200px,
+                    rgba(255, 255, 255, 0.02) 200px,
+                    rgba(255, 255, 255, 0.02) 201px,
+                    transparent 201px,
+                    transparent 400px
+            ),
+                /* Fewer corner dots */
+            radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.015) 2px, transparent 2px),
+            radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.015) 2px, transparent 2px);
+    background-size: 400px 400px, 400px 400px, 80px 80px, 80px 80px;
+    pointer-events: none;
+    z-index: 0;
+    animation: backgroundFloat 45s ease-in-out infinite;
+}
+
+@keyframes backgroundFloat {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(0, 0); }
+}
+
+/* Remove the problematic body::before - replace with dashboard-container pattern */
+.dashboard-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+        /* Very subtle additional stripes */
+            repeating-linear-gradient(
+                    135deg,
+                    transparent 0px,
+                    transparent 150px,
+                    rgba(255, 255, 255, 0.01) 150px,
+                    rgba(255, 255, 255, 0.01) 151px,
+                    transparent 151px,
+                    transparent 300px
+            );
+    pointer-events: none;
+    z-index: 0;
+    animation: diagonalMove 80s linear infinite;
+}
+
+@keyframes diagonalMove {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(0, 0); }
+}
+
+/* Make sure components are above the patterns */
+.dashboard-container > * {
+    background: rgba(17, 17, 17, 0.88);
+    border: 1px solid #2a2a2a;
+    border-radius: 16px;
+    box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(8px);
+    overflow: hidden;
+    z-index: 1;
+}
+
+/* Loading State */
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50vh;
+    color: #666;
+    font-size: 1.2rem;
+    background: rgba(15, 15, 15, 0.9);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid #222;
+    z-index: 2;
+}
+
+/* Component hover effects */
+.dashboard-container > *:hover {
+    transform: translateY(-6px);
+    box-shadow:
+            0 16px 48px rgba(0, 0, 0, 0.5),
+            0 0 0 1px rgba(255, 255, 255, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    border-color: #333;
+    background: rgba(26, 26, 26, 0.9);
+}
+
+.dashboard-container > *:hover::before {
+    opacity: 1;
+}
+
+/* Specific component styling */
+.dashboard-container .player-stats-card {
+    background: rgba(15, 15, 15, 0.95);
+    border: 1px solid #2a2a2a;
+    position: relative;
+}
+
+.dashboard-container .tasks-container {
+    background: rgba(15, 15, 15, 0.95);
+    border-left: 3px solid rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-container .quick-actions {
+    background: rgba(16, 16, 16, 0.95);
+    border-left: 3px solid rgba(255, 255, 255, 0.08);
+}
+
+.dashboard-container .player-abilities {
+    background: rgba(14, 14, 14, 0.95);
+    border-left: 3px solid rgba(255, 255, 255, 0.06);
+}
+
+.dashboard-container .leaderboard {
+    background: rgba(15, 15, 15, 0.95);
+    border-left: 3px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Enhanced typography */
+.dashboard-container h1,
+.dashboard-container h2,
+.dashboard-container h3 {
+    color: #e0e0e0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    margin-bottom: 1rem;
+}
+
+.dashboard-container .section-title {
+    color: #f0f0f0;
+    border-bottom: 2px solid #2a2a2a;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.dashboard-container .section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.3), transparent);
+    animation: titleGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow {
+    0% { opacity: 0.3; width: 40px; }
+    100% { opacity: 0.6; width: 60px; }
+}
+
+/* Enhanced buttons */
+.dashboard-container button {
+    background: rgba(26, 26, 26, 0.9);
+    border: 1px solid #333;
+    color: #e0e0e0;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-container button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.6s ease;
+}
+
+.dashboard-container button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    border-color: #444;
+    background: rgba(34, 34, 34, 0.95);
+}
+
+.dashboard-container button:hover::before {
+    left: 100%;
+}
+
+/* Enhanced stat cards */
+.dashboard-container .stat-card,
+.dashboard-container .achievement-stat {
+    background: rgba(15, 15, 15, 0.8);
+    border: 1px solid #2a2a2a;
+    transition: all 0.3s ease;
+}
+
+.dashboard-container .stat-card:hover,
+.dashboard-container .achievement-stat:hover {
+    border-color: #3a3a3a;
+    background: rgba(26, 26, 26, 0.9);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Loading animations */
+@keyframes dashboardSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dashboard-container > * {
+    animation: dashboardSlideIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.dashboard-container > *:nth-child(1) { animation-delay: 0.1s; }
+.dashboard-container > *:nth-child(2) { animation-delay: 0.2s; }
+.dashboard-container > *:nth-child(3) { animation-delay: 0.3s; }
+.dashboard-container > *:nth-child(4) { animation-delay: 0.4s; }
+.dashboard-container > *:nth-child(5) { animation-delay: 0.5s; }
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
     .dashboard-container {
         padding: 1rem;
     }
+
+    .dashboard-container > * {
+        margin-bottom: 1.5rem;
+        border-radius: 12px;
+    }
 }
 
+/* Instructions button */
 .instructions-section {
     margin-bottom: 2rem;
     display: flex;
@@ -30,31 +326,19 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, #4a90e2, #357abd);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
+    background: rgba(26, 26, 26, 0.9);
+    color: #e0e0e0;
+    border: 1px solid #333;
+    border-radius: 10px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .instructions-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(74, 144, 226, 0.4);
-    background: linear-gradient(135deg, #5ba0f2, #4a90e2);
-}
-
-.instructions-button:active {
-    transform: translateY(0);
-}
-
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-    .instructions-button {
-        padding: 0.6rem 1.2rem;
-        font-size: 0.9rem;
-    }
+    background: rgba(34, 34, 34, 0.95);
+    border-color: #444;
 }
