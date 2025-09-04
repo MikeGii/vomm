@@ -107,13 +107,17 @@ export const POLITSEI_COURSES: Course[] = [
     },
     {
         id: 'medical_course_police_advanced',
-        name: 'Põhjalik esmaabi ja taktikalise meditsiini koolitus',
-        description: 'Koolitus efektiivse esmaabi andmiseks ja tegutsemine lahingolukorras meedikuna',
+        name: 'Põhjalik esmaabi ja taktikalise meditsiini koolitus 1. päev',
+        description: 'Koolitus efektiivse esmaabi andmiseks ja tegutsemine lahingolukorras meedikuna 1. päev',
         duration: 18000,
         requirements: {
             level: 70,
             completedCourses: ['medical_course_police'],
-            totalWorkedHours: 120
+            totalWorkedHours: 120,
+            attributes: {
+                intelligence: 70,
+                agility: 50,
+            }
         },
         rewards: {
             experience: 9500,
@@ -136,6 +140,41 @@ export const POLITSEI_COURSES: Course[] = [
                 experience: 1500,
                 money: 500,
                 reputation: 200,
+            }
+        }
+    },
+    {
+        id: 'medical_course_police_advanced_02',
+        name: 'Põhjalik esmaabi ja taktikalise meditsiini koolitus 2. päev',
+        description: 'Koolitus efektiivse esmaabi andmiseks ja tegutsemine lahingolukorras meedikuna',
+        duration: 21600,
+        requirements: {
+            level: 75,
+            completedCourses: ['medical_course_police_advanced'],
+            totalWorkedHours: 150,
+            attributes: {
+                intelligence: 90,
+                agility: 60,
+            }
+        },
+        rewards: {
+            experience: 12500,
+            reputation: 600,
+            money: 5500,
+        },
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Žguti paigaldamisel jäsemele tuleb:',
+            answers: [
+                'Pingutada kuni arteriaalse pulsi kadumiseni, lisada 1-2 täiendavat pööret',
+                'Pingutada kuni verejooksu peatumiseni ja märkida kellaaeg',
+                'Paigaldada alati kahekordne žgutt maksimaalse efektiivsuse tagamiseks',
+            ],
+            correctAnswerIndex: 0,
+            rewards: {
+                experience: 2500,
+                money: 800,
+                reputation: 300,
             }
         }
     },
@@ -656,6 +695,40 @@ export const POLITSEI_COURSES: Course[] = [
                 experience: 1500,
                 money: 800,
                 reputation: 125,
+            }
+        }
+    },
+    {
+        id: 'anatomic_basic_course',
+        name: 'Anatoomia baaskursus',
+        description: 'Kursus, kus õpid tundma inimese anatoomiat, mis käsitleb ka endas kehavigastusi ja nende tekke põhjuseid.',
+        duration: 21600,
+        requirements: {
+            level: 70,
+            completedCourses: ['forensics_basics'],
+            totalWorkedHours: 150,
+            attributes: {
+                intelligence: 140,
+            }
+        },
+        rewards: {
+            experience: 12500,
+            reputation: 800,
+            money: 7000,
+        },
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Kuidas tekivad surnulaigud (livor mortis) kehal pärast surma?',
+            answers: [
+                'Veri settib gravitatsiooni mõjul allapoole surutud kehaosadesse 6-12 tunni jooksul',
+                'Verevalumid tekivad kohe pärast surma üle kogu keha',
+                'Veri koondub ainult südame ja kopsu piirkonda',
+            ],
+            correctAnswerIndex: 0,
+            rewards: {
+                experience: 2500,
+                money: 800,
+                reputation: 225,
             }
         }
     },

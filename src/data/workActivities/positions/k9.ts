@@ -5,8 +5,8 @@ import { WorkActivity } from '../types';
 export const K9_ACTIVITIES: WorkActivity[] = [
     {
         id: 'K9_work_01',
-        name: 'Abista patrulle ohtlike isikute tabamisel',
-        description: 'K9 üksusena oled valmis reageerima ja abistama patrullpolitseinike ohtlike isikute kinnipidamisel',
+        name: 'Teosta isikute otsinguid välitingimustes',
+        description: 'K9 üksusena oled valmis reageerima ja abistama patrullpolitseinike eksinud / kadunud isikute otsingutel',
         minLevel: 45,
         requiredCourses: ['dog_handler_course'],
         baseExpPerHour: 700,
@@ -22,6 +22,17 @@ export const K9_ACTIVITIES: WorkActivity[] = [
         requiredCourses: ['dog_handler_course', 'emergency_police_course_houses'],
         baseExpPerHour: 950,
         expGrowthRate: 0.12,
+        maxHours: 12,
+        allowedFor: ['koerajuht'],
+    },
+    {
+        id: 'K9_work_03',
+        name: 'Abista patrulle ohtlike isikute tabamisel',
+        description: 'K9 üksusena oled valmis reageerima ja abistama patrullpolitseinike ohtlike isikute kinnipidamisel',
+        minLevel: 65,
+        requiredCourses: ['dog_specialist_course', 'emergency_police_course_houses'],
+        baseExpPerHour: 1150,
+        expGrowthRate: 0.11,
         maxHours: 12,
         allowedFor: ['koerajuht'],
     }
