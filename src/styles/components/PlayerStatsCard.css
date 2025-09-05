@@ -9,8 +9,8 @@
 }
 
 .player-stats-card.vip-player {
-    border: 1px solid #ffd700;
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+    /* Border and shadow handled by Dashboard.css */
+    position: relative;
 }
 
 /* Header Section */
@@ -426,48 +426,17 @@
     }
 }
 
-/* Simple VIP Enhancements */
-.player-stats-card.vip-player {
-    border: 1px solid #ffd700;
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
-    position: relative;
-}
-
-/* Subtle golden top border accent */
-.player-stats-card.vip-player::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #ffd700, transparent);
-    border-radius: 16px 16px 0 0;
-}
-
-/* VIP Level Circle Enhancement */
+/* VIP Enhancements - Internal elements only */
 .vip-player .level-circle {
-    border: 2px solid #ffd700;
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+    border-color: rgba(255, 215, 0, 0.6);
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.05), transparent);
 }
 
 .vip-player .level-number {
     color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
 }
 
-/* Enhanced VIP Badge */
-.vip-badge {
-    background: linear-gradient(135deg, #ffd700, #ffed4e);
-    border: 1px solid #ffd700;
-    color: #000;
-    padding: 0.25rem 0.75rem;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
-}
-
-/* Simple golden accent on section titles */
 .vip-player .section-title {
-    border-bottom: 2px solid #ffd700;
+    color: #ffd700;
 }

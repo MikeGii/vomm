@@ -188,7 +188,7 @@ function DashboardPage() {
             {/* RESTORED: Health Recovery Manager */}
             <HealthRecoveryManager />
             <AuthenticatedHeader />
-            <main className="dashboard-container">
+            <main className={`dashboard-container ${playerStats?.isVip ? 'vip-dashboard' : ''}`}>
 
                 <CacheNotification />
 

@@ -321,6 +321,7 @@ export interface PlayerProfileModalData {
     createdAt?: Date | Timestamp | FirestoreTimestamp;
     completedCourses?: string[];
     totalWorkedHours?: number;
+    isVip?: boolean;
 }
 
 export interface FirestoreTimestamp {

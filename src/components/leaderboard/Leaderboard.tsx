@@ -80,7 +80,11 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
         try {
             const completeProfile = await getPlayerProfileData(playerData.userId);
             if (completeProfile) {
-                setSelectedPlayer(completeProfile);
+                // Preserve the isVip status from the original playerData
+                setSelectedPlayer({
+                    ...completeProfile,
+                    isVip: playerData.isVip // Keep the original VIP status
+                });
                 setIsModalOpen(true);
             } else {
                 setSelectedPlayer(playerData);
@@ -174,68 +178,93 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
                         {totalPages > 1 && (
                             <div className="leaderboard-pagination">
-                                <button
-                                    className={`pagination-btn${currentUserIsVip ? ' vip-btn' : ''}`}
-                                    onClick={() => handlePageChange(1)}
-                                    disabled={currentPage === 1}
-                                >
-                                    ««
-                                </button>
-                                <button
-                                    className={`pagination-btn${currentUserIsVip ? ' vip-btn' : ''}`}
-                                    onClick={() => handlePageChange(currentPage - 1)}
-                                    disabled={currentPage === 1}
-                                >
-                                    ‹
-                                </button>
+                                {/* Previous button - only show if not on first page */}
+                                {currentPage > 1 && (
+                                    <button
+                                        className={`pagination-btn pagination-prev${currentUserIsVip ? ' vip-btn' : ''}`}
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                    >
+                                        ‹
+                                    </button>
+                                )}
 
+                                {/* Page numbers container */}
                                 <div className="pagination-numbers">
+                                    {/* First page if we're not near it */}
+                                    {currentPage > 2 && (
+                                        <>
+                                            <button
+                                                className={`pagination-number${currentUserIsVip ? ' vip-btn' : ''}`}
+                                                onClick={() => handlePageChange(1)}
+                                            >
+                                                1
+                                            </button>
+                                            {currentPage > 3 && (
+                                                <span className="pagination-ellipsis">...</span>
+                                            )}
+                                        </>
+                                    )}
+
+                                    {/* Current page and neighbors */}
                                     {Array.from({ length: totalPages }, (_, i) => i + 1)
                                         .filter(page => {
-                                            return page === 1 ||
-                                                page === totalPages ||
-                                                Math.abs(page - currentPage) <= 1;
+                                            const distance = Math.abs(page - currentPage);
+                                            // Always show current page, and neighbors on desktop
+                                            return distance <= 1;
                                         })
-                                        .map((page, index, array) => (
-                                            <React.Fragment key={page}>
-                                                {index > 0 && array[index - 1] !== page - 1 && (
-                                                    <span className="pagination-ellipsis">...</span>
-                                                )}
-                                                <button
-                                                    className={`pagination-number${currentPage === page ? ' active' : ''}${currentUserIsVip ? ' vip-btn' : ''}`}
-                                                    onClick={() => handlePageChange(page)}
-                                                >
-                                                    {page}
-                                                </button>
-                                            </React.Fragment>
+                                        .map(page => (
+                                            <button
+                                                key={page}
+                                                className={`pagination-number${currentPage === page ? ' active' : ''}${currentUserIsVip ? ' vip-btn' : ''}`}
+                                                onClick={() => handlePageChange(page)}
+                                            >
+                                                {page}
+                                            </button>
                                         ))
                                     }
+
+                                    {/* Last page if we're not near it */}
+                                    {currentPage < totalPages - 1 && (
+                                        <>
+                                            {currentPage < totalPages - 2 && (
+                                                <span className="pagination-ellipsis">...</span>
+                                            )}
+                                            <button
+                                                className={`pagination-number${currentUserIsVip ? ' vip-btn' : ''}`}
+                                                onClick={() => handlePageChange(totalPages)}
+                                            >
+                                                {totalPages}
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
 
-                                <button
-                                    className={`pagination-btn${currentUserIsVip ? ' vip-btn' : ''}`}
-                                    onClick={() => handlePageChange(currentPage + 1)}
-                                    disabled={currentPage === totalPages}
-                                >
-                                    ›
-                                </button>
-                                <button
-                                    className={`pagination-btn${currentUserIsVip ? ' vip-btn' : ''}`}
-                                    onClick={() => handlePageChange(totalPages)}
-                                    disabled={currentPage === totalPages}
-                                >
-                                    »»
-                                </button>
+                                {/* Next button - only show if not on last page */}
+                                {currentPage < totalPages && (
+                                    <button
+                                        className={`pagination-btn pagination-next${currentUserIsVip ? ' vip-btn' : ''}`}
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                    >
+                                        ›
+                                    </button>
+                                )}
                             </div>
                         )}
 
+                        {/* Info section - make it more compact on mobile */}
                         <div className="leaderboard-info">
-                            <span>
-                                Näitan {indexOfFirstEntry + 1}-{Math.min(indexOfLastEntry, allEntries.length)} kokku {allEntries.length} mängijast
+                        <span className="desktop-only">
+                            Näitan {indexOfFirstEntry + 1}-{Math.min(indexOfLastEntry, allEntries.length)} kokku {allEntries.length} mängijast
+                            {currentUserIsVip && hasVipPlayers && (
+                                <span className="vip-info-highlight"> • {vipCount} VIP</span>
+                            )}
+                         </span>
+                            <span className="mobile-only">
+                                {indexOfFirstEntry + 1}-{Math.min(indexOfLastEntry, allEntries.length)} / {allEntries.length}
                                 {currentUserIsVip && hasVipPlayers && (
-                                    <span className="vip-info-highlight"> • {vipCount} VIP kasutajat</span>
+                                    <span className="vip-info-highlight"> • {vipCount} VIP</span>
                                 )}
-                            </span>
+                        </span>
                         </div>
                     </>
                 )}

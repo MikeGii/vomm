@@ -60,7 +60,7 @@ export const startWork = async (
     }
 
     // Calculate expected rewards (both experience and money)
-    const expectedRewards = calculateWorkRewards(workActivity, hours, stats.rank);
+    const expectedRewards = calculateWorkRewards(workActivity, hours, stats.rank, stats);
 
     // Create work session
     const now = Timestamp.now();
@@ -176,7 +176,7 @@ export const completeWork = async (userId: string): Promise<{
             }
 
             // Calculate actual rewards based on current player rank
-            const actualRewards = calculateWorkRewards(workActivity, stats.activeWork.totalHours, stats.rank);
+            const actualRewards = calculateWorkRewards(workActivity, stats.activeWork.totalHours, stats.rank, stats);
 
             // Calculate new stats
             const newExp = stats.experience + actualRewards.experience;
@@ -228,7 +228,7 @@ export const completeWork = async (userId: string): Promise<{
                 rewards: actualRewards,
                 newLevel,
                 wasAlreadyCompleted: false,
-                workData: stats.activeWork // Store for crime update outside transaction
+                workData: stats.activeWork
             };
         });
 

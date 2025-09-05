@@ -26,29 +26,7 @@
    VIP CONTAINER ENHANCEMENTS - MATCHING PLAYERSTATSCARD
    ================================ */
 .quick-actions-container.vip-quick-actions {
-    border: 1px solid #ffd700;
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
-    position: relative;
-}
-
-/* Subtle golden top border accent - SAME AS PLAYERSTATSCARD */
-.quick-actions-container.vip-quick-actions::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #ffd700, transparent);
-    border-radius: 16px 16px 0 0;
-}
-
-.quick-actions-container.vip-quick-actions:hover {
-    box-shadow:
-            0 0 20px rgba(255, 215, 0, 0.2),
-            0 16px 48px rgba(0, 0, 0, 0.5),
-            0 0 0 1px rgba(255, 255, 255, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    /* Border and shadow handled by Dashboard.css */
 }
 
 /* ================================
@@ -74,7 +52,7 @@
 
 /* Simple golden accent on section titles - SAME AS PLAYERSTATSCARD */
 .vip-quick-actions .section-title {
-    border-bottom: 2px solid #ffd700;
+    color: #ffd700;
 }
 
 .vip-indicator {

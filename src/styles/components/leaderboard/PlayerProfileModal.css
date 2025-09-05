@@ -1,254 +1,362 @@
-/* src/styles/components/modals/PlayerProfileModal.css */
-.player-profile-modal {
-    max-width: 450px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
+/* ================================
+   MODAL OVERLAY
+   ================================ */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
     display: flex;
-    flex-direction: column;
-}
-
-.player-profile-content {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.profile-field {
-    display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    padding: 0.75rem;
-    background-color: #2a2a2a;
-    border: 1px solid #444;
-    border-radius: 6px;
-    flex-shrink: 0;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease;
+    backdrop-filter: blur(4px);
 }
 
-.profile-field label {
-    color: #888;
-    font-weight: 600;
-    font-size: 0.95rem;
+/* ================================
+   PLAYER PROFILE MODAL - BASE
+   ================================ */
+.player-profile-modal {
+    background: rgba(17, 17, 17, 0.95);
+    border: 1px solid #2a2a2a;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 2rem;
+    position: relative;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    animation: slideUp 0.3s ease;
 }
 
-.profile-field span {
+/* VIP modal - subtle golden enhancement */
+.player-profile-modal.vip-profile {
+    border: 1px solid rgba(255, 215, 0, 0.25);
+    box-shadow:
+            0 0 15px rgba(255, 215, 0, 0.08),
+            0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* ================================
+   CLOSE BUTTON
+   ================================ */
+.modal-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(26, 26, 26, 0.9);
+    border: 1px solid #333;
+    color: #666;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.3rem;
+    line-height: 1;
+    z-index: 10;
+}
+
+.modal-close-btn:hover {
+    background: rgba(231, 76, 60, 0.2);
+    border-color: #e74c3c;
+    color: #e74c3c;
+    transform: rotate(90deg);
+}
+
+/* ================================
+   HEADER SECTION
+   ================================ */
+.profile-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.profile-username {
+    font-size: 1.6rem;
     color: #f0f0f0;
-    font-weight: 500;
+    margin: 0 0 0.5rem 0;
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
-.profile-field .status-badge {
-    padding: 0.25rem 0.75rem;
-    background-color: rgba(74, 144, 226, 0.2);
-    border: 1px solid #4a90e2;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    color: #4a90e2;
+.vip-profile .profile-username {
+    color: rgba(255, 215, 0, 0.9);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.15);
 }
 
-.profile-field .badge-number {
-    padding: 0.25rem 0.75rem;
-    background-color: rgba(255, 215, 0, 0.2);
-    border: 1px solid #ffd700;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    color: #ffd700;
+.profile-badges {
+    display: flex;
+    justify-content: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.profile-badge {
+    background: rgba(42, 42, 42, 0.6);
+    border: 1px solid #333;
+    color: #999;
+    padding: 0.2rem 0.6rem;
+    border-radius: 14px;
+    font-size: 0.8rem;
     font-weight: 600;
+    letter-spacing: 0.3px;
 }
 
-.profile-field .money-amount {
-    color: #4CAF50;
-    font-weight: 600;
+.profile-vip-badge {
+    background: rgba(255, 215, 0, 0.15);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    color: rgba(255, 215, 0, 0.9);
 }
 
-/* Attributes Section */
-.attributes-section {
-    background: #1e1e1e;
-    border-radius: 8px;
+/* ================================
+   STATS GRID
+   ================================ */
+.profile-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.profile-stat-item {
+    background: rgba(26, 26, 26, 0.6);
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
     padding: 1rem;
-    margin-top: 0.5rem;
-    flex-shrink: 0;
+    text-align: center;
+    transition: all 0.3s ease;
 }
 
-.attributes-section .section-title {
-    color: #4a90e2;
-    font-size: 0.875rem;
-    font-weight: 600;
-    margin-bottom: 0.75rem;
+.profile-stat-item:hover {
+    background: rgba(26, 26, 26, 0.8);
+    border-color: #333;
+}
+
+.profile-stat-label {
+    display: block;
+    font-size: 0.7rem;
+    color: #666;
     text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
 }
 
-.attributes-compact-grid {
+.profile-stat-value {
+    display: block;
+    font-size: 1.3rem;
+    color: #e0e0e0;
+    font-weight: 700;
+}
+
+.vip-profile .profile-stat-item:hover {
+    border-color: rgba(255, 215, 0, 0.2);
+}
+
+.vip-profile .profile-stat-value {
+    color: rgba(255, 215, 0, 0.85);
+}
+
+/* ================================
+   ESTATE SECTION
+   ================================ */
+.profile-estate-section {
+    background: rgba(26, 26, 26, 0.4);
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.estate-name {
+    color: #4a90e2;
+    font-weight: 600;
+}
+
+.no-estate {
+    color: #666;
+    font-style: italic;
+}
+
+/* ================================
+   ATTRIBUTES
+   ================================ */
+.profile-attributes {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #2a2a2a;
+}
+
+.profile-section-title {
+    color: #888;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.vip-profile .profile-section-title {
+    color: rgba(255, 215, 0, 0.7);
+}
+
+.profile-attributes-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 0.5rem;
 }
 
-.attribute-compact {
-    background: #2a2a2a;
-    border: 1px solid #333;
-    border-radius: 6px;
-    padding: 0.5rem;
+.profile-attribute {
+    background: rgba(26, 26, 26, 0.5);
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 0.6rem;
     text-align: center;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
-.attribute-compact:hover {
-    background: #333;
+.profile-attribute:hover {
+    background: rgba(26, 26, 26, 0.7);
+    border-color: #333;
     transform: translateY(-1px);
 }
 
-.attribute-emoji {
+.profile-attribute-icon {
     display: block;
-    font-size: 1.1rem;
-    margin-bottom: 0.25rem;
+    font-size: 1.3rem;
+    margin-bottom: 0.2rem;
+    filter: saturate(0.8);
 }
 
-.attribute-name {
+.profile-attribute-level {
     display: block;
-    color: #888;
-    font-size: 0.65rem;
-    font-weight: 500;
-    margin-bottom: 0.25rem;
-}
-
-.attribute-value {
-    display: block;
-    color: #f0f0f0;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    color: #e0e0e0;
     font-weight: 700;
 }
 
-/* SINGLE scrollbar styling - only for the main modal */
+/* ================================
+   FOOTER
+   ================================ */
+.profile-footer {
+    text-align: center;
+    padding-top: 1rem;
+    margin-top: 1.5rem;
+    border-top: 1px solid #2a2a2a;
+    color: #555;
+    font-size: 0.8rem;
+}
+
+/* ================================
+   ANIMATIONS
+   ================================ */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ================================
+   SCROLLBAR
+   ================================ */
 .player-profile-modal::-webkit-scrollbar {
     width: 6px;
 }
 
 .player-profile-modal::-webkit-scrollbar-track {
-    background: #1a1a1a;
+    background: rgba(26, 26, 26, 0.5);
     border-radius: 3px;
 }
 
 .player-profile-modal::-webkit-scrollbar-thumb {
-    background: #555;
+    background: #333;
     border-radius: 3px;
 }
 
 .player-profile-modal::-webkit-scrollbar-thumb:hover {
-    background: #777;
+    background: #444;
 }
 
-/* Mobile responsiveness */
+.vip-profile::-webkit-scrollbar-thumb {
+    background: rgba(255, 215, 0, 0.2);
+}
+
+/* ================================
+   MOBILE RESPONSIVE
+   ================================ */
 @media (max-width: 768px) {
     .player-profile-modal {
-        max-width: 95%;
-        max-height: 80vh;
+        width: 95%;
+        padding: 1.5rem;
+        max-height: 90vh;
     }
 
-    .profile-field {
+    .profile-stats-grid {
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .player-profile-modal {
+        padding: 1.25rem;
+        width: 98%;
+    }
+
+    .modal-close-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 1.1rem;
+    }
+
+    .profile-username {
+        font-size: 1.4rem;
+    }
+
+    .profile-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .profile-attributes-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+    }
+
+    .profile-attribute {
         padding: 0.5rem;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.25rem;
     }
 
-    .profile-field label {
+    .profile-attribute-icon {
+        font-size: 1.1rem;
+    }
+
+    .profile-attribute-level {
         font-size: 0.85rem;
-    }
-
-    .profile-field span {
-        font-size: 0.9rem;
-        align-self: flex-end;
-    }
-
-    .attributes-compact-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    .attribute-compact {
-        padding: 0.375rem;
-    }
-
-    .attribute-emoji {
-        font-size: 1rem;
-    }
-
-    .attribute-name {
-        font-size: 0.6rem;
-    }
-
-    .attribute-value {
-        font-size: 0.85rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .player-profile-modal {
-        max-height: 80vh; /* Consistent 80% limit */
-    }
-
-    .attributes-compact-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-.courses-count {
-    color: #4a90e2;
-    font-weight: 600;
-}
-
-.work-hours {
-    color: #ff9800;
-    font-weight: 600;
-}
-
-.estate-name {
-    font-size: inherit;
-    font-weight: inherit;
-    color: inherit;
-    margin: 0;
-    padding: 0;
-}
-
-.estate-loading,
-.no-estate-text {
-    font-size: inherit;
-    font-weight: 500;
-    font-style: italic;
-}
-
-.no-estate-text {
-    color: #888;
-}
-
-.estate-loading {
-    color: #4a90e2;
-}
-
-.attributes-extended-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.5rem;
-}
-
-.attribute-compact.locked {
-    opacity: 0.6;
-    border-color: #666;
-}
-
-.attribute-compact.locked .attribute-name,
-.attribute-compact.locked .attribute-value {
-    color: #666;
-}
-
-@media (max-width: 768px) {
-    .attributes-extended-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (max-width: 480px) {
-    .attributes-extended-grid {
-        grid-template-columns: repeat(2, 1fr);
     }
 }

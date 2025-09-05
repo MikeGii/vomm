@@ -176,24 +176,38 @@
     position: relative;
 }
 
-.dashboard-container .tasks-container {
+/* VIP Dashboard Styling - Consistent for all components */
+.dashboard-container.vip-dashboard .player-stats-card,
+.dashboard-container.vip-dashboard .tasks-container,
+.dashboard-container.vip-dashboard .quick-actions-container,
+.dashboard-container.vip-dashboard .abilities-container,
+.dashboard-container.vip-dashboard .leaderboard-container {
+    border: 1px solid rgba(255, 215, 0, 0.4) !important;
+    box-shadow:
+            0 0 20px rgba(255, 215, 0, 0.15),
+            0 4px 16px rgba(0, 0, 0, 0.2);
+    position: relative;
     background: rgba(15, 15, 15, 0.95);
-    border-left: 3px solid rgba(255, 255, 255, 0.1);
 }
 
-.dashboard-container .quick-actions {
-    background: rgba(16, 16, 16, 0.95);
-    border-left: 3px solid rgba(255, 255, 255, 0.08);
-}
-
-.dashboard-container .player-abilities {
-    background: rgba(14, 14, 14, 0.95);
-    border-left: 3px solid rgba(255, 255, 255, 0.06);
-}
-
-.dashboard-container .leaderboard {
-    background: rgba(15, 15, 15, 0.95);
-    border-left: 3px solid rgba(255, 255, 255, 0.05);
+/* Subtle golden accent line at top */
+.dashboard-container.vip-dashboard .player-stats-card::after,
+.dashboard-container.vip-dashboard .tasks-container::after,
+.dashboard-container.vip-dashboard .quick-actions-container::after,
+.dashboard-container.vip-dashboard .abilities-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 20%;
+    right: 20%;
+    height: 1px;
+    background: linear-gradient(90deg,
+    transparent,
+    rgba(255, 215, 0, 0.8),
+    rgba(255, 215, 0, 0.8),
+    transparent
+    );
+    pointer-events: none;
 }
 
 /* Enhanced typography */
@@ -341,4 +355,12 @@
     transform: translateY(-2px);
     background: rgba(34, 34, 34, 0.95);
     border-color: #444;
+}
+
+/* Subtle animation on hover for VIP components */
+.dashboard-container.vip-dashboard > *:hover {
+    border-color: rgba(255, 215, 0, 0.6) !important;
+    box-shadow:
+            0 0 30px rgba(255, 215, 0, 0.2),
+            0 8px 24px rgba(0, 0, 0, 0.3);
 }

@@ -1,283 +1,252 @@
-/* src/styles/components/leaderboard/Leaderboard.css */
-
 /* ================================
    BASE CONTAINER STYLES (STANDARD)
    ================================ */
 .leaderboard-container {
-    margin-top: 2rem;
-    background-color: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 1.5rem;
-    animation: fadeIn 0.5s ease;
-}
-
-.leaderboard-title {
-    color: #f0f0f0;
-    font-size: 1.3rem;
-    margin-bottom: 1.5rem;
-    font-weight: 600;
-}
-
-.leaderboard-loading,
-.leaderboard-error {
-    text-align: center;
+    background: rgba(17, 17, 17, 0.88);
+    border: 1px solid #2a2a2a;
+    border-radius: 16px;
     padding: 2rem;
-    color: #888;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.leaderboard-error button {
-    margin-top: 1rem;
-    padding: 0.5rem 1rem;
-    background-color: #4a90e2;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.leaderboard-error button:hover {
-    background-color: #357abd;
+.leaderboard-container:hover {
+    transform: translateY(-6px);
+    box-shadow:
+            0 16px 48px rgba(0, 0, 0, 0.5),
+            0 0 0 1px rgba(255, 255, 255, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 /* ================================
-   VIP ENHANCED CONTAINER (ONLY FOR VIP USERS)
+   VIP CONTAINER (Border handled by Dashboard.css)
    ================================ */
 .leaderboard-container.current-user-vip {
-    background: linear-gradient(135deg, #1a1a1a, #2a1a2a);
-    border: 1px solid rgba(156, 39, 176, 0.3);
-    position: relative;
-}
-
-.leaderboard-container.current-user-vip::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(156, 39, 176, 0.05), transparent);
-    pointer-events: none;
-    z-index: 0;
-}
-
-.leaderboard-container.current-user-vip .leaderboard-title {
-    background: linear-gradient(135deg, #9c27b0, #e91e63);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: 0 0 20px rgba(156, 39, 176, 0.3);
-    position: relative;
-    z-index: 1;
+    /* Border and shadow handled by Dashboard.css */
 }
 
 /* ================================
-   HEADER STYLES
+   HEADER SECTION
    ================================ */
 .leaderboard-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #333;
 }
 
-.leaderboard-title-section {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+.leaderboard-title,
+.section-title {
+    color: #f0f0f0;
+    font-size: 1.1rem;
+    margin: 0;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.leaderboard-actions {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
+/* Golden title for VIP users */
+.current-user-vip .leaderboard-title,
+.current-user-vip .section-title {
+    color: #ffd700;
 }
 
 /* ================================
-   STANDARD BUTTON STYLES
+   ACTION BUTTONS
    ================================ */
 .go-to-position-btn {
-    background-color: #4a90e2;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
+    background: rgba(42, 42, 42, 0.9);
+    border: 1px solid #333;
+    color: #e0e0e0;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
     cursor: pointer;
-    font-size: 0.9rem;
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .go-to-position-btn:hover {
-    background-color: #357abd;
+    background: rgba(50, 50, 50, 0.9);
+    border-color: #4a90e2;
+    transform: translateY(-2px);
+}
+
+/* VIP button enhancement */
+.go-to-position-btn.vip-button {
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.go-to-position-btn.vip-button:hover {
+    border-color: rgba(255, 215, 0, 0.5);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
 }
 
 .refresh-btn {
-    background-color: #2a2a2a;
-    color: #f0f0f0;
-    border: 1px solid #444;
+    background: rgba(42, 42, 42, 0.9);
+    border: 1px solid #333;
+    color: #e0e0e0;
     padding: 0.5rem;
-    border-radius: 4px;
+    border-radius: 10px;
     cursor: pointer;
     font-size: 1.2rem;
     line-height: 1;
     transition: all 0.3s ease;
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .refresh-btn:hover {
-    background-color: #333;
-    border-color: #4a90e2;
+    border-color: #444;
+    background: rgba(50, 50, 50, 0.9);
     transform: rotate(180deg);
 }
 
-.refresh-btn:active {
-    transform: rotate(180deg) scale(0.95);
-}
-
-/* ================================
-   VIP BUTTON ENHANCEMENTS (ONLY FOR VIP USERS)
-   ================================ */
-.go-to-position-btn.vip-button {
-    background: linear-gradient(135deg, #9c27b0, #e91e63);
-    box-shadow: 0 2px 8px rgba(156, 39, 176, 0.4);
-    position: relative;
-    overflow: hidden;
-}
-
-.go-to-position-btn.vip-button:hover {
-    background: linear-gradient(135deg, #b93cc6, #f73378);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(156, 39, 176, 0.6);
-}
-
 .refresh-btn.vip-button {
-    background: linear-gradient(135deg, #9c27b0, #e91e63);
-    border: 1px solid rgba(156, 39, 176, 0.5);
-    color: white;
+    border: 1px solid rgba(255, 215, 0, 0.3);
 }
 
 .refresh-btn.vip-button:hover {
-    background: linear-gradient(135deg, #b93cc6, #f73378);
-    transform: rotate(180deg) translateY(-2px);
-    box-shadow: 0 4px 15px rgba(156, 39, 176, 0.6);
-}
-
-.button-sparkle {
-    margin-left: 0.5rem;
-    animation: sparkle-bounce 2s ease-in-out infinite;
-}
-
-@keyframes sparkle-bounce {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.2); }
+    border-color: rgba(255, 215, 0, 0.5);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
 }
 
 /* ================================
-   PAGINATION STYLES
+   PAGINATION - WITH VIP STYLING
    ================================ */
 .leaderboard-pagination {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 0.5rem;
-    margin-top: 1.5rem;
-    padding: 1rem;
-}
-
-.pagination-btn {
-    background-color: #2a2a2a;
-    color: #f0f0f0;
-    border: 1px solid #444;
-    padding: 0.5rem 0.75rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    min-width: 36px;
-}
-
-.pagination-btn:hover:not(:disabled) {
-    background-color: #333;
-    border-color: #4a90e2;
-}
-
-.pagination-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #333;
+    min-height: 50px;
 }
 
 .pagination-numbers {
     display: flex;
-    gap: 0.25rem;
     align-items: center;
+    gap: 0.5rem;
 }
 
+.pagination-btn,
 .pagination-number {
-    background-color: #2a2a2a;
-    color: #f0f0f0;
-    border: 1px solid #444;
+    background: rgba(42, 42, 42, 0.6);
+    border: 1px solid #333;
+    color: #e0e0e0;
     padding: 0.5rem 0.75rem;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 0.9rem;
     transition: all 0.3s ease;
-    min-width: 36px;
-    text-align: center;
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
+.pagination-btn:hover:not(:disabled),
 .pagination-number:hover:not(.active) {
-    background-color: #333;
-    border-color: #4a90e2;
-}
-
-.pagination-number.active {
-    background-color: #4a90e2;
-    border-color: #4a90e2;
-    color: white;
-    font-weight: 600;
-}
-
-.pagination-ellipsis {
-    color: #666;
-    padding: 0 0.5rem;
-}
-
-/* ================================
-   VIP PAGINATION ENHANCEMENTS (ONLY FOR VIP USERS)
-   ================================ */
-.pagination-btn.vip-btn {
-    background: linear-gradient(135deg, rgba(156, 39, 176, 0.3), rgba(233, 30, 99, 0.2));
-    border: 1px solid rgba(156, 39, 176, 0.5);
-    color: #e1bee7;
-}
-
-.pagination-btn.vip-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, rgba(156, 39, 176, 0.5), rgba(233, 30, 99, 0.3));
-    border-color: #9c27b0;
+    background: rgba(50, 50, 50, 0.7);
+    border-color: #444;
     transform: translateY(-1px);
 }
 
-.pagination-number.vip-btn {
-    background: linear-gradient(135deg, rgba(156, 39, 176, 0.3), rgba(233, 30, 99, 0.2));
-    border: 1px solid rgba(156, 39, 176, 0.5);
-    color: #e1bee7;
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
+.pagination-number.active {
+    background: #4a90e2;
+    border-color: #4a90e2;
+    color: white;
+    font-weight: 700;
+}
+
+/* VIP PAGINATION STYLING */
+.pagination-btn.vip-btn,
+.pagination-number.vip-btn {
+    border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.pagination-btn.vip-btn:hover:not(:disabled),
 .pagination-number.vip-btn:hover:not(.active) {
-    background: linear-gradient(135deg, rgba(156, 39, 176, 0.5), rgba(233, 30, 99, 0.3));
-    border-color: #9c27b0;
+    border-color: rgba(255, 215, 0, 0.4);
+    background: rgba(50, 50, 50, 0.8);
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.15);
 }
 
 .pagination-number.vip-btn.active {
-    background: linear-gradient(135deg, #9c27b0, #e91e63);
-    border-color: #9c27b0;
-    color: white;
-    box-shadow: 0 2px 8px rgba(156, 39, 176, 0.6);
+    background: rgba(255, 215, 0, 0.8);
+    border-color: #ffd700;
+    color: #000;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.pagination-ellipsis {
+    color: #888;
+    padding: 0 0.5rem;
+}
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 768px) {
+    .leaderboard-pagination {
+        gap: 0.3rem;
+        padding: 1rem 0.5rem;
+    }
+
+    .pagination-numbers {
+        gap: 0.3rem;
+    }
+
+    .pagination-btn,
+    .pagination-number {
+        padding: 0.5rem 0.6rem;
+        font-size: 0.85rem;
+        min-width: 36px;
+        height: 36px;
+    }
+
+    /* Hide neighbor pages on tablets */
+    .pagination-number:not(.active):not(:first-child):not(:last-child) {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .leaderboard-pagination {
+        gap: 0.2rem;
+        padding: 0.75rem 0.25rem;
+    }
+
+    .pagination-numbers {
+        gap: 0.2rem;
+    }
+
+    .pagination-btn,
+    .pagination-number {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.8rem;
+        min-width: 32px;
+        height: 32px;
+    }
+
+    /* On mobile, hide all non-active middle pages */
+    .pagination-numbers button:not(.active):not(:first-child):not(:last-child) {
+        display: none;
+    }
 }
 
 /* ================================
@@ -291,23 +260,28 @@
 }
 
 .vip-info-highlight {
-    color: #e1bee7;
+    color: rgba(255, 215, 0, 0.8);
     font-weight: 600;
-    text-shadow: 0 0 4px rgba(156, 39, 176, 0.5);
 }
 
-/* ================================
-   MOBILE RESPONSIVE STYLES
-   ================================ */
+/* Loading and Error states remain the same */
+.leaderboard-loading,
+.leaderboard-error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    color: #888;
+    font-size: 1.1rem;
+    background: rgba(42, 42, 42, 0.6);
+    border-radius: 10px;
+    border: 1px solid #333;
+}
+
+/* Mobile responsive styles remain mostly the same */
 @media (max-width: 768px) {
     .leaderboard-container {
-        margin-top: 1.5rem;
-        padding: 1rem;
-    }
-
-    .leaderboard-title {
-        font-size: 1.2rem;
-        margin-bottom: 1rem;
+        padding: 1.5rem;
     }
 
     .leaderboard-header {
@@ -315,20 +289,28 @@
         gap: 1rem;
         align-items: stretch;
     }
+}
 
-    .go-to-position-btn {
-        width: 100%;
+/* Mobile/Desktop visibility helpers */
+.mobile-only {
+    display: none;
+}
+
+.desktop-only {
+    display: inline;
+}
+
+@media (max-width: 480px) {
+    .mobile-hide {
+        display: none !important;
     }
 
-    .leaderboard-pagination {
-        flex-wrap: wrap;
-        padding: 0.5rem;
+    .mobile-only {
+        display: inline;
     }
 
-    .pagination-btn,
-    .pagination-number {
-        padding: 0.4rem 0.6rem;
-        font-size: 0.9rem;
-        min-width: 32px;
+    .desktop-only {
+        display: none;
     }
 }
+

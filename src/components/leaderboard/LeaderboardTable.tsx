@@ -49,7 +49,8 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             policePosition: entry.policePosition,
             attributes: entry.attributes,
             createdAt: undefined,
-            completedCourses: entry.completedCourses
+            completedCourses: entry.completedCourses,
+            isVip: entry.isVip
         };
         onPlayerClick(playerData);
     };
@@ -67,14 +68,14 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
 
     return (
         <div className="leaderboard-table-container">
-            <table className={`leaderboard-table${hasVipPlayers ? ' has-vip' : ''}`}>
+            <table className={`lb-table${hasVipPlayers ? ' has-vip' : ''}`}>
                 <thead>
                 <tr>
-                    <th className="rank-column">Koht</th>
-                    <th className="name-column">Nimi</th>
-                    <th className="status-column">Staatus</th>
-                    <th className="level-column">Tase</th>
-                    <th className="reputation-column mobile-hide">Maine</th>
+                    <th className="lb-rank-col">Koht</th>
+                    <th className="lb-name-col">Nimi</th>
+                    <th className="lb-status-col">Staatus</th>
+                    <th className="lb-level-col">Tase</th>
+                    <th className="lb-rep-col mobile-hide">Maine</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -89,42 +90,41 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                         <tr
                             key={entry.userId}
                             className={[
-                                entry.userId === currentUserId ? 'current-user' : '',
-                                isActuallyVip ? 'vip-player' : '',
-                                isActuallyVip && globalRank <= 3 ? 'top-vip' : ''
+                                'lb-row',
+                                entry.userId === currentUserId ? 'lb-current-user' : '',
+                                isActuallyVip ? 'lb-vip-row' : '',
+                                isActuallyVip && globalRank <= 3 ? 'lb-top-vip' : ''
                             ].filter(Boolean).join(' ')}
                         >
-                            <td className="rank-column">
-                                <span
-                                    className="rank-number"
-                                    style={medalStyle}
+                            <td className="lb-rank-col">
+                            <span
+                                className="lb-rank-number"
+                                style={medalStyle}
+                            >
+                                {globalRank}
+                            </span>
+                            </td>
+                            <td className="lb-name-col">
+                                <button
+                                    className="lb-player-name-btn"
+                                    onClick={() => handlePlayerClick(entry)}
                                 >
-                                    {globalRank}
+                                    {entry.username}
+                                </button>
+                                {/* FIXED: Only show for actual VIP players */}
+                                {isActuallyVip && (
+                                    <span className="lb-vip-badge" title="VIP kasutaja">
+                                    VIP
                                 </span>
+                                )}
                             </td>
-                            <td className="name-column">
-                                <div className="player-name-container">
-                                    <button
-                                        className="player-name-button"
-                                        onClick={() => handlePlayerClick(entry)}
-                                    >
-                                        {entry.username}
-                                    </button>
-                                    {/* FIXED: Only show for actual VIP players */}
-                                    {isActuallyVip && (
-                                        <span className="vip-badge" title="VIP kasutaja">
-                                            VIP
-                                        </span>
-                                    )}
-                                </div>
+                            <td className="lb-status-col">
+                            <span className="lb-status-badge">
+                                {getStatusText(entry)}
+                            </span>
                             </td>
-                            <td className="status-column">
-                                <span className="status-badge">
-                                    {getStatusText(entry)}
-                                </span>
-                            </td>
-                            <td className="level-column">{entry.level}</td>
-                            <td className="reputation-column mobile-hide">{entry.reputation}</td>
+                            <td className="lb-level-col">{entry.level}</td>
+                            <td className="lb-rep-col mobile-hide">{entry.reputation}</td>
                         </tr>
                     );
                 })}
