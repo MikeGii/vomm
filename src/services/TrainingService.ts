@@ -17,6 +17,7 @@ import { CRAFTING_INGREDIENTS } from '../data/shop/craftingIngredients';
 import { ALL_SHOP_ITEMS } from '../data/shop';
 import { InventoryItem } from '../types';
 import { getBaseIdFromInventoryId, createTimestampedId } from '../utils/inventoryUtils';
+import { updateProgress } from "./TaskService";
 
 // Calculate experience needed for next attribute level
 export const calculateExpForNextLevel = (currentLevel: number): number => {
@@ -562,7 +563,6 @@ export const checkAndResetHandicraftTrainingClicks = async (userId: string): Pro
 };
 
 // Main training function with material checking and crafting
-// Main training function with material checking and crafting
 export const performTraining = async (
     userId: string,
     activityId: string,
@@ -883,6 +883,14 @@ export const performTraining = async (
 
     // Save to database
     await updateDoc(statsRef, updates);
+
+    // Update task progress after successful training
+    try {
+        await updateProgress(userId, 'training', totalAttributeLevelsGained);
+        console.log(`Task progress updated: ${totalAttributeLevelsGained} attribute levels gained`);
+    } catch (error) {
+        console.error('Task progress update failed, but training completed successfully:', error);
+    }
 
     const finalStats = {
         ...stats,

@@ -19,8 +19,9 @@ import { checkCourseCompletion } from '../services/CourseService';
 import { PlayerAbilities } from "../components/dashboard/PlayerAbilities";
 import { InstructionsModal } from '../components/dashboard/InstructionsModal';
 import { getActiveEvent } from "../services/EventService";
+import { Tasks } from '../components/dashboard/Tasks';
 import Footer from "../components/layout/footer";
-
+import { HealthModal } from '../components/health/HealthModal';
 
 import '../styles/pages/Dashboard.css';
 import {getCourseById} from "../data/courses";
@@ -35,6 +36,7 @@ function DashboardPage() {
     const [showDepartmentSelection, setShowDepartmentSelection] = useState(false);
     const [showInstructionsModal, setShowInstructionsModal] = useState(false);
     const [initializationDone, setInitializationDone] = useState(false);
+    const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
 
     // ONE-TIME INITIALIZATION (runs once when component mounts)
     useEffect(() => {
@@ -186,18 +188,21 @@ function DashboardPage() {
             {/* RESTORED: Health Recovery Manager */}
             <HealthRecoveryManager />
             <AuthenticatedHeader />
-            <main className="dashboard-container">
+            <main className={`dashboard-container ${playerStats?.isVip ? 'vip-dashboard' : ''}`}>
 
                 <CacheNotification />
 
                 {playerStats && userData && (
                     <>
-                        {/* RESTORED: All original components */}
                         <PlayerStatsCard
                             stats={playerStats}
                             username={userData.username}
                             onHealthUpdate={handleHealthUpdate}
+                            onHealthModalOpen={() => setIsHealthModalOpen(true)}
                         />
+
+                        <Tasks/>
+
                         <QuickActions
                             stats={playerStats}
                             onShowInstructions={() => setShowInstructionsModal(true)}
@@ -236,6 +241,16 @@ function DashboardPage() {
                     <InstructionsModal
                         isOpen={showInstructionsModal}
                         onClose={() => setShowInstructionsModal(false)}
+                    />
+                )}
+
+                {/* Health Modal - Rendered at dashboard level */}
+                {isHealthModalOpen && playerStats && (
+                    <HealthModal
+                        isOpen={isHealthModalOpen}
+                        onClose={() => setIsHealthModalOpen(false)}
+                        playerStats={playerStats}
+                        onHealthUpdate={handleHealthUpdate}
                     />
                 )}
 

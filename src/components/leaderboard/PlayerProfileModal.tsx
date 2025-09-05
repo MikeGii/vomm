@@ -46,6 +46,7 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
     const [estateLoading, setEstateLoading] = useState(false);
 
     const isCurrentUserProfile = currentUser?.uid === playerData?.userId;
+    const isVipPlayer = playerData?.isVip === true;
 
     // Load estate data for other players
     useEffect(() => {
@@ -164,130 +165,94 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
     if (!isOpen || !playerData) return null;
 
     return (
-        <div className="modal-backdrop" onClick={onClose}>
-            <div className="modal-content player-profile-modal" onClick={(e) => e.stopPropagation()}>
-                <button className="modal-close" onClick={onClose}>×</button>
-                <h2 className="modal-title">Mängija profiil</h2>
+        <div className="modal-overlay" onClick={onClose}>
+            <div
+                className={`modal-content player-profile-modal ${isVipPlayer ? 'vip-profile' : ''}`}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <button className="modal-close-btn" onClick={onClose}>×</button>
 
-                <div className="player-profile-content">
-                    {/* Player Name */}
-                    <div className="profile-field">
-                        <label>Nimi:</label>
-                        <span>{playerData.username}</span>
-                    </div>
-
-                    {/* Badge Number */}
-                    {playerData.badgeNumber && (
-                        <div className="profile-field">
-                            <label>Märgi number:</label>
-                            <span className="badge-number">{playerData.badgeNumber}</span>
-                        </div>
-                    )}
-
-                    {/* Status */}
-                    <div className="profile-field">
-                        <label>Staatus:</label>
-                        <span className="status-badge">{getPlayerStatus()}</span>
-                    </div>
-
-                    {/* Level */}
-                    <div className="profile-field">
-                        <label>Tase:</label>
-                        <span>{playerData.level}</span>
-                    </div>
-
-                    {/* Reputation */}
-                    <div className="profile-field">
-                        <label>Maine:</label>
-                        <span>{playerData.reputation}</span>
-                    </div>
-
-                    {/* Money */}
-                    <div className="profile-field">
-                        <label>Raha:</label>
-                        <span className="money-amount">{formatMoney(playerData.money)}</span>
-                    </div>
-
-                    {/* Completed Courses */}
-                    <div className="profile-field">
-                        <label>Läbitud koolitusi:</label>
-                        <span className="courses-count">{playerData.completedCourses?.length || 0} tk</span>
-                    </div>
-
-                    {/* Work Hours */}
-                    <div className="profile-field">
-                        <label>Töötunnid:</label>
-                        <span className="work-hours">{playerData.totalWorkedHours || 0}h</span>
-                    </div>
-
-                    {/* Estate Information - NOW PUBLIC FOR ALL PLAYERS */}
-                    <div className="profile-field">
-                        <label>Kinnisvara:</label>
-                        <span>
-                            {(!isCurrentUserProfile && estateLoading) ? (
-                                <span className="estate-loading">Laen andmeid...</span>
-                            ) : estateData?.currentEstate ? (
-                                estateData.currentEstate.name
-                            ) : (
-                                <span className="no-estate-text">Pole kinnisasja</span>
+                <div className="profile-header">
+                    <div className="profile-info">
+                        <h2 className="profile-username">{playerData.username}</h2>
+                        <div className="profile-badges">
+                            {playerData.badgeNumber && (
+                                <span className="profile-badge">#{playerData.badgeNumber}</span>
                             )}
-                        </span>
-                    </div>
-
-                    {/* Creation Date */}
-                    <div className="profile-field">
-                        <label>Liitunud:</label>
-                        <span>{formatDate(playerData.createdAt)}</span>
-                    </div>
-
-                    {/* Attributes Section */}
-                    {playerData.attributes && (
-                        <div className="attributes-section">
-                            <h3 className="section-title">Atribuudid</h3>
-                            <div className="attributes-extended-grid">
-                                {/* Physical Attributes */}
-                                {[
-                                    { key: 'strength', emoji: '💪', name: 'Jõud' },
-                                    { key: 'agility', emoji: '🏃', name: 'Kiirus' },
-                                    { key: 'dexterity', emoji: '🎯', name: 'Osavus' },
-                                    { key: 'intelligence', emoji: '🧠', name: 'Int.' },
-                                    { key: 'endurance', emoji: '🏋️', name: 'Vast.' },
-                                    { key: 'cooking', emoji: '🍳', name: 'Söök' },
-                                    { key: 'brewing', emoji: '🥤', name: 'Jook' },
-                                    { key: 'chemistry', emoji: '🧪', name: 'Keem.' },
-                                    { key: 'sewing', emoji: '🪡', name: 'Õmbl.' },
-                                    { key: 'medicine', emoji: '🏥', name: 'Med.' }
-                                ].map(attr => (
-                                    <div key={attr.key} className="attribute-compact">
-                                        <span className="attribute-emoji">{attr.emoji}</span>
-                                        <span className="attribute-name">{attr.name}</span>
-                                        <span className="attribute-value">
-                                            {playerData.attributes?.[attr.key as keyof typeof playerData.attributes]?.level || 0}
-                                        </span>
-                                    </div>
-                                ))}
-
-                                {/* Workshop Attributes */}
-                                {['printing', 'lasercutting'].map(skill => (
-                                    <div
-                                        key={skill}
-                                        className={`attribute-compact ${
-                                            isCurrentUserProfile &&
-                                            ((skill === 'printing' && !canUse3DPrinter()) ||
-                                                (skill === 'lasercutting' && !canUseLaserCutter()))
-                                                ? 'locked' : ''
-                                        }`}
-                                    >
-                                        <span className="attribute-emoji">{getAttributeIcon(skill)}</span>
-                                        <span className="attribute-name">
-                                            {skill === 'printing' ? '3D Print' : 'Laser'}
-                                        </span>
-                                        <span className="attribute-value">{getAttributeValue(skill)}</span>
-                                    </div>
-                                ))}
-                            </div>
+                            <span className="profile-badge">{getPlayerStatus()}</span>
+                            {playerData?.isVip && (
+                                <span className="profile-badge profile-vip-badge">VIP</span>
+                            )}
                         </div>
-                    )}
+                    </div>
+                </div>
+
+                <div className="profile-stats-grid">
+                    <div className="profile-stat-item">
+                        <span className="profile-stat-label">Tase</span>
+                        <span className="profile-stat-value">{playerData.level}</span>
+                    </div>
+                    <div className="profile-stat-item">
+                        <span className="profile-stat-label">Maine</span>
+                        <span className="profile-stat-value">{playerData.reputation}</span>
+                    </div>
+                    <div className="profile-stat-item">
+                        <span className="profile-stat-label">Raha</span>
+                        <span className="profile-stat-value">{formatMoney(playerData.money)}</span>
+                    </div>
+                    <div className="profile-stat-item">
+                        <span className="profile-stat-label">Töötunnid</span>
+                        <span className="profile-stat-value">{playerData.totalWorkedHours || 0}h</span>
+                    </div>
+                </div>
+
+                {/* Estate Section */}
+                {(estateData || estateLoading) && (
+                    <div className="profile-estate-section">
+                        <h3 className="profile-section-title">Kinnisvara</h3>
+                        {estateLoading ? (
+                            <p className="estate-loading">Laen andmeid...</p>
+                        ) : estateData?.currentEstate ? (
+                            <p className="estate-name">{estateData.currentEstate.name}</p>
+                        ) : (
+                            <p className="no-estate">Pole kinnisasja</p>
+                        )}
+                    </div>
+                )}
+
+                {/* Attributes Section */}
+                {playerData.attributes && (
+                    <div className="profile-attributes">
+                        <h3 className="profile-section-title">Omadused</h3>
+                        <div className="profile-attributes-grid">
+                            {[
+                                { key: 'strength', emoji: '💪' },
+                                { key: 'agility', emoji: '🏃' },
+                                { key: 'dexterity', emoji: '🎯' },
+                                { key: 'intelligence', emoji: '🧠' },
+                                { key: 'endurance', emoji: '🏋️' },
+                                { key: 'cooking', emoji: '🍳' },
+                                { key: 'brewing', emoji: '🥤' },
+                                { key: 'chemistry', emoji: '🧪' },
+                                { key: 'sewing', emoji: '🪡' },
+                                { key: 'medicine', emoji: '🏥' },
+                                { key: 'printing', emoji: getAttributeIcon('printing') },
+                                { key: 'lasercutting', emoji: getAttributeIcon('lasercutting') }
+                            ].map(attr => (
+                                <div key={attr.key} className="profile-attribute">
+                                    <span className="profile-attribute-icon">{attr.emoji}</span>
+                                    <span className="profile-attribute-level">
+                                    {getAttributeValue(attr.key)}
+                                </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Footer info */}
+                <div className="profile-footer">
+                    <p className="profile-joined">Liitunud: {formatDate(playerData.createdAt)}</p>
                 </div>
             </div>
         </div>

@@ -27,7 +27,7 @@ export const PublicHeader: React.FC = () => {
                         <div className="title-with-badge">
                             <h1 className="game-title">Võmm.ee</h1>
                             <img
-                                src="/images/policeBadge.png"
+                                src="/images/Võmm_logo2.png"
                                 alt="Police Badge"
                                 className="title-badge"
                             />

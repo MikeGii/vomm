@@ -3,24 +3,28 @@ import React, { useState, useEffect } from 'react';
 import { PlayerStats } from '../../types';
 import { getExpProgress } from '../../services/PlayerService';
 import { Timestamp } from 'firebase/firestore';
-import {calculateEquipmentBonuses} from "../../services/EquipmentBonusService";
-import { HealthModal } from '../health/HealthModal';
-import { getRankImagePath} from "../../utils/rankUtils";
+import { calculateEquipmentBonuses } from "../../services/EquipmentBonusService";
+import { getRankImagePath } from "../../utils/rankUtils";
+import { getPositionName } from '../../data/policePositions';
+import { isPoliceOfficer } from "../../utils/playerStatus";
 import '../../styles/components/PlayerStatsCard.css';
-import {isPoliceOfficer} from "../../utils/playerStatus";
 
 interface PlayerStatsCardProps {
     stats: PlayerStats;
     username: string;
     onHealthUpdate?: () => void;
+    onHealthModalOpen?: () => void;
 }
 
-export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, username, onHealthUpdate }) => {
+export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({
+                                                                    stats,
+                                                                    username,
+                                                                    onHealthUpdate,
+                                                                    onHealthModalOpen
+                                                                }) => {
     const expProgress = getExpProgress(stats.experience);
     const expPercentage = expProgress.percentage;
     const [healthRecoveryTime, setHealthRecoveryTime] = useState<string>('');
-    const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
-    const hasCompletedBasicTraining = stats.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
 
     const equipmentBonuses = stats.equipment ? calculateEquipmentBonuses(stats.equipment) : null;
 
@@ -32,13 +36,11 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
         }
 
         const calculateTimeToNextRecovery = () => {
-            // If no lastHealthUpdate, initialize it
             if (!stats.lastHealthUpdate) {
                 setHealthRecoveryTime('60:00');
                 return;
             }
 
-            // Convert to Date
             let lastUpdateDate: Date;
             if (stats.lastHealthUpdate instanceof Timestamp) {
                 lastUpdateDate = stats.lastHealthUpdate.toDate();
@@ -50,12 +52,9 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
 
             const now = new Date();
             const timeSinceLastUpdate = now.getTime() - lastUpdateDate.getTime();
-
-            // Calculate time until next 5 HP recovery (1 hour = 5 HP)
             const msPerHour = 60 * 60 * 1000;
             const timeToNextRecovery = msPerHour - (timeSinceLastUpdate % msPerHour);
 
-            // Format time
             const minutes = Math.floor(timeToNextRecovery / 60000);
             const seconds = Math.floor((timeToNextRecovery % 60000) / 1000);
 
@@ -64,23 +63,13 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
 
         calculateTimeToNextRecovery();
         const interval = setInterval(calculateTimeToNextRecovery, 1000);
-
         return () => clearInterval(interval);
     }, [stats.health, stats.lastHealthUpdate]);
 
-    // Handle health update from modal
-    const handleHealthModalUpdate = () => {
-        // Call parent's onHealthUpdate if provided
-        if (onHealthUpdate) {
-            onHealthUpdate();
-        }
-    };
-
-    // Check player status
+    // Player status helpers
     const isKadett = stats.policePosition === 'kadett';
     const isAbipolitseinik = stats.policePosition === 'abipolitseinik';
 
-    // Get prefecture display
     const getPrefectureDisplay = () => {
         if (isKadett) {
             return 'Sisekaitseakadeemia';
@@ -88,15 +77,13 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
         return stats.prefecture || 'Määramata';
     };
 
-    // Get department display
     const getDepartmentDisplay = () => {
         if (isKadett) {
             return 'Politsei- ja Piirivalvekolledž';
         }
         if (isAbipolitseinik) {
-            return '—'; // Empty for abipolitseinik
+            return '—';
         }
-        // Use isPoliceOfficer instead of hardcoded position checks
         if (isPoliceOfficer(stats)) {
             return stats.department || 'Määramata';
         }
@@ -118,253 +105,220 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({ stats, usernam
 
     return (
         <div className={`player-stats-card ${stats.isVip ? 'vip-player' : ''}`}>
-            {/* VIP Crown Effect */}
-            {stats.isVip && (
-                <div className="vip-crown-container">
-                    <div className="vip-crown-effect">👑</div>
-                    <div className="vip-particles">
-                        <div className="particle"></div>
-                        <div className="particle"></div>
-                        <div className="particle"></div>
-                        <div className="particle"></div>
-                    </div>
-                </div>
-            )}
-
-            {/* Header Section with VIP Enhancement */}
-            <div className="stats-header-section">
-                <div className="player-info">
-                    <div className="username-container">
-                        <h2 className="player-username">{username}</h2>
-                        {stats.isVip && (
-                            <span className="vip-crown-badge" title="VIP Kasutaja">
-                            <span className="crown-icon">👑</span>
-                            <span className="vip-text">VIP</span>
-                        </span>
-                        )}
-                    </div>
-                    <div className="player-badges">
-                        {stats.badgeNumber && (
-                            <span className={`badge-display ${stats.isVip ? 'vip-badge' : ''}`}>
-                            Ametitõend #{stats.badgeNumber}
-                        </span>
-                        )}
-                        {stats.rank && (
-                            <span className={`rank-display ${stats.isVip ? 'vip-rank' : ''}`}>
-                            {stats.rank}
-                        </span>
-                        )}
-                        {stats.rank && getRankImagePath(stats.rank) && (
-                            <div className="rank-image-container">
-                                <img
-                                    src={getRankImagePath(stats.rank)!}
-                                    alt={`${stats.rank} märk`}
-                                    className="rank-image"
-                                />
+            {/* Header Section */}
+            <div className="stats-header">
+                <div className="player-identity">
+                    <div className="rank-section">
+                        <div className="rank-image-container">
+                            <img
+                                src={getRankImagePath(stats.rank) || ''}
+                                alt={`${stats.rank || stats.policePosition || 'kadett'} märk`}
+                                className="rank-image-playerstats"
+                            />
+                        </div>
+                        <div className="rank-info">
+                            <h2 className="player-username">{username}</h2>
+                            <div className="player-badges">
+                                <span className="badge-number">#{stats.badgeNumber || 'N/A'}</span>
+                                <span className="police-rank">{getPositionName(stats.policePosition)}</span>
+                                {stats.isVip && <span className="vip-badge-playerstats">VIP</span>}
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
-                <div className={`level-display ${stats.isVip ? 'vip-level' : ''}`}>
-                    <span className="level-number">{stats.level}</span>
-                    <span className="level-label">TASE</span>
-                    {stats.isVip && <div className="level-vip-glow"></div>}
+
+                <div className="level-section">
+                    <div className="level-circle">
+                        <span className="level-number">{stats.level || 1}</span>
+                        <span className="level-label">TASE</span>
+                    </div>
+                </div>
+
+                {/* Mobile-only money and pollid */}
+                <div className="mobile-currency">
+                    <div className="currency-item">
+                        <span className="currency-icon">💰</span>
+                        <span className="currency-value">€ {stats.money || 0}</span>
+                    </div>
+                    <div className="currency-item">
+                        <span className="currency-icon">💎</span>
+                        <span className="currency-value">{stats.pollid || 0}</span>
+                    </div>
                 </div>
             </div>
 
-            {/* VIP Enhanced Experience Section */}
+            {/* Experience Bar */}
             <div className="experience-section">
                 <div className="exp-info">
                     <span className="exp-label">Kogemus</span>
                     <span className="exp-numbers">{expProgress.current} / {expProgress.needed} XP</span>
-                    {stats.isVip && (
-                        <span className="vip-exp-bonus" title="VIP kogemus boonus">✨ VIP</span>
-                    )}
                 </div>
-                <div className={`exp-bar-large ${stats.isVip ? 'vip-exp-bar' : ''}`}>
-                    <div
-                        className={`exp-progress-large ${stats.isVip ? 'vip-progress' : ''}`}
-                        style={{ width: `${expPercentage}%` }}
-                    />
-                    {stats.isVip && <div className="exp-bar-shimmer"></div>}
+                <div className="exp-bar">
+                    <div className="exp-progress" style={{ width: `${expPercentage}%` }}></div>
                 </div>
             </div>
 
-            {/* Rest of your existing code unchanged */}
-            <div className="stats-main-grid">
-                <div className={`stat-card ${isKadett ? 'academy-highlight' : ''}`}>
+            {/* Main Stats Grid */}
+            <div className="main-stats-grid">
+                <div className="stat-item">
                     <span className="stat-icon">🏛️</span>
                     <div className="stat-content">
-                        <span className="stat-title">Prefektuur</span>
+                        <span className="stat-label">Prefektuur</span>
                         <span className="stat-value">{getPrefectureDisplay()}</span>
                     </div>
                 </div>
 
-                <div className="stat-card">
-                    <span className="stat-icon">🏢</span>
+                <div className="stat-item">
+                    <span className="stat-icon">👮</span>
                     <div className="stat-content">
-                        <span className="stat-title">Osakond</span>
+                        <span className="stat-label">Osakond</span>
                         <span className="stat-value">{getDepartmentDisplay()}</span>
                     </div>
                 </div>
 
                 <div
-                    className="stat-card health-card clickable"
-                    onClick={() => setIsHealthModalOpen(true)}
-                    style={{ cursor: 'pointer', position: 'relative' }}
+                    className="stat-item clickable health-card"
+                    onClick={() => onHealthModalOpen?.()}
                 >
                     <span className="stat-icon">❤️</span>
                     <div className="stat-content">
-                        <span className="stat-title">Tervis</span>
+                        <span className="stat-label">Tervis</span>
                         <span className={`stat-value ${healthStatus.color}`}>
-                        {healthStatus.text}
-                    </span>
-                        {healthStatus.showRecovery && healthRecoveryTime && (
-                            <span className="health-recovery-timer">
-                            +5 HP: {healthRecoveryTime}
+                            {healthStatus.text}
+                            {healthStatus.showRecovery && healthRecoveryTime && (
+                                <span className="recovery-timer">+5 HP: {healthRecoveryTime}</span>
+                            )}
                         </span>
-                        )}
                     </div>
                     <div className="click-hint">Kliki ravimiseks</div>
                 </div>
 
-                <div className="stat-card">
+                <div className="stat-item">
                     <span className="stat-icon">⏱️</span>
                     <div className="stat-content">
-                        <span className="stat-title">Töötunnid</span>
+                        <span className="stat-label">Töötunnid</span>
                         <span className="stat-value">{stats.totalWorkedHours || 0}h</span>
+                    </div>
+                </div>
+
+                <div className="stat-item">
+                    <span className="stat-icon">📚</span>
+                    <div className="stat-content">
+                        <span className="stat-label">Kursused</span>
+                        <span className="stat-value">{stats.completedCourses?.length || 0}</span>
                     </div>
                 </div>
             </div>
 
-            {/* All your existing sections remain exactly the same */}
-            {hasCompletedBasicTraining && (
-                <div className="achievements-section">
-                    <h3 className="section-title">Saavutused</h3>
-                    <div className="achievements-grid">
-                        <div className="achievement-stat">
-                            <span className="achievement-number">{stats.casesCompleted}</span>
-                            <span className="achievement-label">Lahendatud juhtumit</span>
-                        </div>
-                        <div className="achievement-stat">
-                            <span className="achievement-number">{stats.criminalsArrested}</span>
-                            <span className="achievement-label">Kinni peetud kurjategijat</span>
-                        </div>
-                        <div className="achievement-stat">
-                            <span className="achievement-number">{stats.completedCourses?.length || 0}</span>
-                            <span className="achievement-label">Läbitud koolitust</span>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Attributes Section - unchanged */}
+            {/* All Attributes Section - Icons Only */}
             {stats.attributes && (
                 <div className="attributes-section">
                     <h3 className="section-title">Omadused</h3>
-                    <div className="attributes-compact-grid">
-                        <div className="attribute-compact">
-                            <span className="attribute-emoji">💪</span>
-                            <span className="attribute-name">Jõud</span>
-                            <span className="attribute-value">
-                            {stats.attributes.strength.level}
-                                {equipmentBonuses?.strength ? (
-                                    <span className="equipment-bonus"> +{equipmentBonuses.strength}</span>
-                                ) : null}
-                        </span>
+                    <div className="attributes-grid">
+                        {/* Physical Attributes - WITH equipment bonuses */}
+                        <div className="attribute-item">
+                            <span className="attribute-icon">💪</span>
+                            <span className="attribute-level">
+                                {stats.attributes.strength.level}
+                                {equipmentBonuses?.strength && (
+                                    <span className="equipment-bonus">+{equipmentBonuses.strength}</span>
+                                )}
+                            </span>
                         </div>
-                        <div className="attribute-compact">
-                            <span className="attribute-emoji">🏃</span>
-                            <span className="attribute-name">Kiirus</span>
-                            <span className="attribute-value">
-                            {stats.attributes.agility.level}
-                                {equipmentBonuses?.agility ? (
-                                    <span className="equipment-bonus"> +{equipmentBonuses.agility}</span>
-                                ) : null}
-                        </span>
+
+                        <div className="attribute-item">
+                            <span className="attribute-icon">🏃</span>
+                            <span className="attribute-level">
+                                {stats.attributes.agility.level}
+                                {equipmentBonuses?.agility && (
+                                    <span className="equipment-bonus">+{equipmentBonuses.agility}</span>
+                                )}
+                            </span>
                         </div>
-                        <div className="attribute-compact">
-                            <span className="attribute-emoji">🎯</span>
-                            <span className="attribute-name">Osavus</span>
-                            <span className="attribute-value">
-                            {stats.attributes.dexterity.level}
-                                {equipmentBonuses?.dexterity ? (
-                                    <span className="equipment-bonus"> +{equipmentBonuses.dexterity}</span>
-                                ) : null}
-                        </span>
+
+                        <div className="attribute-item">
+                            <span className="attribute-icon">🎯</span>
+                            <span className="attribute-level">
+                                {stats.attributes.dexterity.level}
+                                {equipmentBonuses?.dexterity && (
+                                    <span className="equipment-bonus">+{equipmentBonuses.dexterity}</span>
+                                )}
+                            </span>
                         </div>
-                        <div className="attribute-compact">
-                            <span className="attribute-emoji">🧠</span>
-                            <span className="attribute-name">Intelligentsus</span>
-                            <span className="attribute-value">
-                            {stats.attributes.intelligence.level}
-                                {equipmentBonuses?.intelligence ? (
-                                    <span className="equipment-bonus"> +{equipmentBonuses.intelligence}</span>
-                                ) : null}
-                        </span>
+
+                        <div className="attribute-item">
+                            <span className="attribute-icon">🧠</span>
+                            <span className="attribute-level">
+                                {stats.attributes.intelligence.level}
+                                {equipmentBonuses?.intelligence && (
+                                    <span className="equipment-bonus">+{equipmentBonuses.intelligence}</span>
+                                )}
+                            </span>
                         </div>
-                        <div className="attribute-compact">
-                            <span className="attribute-emoji">🏋️</span>
-                            <span className="attribute-name">Vastupidavus</span>
-                            <span className="attribute-value">
-                            {stats.attributes.endurance.level}
-                                {equipmentBonuses?.endurance ? (
-                                    <span className="equipment-bonus"> +{equipmentBonuses.endurance}</span>
-                                ) : null}
-                        </span>
+
+                        <div className="attribute-item">
+                            <span className="attribute-icon">🏋️</span>
+                            <span className="attribute-level">
+                                {stats.attributes.endurance.level}
+                                {equipmentBonuses?.endurance && (
+                                    <span className="equipment-bonus">+{equipmentBonuses.endurance}</span>
+                                )}
+                            </span>
+                        </div>
+
+                        {/* Kitchen & Lab Attributes - NO equipment bonuses */}
+                        <div className="attribute-item">
+                            <span className="attribute-icon">🍳</span>
+                            <span className="attribute-level">
+                                {stats.attributes.cooking.level}
+                            </span>
+                        </div>
+
+                        <div className="attribute-item">
+                            <span className="attribute-icon">🥤</span>
+                            <span className="attribute-level">
+                                {stats.attributes.brewing.level}
+                            </span>
+                        </div>
+
+                        <div className="attribute-item">
+                            <span className="attribute-icon">🧪</span>
+                            <span className="attribute-level">
+                                {stats.attributes.chemistry.level}
+                            </span>
+                        </div>
+
+                        {/* Handicraft Attributes - NO equipment bonuses */}
+                        <div className="attribute-item">
+                            <span className="attribute-icon">🪡</span>
+                            <span className="attribute-level">
+                                {stats.attributes.sewing.level}
+                            </span>
+                        </div>
+
+                        <div className="attribute-item">
+                            <span className="attribute-icon">🏥</span>
+                            <span className="attribute-level">
+                                {stats.attributes.medicine.level}
+                            </span>
+                        </div>
+
+                        <div className="attribute-item">
+                            <span className="attribute-icon">🖨️</span>
+                            <span className="attribute-level">
+                                {stats.attributes.printing.level}
+                            </span>
+                        </div>
+
+                        <div className="attribute-item">
+                            <span className="attribute-icon">✂️</span>
+                            <span className="attribute-level">
+                                {stats.attributes.lasercutting.level}
+                            </span>
                         </div>
                     </div>
                 </div>
             )}
-
-            {/* All status messages remain unchanged */}
-            {!hasCompletedBasicTraining && (
-                <div className="status-message warning">
-                    <span className="status-icon">⚠️</span>
-                    <div>
-                        <p className="status-title">Alusta karjääri</p>
-                        <p className="status-text">Läbi abipolitseiniku baaskoolitus, et astuda politseiteenistusse!</p>
-                    </div>
-                </div>
-            )}
-
-            {isKadett && (
-                <div className="status-message academy">
-                    <span className="status-icon">🎓</span>
-                    <div>
-                        <p className="status-title">Sisekaitseakadeemia kadett</p>
-                        <p className="status-text">Õpid Sisekaitseakadeemias, et saada politseiametnikuks.</p>
-                    </div>
-                </div>
-            )}
-
-            {stats.activeCourse && (
-                <div className="status-message info">
-                    <span className="status-icon">📚</span>
-                    <div>
-                        <p className="status-title">Koolitus käib</p>
-                        <p className="status-text">Oled hetkel koolitusel. Oota kuni see lõppeb.</p>
-                    </div>
-                </div>
-            )}
-
-            {stats.activeWork && (
-                <div className="status-message info">
-                    <span className="status-icon">🚓</span>
-                    <div>
-                        <p className="status-title">Töö käib</p>
-                        <p className="status-text">Oled hetkel tööl. Oota kuni vahetus lõppeb.</p>
-                    </div>
-                </div>
-            )}
-
-            {/* Health Modal - unchanged */}
-            <HealthModal
-                isOpen={isHealthModalOpen}
-                onClose={() => setIsHealthModalOpen(false)}
-                playerStats={stats}
-                onHealthUpdate={handleHealthModalUpdate}
-            />
         </div>
     );
 };

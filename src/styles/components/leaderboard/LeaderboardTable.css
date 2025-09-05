@@ -1,270 +1,218 @@
-/* src/styles/components/leaderboard/LeaderboardTable.css */
-
 /* ================================
-   BASE TABLE STYLES (STANDARD)
+   LEADERBOARD TABLE - Using specific lb- prefix
    ================================ */
-.leaderboard-table-container {
-    overflow-x: auto;
-    border-radius: 6px;
-    border: 1px solid #333;
-}
-
-.leaderboard-table {
+.lb-table {
     width: 100%;
-    border-collapse: collapse;
-    background-color: #2a2a2a;
+    background: rgba(42, 42, 42, 0.3);
+    border: 1px solid #333;
+    border-radius: 10px;
+    overflow: hidden;
 }
 
-/* ================================
-   STANDARD HEADER STYLES (DEFAULT FOR ALL)
-   ================================ */
-.leaderboard-table thead {
-    background-color: #333;
-}
-
-.leaderboard-table th {
-    padding: 1rem;
-    text-align: left;
-    color: #888;
-    font-weight: 600;
-    font-size: 0.85rem;
-    letter-spacing: 0.5px;
-    border-bottom: 2px solid #444;
-}
-
-/* ================================
-   STANDARD TABLE BODY STYLES
-   ================================ */
-.leaderboard-table td {
-    padding: 0.75rem 1rem;
-    color: #f0f0f0;
+.lb-table thead {
+    background: rgba(42, 42, 42, 0.6);
     border-bottom: 1px solid #333;
 }
 
-.leaderboard-table tbody tr {
+.lb-table th {
+    padding: 1rem;
+    text-align: left;
+    color: #888;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.lb-row {
+    border-bottom: 1px solid #2a2a2a;
     transition: all 0.3s ease;
-    position: relative;
 }
 
-.leaderboard-table tbody tr:hover {
-    background-color: rgba(74, 144, 226, 0.1);
+.lb-row:hover {
+    background: rgba(50, 50, 50, 0.4);
 }
 
-.leaderboard-table tbody tr.current-user {
-    background-color: rgba(255, 215, 0, 0.1);
-    border-left: 3px solid #ffd700;
+.lb-table td {
+    padding: 1rem;
+    color: #f0f0f0;
+    font-size: 0.9rem;
 }
 
 /* ================================
-   COLUMN STYLES
+   PLAYER NAME BUTTON - Specific to leaderboard
    ================================ */
-.rank-column {
+.lb-player-name-btn {
+    background: none !important;
+    border: none !important;
+    color: #f0f0f0;
+    cursor: pointer;
+    font-size: inherit;
+    font-weight: 600;
+    padding: 0 !important;
+    transition: color 0.3s ease;
+    box-shadow: none !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+}
+
+.lb-player-name-btn:hover {
+    color: #4a90e2;
+    text-decoration: underline;
+    transform: none !important;
+    background: none !important;
+}
+
+/* VIP player name */
+.lb-vip-row .lb-player-name-btn {
+    color: rgba(255, 215, 0, 0.9);
+}
+
+.lb-vip-row .lb-player-name-btn:hover {
+    color: #ffd700;
+}
+
+/* ================================
+   STATUS BADGE - Leaderboard specific
+   ================================ */
+.lb-status-badge {
+    display: inline-block !important;
+    color: #ffffff !important;
+    padding: 0.25rem 0.75rem !important;
+    border-radius: 6px !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+}
+
+.lb-vip-row .lb-status-badge {
+    color: rgba(255, 215, 0, 0.9) !important;
+}
+
+/* ================================
+   VIP ROW STYLING
+   ================================ */
+.lb-vip-row {
+    background: rgba(42, 42, 42, 0.5);
+    border-left: 2px solid rgba(255, 215, 0, 0.3);
+    position: relative;
+}
+
+.lb-vip-row:hover {
+    background: rgba(50, 50, 50, 0.6);
+    transform: translateX(2px);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
+}
+
+/* ================================
+   COLUMN SPECIFIC STYLES
+   ================================ */
+.lb-rank-col {
     width: 60px;
     text-align: center !important;
 }
 
-.rank-number {
-    display: inline-block;
-    width: 30px;
-    height: 30px;
-    line-height: 30px;
-    text-align: center;
-    background-color: #333;
-    border-radius: 50%;
-    font-weight: bold;
-}
-
-.name-column {
-    font-weight: 600;
-    min-width: 150px;
-}
-
-.player-name-container {
-    display: flex;
+.lb-rank-number {
+    display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(74, 144, 226, 0.15);
+    border: 1px solid #4a90e2;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 0.9rem;
 }
 
-.player-name-button {
-    background: none;
-    border: none;
-    color: inherit;
-    cursor: pointer;
-    text-decoration: none;
-    font-weight: inherit;
-    padding: 0;
-    transition: color 0.3s ease;
+.lb-name-col {
+    min-width: 120px;
 }
 
-.player-name-button:hover {
-    color: #4a90e2;
-    text-decoration: underline;
-}
-
-.status-column {
+.lb-status-col {
     min-width: 130px;
 }
 
-.status-badge {
-    padding: 0.25rem 0.5rem;
-    background-color: rgba(74, 144, 226, 0.2);
-    border: 1px solid #4a90e2;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    display: inline-block;
-}
-
-.level-column,
-.reputation-column {
+.lb-level-col,
+.lb-rep-col {
     text-align: center !important;
     min-width: 80px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
-.reputation-column {
-    min-width: 100px;
+.lb-vip-row .lb-level-col,
+.lb-vip-row .lb-rep-col {
+    color: rgba(255, 215, 0, 0.8);
 }
 
 /* ================================
-   VIP PLAYER STYLES (ONLY FOR VIP PLAYERS)
+   VIP BADGE
    ================================ */
-
-/* VIP Player Row */
-.leaderboard-table tbody tr.vip-player {
-    background: linear-gradient(135deg, rgba(156, 39, 176, 0.1), rgba(233, 30, 99, 0.05)) !important;
-    border-left: 3px solid #9c27b0 !important;
-    position: relative;
-}
-
-.leaderboard-table tbody tr.vip-player:hover {
-    background: linear-gradient(135deg, rgba(156, 39, 176, 0.2), rgba(233, 30, 99, 0.1)) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4);
-}
-
-/* VIP Badge - REMOVED ANIMATION */
-.vip-badge {
-    background: linear-gradient(135deg, #9c27b0, #e91e63);
-    color: white;
+.lb-vip-badge {
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    color: #000;
     font-size: 0.65rem;
     font-weight: 700;
     padding: 0.2rem 0.5rem;
-    border-radius: 12px;
+    border-radius: 6px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 2px 4px rgba(156, 39, 176, 0.3);
-}
-
-/* VIP Player Enhanced Text */
-.leaderboard-table tbody tr.vip-player .player-name-button {
-    color: #e1bee7 !important;
-    font-weight: 600;
-    text-shadow: 0 0 8px rgba(156, 39, 176, 0.5);
-}
-
-.leaderboard-table tbody tr.vip-player .status-badge {
-    background: linear-gradient(135deg, rgba(156, 39, 176, 0.3), rgba(233, 30, 99, 0.2));
-    border: 1px solid rgba(156, 39, 176, 0.5);
-    color: #e1bee7;
-}
-
-.leaderboard-table tbody tr.vip-player .level-column,
-.leaderboard-table tbody tr.vip-player .reputation-column {
-    color: #e1bee7 !important;
-    font-weight: 700;
-    text-shadow: 0 0 6px rgba(156, 39, 176, 0.3);
-}
-
-/* VIP Crown for Top 3 - REMOVED ANIMATION */
-.leaderboard-table tbody tr.vip-player.top-vip::after {
-    content: '👑';
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 1.2rem;
-    z-index: 3;
+    margin-left: 0.5rem;
 }
 
 /* ================================
-   EMPTY STATE
-   ================================ */
-.leaderboard-empty {
-    text-align: center;
-    padding: 3rem;
-    color: #888;
-}
-
-/* ================================
-   MOBILE RESPONSIVE STYLES
+   MOBILE RESPONSIVE
    ================================ */
 @media (max-width: 768px) {
-    .mobile-hide {
-        display: none !important;
+    .lb-vip-badge {
+        display: none;
     }
 
-    .leaderboard-table {
-        font-size: 0.9rem;
-    }
-
-    .leaderboard-table th,
-    .leaderboard-table td {
-        padding: 0.75rem 0.5rem;
-    }
-
-    .rank-column {
-        width: 50px;
-    }
-
-    .rank-number {
-        width: 28px;
-        height: 28px;
-        line-height: 28px;
+    .lb-table {
         font-size: 0.85rem;
     }
 
-    .name-column {
-        min-width: auto;
+    .lb-table th,
+    .lb-table td {
+        padding: 0.75rem 0.5rem;
     }
 
-    .level-column {
-        min-width: 60px;
+    .lb-rep-col {
+        display: none;
     }
 
-    .vip-badge {
-        font-size: 0.6rem;
-        padding: 0.15rem 0.4rem;
-    }
-
-    .player-name-container {
-        gap: 0.25rem;
+    .lb-status-badge {
+        padding: 0.2rem 0.4rem !important;
+        font-size: 0.75rem !important;
     }
 }
 
 @media (max-width: 480px) {
-    .leaderboard-table {
-        font-size: 0.85rem;
-    }
-
-    .leaderboard-table th,
-    .leaderboard-table td {
-        padding: 0.5rem 0.25rem;
-    }
-
-    .rank-column {
-        width: 40px;
-    }
-
-    .rank-number {
-        width: 24px;
-        height: 24px;
-        line-height: 24px;
+    .lb-table {
         font-size: 0.8rem;
     }
 
-    .vip-badge {
-        font-size: 0.55rem;
-        padding: 0.1rem 0.3rem;
+    .lb-table th,
+    .lb-table td {
+        padding: 0.5rem 0.25rem;
+    }
+
+    .lb-rank-number {
+        width: 24px;
+        height: 24px;
+        font-size: 0.7rem;
+    }
+
+    .lb-player-name-btn {
+        font-size: 0.85rem;
+    }
+
+    .lb-status-badge {
+        padding: 0.15rem 0.3rem !important;
+        font-size: 0.7rem !important;
+    }
+
+    .lb-level-col {
+        font-size: 0.85rem;
     }
 }

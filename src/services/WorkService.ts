@@ -21,6 +21,7 @@ import { getWorkActivityById, calculateWorkRewards } from '../data/workActivitie
 import { calculateLevelFromExp } from "./PlayerService";
 import { triggerWorkEvent } from "./EventService";
 import {updateCrimeLevelAfterWork} from "./CrimeService";
+import { updateProgress } from "./TaskService";
 
 // Start work
 export const startWork = async (
@@ -59,7 +60,7 @@ export const startWork = async (
     }
 
     // Calculate expected rewards (both experience and money)
-    const expectedRewards = calculateWorkRewards(workActivity, hours, stats.rank);
+    const expectedRewards = calculateWorkRewards(workActivity, hours, stats.rank, stats);
 
     // Create work session
     const now = Timestamp.now();
@@ -175,7 +176,7 @@ export const completeWork = async (userId: string): Promise<{
             }
 
             // Calculate actual rewards based on current player rank
-            const actualRewards = calculateWorkRewards(workActivity, stats.activeWork.totalHours, stats.rank);
+            const actualRewards = calculateWorkRewards(workActivity, stats.activeWork.totalHours, stats.rank, stats);
 
             // Calculate new stats
             const newExp = stats.experience + actualRewards.experience;
@@ -227,7 +228,7 @@ export const completeWork = async (userId: string): Promise<{
                 rewards: actualRewards,
                 newLevel,
                 wasAlreadyCompleted: false,
-                workData: stats.activeWork // Store for crime update outside transaction
+                workData: stats.activeWork
             };
         });
 
@@ -253,6 +254,14 @@ export const completeWork = async (userId: string): Promise<{
                 } catch (error) {
                     console.error('Crime level update failed, but work completed successfully:', error);
                 }
+            }
+
+            // Update task progress after successful work completion
+            try {
+                await updateProgress(userId, 'work', result.workData.totalHours);
+                console.log(`Task progress updated: ${result.workData.totalHours} work hours`);
+            } catch (error) {
+                console.error('Task progress update failed, but work completed successfully:', error);
             }
         }
 
