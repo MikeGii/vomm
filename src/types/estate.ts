@@ -1,6 +1,12 @@
 // src/types/estate.ts (COMPLETE)
 import {InventoryItem} from "./inventory";
 
+export interface GarageSlot {
+    slotId: number;
+    isEmpty: boolean;
+    carId?: string;
+}
+
 export interface EstateProperty {
     id: string;
     name: string;

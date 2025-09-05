@@ -24,6 +24,7 @@ import TestsPage from './pages/TestsPage';
 import SettingsPage from "./pages/SettingsPage";
 import VIPPage from "./pages/VIPPage";
 import RealEstatePage from "./pages/RealEstatePage";
+import CarMarketplacePage from './pages/CarMarketplacePage';
 
 function App() {
     return (
@@ -82,6 +83,15 @@ function App() {
                                         <ShopPage />
                                     </ProtectedRoute>
                                 } />
+
+                                <Route
+                                    path="/car-marketplace"
+                                    element={
+                                        <ProtectedRoute>
+                                            <CarMarketplacePage />
+                                        </ProtectedRoute>
+                                    }
+                                />
 
                                 <Route path="/real-estate" element={
                                     <ProtectedRoute>

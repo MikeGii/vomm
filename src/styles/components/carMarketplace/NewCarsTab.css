@@ -1,0 +1,125 @@
+/* New Cars Tab Styles */
+.new-cars-tab {
+    padding: 1rem 0;
+}
+
+/* Filters Section */
+.filters-section {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #1a1a1a;
+    border-radius: 8px;
+    border: 1px solid #333;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-group label {
+    color: #888;
+    font-size: 0.95rem;
+}
+
+.brand-filter,
+.sort-filter {
+    padding: 0.5rem 0.75rem;
+    background: #2a2a2a;
+    color: #f0f0f0;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.brand-filter:hover,
+.sort-filter:hover {
+    border-color: #555;
+}
+
+.money-display {
+    margin-left: auto;
+    padding: 0.6rem 1rem;
+    background: #2a2a2a;
+    border-radius: 4px;
+    border: 1px solid #444;
+}
+
+.money-amount {
+    color: #4CAF50;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* Table Container */
+.cars-table-container {
+    background: #1a1a1a;
+    border-radius: 8px;
+    border: 1px solid #333;
+    overflow-x: auto;
+}
+
+.cars-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cars-table thead {
+    background: #2a2a2a;
+    border-bottom: 2px solid #444;
+}
+
+.cars-table th {
+    padding: 1rem;
+    text-align: left;
+    color: #f0f0f0;
+    font-weight: 600;
+    font-size: 0.95rem;
+    white-space: nowrap;
+}
+
+.no-cars-message {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+    font-size: 1.1rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .filters-section {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .filter-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .money-display {
+        margin-left: 0;
+        text-align: center;
+    }
+
+    .cars-table {
+        font-size: 0.85rem;
+    }
+
+    .cars-table th,
+    .cars-table td {
+        padding: 0.5rem;
+    }
+
+    /* Hide some columns on mobile */
+    .car-mass,
+    .cars-table th:nth-child(5) {
+        display: none;
+    }
+}

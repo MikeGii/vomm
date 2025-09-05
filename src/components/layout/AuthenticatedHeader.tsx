@@ -223,6 +223,27 @@ export const AuthenticatedHeader: React.FC = () => {
                                     </span>
                                 </button>
 
+                                <button
+                                    onClick={() => {
+                                        if (playerStats && playerStats.level >= 60) {
+                                            navigate('/car-marketplace');
+                                            setIsMenuOpen(false);
+                                        }
+                                    }}
+                                    className={`menu-item ${playerStats && playerStats.level >= 60 ? '' : 'menu-item-locked'}`}
+                                    disabled={!playerStats || playerStats.level < 60}
+                                    >
+                                    <span className="menu-icon">
+                                        {playerStats && playerStats.level >= 60 ? '🚗' : '🔒'}
+                                    </span>
+                                    <span>
+                                        Autode turg
+                                        {playerStats && playerStats.level < 60 && (
+                                            <span className="menu-item-level-req"> (Tase 60)</span>
+                                        )}
+                                    </span>
+                                </button>
+
                                 <div className="menu-divider"></div>
 
                                 <div className="menu-section">
