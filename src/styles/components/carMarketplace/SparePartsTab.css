@@ -1,0 +1,328 @@
+/* src/styles/components/carMarketplace/SparePartsTab.css */
+
+.parts-list-container {
+    padding: 1.5rem;
+    background: #0a0a0a;
+    min-height: 500px;
+}
+
+/* Header section */
+.parts-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #333;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+/* Category filters */
+.parts-category-filters {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.parts-filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #888;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.parts-filter-btn:hover {
+    background: #2a2a2a;
+    border-color: #4a90e2;
+    color: #f0f0f0;
+    transform: translateY(-1px);
+}
+
+.parts-filter-btn.active {
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    border-color: #4a90e2;
+    color: white;
+}
+
+.filter-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    filter: brightness(0.8);
+    transition: filter 0.3s ease;
+}
+
+.parts-filter-btn:hover .filter-icon,
+.parts-filter-btn.active .filter-icon {
+    filter: brightness(1) drop-shadow(0 0 3px rgba(74, 144, 226, 0.5));
+}
+
+/* Money display */
+.player-money {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1.2rem;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 6px;
+}
+
+.money-text {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.money-value {
+    color: #4CAF50;
+    font-size: 1.2rem;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+}
+
+/* Table wrapper */
+.parts-list-table-wrapper {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Table styles */
+.parts-list-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.parts-list-table thead {
+    background: #0f0f0f;
+    border-bottom: 2px solid #333;
+}
+
+.parts-list-table th {
+    padding: 1rem;
+    text-align: left;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.parts-list-table tbody tr {
+    border-bottom: 1px solid #262626;
+    transition: background 0.2s ease;
+}
+
+.parts-list-table tbody tr:hover {
+    background: #1f1f1f;
+}
+
+.parts-list-table tbody tr.unaffordable {
+    opacity: 0.6;
+}
+
+.parts-list-table td {
+    padding: 1rem;
+    color: #f0f0f0;
+}
+
+/* Part name cell */
+.part-name-cell .part-name-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.part-list-icon {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 4px rgba(74, 144, 226, 0.3));
+}
+
+/* Part category */
+.part-category-cell {
+    color: #4a90e2;
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+/* Level badge */
+.level-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.level-badge.level-stock {
+    background: #666;
+    color: white;
+}
+
+.level-badge.level-stage1,
+.level-badge.level-sport {
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    color: white;
+}
+
+.level-badge.level-stage2 {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.level-badge.level-stage3,
+.level-badge.level-performance {
+    background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);
+    color: white;
+}
+
+/* Boost value */
+.boost-value {
+    color: #4CAF50;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Price tag */
+.price-tag {
+    font-weight: bold;
+    font-size: 1.1rem;
+    font-family: 'Courier New', monospace;
+}
+
+.price-tag.price-red {
+    color: #f44336;
+}
+
+/* Buy button */
+.btn-buy-part {
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.btn-buy-part:hover:not(.disabled):not(.purchasing) {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
+}
+
+.btn-buy-part.disabled {
+    background: #333;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.btn-buy-part.purchasing {
+    background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* No parts message */
+.no-parts-message {
+    text-align: center;
+    padding: 3rem;
+    color: #888;
+    font-size: 1.1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .parts-list-container {
+        padding: 1rem;
+    }
+
+    .parts-list-header {
+        flex-direction: column;
+    }
+
+    .parts-category-filters {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .player-money {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .parts-list-table {
+        font-size: 0.85rem;
+    }
+
+    .parts-list-table th,
+    .parts-list-table td {
+        padding: 0.75rem 0.5rem;
+    }
+
+    /* Hide some columns on mobile */
+    .part-category-cell,
+    .parts-list-table th:nth-child(2) {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .parts-category-filters {
+        flex-direction: column;
+    }
+
+    .parts-filter-btn {
+        width: 100%;
+    }
+
+    /* Stack table on very small screens */
+    .parts-list-table thead {
+        display: none;
+    }
+
+    .parts-list-table tbody tr {
+        display: block;
+        margin-bottom: 1rem;
+        background: #1a1a1a;
+        border-radius: 6px;
+        padding: 1rem;
+    }
+
+    .parts-list-table td {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+    }
+
+    .parts-list-table td::before {
+        content: attr(data-label);
+        color: #666;
+        font-weight: 500;
+    }
+
+    .btn-buy-part {
+        width: 100%;
+    }
+}

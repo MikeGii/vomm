@@ -387,3 +387,49 @@
         flex-direction: column;
     }
 }
+
+/* Tuning section */
+.tuning-section {
+    margin-bottom: 2rem;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Cars section */
+.cars-section {
+    margin-top: 2rem;
+}
+
+.section-title {
+    color: #f0f0f0;
+    font-size: 1.3rem;
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #333;
+}
+
+/* Mobile responsiveness for new sections */
+@media (max-width: 768px) {
+    .tuning-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .cars-section {
+        margin-top: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+}

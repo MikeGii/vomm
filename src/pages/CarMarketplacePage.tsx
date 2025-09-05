@@ -1,9 +1,12 @@
+// src/pages/CarMarketplacePage.tsx
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { TabNavigation } from '../components/ui/TabNavigation';
 import NewCarsTab from '../components/carMarketplace/NewCarsTab';
-import UsedCarsTab from "../components/carMarketplace/UsedCarsTab";
+import UsedCarsTab from '../components/carMarketplace/UsedCarsTab';
+import SparePartsTab from '../components/carMarketplace/SparePartsTab';
 import '../styles/pages/CarMarketplace.css';
 
 const CarMarketplacePage: React.FC = () => {
@@ -23,12 +26,7 @@ const CarMarketplacePage: React.FC = () => {
             case 'new':
                 return <NewCarsTab />;
             case 'parts':
-                return (
-                    <div className="tab-placeholder">
-                        <h2>Varuosad</h2>
-                        <p>Osta ja müü autovaruosi.</p>
-                    </div>
-                );
+                return <SparePartsTab />;
             default:
                 return null;
         }

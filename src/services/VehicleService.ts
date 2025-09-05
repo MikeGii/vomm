@@ -1,3 +1,5 @@
+// src/services/VehicleService.ts
+
 import {
     collection,
     doc,
@@ -7,13 +9,12 @@ import {
     Timestamp,
     orderBy,
     limit,
-    runTransaction, getDoc
+    runTransaction, getDoc, updateDoc, serverTimestamp
 } from 'firebase/firestore';
 import { firestore as db } from '../config/firebase';
 import { PlayerCar, CarModel } from '../types/vehicles';
-import { GarageSlot } from '../types/estate'; // Lisa see import!
+import { GarageSlot } from '../types/estate';
 import { createStockEngine } from '../data/vehicles';
-
 
 async function ensureGarageSlots(
     transaction: any,
@@ -21,12 +22,13 @@ async function ensureGarageSlots(
     userData: any,
     userId: string
 ): Promise<GarageSlot[]> {
-    // Kui garaaži slotid juba olemas, tagasta need
-    if (userData.estateData?.garageSlots && userData.estateData.garageSlots.length > 0) {
-        return userData.estateData.garageSlots;
+    // Check if garage slots exist and are valid
+    const existingSlots = userData.estateData?.garageSlots;
+    if (existingSlots && Array.isArray(existingSlots) && existingSlots.length > 0) {
+        return existingSlots;
     }
 
-    // Kontrolli kas kasutajal on kinnisvara garaažiga
+    // Get estate data
     const estateRef = doc(db, 'playerEstates', userId);
     const estateDoc = await transaction.get(estateRef);
 
@@ -37,12 +39,12 @@ async function ensureGarageSlots(
     const estateData = estateDoc.data();
     const currentEstate = estateData.currentEstate;
 
-    // Kui pole kinnisvara või pole garaaži
+    // Check garage capacity
     if (!currentEstate?.hasGarage || !currentEstate?.garageCapacity) {
         return [];
     }
 
-    // Loo uued tühjad garaaži slotid
+    // Create new empty garage slots
     const newSlots: GarageSlot[] = [];
     for (let i = 1; i <= currentEstate.garageCapacity; i++) {
         newSlots.push({
@@ -51,16 +53,14 @@ async function ensureGarageSlots(
         });
     }
 
-    // Uuenda kasutaja dokument uute slottidega
+    // Update user document with new slots
     transaction.update(userRef, {
         'estateData.garageSlots': newSlots
     });
 
-    console.log(`Initialized ${newSlots.length} garage slots for user ${userId}`);
     return newSlots;
 }
 
-// Uuenda purchaseNewCar funktsiooni
 export async function purchaseNewCar(
     userId: string,
     carModel: CarModel
@@ -76,12 +76,12 @@ export async function purchaseNewCar(
 
             const userData = userDoc.data();
 
-            // Kontrolli raha
+            // Check money
             if (userData.money < carModel.basePrice) {
                 throw new Error('Pole piisavalt raha');
             }
 
-            // UUENDATUD: Kasuta ensureGarageSlots funktsiooni
+            // Get garage slots
             const garageSlots = await ensureGarageSlots(
                 transaction,
                 userRef,
@@ -89,21 +89,19 @@ export async function purchaseNewCar(
                 userId
             );
 
-            // Kui pole ühtegi slotti (pole garaaži)
+            // Check if garage exists
             if (garageSlots.length === 0) {
                 throw new Error('Sul pole garaaži! Osta kõigepealt garaažiga kinnisvara.');
             }
 
-            // Leia tühi slot
+            // Find empty slot
             const emptySlotIndex = garageSlots.findIndex((slot: GarageSlot) => slot.isEmpty);
 
             if (emptySlotIndex === -1) {
                 throw new Error('Garaažis pole ruumi');
             }
 
-            // ... ülejäänud kood jääb samaks
-
-            // Loo uus auto
+            // Create new car
             const newCar: PlayerCar = {
                 id: `car_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                 ownerId: userId,
@@ -114,21 +112,21 @@ export async function purchaseNewCar(
                 isForSale: false
             };
 
-            // Salvesta auto
+            // Save car
             const carRef = doc(db, 'cars', newCar.id);
             transaction.set(carRef, {
                 ...newCar,
                 purchaseDate: Timestamp.fromDate(newCar.purchaseDate)
             });
 
-            // Uuenda garaaži slot
+            // Update garage slot
             garageSlots[emptySlotIndex] = {
                 slotId: garageSlots[emptySlotIndex].slotId,
                 isEmpty: false,
                 carId: newCar.id
             };
 
-            // Uuenda kasutaja andmed (raha ja garaaž)
+            // Update user data
             transaction.update(userRef, {
                 money: userData.money - carModel.basePrice,
                 'estateData.garageSlots': garageSlots
@@ -149,38 +147,32 @@ export async function purchaseNewCar(
     }
 }
 
-// Osta kasutatud auto (täiustatud transaktsiooniga)
 export async function purchaseUsedCar(
     buyerId: string,
     carId: string
 ): Promise<{ success: boolean; message: string }> {
     try {
         return await runTransaction(db, async (transaction) => {
-            // Loe kõik vajalikud dokumendid
             const carRef = doc(db, 'cars', carId);
             const buyerRef = doc(db, 'users', buyerId);
 
             const carDoc = await transaction.get(carRef);
             const buyerDoc = await transaction.get(buyerRef);
 
-            // Kontrolli auto olemasolu
             if (!carDoc.exists()) {
                 throw new Error('Autot ei leitud');
             }
 
             const carData = carDoc.data() as PlayerCar;
 
-            // Kontrolli kas auto on veel müügis
             if (!carData.isForSale) {
                 throw new Error('Auto ei ole enam müügis');
             }
 
-            // Kontrolli et ei osta enda autot
             if (carData.ownerId === buyerId) {
                 throw new Error('Ei saa osta enda autot');
             }
 
-            // Kontrolli ostja olemasolu
             if (!buyerDoc.exists()) {
                 throw new Error('Ostja andmed ei leitud');
             }
@@ -188,12 +180,10 @@ export async function purchaseUsedCar(
             const buyerData = buyerDoc.data();
             const salePrice = carData.salePrice || 0;
 
-            // Kontrolli raha
             if (buyerData.money < salePrice) {
                 throw new Error('Pole piisavalt raha');
             }
 
-            // Kontrolli garaaži ruumi - õige tüübiga
             const buyerGarageSlots: GarageSlot[] = buyerData.estateData?.garageSlots || [];
             const emptySlotIndex = buyerGarageSlots.findIndex((slot: GarageSlot) => slot.isEmpty);
 
@@ -201,7 +191,6 @@ export async function purchaseUsedCar(
                 throw new Error('Garaažis pole ruumi');
             }
 
-            // Loe müüja andmed
             const sellerRef = doc(db, 'users', carData.ownerId);
             const sellerDoc = await transaction.get(sellerRef);
 
@@ -210,25 +199,21 @@ export async function purchaseUsedCar(
             }
 
             const sellerData = sellerDoc.data();
-
-            // Leia müüja garaaži slot - õige tüübiga
             const sellerGarageSlots: GarageSlot[] = sellerData.estateData?.garageSlots || [];
             const sellerSlotIndex = sellerGarageSlots.findIndex(
                 (slot: GarageSlot) => slot.carId === carId
             );
 
-            // Tee kõik muudatused transaktsiooniliselt
-
-            // 1. Uuenda auto omanik ja eemalda müügist
+            // Update car ownership
             transaction.update(carRef, {
                 ownerId: buyerId,
                 isForSale: false,
                 salePrice: null,
                 listedAt: null,
-                previousOwner: carData.ownerId // Lisa eelmine omanik
+                previousOwner: carData.ownerId
             });
 
-            // 2. Uuenda müüja (raha ja garaaž)
+            // Update seller
             if (sellerSlotIndex !== -1) {
                 sellerGarageSlots[sellerSlotIndex] = {
                     slotId: sellerGarageSlots[sellerSlotIndex].slotId,
@@ -242,7 +227,7 @@ export async function purchaseUsedCar(
                 'estateData.garageSlots': sellerGarageSlots
             });
 
-            // 3. Uuenda ostja (raha ja garaaž)
+            // Update buyer
             buyerGarageSlots[emptySlotIndex] = {
                 slotId: buyerGarageSlots[emptySlotIndex].slotId,
                 isEmpty: false,
@@ -268,7 +253,6 @@ export async function purchaseUsedCar(
     }
 }
 
-// Pane auto müüki (transaktsiooniga)
 export async function listCarForSale(
     userId: string,
     carId: string,
@@ -276,7 +260,6 @@ export async function listCarForSale(
 ): Promise<{ success: boolean; message: string }> {
     try {
         return await runTransaction(db, async (transaction) => {
-            // Kontrolli auto ja omaniku õigsust
             const carRef = doc(db, 'cars', carId);
             const carDoc = await transaction.get(carRef);
 
@@ -286,17 +269,14 @@ export async function listCarForSale(
 
             const carData = carDoc.data() as PlayerCar;
 
-            // Kontrolli omandiõigust
             if (carData.ownerId !== userId) {
                 throw new Error('See ei ole sinu auto');
             }
 
-            // Kontrolli kas juba müügis
             if (carData.isForSale) {
                 throw new Error('Auto on juba müügis');
             }
 
-            // Kontrolli hinda
             if (price < 100) {
                 throw new Error('Hind peab olema vähemalt $100');
             }
@@ -305,7 +285,6 @@ export async function listCarForSale(
                 throw new Error('Hind on liiga kõrge');
             }
 
-            // Pane müüki
             transaction.update(carRef, {
                 isForSale: true,
                 salePrice: price,
@@ -326,7 +305,6 @@ export async function listCarForSale(
     }
 }
 
-// Võta auto müügist maha (transaktsiooniga)
 export async function unlistCarFromSale(
     userId: string,
     carId: string
@@ -342,17 +320,14 @@ export async function unlistCarFromSale(
 
             const carData = carDoc.data() as PlayerCar;
 
-            // Kontrolli omandiõigust
             if (carData.ownerId !== userId) {
                 throw new Error('See ei ole sinu auto');
             }
 
-            // Kontrolli kas on müügis
             if (!carData.isForSale) {
                 throw new Error('Auto ei ole müügis');
             }
 
-            // Eemalda müügist
             transaction.update(carRef, {
                 isForSale: false,
                 salePrice: null,
@@ -373,7 +348,6 @@ export async function unlistCarFromSale(
     }
 }
 
-// Saa kasutaja autod (ei vaja transaktsiooni)
 export async function getUserCars(userId: string): Promise<PlayerCar[]> {
     try {
         const carsQuery = query(
@@ -400,34 +374,25 @@ export async function getUserCars(userId: string): Promise<PlayerCar[]> {
     }
 }
 
-// Saa müügis olevad autod (ei vaja transaktsiooni)
 export async function getCarsForSale(): Promise<Array<PlayerCar & { sellerName?: string }>> {
     try {
-        console.log('Starting to fetch cars for sale...'); // DEBUG
-
         const carsQuery = query(
             collection(db, 'cars'),
             where('isForSale', '==', true)
-            // Eemalda orderBy ajutiselt, kuni index valmis
         );
 
         const snapshot = await getDocs(carsQuery);
-        console.log('Found cars:', snapshot.size); // DEBUG
-
         const cars: Array<PlayerCar & { sellerName?: string }> = [];
 
-        // Kogume kõik unikaalsed ownerId-d
         const ownerIds = new Set<string>();
         const carDocs: any[] = [];
 
         snapshot.forEach((doc) => {
             const data = doc.data();
-            console.log('Car data:', data); // DEBUG
             ownerIds.add(data.ownerId);
             carDocs.push({ id: doc.id, ...data });
         });
 
-        // Päri kõik kasutajad korraga (efektiivsem)
         const userPromises = Array.from(ownerIds).map(async (userId) => {
             const userDoc = await getDoc(doc(db, 'users', userId));
             if (userDoc.exists()) {
@@ -443,7 +408,6 @@ export async function getCarsForSale(): Promise<Array<PlayerCar & { sellerName?:
         const users = await Promise.all(userPromises);
         const userMap = new Map(users.map(u => [u.userId, u.username]));
 
-        // Ühenda autod müüja nimedega
         carDocs.forEach((carData) => {
             cars.push({
                 ...carData,
@@ -454,17 +418,59 @@ export async function getCarsForSale(): Promise<Array<PlayerCar & { sellerName?:
             } as PlayerCar & { sellerName?: string });
         });
 
-        // Sorteeri JavaScriptis kuni Firestore index valmis
         cars.sort((a, b) => {
             const dateA = a.listedAt || new Date(0);
             const dateB = b.listedAt || new Date(0);
             return dateB.getTime() - dateA.getTime();
         });
 
-        console.log('Final sorted cars:', cars); // DEBUG
         return cars;
     } catch (error) {
         console.error('Error fetching cars for sale:', error);
         return [];
     }
 }
+
+export const updateCarParts = async (
+    userId: string,
+    carId: string,
+    partCategory: 'turbo' | 'ecu' | 'intake' | 'exhaust',
+    newLevel: string
+): Promise<{ success: boolean; message: string }> => {
+    try {
+        const carRef = doc(db, 'cars', carId);
+        const carSnap = await getDoc(carRef);
+
+        if (!carSnap.exists()) {
+            return { success: false, message: 'Auto ei leitud' };
+        }
+
+        const carData = carSnap.data() as PlayerCar;
+
+        if (carData.ownerId !== userId) {
+            return { success: false, message: 'See ei ole sinu auto' };
+        }
+
+        const updatedEngine = { ...carData.engine };
+
+        if (partCategory === 'turbo') {
+            updatedEngine.turbo = newLevel as 'stock' | 'stage1' | 'stage2' | 'stage3';
+        } else if (partCategory === 'ecu') {
+            updatedEngine.ecu = newLevel as 'stock' | 'stage1' | 'stage2' | 'stage3';
+        } else if (partCategory === 'intake') {
+            updatedEngine.intake = newLevel as 'stock' | 'sport' | 'performance';
+        } else if (partCategory === 'exhaust') {
+            updatedEngine.exhaust = newLevel as 'stock' | 'sport' | 'performance';
+        }
+
+        await updateDoc(carRef, {
+            engine: updatedEngine,
+            updatedAt: serverTimestamp()
+        });
+
+        return { success: true, message: 'Osa vahetatud!' };
+    } catch (error) {
+        console.error('Error updating car parts:', error);
+        return { success: false, message: 'Viga osade vahetamisel' };
+    }
+};
