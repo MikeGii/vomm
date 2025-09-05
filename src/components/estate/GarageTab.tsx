@@ -6,6 +6,8 @@ import { useToast } from '../../contexts/ToastContext';
 import { getUserCars, listCarForSale, unlistCarFromSale } from '../../services/VehicleService';
 import { getCarModelById } from '../../data/vehicles';
 import { calculateCarStats } from '../../utils/vehicleCalculations';
+import CarTuningSelector from './CarTuningSelector';
+import SparePartsInventory from './SparePartsInventory';
 import { PlayerCar } from '../../types/vehicles';
 import '../../styles/components/estate/GarageTab.css';
 
@@ -20,6 +22,8 @@ export const GarageTab: React.FC = () => {
     const [selectedCarId, setSelectedCarId] = useState<string | null>(null);
     const [salePrice, setSalePrice] = useState<string>('');
     const [isListing, setIsListing] = useState(false);
+
+    const [selectedTuningCarId, setSelectedTuningCarId] = useState<string | null>(null);
 
     // Check if player has garage access
     const hasGarageAccess = playerEstate?.currentEstate?.hasGarage || false;
@@ -94,6 +98,11 @@ export const GarageTab: React.FC = () => {
         }
     };
 
+    const handlePartInstalled = () => {
+        // Reload cars to show updated parts
+        loadUserCars();
+    };
+
     // If no garage access
     if (!hasGarageAccess) {
         return (
@@ -154,6 +163,8 @@ export const GarageTab: React.FC = () => {
                         </button>
                     </div>
                 ) : (
+                    <>
+                    {/* Existing cars section */}
                     <div className="vehicles-grid">
                         {userCars.map((car) => {
                             const carModel = getCarModelById(car.carModelId);
@@ -164,12 +175,13 @@ export const GarageTab: React.FC = () => {
 
                             return (
                                 <div key={car.id} className={`vehicle-card ${car.isForSale ? 'for-sale' : ''}`}>
+                                    {/* ... keep all your existing vehicle card content exactly as it is ... */}
                                     <div className="vehicle-header">
                                         <h4>{carModel.brand} {carModel.model}</h4>
                                         {car.isForSale && (
                                             <span className="sale-badge">
-                                                Müügis: ${car.salePrice?.toLocaleString()}
-                                            </span>
+                                    Müügis: ${car.salePrice?.toLocaleString()}
+                                </span>
                                         )}
                                     </div>
 
@@ -281,6 +293,22 @@ export const GarageTab: React.FC = () => {
                             </div>
                         )}
                     </div>
+
+                        {/* Tuning section - BELOW the cars */}
+                        <div className="tuning-section">
+                            <CarTuningSelector
+                                userCars={userCars}
+                                onCarSelect={setSelectedTuningCarId}
+                                selectedCarId={selectedTuningCarId}
+                                onCarUpdated={handlePartInstalled}
+                            />
+
+                            <SparePartsInventory
+                                selectedCarId={selectedTuningCarId}
+                                onPartInstalled={handlePartInstalled}
+                            />
+                        </div>
+                    </>
                 )}
             </div>
         </div>

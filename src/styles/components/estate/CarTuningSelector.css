@@ -1,0 +1,383 @@
+/* src/styles/components/estate/CarTuningSelector.css */
+
+.car-tuning-selector {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Header */
+.selector-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #333;
+}
+
+.selector-header h3 {
+    color: #f0f0f0;
+    font-size: 1.3rem;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.selector-header p {
+    color: #888;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Car selector */
+.car-selector {
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.car-selector label {
+    color: #888;
+    font-size: 0.9rem;
+    min-width: 80px;
+}
+
+.car-dropdown {
+    flex: 1;
+    padding: 0.6rem;
+    background: #0f0f0f;
+    border: 1px solid #444;
+    color: #f0f0f0;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.car-dropdown:hover {
+    border-color: #4a90e2;
+    background: #1a1a1a;
+}
+
+.car-dropdown:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+/* Current parts display */
+.current-parts {
+    animation: fadeIn 0.3s ease;
+}
+
+.current-parts h4 {
+    color: #f0f0f0;
+    font-size: 1.1rem;
+    margin: 0 0 1rem 0;
+}
+
+.parts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Part items */
+.part-item {
+    background: #0f0f0f;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.part-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #333;
+    transition: background 0.3s ease;
+}
+
+/* Level color coding */
+.part-item.stock::before {
+    background: #666;
+}
+
+.part-item.stage1::before {
+    background: linear-gradient(90deg, #4a90e2, #357abd);
+}
+
+.part-item.stage2::before {
+    background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.part-item.stage3::before {
+    background: linear-gradient(90deg, #f39c12, #e74c3c);
+}
+
+.part-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.part-item .part-icon {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    margin-bottom: 0.75rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    transition: transform 0.3s ease;
+}
+
+.part-item:hover .part-icon {
+    transform: scale(1.1);
+}
+
+.part-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.part-type {
+    color: #888;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.part-level {
+    color: #f0f0f0;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Car stats preview */
+.car-stats-preview {
+    background: #0f0f0f;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-around;
+    gap: 1rem;
+}
+
+.car-stats-preview .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.car-stats-preview .stat span {
+    color: #888;
+    font-size: 0.85rem;
+}
+
+.car-stats-preview .stat strong {
+    color: #4CAF50;
+    font-size: 1.1rem;
+}
+
+/* No car selected */
+.no-car-selected {
+    text-align: center;
+    padding: 2rem;
+    color: #888;
+}
+
+.no-car-selected p {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .car-tuning-selector {
+        padding: 1rem;
+    }
+
+    .car-selector {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .car-selector label {
+        min-width: auto;
+    }
+
+    .parts-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .part-item {
+        padding: 0.75rem;
+    }
+
+    .part-item .part-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .car-stats-preview {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .parts-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Add power boost display */
+.part-boost {
+    color: #4CAF50;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 0.25rem;
+}
+
+/* Update part-info to accommodate boost display */
+.part-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    text-align: center;
+}
+
+/* Add animation for stats updates */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.current-parts {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Enhance stat display */
+.car-stats-preview .stat strong {
+    color: #4CAF50;
+    font-size: 1.1rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Add boost stat special styling */
+.car-stats-preview .stat:last-child strong {
+    color: #ff9800;
+}
+
+/* Remove part button */
+.btn-remove-part {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: #f44336;
+    color: white;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    opacity: 0.8;
+}
+
+.btn-remove-part:hover:not(:disabled) {
+    opacity: 1;
+    background: #d32f2f;
+    transform: scale(1.1);
+}
+
+.btn-remove-part:disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Show remove button only on hover for cleaner look */
+.part-item .btn-remove-part {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.part-item:hover .btn-remove-part {
+    opacity: 0.8;
+    pointer-events: auto;
+}
+
+.part-item:hover .btn-remove-part:hover {
+    opacity: 1;
+}
+
+.part-item.empty-slot {
+    border: 2px dashed #555;
+    background: #111;
+    opacity: 0.7;
+}
+
+.empty-slot-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.empty-icon {
+    font-size: 2rem;
+    color: #555;
+}
+
+.empty-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.empty-label {
+    color: #888;
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+.install-hint {
+    color: #666;
+    font-size: 0.75rem;
+}
+
+.part-item.empty-slot:hover {
+    border-color: #777;
+    opacity: 1;
+}
