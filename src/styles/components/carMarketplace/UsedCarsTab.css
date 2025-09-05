@@ -1,0 +1,636 @@
+/* src/styles/components/carMarketplace/UsedCarsTab.css */
+
+.used-cars-tab {
+    padding: 1rem 0;
+    min-height: 400px;
+}
+
+/* Header ja filtrid */
+.tab-header {
+    background: #1a1a1a;
+    border-radius: 8px;
+    border: 1px solid #333;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.filters-row {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-group label {
+    color: #888;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.brand-filter,
+.sort-filter {
+    padding: 0.5rem 0.75rem;
+    background: #2a2a2a;
+    color: #f0f0f0;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    min-width: 150px;
+}
+
+.brand-filter:hover,
+.sort-filter:hover {
+    border-color: #555;
+    background: #333;
+}
+
+.brand-filter:focus,
+.sort-filter:focus {
+    outline: none;
+    border-color: #4a90e2;
+}
+
+/* Raha kuvamine */
+.money-display {
+    margin-left: auto;
+    padding: 0.6rem 1rem;
+    background: #2a2a2a;
+    border-radius: 4px;
+    border: 1px solid #444;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.money-label {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.money-amount {
+    color: #4CAF50;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.cars-count {
+    color: #aaa;
+    font-size: 0.9rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #333;
+}
+
+/* Loading state */
+.loading-message {
+    text-align: center;
+    padding: 3rem;
+    color: #888;
+    font-size: 1.1rem;
+    background: #1a1a1a;
+    border-radius: 8px;
+    border: 1px solid #333;
+}
+
+/* No cars message */
+.no-cars-message {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+}
+
+.no-cars-message h3 {
+    color: #f0f0f0;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.no-cars-message p {
+    color: #888;
+    font-size: 1rem;
+}
+
+/* Autode grid */
+.used-cars-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+/* Auto kaart */
+.used-car-card {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.used-car-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-color: #4a90e2;
+}
+
+.used-car-card.unaffordable {
+    opacity: 0.7;
+}
+
+/* Auto päis */
+.car-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #333;
+}
+
+.car-header h3 {
+    color: #f0f0f0;
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.engine-code {
+    background: #2a2a2a;
+    color: #4a90e2;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-family: monospace;
+    font-weight: 500;
+}
+
+/* Tuuningu märgised */
+.tuning-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    min-height: 28px;
+}
+
+.tuning-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Auto detailid */
+.car-details {
+    flex: 1;
+    margin-bottom: 1rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid #262626;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.detail-value {
+    color: #f0f0f0;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+.power-value {
+    color: #4CAF50;
+}
+
+.horsepower {
+    color: #888;
+    font-size: 0.85rem;
+    margin-left: 0.25rem;
+}
+
+/* Auto jalus */
+.car-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid #333;
+    margin-top: auto;
+}
+
+.price-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.price-label {
+    color: #888;
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.price-amount {
+    color: #4CAF50;
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+.price-amount.unaffordable {
+    color: #f44336;
+}
+
+/* Ostunupp */
+.btn-purchase {
+    padding: 0.6rem 1.5rem;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-purchase:hover:not(.disabled):not(.purchasing) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+}
+
+.btn-purchase.disabled {
+    background: #444;
+    color: #777;
+    cursor: not-allowed;
+}
+
+.btn-purchase.purchasing {
+    background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Tablet view */
+@media (max-width: 1024px) {
+    .used-cars-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+}
+
+/* Mobile view */
+@media (max-width: 768px) {
+    .filters-row {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .filter-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .brand-filter,
+    .sort-filter {
+        flex: 1;
+        min-width: auto;
+    }
+
+    .money-display {
+        margin-left: 0;
+        justify-content: center;
+    }
+
+    .used-cars-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .used-car-card {
+        padding: 1rem;
+    }
+
+    .car-header h3 {
+        font-size: 1.1rem;
+    }
+
+    .detail-row {
+        padding: 0.3rem 0;
+    }
+
+    .detail-label,
+    .detail-value {
+        font-size: 0.85rem;
+    }
+
+    .tuning-badges {
+        gap: 0.3rem;
+    }
+
+    .tuning-badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .price-amount {
+        font-size: 1.1rem;
+    }
+
+    .btn-purchase {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+    .tab-header {
+        padding: 0.75rem;
+    }
+
+    .car-header {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .engine-code {
+        font-size: 0.8rem;
+    }
+
+    .horsepower {
+        display: block;
+        margin-left: 0;
+    }
+
+    .car-footer {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .price-section {
+        text-align: center;
+    }
+
+    .btn-purchase {
+        width: 100%;
+    }
+}
+
+/* Special states */
+.used-car-card.highlighted {
+    border-color: #ffa726;
+    box-shadow: 0 0 10px rgba(255, 167, 38, 0.3);
+}
+
+/* Animation for new listings */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.used-car-card {
+    animation: slideIn 0.3s ease;
+}
+
+.seller-name {
+    color: #4a90e2;
+    font-weight: 600;
+}
+
+.used-cars-table-container {
+    background: #1a1a1a;
+    border-radius: 8px;
+    border: 1px solid #333;
+    overflow-x: auto;
+    margin-top: 1.5rem;
+}
+
+.used-cars-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.used-cars-table thead {
+    background: #2a2a2a;
+    border-bottom: 2px solid #444;
+}
+
+.used-cars-table th {
+    padding: 1rem;
+    text-align: left;
+    color: #f0f0f0;
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.used-cars-table tbody tr {
+    border-bottom: 1px solid #333;
+    transition: background-color 0.2s ease;
+}
+
+.used-cars-table tbody tr:hover {
+    background: rgba(74, 144, 226, 0.1);
+}
+
+.used-cars-table tbody tr.unaffordable {
+    opacity: 0.6;
+}
+
+.used-cars-table td {
+    padding: 0.75rem 1rem;
+    color: #ccc;
+}
+
+/* Kolonni stiilid tabelis */
+.car-row .car-brand {
+    font-weight: 600;
+    color: #f0f0f0;
+}
+
+.car-row .car-model {
+    color: #f0f0f0;
+}
+
+.car-row .engine-code {
+    font-family: monospace;
+    background: #2a2a2a;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    color: #4a90e2;
+}
+
+.car-row .car-power .power-value {
+    color: #4CAF50;
+    font-weight: 500;
+}
+
+.car-row .car-power .horsepower {
+    color: #888;
+    font-size: 0.85rem;
+    margin-left: 0.25rem;
+}
+
+.car-row .car-mileage {
+    font-family: monospace;
+}
+
+/* Tuuningu märgised tabelis */
+.tuning-badges-inline {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.tuning-badge-small {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.15rem 0.3rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.stock-badge {
+    color: #666;
+    font-style: italic;
+    font-size: 0.85rem;
+}
+
+.car-row .car-seller {
+    color: #4a90e2;
+    font-weight: 500;
+}
+
+.car-row .car-price .price {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #4CAF50;
+}
+
+.car-row .car-price .price-unaffordable {
+    color: #f44336;
+}
+
+/* Osta nupp tabelis */
+.btn-purchase-table {
+    padding: 0.4rem 1rem;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-purchase-table:hover:not(.disabled):not(.purchasing) {
+    background: #45a049;
+    transform: translateY(-1px);
+}
+
+.btn-purchase-table.disabled {
+    background: #444;
+    color: #777;
+    cursor: not-allowed;
+}
+
+.btn-purchase-table.purchasing {
+    background: #ffa726;
+    animation: pulse 1s infinite;
+}
+
+/* Tabeli mobile view */
+@media (max-width: 1024px) {
+    .used-cars-table {
+        font-size: 0.85rem;
+    }
+
+    .used-cars-table th,
+    .used-cars-table td {
+        padding: 0.5rem;
+    }
+
+    /* Peida mõned veerud mobiilis */
+    .car-row .car-engine,
+    .used-cars-table th:nth-child(3) {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Peida veel veerge väiksemal ekraanil */
+    .car-row .car-tuning,
+    .used-cars-table th:nth-child(6),
+    .car-row .car-seller,
+    .used-cars-table th:nth-child(7) {
+        display: none;
+    }
+
+    .tuning-badge-small {
+        font-size: 0.6rem;
+        padding: 0.1rem 0.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .car-row .car-power .horsepower {
+        display: none;
+    }
+
+    .btn-purchase-table {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.8rem;
+    }
+}

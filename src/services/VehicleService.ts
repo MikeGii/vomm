@@ -7,21 +7,66 @@ import {
     Timestamp,
     orderBy,
     limit,
-    runTransaction
+    runTransaction, getDoc
 } from 'firebase/firestore';
 import { firestore as db } from '../config/firebase';
 import { PlayerCar, CarModel } from '../types/vehicles';
 import { GarageSlot } from '../types/estate'; // Lisa see import!
 import { createStockEngine } from '../data/vehicles';
 
-// Osta uus auto (transaktsiooniga)
+
+async function ensureGarageSlots(
+    transaction: any,
+    userRef: any,
+    userData: any,
+    userId: string
+): Promise<GarageSlot[]> {
+    // Kui garaaži slotid juba olemas, tagasta need
+    if (userData.estateData?.garageSlots && userData.estateData.garageSlots.length > 0) {
+        return userData.estateData.garageSlots;
+    }
+
+    // Kontrolli kas kasutajal on kinnisvara garaažiga
+    const estateRef = doc(db, 'playerEstates', userId);
+    const estateDoc = await transaction.get(estateRef);
+
+    if (!estateDoc.exists()) {
+        return [];
+    }
+
+    const estateData = estateDoc.data();
+    const currentEstate = estateData.currentEstate;
+
+    // Kui pole kinnisvara või pole garaaži
+    if (!currentEstate?.hasGarage || !currentEstate?.garageCapacity) {
+        return [];
+    }
+
+    // Loo uued tühjad garaaži slotid
+    const newSlots: GarageSlot[] = [];
+    for (let i = 1; i <= currentEstate.garageCapacity; i++) {
+        newSlots.push({
+            slotId: i,
+            isEmpty: true
+        });
+    }
+
+    // Uuenda kasutaja dokument uute slottidega
+    transaction.update(userRef, {
+        'estateData.garageSlots': newSlots
+    });
+
+    console.log(`Initialized ${newSlots.length} garage slots for user ${userId}`);
+    return newSlots;
+}
+
+// Uuenda purchaseNewCar funktsiooni
 export async function purchaseNewCar(
     userId: string,
     carModel: CarModel
 ): Promise<{ success: boolean; message: string; carId?: string }> {
     try {
         return await runTransaction(db, async (transaction) => {
-            // Loe kasutaja andmed transaktsioonist
             const userRef = doc(db, 'users', userId);
             const userDoc = await transaction.get(userRef);
 
@@ -36,13 +81,27 @@ export async function purchaseNewCar(
                 throw new Error('Pole piisavalt raha');
             }
 
-            // Kontrolli garaaži ruumi - nüüd õige tüübiga
-            const garageSlots: GarageSlot[] = userData.estateData?.garageSlots || [];
+            // UUENDATUD: Kasuta ensureGarageSlots funktsiooni
+            const garageSlots = await ensureGarageSlots(
+                transaction,
+                userRef,
+                userData,
+                userId
+            );
+
+            // Kui pole ühtegi slotti (pole garaaži)
+            if (garageSlots.length === 0) {
+                throw new Error('Sul pole garaaži! Osta kõigepealt garaažiga kinnisvara.');
+            }
+
+            // Leia tühi slot
             const emptySlotIndex = garageSlots.findIndex((slot: GarageSlot) => slot.isEmpty);
 
             if (emptySlotIndex === -1) {
                 throw new Error('Garaažis pole ruumi');
             }
+
+            // ... ülejäänud kood jääb samaks
 
             // Loo uus auto
             const newCar: PlayerCar = {
@@ -342,28 +401,67 @@ export async function getUserCars(userId: string): Promise<PlayerCar[]> {
 }
 
 // Saa müügis olevad autod (ei vaja transaktsiooni)
-export async function getCarsForSale(): Promise<PlayerCar[]> {
+export async function getCarsForSale(): Promise<Array<PlayerCar & { sellerName?: string }>> {
     try {
+        console.log('Starting to fetch cars for sale...'); // DEBUG
+
         const carsQuery = query(
             collection(db, 'cars'),
-            where('isForSale', '==', true),
-            orderBy('listedAt', 'desc'),
-            limit(50)
+            where('isForSale', '==', true)
+            // Eemalda orderBy ajutiselt, kuni index valmis
         );
 
         const snapshot = await getDocs(carsQuery);
-        const cars: PlayerCar[] = [];
+        console.log('Found cars:', snapshot.size); // DEBUG
+
+        const cars: Array<PlayerCar & { sellerName?: string }> = [];
+
+        // Kogume kõik unikaalsed ownerId-d
+        const ownerIds = new Set<string>();
+        const carDocs: any[] = [];
 
         snapshot.forEach((doc) => {
             const data = doc.data();
-            cars.push({
-                ...data,
-                id: doc.id,
-                purchaseDate: data.purchaseDate?.toDate() || new Date(),
-                listedAt: data.listedAt?.toDate()
-            } as PlayerCar);
+            console.log('Car data:', data); // DEBUG
+            ownerIds.add(data.ownerId);
+            carDocs.push({ id: doc.id, ...data });
         });
 
+        // Päri kõik kasutajad korraga (efektiivsem)
+        const userPromises = Array.from(ownerIds).map(async (userId) => {
+            const userDoc = await getDoc(doc(db, 'users', userId));
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                return {
+                    userId,
+                    username: userData.username || userData.displayName || 'Kasutaja'
+                };
+            }
+            return { userId, username: 'Kasutaja' };
+        });
+
+        const users = await Promise.all(userPromises);
+        const userMap = new Map(users.map(u => [u.userId, u.username]));
+
+        // Ühenda autod müüja nimedega
+        carDocs.forEach((carData) => {
+            cars.push({
+                ...carData,
+                id: carData.id,
+                purchaseDate: carData.purchaseDate?.toDate() || new Date(),
+                listedAt: carData.listedAt?.toDate(),
+                sellerName: userMap.get(carData.ownerId) || 'Kasutaja'
+            } as PlayerCar & { sellerName?: string });
+        });
+
+        // Sorteeri JavaScriptis kuni Firestore index valmis
+        cars.sort((a, b) => {
+            const dateA = a.listedAt || new Date(0);
+            const dateB = b.listedAt || new Date(0);
+            return dateB.getTime() - dateA.getTime();
+        });
+
+        console.log('Final sorted cars:', cars); // DEBUG
         return cars;
     } catch (error) {
         console.error('Error fetching cars for sale:', error);

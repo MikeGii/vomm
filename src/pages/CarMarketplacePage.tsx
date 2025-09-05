@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { TabNavigation } from '../components/ui/TabNavigation';
 import NewCarsTab from '../components/carMarketplace/NewCarsTab';
+import UsedCarsTab from "../components/carMarketplace/UsedCarsTab";
 import '../styles/pages/CarMarketplace.css';
 
 const CarMarketplacePage: React.FC = () => {
@@ -18,12 +19,7 @@ const CarMarketplacePage: React.FC = () => {
     const renderTabContent = () => {
         switch (activeTab) {
             case 'used':
-                return (
-                    <div className="tab-placeholder">
-                        <h2>Kasutatud autod</h2>
-                        <p>Siin saad osta kasutatud autosid teistelt mängijatelt.</p>
-                    </div>
-                );
+                return <UsedCarsTab />;
             case 'new':
                 return <NewCarsTab />;
             case 'parts':
