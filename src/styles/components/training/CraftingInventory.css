@@ -332,3 +332,148 @@
         margin-top: 0.2rem;
     }
 }
+
+
+/* Item count in header */
+.item-count {
+    font-size: 0.9rem;
+    color: #888;
+    font-weight: normal;
+    margin-left: 0.5rem;
+}
+
+/* Pagination container */
+.inventory-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #333;
+}
+
+/* Pagination buttons */
+.pagination-btn {
+    padding: 0.5rem 1rem;
+    background-color: #2a2a2a;
+    color: #f0f0f0;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    min-width: 80px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #333;
+    border-color: #4a90e2;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Page numbers container */
+.pagination-pages {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Individual page numbers */
+.page-number {
+    padding: 0.4rem 0.6rem;
+    background-color: #2a2a2a;
+    color: #f0f0f0;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    min-width: 36px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.page-number:hover {
+    background-color: #333;
+    border-color: #4a90e2;
+}
+
+.page-number.active {
+    background-color: #4a90e2;
+    color: white;
+    border-color: #4a90e2;
+}
+
+.page-dots {
+    color: #666;
+    padding: 0 0.5rem;
+    user-select: none;
+}
+
+/* Mobile responsiveness for pagination */
+@media (max-width: 768px) {
+    .inventory-pagination {
+        gap: 0.3rem;
+        padding-top: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .pagination-btn {
+        padding: 0.4rem 0.7rem;
+        font-size: 0.85rem;
+        min-width: 70px;
+    }
+
+    .pagination-pages {
+        gap: 0.2rem;
+    }
+
+    .page-number {
+        padding: 0.35rem 0.5rem;
+        font-size: 0.85rem;
+        min-width: 32px;
+    }
+
+    /* Hide page numbers except current on very small screens */
+    @media (max-width: 480px) {
+        .page-number:not(.active) {
+            display: none;
+        }
+
+        .page-dots {
+            display: none;
+        }
+
+        /* Show current page info instead */
+        .pagination-pages::after {
+            content: attr(data-page-info);
+            color: #888;
+            font-size: 0.85rem;
+        }
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+    .inventory-pagination {
+        gap: 0.2rem;
+    }
+
+    .pagination-btn {
+        padding: 0.35rem 0.5rem;
+        font-size: 0.8rem;
+        min-width: 60px;
+    }
+
+    /* Show simplified page counter on mobile */
+    .pagination-pages {
+        color: #888;
+        font-size: 0.85rem;
+        padding: 0 0.5rem;
+    }
+}

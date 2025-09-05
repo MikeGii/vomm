@@ -117,7 +117,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'patrol',
         requirements: {
             minimumLevel: 55,
-            completedCourses: ['lopueksam', 'police_group_leader_course'],
+            completedCourses: ['police_group_leader_course'],
             minimumWorkedHours: 150,
             minimumReputation: 5000,
             attributes: {
@@ -135,7 +135,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'procedural_service',
         requirements: {
             minimumLevel: 60,
-            completedCourses: ['lopueksam', 'police_group_leader_course', 'evidence_place_course', 'enhanced_law_studies'],
+            completedCourses: ['police_group_leader_course', 'evidence_place_course', 'enhanced_law_studies'],
             minimumWorkedHours: 150,
             minimumReputation: 5000,
             attributes: {
@@ -153,7 +153,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'emergency_response',
         requirements: {
             minimumLevel: 65,
-            completedCourses: ['lopueksam', 'police_group_leader_course', 'riot_police_course', 'medical_course_police', 'police_atv_course', 'police_drone_course'],
+            completedCourses: ['police_group_leader_course', 'riot_police_course', 'medical_course_police', 'police_atv_course', 'police_drone_course'],
             minimumWorkedHours: 150,
             minimumReputation: 5000,
             attributes: {
@@ -171,7 +171,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'k9_unit',
         requirements: {
             minimumLevel: 60,
-            completedCourses: ['lopueksam', 'police_group_leader_course', 'dog_handler_course'],
+            completedCourses: ['police_group_leader_course', 'dog_handler_course'],
             minimumWorkedHours: 150,
             minimumReputation: 5000,
             attributes: {
@@ -189,7 +189,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'cyber_crime',
         requirements: {
             minimumLevel: 65,
-            completedCourses: ['lopueksam', 'police_group_leader_course', 'cyber_crime_course', 'advanced_computer_skills'],
+            completedCourses: ['police_group_leader_course', 'cyber_crime_course', 'advanced_computer_skills'],
             minimumWorkedHours: 150,
             minimumReputation: 5000,
             attributes: {
@@ -227,7 +227,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'patrol',
         requirements: {
             minimumLevel: 85,
-            completedCourses: ['advanced_leader_course'],
+            completedCourses: ['advanced_leader_course', 'basic_computer_course'],
             minimumWorkedHours: 300,
             minimumReputation: 8000,
             attributes: {
@@ -245,7 +245,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'procedural_service',
         requirements: {
             minimumLevel: 90,
-            completedCourses: ['advanced_leader_course', 'forensics_basics'],
+            completedCourses: ['advanced_leader_course', 'forensics_basics', 'basic_computer_course'],
             minimumWorkedHours: 300,
             minimumReputation: 9000,
             attributes: {
@@ -263,7 +263,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'emergency_response',
         requirements: {
             minimumLevel: 95,
-            completedCourses: ['advanced_leader_course'],
+            completedCourses: ['advanced_leader_course', 'forensics_basics', 'basic_computer_course'],
             minimumWorkedHours: 300,
             minimumReputation: 9000,
             attributes: {
@@ -281,7 +281,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'k9_unit',
         requirements: {
             minimumLevel: 90,
-            completedCourses: ['advanced_leader_course', 'dog_specialist_course'],
+            completedCourses: ['advanced_leader_course', 'forensics_basics', 'basic_computer_course', 'dog_specialist_course'],
             minimumWorkedHours: 300,
             minimumReputation: 10000,
             attributes: {
@@ -299,7 +299,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'cyber_crime',
         requirements: {
             minimumLevel: 95,
-            completedCourses: ['advanced_leader_course', 'cyber_crime_course', 'advanced_computer_skills'],
+            completedCourses: ['advanced_leader_course', 'forensics_basics', 'cyber_crime_course_02', 'advanced_computer_skills_02'],
             minimumWorkedHours: 300,
             minimumReputation: 10000,
             attributes: {
@@ -317,7 +317,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'crime_unit',
         requirements: {
             minimumLevel: 95,
-            completedCourses: ['advanced_leader_course', 'forensics_basics'],
+            completedCourses: ['advanced_leader_course', 'forensics_basics', 'basic_computer_course'],
             minimumWorkedHours: 300,
             minimumReputation: 10000,
             attributes: {
