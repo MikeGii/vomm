@@ -11,11 +11,14 @@ interface CraftingInventoryProps {
     onSellItem?: (itemId: string, quantity: number) => Promise<void>;
 }
 
+const ITEMS_PER_PAGE = 15;
+
 export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory, onSellItem }) => {
     const [sellQuantities, setSellQuantities] = useState<{ [key: string]: number }>({});
     const [sellQuantityInputs, setSellQuantityInputs] = useState<{ [key: string]: string }>({});
     const [sellQuantityErrors, setSellQuantityErrors] = useState<{ [key: string]: string | null }>({});
     const [sellLoading, setSellLoading] = useState<{ [key: string]: boolean }>({});
+    const [currentPage, setCurrentPage] = useState(1);
 
     // Get item details from CRAFTING_INGREDIENTS
     const getItemDetails = (item: InventoryItem) => {
@@ -142,6 +145,36 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
             return nameA.localeCompare(nameB, 'et');
         });
 
+    const handlePreviousPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    const handlePageSelect = (page: number) => {
+        setCurrentPage(page);
+    };
+
+
+// Calculate pagination values
+    const totalPages = Math.ceil(craftingItems.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const currentItems = craftingItems.slice(startIndex, endIndex);
+
+// Add this useEffect to reset page when needed
+    useEffect(() => {
+        if (currentPage > totalPages && totalPages > 0) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
+
     if (craftingItems.length === 0) {
         return (
             <div className="crafting-inventory">
@@ -155,7 +188,14 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
 
     return (
         <div className="crafting-inventory">
-            <h4>🎒 Sinu materjalid ja tooted</h4>
+            <h4>
+                🎒 Sinu materjalid ja tooted
+                {craftingItems.length > ITEMS_PER_PAGE && (
+                    <span className="item-count">
+                    ({startIndex + 1}-{Math.min(endIndex, craftingItems.length)} / {craftingItems.length})
+                </span>
+                )}
+            </h4>
             <div className="inventory-table-container">
                 <table className="inventory-table">
                     <thead>
@@ -167,7 +207,7 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
                     </tr>
                     </thead>
                     <tbody>
-                    {craftingItems.map(item => {
+                    {currentItems.map(item => {
                         const currentInput = sellQuantityInputs[item.id] || '';
                         const currentError = sellQuantityErrors[item.id];
                         const canSell = canSellItem(item) && !currentError;
@@ -218,6 +258,72 @@ export const CraftingInventory: React.FC<CraftingInventoryProps> = ({ inventory,
                     </tbody>
                 </table>
             </div>
+
+            {/* Pagination controls */}
+            {totalPages > 1 && (
+                <div className="inventory-pagination">
+                    <button
+                        className="pagination-btn prev-btn"
+                        onClick={handlePreviousPage}
+                        disabled={currentPage === 1}
+                    >
+                        ← Eelmine
+                    </button>
+
+                    <div className="pagination-pages">
+                        {/* Show first page always */}
+                        {currentPage > 2 && (
+                            <>
+                                <button
+                                    className="page-number"
+                                    onClick={() => handlePageSelect(1)}
+                                >
+                                    1
+                                </button>
+                                {currentPage > 3 && <span className="page-dots">...</span>}
+                            </>
+                        )}
+
+                        {/* Show current page and nearby pages */}
+                        {Array.from({length: totalPages}, (_, i) => i + 1)
+                            .filter(page => {
+                                return page === currentPage ||
+                                    page === currentPage - 1 ||
+                                    page === currentPage + 1;
+                            })
+                            .map(page => (
+                                <button
+                                    key={page}
+                                    className={`page-number ${page === currentPage ? 'active' : ''}`}
+                                    onClick={() => handlePageSelect(page)}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+
+                        {/* Show last page always */}
+                        {currentPage < totalPages - 1 && (
+                            <>
+                                {currentPage < totalPages - 2 && <span className="page-dots">...</span>}
+                                <button
+                                    className="page-number"
+                                    onClick={() => handlePageSelect(totalPages)}
+                                >
+                                    {totalPages}
+                                </button>
+                            </>
+                        )}
+                    </div>
+
+                    <button
+                        className="pagination-btn next-btn"
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages}
+                    >
+                        Järgmine →
+                    </button>
+                </div>
+            )}
         </div>
     );
-};
+}

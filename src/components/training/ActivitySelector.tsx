@@ -238,11 +238,11 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
 
         const unlockedLevels = allLevels.filter(level => level <= playerLevel);
 
-        if (unlockedLevels.length <= 2) {
+        if (unlockedLevels.length <= 1) {
             return unlockedLevels;
         }
 
-        return unlockedLevels.slice(-2);
+        return unlockedLevels.slice(-1);  // <-- Changed to show only last 1
     };
 
     const sortedLevels = getFilteredLevels();

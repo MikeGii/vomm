@@ -1,5 +1,5 @@
 // src/components/dashboard/Tasks.tsx
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePlayerStats } from '../../contexts/PlayerStatsContext';
 import { getPlayerTasks, claimRewards } from '../../services/TaskService';
@@ -15,11 +15,7 @@ export const Tasks: React.FC = () => {
 
     const isVip = playerStats?.isVip || false;
 
-    useEffect(() => {
-        loadTasks();
-    }, [currentUser]);
-
-    const loadTasks = async () => {
+    const loadTasks = useCallback(async () => {
         if (!currentUser) return;
 
         try {
@@ -30,7 +26,12 @@ export const Tasks: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentUser]); // Only recreate if currentUser changes
+
+    // Now include loadTasks in the dependency array
+    useEffect(() => {
+        loadTasks();
+    }, [loadTasks]);
 
     const handleClaimRewards = async (taskType: 'daily' | 'weekly') => {
         if (!currentUser || !tasks) return;

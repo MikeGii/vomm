@@ -373,9 +373,6 @@ select option:disabled {
 
 /* Show both desktop counter and no badge on larger screens */
 @media (min-width: 769px) {
-    .clicks-badge {
-        display: none;
-    }
 
     .training-counter {
         display: block;
