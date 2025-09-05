@@ -217,8 +217,8 @@ export async function purchaseUsedCar(
             if (sellerSlotIndex !== -1) {
                 sellerGarageSlots[sellerSlotIndex] = {
                     slotId: sellerGarageSlots[sellerSlotIndex].slotId,
-                    isEmpty: true,
-                    carId: undefined
+                    isEmpty: true
+                    // carId välja ei lisata üldse kui see on tühi
                 };
             }
 
