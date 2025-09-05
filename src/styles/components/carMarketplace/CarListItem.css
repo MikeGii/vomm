@@ -1,0 +1,75 @@
+/* Car List Item Styles */
+.car-list-item {
+    border-bottom: 1px solid #333;
+    transition: background-color 0.2s ease;
+}
+
+.car-list-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.car-list-item td {
+    padding: 0.75rem 1rem;
+    color: #ccc;
+    font-size: 0.95rem;
+}
+
+.car-brand {
+    font-weight: 500;
+    color: #f0f0f0;
+}
+
+.car-model {
+    color: #f0f0f0;
+}
+
+.car-engine {
+    font-family: monospace;
+    color: #888;
+}
+
+.car-power {
+    color: #4CAF50;
+    font-weight: 500;
+}
+
+.car-mass {
+    color: #888;
+}
+
+.car-acceleration {
+    color: #FFA726;
+}
+
+.car-price {
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+.price-unaffordable {
+    color: #f44336;
+    opacity: 0.7;
+}
+
+.purchase-btn-small {
+    padding: 0.4rem 1rem;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.purchase-btn-small:hover:not(.disabled) {
+    background: #45a049;
+    transform: translateY(-1px);
+}
+
+.purchase-btn-small.disabled {
+    background: #444;
+    color: #777;
+    cursor: not-allowed;
+}

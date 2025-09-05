@@ -1,7 +1,7 @@
 // src/services/EstateService.ts
 import { doc, getDoc, setDoc, Timestamp, runTransaction } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
-import { PlayerEstate, EstateProperty, EstateTransaction } from '../types/estate';
+import {PlayerEstate, EstateProperty, EstateTransaction, GarageSlot} from '../types/estate';
 import { InventoryItem } from '../types';
 import { getBaseIdFromInventoryId } from '../utils/inventoryUtils';
 import { AVAILABLE_ESTATES } from "../data/estates";
@@ -56,6 +56,17 @@ export const ensurePlayerEstate = async (userId: string): Promise<PlayerEstate> 
     });
 
     return newEstate;
+};
+
+const createEmptyGarageSlots = (capacity: number): GarageSlot[] => {
+    const slots: GarageSlot[] = [];
+    for (let i = 1; i <= capacity; i++) {
+        slots.push({
+            slotId: i,
+            isEmpty: true
+        });
+    }
+    return slots;
 };
 
 // Keep the old name as an alias for backward compatibility
@@ -309,15 +320,18 @@ export const purchaseEstate = async (
             // Get current estate and player stats
             const estateRef = doc(firestore, 'playerEstates', userId);
             const playerRef = doc(firestore, 'playerStats', userId);
+            const userRef = doc(firestore, 'users', userId); // LISA SEE
 
             const estateDoc = await transaction.get(estateRef);
             const playerDoc = await transaction.get(playerRef);
+            const userDoc = await transaction.get(userRef); // LISA SEE
 
             if (!playerDoc.exists()) {
                 throw new Error('Mängija andmed ei leitud');
             }
 
             const playerStats = playerDoc.data();
+            const userData = userDoc.exists() ? userDoc.data() : {}; // LISA SEE
             const currentEstate = estateDoc.exists() ? estateDoc.data() : null;
 
             // Calculate transaction
@@ -340,6 +354,42 @@ export const purchaseEstate = async (
             transaction.update(playerRef, {
                 money: newBalance
             });
+
+            // LISA SIIA GARAAŽI SLOTTIDE LOOGIKA
+            let garageSlots = userData.estateData?.garageSlots || [];
+
+            if (newEstate.hasGarage && newEstate.garageCapacity > 0) {
+                // Kui vanal kinnisvaral polnud garaaži või uus on suurem
+                if (!currentEstate?.currentEstate?.hasGarage ||
+                    newEstate.garageCapacity !== (currentEstate?.currentEstate?.garageCapacity || 0)) {
+
+                    // Salvesta olemasolevad autod
+                    const existingCars = garageSlots.filter((slot: GarageSlot) => !slot.isEmpty);
+
+                    // Loo uued slotid
+                    garageSlots = createEmptyGarageSlots(newEstate.garageCapacity);
+
+                    // Paiguta olemasolevad autod tagasi
+                    existingCars.forEach((carSlot: GarageSlot, index: number) => {
+                        if (index < garageSlots.length) {
+                            garageSlots[index] = {
+                                slotId: garageSlots[index].slotId,
+                                isEmpty: false,
+                                carId: carSlot.carId
+                            };
+                        }
+                    });
+                }
+            } else {
+                // Kui uuel kinnisvaral pole garaaži, tühjenda slotid
+                garageSlots = [];
+            }
+
+            // Uuenda kasutaja dokument
+            transaction.update(userRef, {
+                'estateData.garageSlots': garageSlots
+            });
+            // LÕPP - garaaži slottide loogika
 
             // Update or create estate record
             const estateData = {

@@ -7,6 +7,7 @@ import { calculateEquipmentBonuses } from "../../services/EquipmentBonusService"
 import { getRankImagePath } from "../../utils/rankUtils";
 import { getPositionName } from '../../data/policePositions';
 import { isPoliceOfficer } from "../../utils/playerStatus";
+import { formatMoney, formatPollid } from '../../utils/currencyUtils';
 import '../../styles/components/PlayerStatsCard.css';
 
 interface PlayerStatsCardProps {
@@ -138,11 +139,11 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({
                 <div className="mobile-currency">
                     <div className="currency-item">
                         <span className="currency-icon">💰</span>
-                        <span className="currency-value">€ {stats.money || 0}</span>
+                        <span className="currency-value">{formatMoney(stats.money || 0)}</span>
                     </div>
                     <div className="currency-item">
                         <span className="currency-icon">💎</span>
-                        <span className="currency-value">{stats.pollid || 0}</span>
+                        <span className="currency-value">{formatPollid(stats.pollid || 0, false)}</span>
                     </div>
                 </div>
             </div>
