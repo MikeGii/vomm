@@ -1,5 +1,4 @@
 import {onSchedule} from "firebase-functions/v2/scheduler";
-import {onCall} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import {logger} from "firebase-functions";
 
@@ -8,7 +7,7 @@ admin.initializeApp();
 const db = admin.firestore();
 
 const CRIME_COLLECTION = "departmentCrimeStats";
-const DAILY_CRIME_INCREASE = 5; // 5% per day
+const DAILY_CRIME_INCREASE = 8; // 8% per day
 const MAX_CRIME_LEVEL = 100;
 
 /**
@@ -100,26 +99,5 @@ export const monthlyCrimeReset = onSchedule(
         logger.info("Starting monthly crime reset at:",
             new Date().toISOString());
         await monthlyResetCrime();
-    }
-);
-
-/**
- * Manual function for testing (optional)
- */
-export const manualCrimeIncrease = onCall(
-    {region: "europe-west1"},
-    async (request) => {
-        if (!request.auth) {
-            throw new Error("User must be authenticated");
-        }
-
-        const uid = request.auth.uid;
-        logger.info(`Manual crime increase triggered by user: ${uid}`);
-        await increaseDailyCrime();
-
-        return {
-            success: true,
-            message: "Manual crime increase completed",
-        };
     }
 );

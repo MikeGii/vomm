@@ -188,6 +188,16 @@ export const AuthenticatedHeader: React.FC = () => {
                                         <span className="menu-icon">👮</span>
                                         <span>Mine tööle</span>
                                     </button>
+                                    <button
+                                        onClick={() => {
+                                            navigate('/department');
+                                            setIsMenuOpen(false);
+                                        }}
+                                        className="menu-item"
+                                    >
+                                        <span className="menu-icon">👥</span>
+                                        <span>Osakond</span>
+                                    </button>
                                 </div>
 
                                 <button

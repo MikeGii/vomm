@@ -582,7 +582,14 @@ export const performTraining = async (
         playerExp: number;
     },
     trainingType: 'sports' | 'kitchen-lab' | 'handicraft' = 'sports'
-): Promise<{ updatedStats: PlayerStats; craftingResult?: { itemsProduced: boolean } }> => {
+): Promise<{
+    updatedStats: PlayerStats;
+    craftingResult?: {
+        itemsProduced: boolean;
+        isWorkshopActivity: boolean;
+        activityName?: string;
+    }
+}> => {
     // SECURITY: Validate all inputs
     if (!userId || typeof userId !== 'string') {
         throw new Error('Invalid user ID');
@@ -822,17 +829,27 @@ export const performTraining = async (
     }
 
     // NEW: Handle handicraft activities with workshop success rate system
-    let craftingResult: { itemsProduced: boolean } | undefined;
+    let craftingResult: {
+        itemsProduced: boolean;
+        isWorkshopActivity: boolean;
+        activityName?: string;
+    } | undefined;
 
     if (trainingType === 'handicraft') {
         const activity = getHandicraftActivityById(activityId);
         if (activity && activity.requiredItems) {
+            const isWorkshopActivity = !!(activity.rewards.printing || activity.rewards.lasercutting);
+
             // Check if this is a workshop activity (printing or laser cutting)
-            if (activity.rewards.printing || activity.rewards.lasercutting) {
+            if (isWorkshopActivity) {
                 // Use workshop crafting with success rate
                 const workshopResult = await performWorkshopCrafting(userId, activity, stats.inventory || []);
                 updates.inventory = workshopResult.updatedInventory;
-                craftingResult = { itemsProduced: workshopResult.itemsProduced };
+                craftingResult = {
+                    itemsProduced: workshopResult.itemsProduced,
+                    isWorkshopActivity: true,
+                    activityName: activity.name
+                };
 
                 // Log crafting outcome for debugging/monitoring
                 if (!workshopResult.itemsProduced) {
@@ -847,7 +864,11 @@ export const performTraining = async (
                         activity.producedItems
                     );
                     updates.inventory = updatedInventory;
-                    craftingResult = { itemsProduced: true };
+                    craftingResult = {
+                        itemsProduced: true,
+                        isWorkshopActivity: false,
+                        activityName: activity.name
+                    };
                 }
             }
         }
@@ -920,7 +941,21 @@ export const performTraining5x = async (
     activityId: string,
     rewards: any,
     trainingType: 'sports' | 'kitchen-lab' | 'handicraft' = 'sports'
-): Promise<{ updatedStats: PlayerStats; craftingResults?: { itemsProduced: boolean }[] }> => {
+): Promise<{
+    updatedStats: PlayerStats;
+    craftingResults?: {
+        itemsProduced: boolean;
+        isWorkshopActivity: boolean;
+        activityName?: string;
+    }[];
+    craftingSummary?: {
+        totalAttempts: number;
+        successful: number;
+        failed: number;
+        activityName: string;
+        isWorkshopActivity: boolean;
+    }
+}> => {
 
     // Pre-check: ensure we have enough clicks and materials
     const statsRef = doc(firestore, 'playerStats', userId);
@@ -974,7 +1009,11 @@ export const performTraining5x = async (
 
     // Perform 5 individual trainings
     let currentStats = stats;
-    const craftingResults: { itemsProduced: boolean }[] = [];
+    const craftingResults: {
+        itemsProduced: boolean;
+        isWorkshopActivity: boolean;
+        activityName?: string;
+    }[] = [];
 
     for (let i = 0; i < 5; i++) {
         const result = await performTraining(userId, activityId, rewards, trainingType);
@@ -985,8 +1024,24 @@ export const performTraining5x = async (
         }
     }
 
+    // Create crafting summary if we have crafting results
+    let craftingSummary;
+    if (craftingResults.length > 0) {
+        const successful = craftingResults.filter(r => r.itemsProduced).length;
+        const failed = craftingResults.filter(r => !r.itemsProduced).length;
+
+        craftingSummary = {
+            totalAttempts: craftingResults.length,
+            successful,
+            failed,
+            activityName: craftingResults[0]?.activityName || 'Teadmata',
+            isWorkshopActivity: craftingResults[0]?.isWorkshopActivity || false
+        };
+    }
+
     return {
         updatedStats: currentStats,
-        craftingResults: craftingResults.length > 0 ? craftingResults : undefined
+        craftingResults: craftingResults.length > 0 ? craftingResults : undefined,
+        craftingSummary
     };
 };

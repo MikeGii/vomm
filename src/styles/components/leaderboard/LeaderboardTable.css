@@ -1,12 +1,24 @@
 /* ================================
    LEADERBOARD TABLE - Using specific lb- prefix
    ================================ */
-.lb-table {
-    width: 100%;
+
+/* Add table container with horizontal scroll */
+.leaderboard-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
     background: rgba(42, 42, 42, 0.3);
     border: 1px solid #333;
-    border-radius: 10px;
+    position: relative;
+}
+
+.lb-table {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-radius: 0;
     overflow: hidden;
+    border-collapse: collapse;
 }
 
 .lb-table thead {
@@ -22,6 +34,7 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .lb-row {
@@ -83,6 +96,7 @@
     font-size: 0.85rem !important;
     font-weight: 600 !important;
     text-transform: none !important;
+    white-space: nowrap;
 }
 
 .lb-vip-row .lb-status-badge {
@@ -158,18 +172,38 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-left: 0.5rem;
+    white-space: nowrap;
+}
+
+/* ================================
+   SCROLL INDICATOR
+   ================================ */
+.lb-table-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(to left, rgba(42, 42, 42, 0.8), transparent);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 /* ================================
    MOBILE RESPONSIVE
    ================================ */
+
+/* Medium screens (tablets) */
 @media (max-width: 768px) {
-    .lb-vip-badge {
-        display: none;
+    .lb-table-container::after {
+        opacity: 1;
     }
 
     .lb-table {
         font-size: 0.85rem;
+        min-width: 500px; /* Prevent table crushing */
     }
 
     .lb-table th,
@@ -177,8 +211,31 @@
         padding: 0.75rem 0.5rem;
     }
 
+    /* Hide VIP badge first on medium screens */
+    .lb-vip-badge {
+        display: none;
+    }
+
+    /* Then hide reputation column */
     .lb-rep-col {
         display: none;
+    }
+
+    /* Adjust column widths */
+    .lb-rank-col {
+        width: 50px;
+    }
+
+    .lb-name-col {
+        min-width: 140px;
+    }
+
+    .lb-status-col {
+        min-width: 100px;
+    }
+
+    .lb-level-col {
+        min-width: 70px;
     }
 
     .lb-status-badge {
@@ -187,16 +244,36 @@
     }
 }
 
+/* Small screens (phones) */
 @media (max-width: 480px) {
     .lb-table {
         font-size: 0.8rem;
+        min-width: 400px; /* Minimum readable width */
     }
 
     .lb-table th,
     .lb-table td {
-        padding: 0.5rem 0.25rem;
+        padding: 0.5rem 0.3rem;
     }
 
+    /* Further optimize columns */
+    .lb-rank-col {
+        width: 45px;
+    }
+
+    .lb-name-col {
+        min-width: 120px;
+    }
+
+    .lb-status-col {
+        min-width: 90px;
+    }
+
+    .lb-level-col {
+        min-width: 60px;
+    }
+
+    /* Smaller rank badges */
     .lb-rank-number {
         width: 24px;
         height: 24px;
@@ -214,5 +291,27 @@
 
     .lb-level-col {
         font-size: 0.85rem;
+    }
+}
+
+/* Extra small screens (very small phones) */
+@media (max-width: 360px) {
+    .lb-table {
+        min-width: 320px;
+        font-size: 0.75rem;
+    }
+
+    .lb-table th,
+    .lb-table td {
+        padding: 0.4rem 0.2rem;
+    }
+
+    /* Hide status column on very small screens */
+    .lb-status-col {
+        display: none;
+    }
+
+    .lb-name-col {
+        min-width: 100px;
     }
 }
