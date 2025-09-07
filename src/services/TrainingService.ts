@@ -914,3 +914,79 @@ export const getTimeUntilReset = (): string => {
 
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
+
+export const performTraining5x = async (
+    userId: string,
+    activityId: string,
+    rewards: any,
+    trainingType: 'sports' | 'kitchen-lab' | 'handicraft' = 'sports'
+): Promise<{ updatedStats: PlayerStats; craftingResults?: { itemsProduced: boolean }[] }> => {
+
+    // Pre-check: ensure we have enough clicks and materials
+    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsDoc = await getDoc(statsRef);
+
+    if (!statsDoc.exists()) {
+        throw new Error('Player stats not found');
+    }
+
+    const stats = statsDoc.data() as PlayerStats;
+
+    // Check we have at least 5 clicks
+    const currentClicks = trainingType === 'sports'
+        ? (stats.trainingData?.remainingClicks || 0)
+        : trainingType === 'kitchen-lab'
+            ? (stats.kitchenLabTrainingData?.remainingClicks || 0)
+            : (stats.handicraftTrainingData?.remainingClicks || 0);
+
+    if (currentClicks < 5) {
+        throw new Error(`Vajad vähemalt 5 treeningut, sul on ${currentClicks}`);
+    }
+
+    // For crafting activities, check materials for 5x
+    if (trainingType === 'kitchen-lab') {
+        const activity = getKitchenLabActivityById(activityId);
+        if (activity?.requiredItems) {
+            const materialsFor5x = activity.requiredItems.map(item => ({
+                ...item,
+                quantity: item.quantity * 5
+            }));
+
+            const materialCheck = hasRequiredMaterials(stats.inventory || [], materialsFor5x);
+            if (!materialCheck.hasAll) {
+                throw new Error('Materjale pole piisavalt 5x valmistamiseks');
+            }
+        }
+    } else if (trainingType === 'handicraft') {
+        const activity = getHandicraftActivityById(activityId);
+        if (activity?.requiredItems) {
+            const materialsFor5x = activity.requiredItems.map(item => ({
+                ...item,
+                quantity: item.quantity * 5
+            }));
+
+            const materialCheck = hasRequiredMaterials(stats.inventory || [], materialsFor5x);
+            if (!materialCheck.hasAll) {
+                throw new Error('Materjale pole piisavalt 5x valmistamiseks');
+            }
+        }
+    }
+
+    // Perform 5 individual trainings
+    let currentStats = stats;
+    const craftingResults: { itemsProduced: boolean }[] = [];
+
+    for (let i = 0; i < 5; i++) {
+        const result = await performTraining(userId, activityId, rewards, trainingType);
+        currentStats = result.updatedStats;
+
+        if (result.craftingResult) {
+            craftingResults.push(result.craftingResult);
+        }
+    }
+
+    return {
+        updatedStats: currentStats,
+        craftingResults: craftingResults.length > 0 ? craftingResults : undefined
+    };
+};

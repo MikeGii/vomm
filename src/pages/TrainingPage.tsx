@@ -318,6 +318,155 @@ const TrainingPage: React.FC = () => {
         setActiveTrainingState
     ]);
 
+    const handleTrain5x = useCallback(async () => {
+        const validation = validateTrainingState();
+        if (!validation.isValid) {
+            if (validation.error) {
+                showToast(validation.error, 'error');
+            }
+            return;
+        }
+
+        // Check we have at least 5 clicks
+        if (remainingClicks < 5) {
+            showToast(`Vajad vähemalt 5 treeningut, sul on ${remainingClicks}`, 'warning');
+            return;
+        }
+
+        const currentTrainingState = trainingStates[activeTab as keyof typeof trainingStates];
+        let activity: TrainingActivity | null = null;
+
+        // Determine which activity to use (same logic as handleTrain)
+        if (activeTab === 'sports') {
+            if (!currentTrainingState.selectedActivity) {
+                showToast('Vali esmalt treeningtegevus!', 'warning');
+                return;
+            }
+            activity = getActivityById(currentTrainingState.selectedActivity) || null;
+        } else if (activeTab === 'food') {
+            if (!currentTrainingState.selectedActivity) {
+                showToast('Vali esmalt köök & labor tegevus!', 'warning');
+                return;
+            }
+            activity = getKitchenLabActivityById(currentTrainingState.selectedActivity) || null;
+        } else if (activeTab === 'handcraft') {
+            if (!currentTrainingState.selectedActivity) {
+                showToast('Vali esmalt käsitöö tegevus!', 'warning');
+                return;
+            }
+            activity = getHandicraftActivityById(currentTrainingState.selectedActivity) || null;
+        }
+
+        if (!activity) {
+            showToast('Tegevust ei leitud!', 'error');
+            return;
+        }
+
+        setActiveTrainingState(true);
+
+        try {
+            const trainingType = activeTab === 'sports' ? 'sports' :
+                activeTab === 'food' ? 'kitchen-lab' : 'handicraft';
+
+            // Perform 5 individual trainings in sequence
+            for (let i = 0; i < 5; i++) {
+                await performTraining(currentUser!.uid, currentTrainingState.selectedActivity, activity.rewards, trainingType);
+            }
+
+            await refreshStats();
+            showToast(`5x ${activity.name} lõpetatud!`, 'success');
+
+        } catch (error: any) {
+            console.error('5x Training error:', error);
+            showToast(error.message || '5x treenimine ebaõnnestus', 'error');
+        } finally {
+            setActiveTrainingState(false);
+        }
+    }, [
+        currentUser,
+        activeTab,
+        trainingStates,
+        remainingClicks,
+        refreshStats,
+        showToast,
+        validateTrainingState,
+        setActiveTrainingState
+    ]);
+
+    const handleTrainCustom = useCallback(async (amount: number) => {
+        const validation = validateTrainingState();
+        if (!validation.isValid) {
+            if (validation.error) {
+                showToast(validation.error, 'error');
+            }
+            return;
+        }
+
+        if (amount < 1 || amount > remainingClicks) {
+            showToast(`Vigane kogus: ${amount}`, 'warning');
+            return;
+        }
+
+        const currentTrainingState = trainingStates[activeTab as keyof typeof trainingStates];
+        let activity: TrainingActivity | null = null;
+
+        // Same activity selection logic as other handlers
+        if (activeTab === 'sports') {
+            if (!currentTrainingState.selectedActivity) {
+                showToast('Vali esmalt treeningtegevus!', 'warning');
+                return;
+            }
+            activity = getActivityById(currentTrainingState.selectedActivity) || null;
+        } else if (activeTab === 'food') {
+            if (!currentTrainingState.selectedActivity) {
+                showToast('Vali esmalt köök & labor tegevus!', 'warning');
+                return;
+            }
+            activity = getKitchenLabActivityById(currentTrainingState.selectedActivity) || null;
+        } else if (activeTab === 'handcraft') {
+            if (!currentTrainingState.selectedActivity) {
+                showToast('Vali esmalt käsitöö tegevus!', 'warning');
+                return;
+            }
+            activity = getHandicraftActivityById(currentTrainingState.selectedActivity) || null;
+        }
+
+        if (!activity) {
+            showToast('Tegevust ei leitud!', 'error');
+            return;
+        }
+
+        setActiveTrainingState(true);
+
+        try {
+            const trainingType = activeTab === 'sports' ? 'sports' :
+                activeTab === 'food' ? 'kitchen-lab' : 'handicraft';
+
+            // Perform custom amount of trainings
+            for (let i = 0; i < amount; i++) {
+                await performTraining(currentUser!.uid, currentTrainingState.selectedActivity, activity.rewards, trainingType);
+            }
+
+            await refreshStats();
+            showToast(`${amount}x ${activity.name} lõpetatud!`, 'success');
+
+        } catch (error: any) {
+            console.error(`${amount}x Training error:`, error);
+            showToast(error.message || `${amount}x treenimine ebaõnnestus`, 'error');
+        } finally {
+            setActiveTrainingState(false);
+        }
+    }, [
+        currentUser,
+        activeTab,
+        trainingStates,
+        remainingClicks,
+        refreshStats,
+        showToast,
+        validateTrainingState,
+        setActiveTrainingState
+    ]);
+
     // Handle selling crafted items
     const handleSellItem = useCallback(async (itemId: string, quantity: number) => {
         if (!currentUser) {
@@ -551,8 +700,10 @@ const TrainingPage: React.FC = () => {
                             selectedActivity={currentTrainingState.selectedActivity}
                             onActivitySelect={setSelectedActivityForTab}
                             onTrain={handleTrain}
+                            onTrain5x={handleTrain5x}
                             isTraining={currentTrainingState.isTraining}
-                            canTrain={remainingClicks > 0}
+                            onTrainCustom={handleTrainCustom}
+                            onRefreshStats={refreshStats}
                             playerStats={playerStats}
                             trainingType="sports"
                         />
@@ -593,8 +744,10 @@ const TrainingPage: React.FC = () => {
                             selectedActivity={currentTrainingState.selectedActivity}
                             onActivitySelect={setSelectedActivityForTab}
                             onTrain={handleTrain}
+                            onTrain5x={handleTrain5x}
+                            onTrainCustom={handleTrainCustom}
+                            onRefreshStats={refreshStats}
                             isTraining={currentTrainingState.isTraining}
-                            canTrain={remainingClicks > 0}
                             playerStats={playerStats}
                             trainingType="kitchen-lab"
                         />
@@ -651,8 +804,10 @@ const TrainingPage: React.FC = () => {
                             selectedActivity={currentTrainingState.selectedActivity}
                             onActivitySelect={setSelectedActivityForTab}
                             onTrain={handleTrain}
+                            onTrain5x={handleTrain5x}
+                            onTrainCustom={handleTrainCustom}
                             isTraining={currentTrainingState.isTraining}
-                            canTrain={remainingClicks > 0}
+                            onRefreshStats={refreshStats}
                             playerStats={playerStats}
                             trainingType="handicraft"
                         />

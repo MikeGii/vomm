@@ -5,7 +5,6 @@ import {
     getDoc,
     runTransaction,
     serverTimestamp,
-    deleteField
 } from 'firebase/firestore';
 import { firestore as db } from '../config/firebase';
 import { createTimestampedId, getBaseIdFromInventoryId } from '../utils/inventoryUtils';

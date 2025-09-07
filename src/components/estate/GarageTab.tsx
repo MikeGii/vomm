@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEstate } from '../../contexts/EstateContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -29,15 +29,7 @@ export const GarageTab: React.FC = () => {
     const hasGarageAccess = playerEstate?.currentEstate?.hasGarage || false;
     const garageCapacity = playerEstate?.currentEstate?.garageCapacity || 0;
 
-    useEffect(() => {
-        if (hasGarageAccess && currentUser) {
-            loadUserCars();
-        } else {
-            setLoading(false);
-        }
-    }, [hasGarageAccess, currentUser]);
-
-    const loadUserCars = async () => {
+    const loadUserCars = useCallback(async () => {
         if (!currentUser) return;
 
         setLoading(true);
@@ -50,7 +42,15 @@ export const GarageTab: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentUser, showToast]);
+
+    useEffect(() => {
+        if (hasGarageAccess && currentUser) {
+            loadUserCars();
+        } else {
+            setLoading(false);
+        }
+    }, [hasGarageAccess, currentUser, loadUserCars]);
 
     const handleListForSale = async (carId: string) => {
         if (!currentUser) return;

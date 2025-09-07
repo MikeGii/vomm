@@ -3,12 +3,6 @@ import { doc, getDoc, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats, Task, PlayerTasks } from '../types';
 
-// Fix Error 1: Handle undefined properly
-const canGetTasks = (position: string | null | undefined): boolean => {
-    if (!position) return false; // Handle null and undefined
-    return position !== 'abipolitseinik' && position !== 'kadett';
-};
-
 // Calculate reward multiplier based on player level and reputation
 const calculateRewardMultiplier = (level: number, reputation: number, isVip: boolean): number => {
     const levelBonus = level * 0.02; // +2% per level
@@ -85,7 +79,6 @@ export const getPlayerTasks = async (userId: string): Promise<PlayerTasks | null
     if (!statsDoc.exists()) return null;
 
     const stats = statsDoc.data() as PlayerStats;
-    if (!canGetTasks(stats.policePosition)) return null;
 
     const tasksRef = doc(firestore, 'playerTasks', userId);
     const tasksDoc = await getDoc(tasksRef);

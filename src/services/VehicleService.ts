@@ -7,8 +7,6 @@ import {
     query,
     where,
     Timestamp,
-    orderBy,
-    limit,
     runTransaction, getDoc, updateDoc, serverTimestamp
 } from 'firebase/firestore';
 import { firestore as db } from '../config/firebase';
@@ -218,7 +216,6 @@ export async function purchaseUsedCar(
                 sellerGarageSlots[sellerSlotIndex] = {
                     slotId: sellerGarageSlots[sellerSlotIndex].slotId,
                     isEmpty: true
-                    // carId välja ei lisata üldse kui see on tühi
                 };
             }
 

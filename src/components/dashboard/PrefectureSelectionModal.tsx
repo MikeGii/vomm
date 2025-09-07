@@ -1,5 +1,6 @@
 // src/components/dashboard/PrefectureSelectionModal.tsx
 import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 import {doc, getDoc, updateDoc} from 'firebase/firestore';
 import { firestore } from '../../config/firebase';
 import '../../styles/components/PrefectureSelectionModal.css';
@@ -73,8 +74,6 @@ export const PrefectureSelectionModal: React.FC<PrefectureSelectionModalProps> =
         }
     };
 
-    const modalContent = getModalContent();
-
     const handleSubmit = async () => {
         if (!selectedPrefecture) return;
 
@@ -105,7 +104,9 @@ export const PrefectureSelectionModal: React.FC<PrefectureSelectionModalProps> =
         }
     };
 
-    return (
+    const modalContent = getModalContent();
+
+    return ReactDOM.createPortal(
         <div className="prefecture-modal-backdrop">
             <div className="prefecture-modal">
                 <h2 className="prefecture-modal-title">{modalContent.title}</h2>
@@ -147,6 +148,7 @@ export const PrefectureSelectionModal: React.FC<PrefectureSelectionModalProps> =
                     {isSubmitting ? 'Kinnitan...' : 'Kinnita valik'}
                 </button>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };

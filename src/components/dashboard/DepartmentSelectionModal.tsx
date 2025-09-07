@@ -1,6 +1,6 @@
-// Create new file: src/components/dashboard/DepartmentSelectionModal.tsx
-
+// src/components/dashboard/DepartmentSelectionModal.tsx
 import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 import { doc, updateDoc } from 'firebase/firestore';
 import { firestore } from '../../config/firebase';
 import { getDepartmentsByPrefecture } from '../../data/prefectures';
@@ -43,7 +43,7 @@ export const DepartmentSelectionModal: React.FC<DepartmentSelectionModalProps> =
         }
     };
 
-    return (
+    return ReactDOM.createPortal(
         <div className="department-modal-backdrop">
             <div className="department-modal">
                 <h2 className="department-modal-title">Vali oma osakond</h2>
@@ -74,6 +74,7 @@ export const DepartmentSelectionModal: React.FC<DepartmentSelectionModalProps> =
                     {isSubmitting ? 'Kinnitan...' : 'Kinnita valik'}
                 </button>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
