@@ -1,220 +1,286 @@
-/* src/styles/components/department/DepartmentLeaderboard.css */
-.department-leaderboard-section {
-    margin-top: 3rem;
-    padding-top: 2rem;
-    border-top: 2px solid #333;
-}
+/* ================================
+   DEPARTMENT LEADERBOARD TABLE STYLES (dept- prefix)
+   ================================ */
 
-.section-title {
-    color: #f0f0f0;
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.leaderboard-info {
-    background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05));
-    border: 1px solid #2196f3;
+/* Add table container with horizontal scroll */
+.dept-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     border-radius: 8px;
-    padding: 1rem;
-    margin: 1.5rem 0;
-    text-align: center;
-}
-
-.info-text {
-    color: #b0b0b0;
-    font-size: 0.9rem;
-    margin: 0;
-    font-style: italic;
-}
-
-.leaderboard-loading {
-    text-align: center;
-    padding: 3rem;
-    color: #888;
-}
-
-.leaderboard-loading p {
-    font-size: 1rem;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
-}
-
-.department-stats-info {
     background: #1e1e1e;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-top: 1.5rem;
+    border: 1px solid #333;
+    position: relative;
+    margin-top: 1rem;
+    min-height: 200px;
 }
 
-.stats-label {
-    display: block;
+.dept-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #f0f0f0;
+    background: transparent;
+    border: none;
+}
+
+.dept-table thead {
+    background: rgba(42, 42, 42, 0.6);
+    border-bottom: 2px solid #333;
+}
+
+.dept-table th {
+    padding: 1rem;
+    text-align: left;
     color: #888;
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     text-transform: uppercase;
-    margin-bottom: 1rem;
+    letter-spacing: 0.5px;
     font-weight: 600;
+    border-right: 1px solid #333;
+    white-space: nowrap;
 }
 
-.department-stat-row {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem;
-    background: #2a2a2a;
-    border-radius: 6px;
-    margin-bottom: 0.5rem;
+.dept-table th:last-child {
+    border-right: none;
+}
+
+.dept-table tbody tr {
+    border-bottom: 1px solid #2a2a2a;
     transition: all 0.3s ease;
 }
 
-.department-stat-row:hover {
-    background: #333;
-    transform: translateX(5px);
+.dept-table tbody tr:hover {
+    background: rgba(50, 50, 50, 0.4);
 }
 
-.department-stat-row .rank {
-    color: #2196f3;
-    font-weight: 700;
-    margin-right: 1rem;
-    min-width: 35px;
+.dept-table tbody tr:last-child {
+    border-bottom: none;
 }
 
-.department-stat-row .name {
-    flex: 1;
+.dept-table td {
+    padding: 1rem;
     color: #f0f0f0;
-    font-weight: 500;
-}
-
-.department-stat-row .player-count {
-    color: #888;
-    font-size: 0.875rem;
-    background: rgba(33, 150, 243, 0.1);
-    padding: 0.25rem 0.75rem;
-    border-radius: 4px;
-    border: 1px solid rgba(33, 150, 243, 0.3);
-}
-
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-    .department-leaderboard-section {
-        margin-top: 2rem;
-        padding-top: 1.5rem;
-    }
-
-    .section-title {
-        font-size: 1.25rem;
-    }
-
-    .department-stat-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
-
-    .department-stat-row .player-count {
-        align-self: flex-end;
-    }
-}
-
-.empty-state {
-    text-align: center;
-    padding: 3rem;
-    color: #666;
-    font-style: italic;
-}
-
-.department-leaderboard-table {
-    background: #1e1e1e;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-top: 1rem;
-    min-height: 200px; /* Ensure minimum height even when empty */
-}
-
-.crime-reset-info {
-    color: #888;
     font-size: 0.9rem;
-    margin-top: 0.5rem;
+    border-right: 1px solid #2a2a2a;
+    vertical-align: middle;
 }
 
-.crime-level-column,
-.crime-status-column {
+.dept-table td:last-child {
+    border-right: none;
+}
+
+/* Column specific styles */
+.dept-rank-column {
+    width: 80px;
     text-align: center;
 }
 
-.crime-row .name-column {
-    padding: 0.5rem;
+.dept-name-column {
+    min-width: 200px;
 }
 
-.crime-department-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+.dept-score-column,
+.dept-crime-level-column,
+.dept-crime-status-column {
+    text-align: center;
+    min-width: 100px;
 }
 
-.crime-department-info .department-name {
-    font-weight: bold;
+.dept-players-column {
+    width: 100px;
+    text-align: center;
 }
 
-.crime-department-info .department-prefecture {
-    font-size: 0.85rem;
-    color: #888;
+/* Rank styling */
+.dept-rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(74, 144, 226, 0.15);
+    border: 1px solid #4a90e2;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #4a90e2;
 }
 
-.crime-percentage {
+.dept-rank.dept-top-three {
+    font-size: 1.2rem;
+    width: 36px;
+    height: 36px;
+}
+
+/* Department name styling */
+.dept-department-name {
+    font-weight: 600;
+    color: #f0f0f0;
+}
+
+/* Score and count styling */
+.dept-score-value,
+.dept-player-count {
+    font-weight: 600;
+    color: #4caf50;
+}
+
+/* Crime specific styling */
+.dept-crime-percentage {
     font-weight: bold;
     font-family: monospace;
     font-size: 1.1rem;
 }
 
-.crime-status {
+.dept-crime-status {
     font-size: 0.9rem;
     font-weight: 500;
 }
 
-.rank.top-three {
-    font-size: 1.2rem;
+.dept-crime-department-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
-.crime-footer-info {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #333;
+.dept-crime-department-info .dept-department-name {
+    font-weight: bold;
 }
 
-.crime-footer-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+.dept-crime-department-info .dept-department-prefecture {
+    font-size: 0.85rem;
     color: #888;
-    font-size: 0.9rem;
 }
 
-.info-icon {
-    font-size: 1rem;
+/* Scroll indicator */
+.dept-table-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(to left, rgba(30, 30, 30, 0.8), transparent);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-/* Mobile responsiveness for crime tab */
+/* ================================
+   MOBILE RESPONSIVENESS FOR DEPARTMENT TABLE
+   ================================ */
+
+/* Medium screens (tablets) */
 @media (max-width: 768px) {
-    .crime-department-info {
-        gap: 0.1rem;
+    .dept-table-container::after {
+        opacity: 1;
     }
 
-    .crime-department-info .department-prefecture {
+    .dept-table {
+        font-size: 0.85rem;
+        min-width: 500px;
+    }
+
+    .dept-table th,
+    .dept-table td {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .dept-rank-column {
+        width: 60px;
+    }
+
+    .dept-name-column {
+        min-width: 140px;
+    }
+
+    .dept-score-column,
+    .dept-crime-level-column,
+    .dept-crime-status-column,
+    .dept-players-column {
+        min-width: 80px;
+    }
+
+    .dept-rank {
+        width: 28px;
+        height: 28px;
         font-size: 0.8rem;
     }
 
-    .crime-footer-info {
-        flex-direction: column;
-        gap: 0.5rem;
-        align-items: center;
+    .dept-rank.dept-top-three {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+
+    /* Hide prefecture info on medium screens */
+    .dept-crime-department-info .dept-department-prefecture {
+        display: none;
+    }
+}
+
+/* Small screens (phones) */
+@media (max-width: 480px) {
+    .dept-table {
+        font-size: 0.8rem;
+        min-width: 450px;
+    }
+
+    .dept-table th,
+    .dept-table td {
+        padding: 0.5rem 0.3rem;
+    }
+
+    .dept-rank-column {
+        width: 50px;
+    }
+
+    .dept-name-column {
+        min-width: 120px;
+    }
+
+    .dept-score-column,
+    .dept-crime-level-column,
+    .dept-crime-status-column,
+    .dept-players-column {
+        min-width: 70px;
+    }
+
+    .dept-rank {
+        width: 24px;
+        height: 24px;
+        font-size: 0.7rem;
+    }
+
+    .dept-rank.dept-top-three {
+        width: 28px;
+        height: 28px;
+        font-size: 0.9rem;
+    }
+
+    .dept-department-name {
+        font-size: 0.85rem;
+    }
+
+    /* Hide crime status column on small screens */
+    .dept-crime-status-column {
+        display: none;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 360px) {
+    .dept-table {
+        min-width: 320px;
+        font-size: 0.75rem;
+    }
+
+    .dept-table th,
+    .dept-table td {
+        padding: 0.4rem 0.2rem;
+    }
+
+    /* Hide players column on very small screens */
+    .dept-players-column {
+        display: none;
     }
 }

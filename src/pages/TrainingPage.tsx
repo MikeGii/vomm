@@ -32,7 +32,7 @@ import {
     initializeTrainingData,
     initializeKitchenLabTrainingData,
     checkAndResetHandicraftTrainingClicks,
-    initializeHandicraftTrainingData
+    initializeHandicraftTrainingData, performTraining5x
 } from '../services/TrainingService';
 import { getAvailableActivities, getActivityById } from '../data/trainingActivities';
 import { sellCraftedItem } from '../services/SellService';
@@ -369,12 +369,17 @@ const TrainingPage: React.FC = () => {
                 activeTab === 'food' ? 'kitchen-lab' : 'handicraft';
 
             // Perform 5 individual trainings in sequence
-            for (let i = 0; i < 5; i++) {
-                await performTraining(currentUser!.uid, currentTrainingState.selectedActivity, activity.rewards, trainingType);
-            }
+            const result = await performTraining5x(currentUser!.uid, currentTrainingState.selectedActivity, activity.rewards, trainingType);
 
             await refreshStats();
-            showToast(`5x ${activity.name} lõpetatud!`, 'success');
+
+            // Show enhanced feedback for handicraft activities
+            if (activeTab === 'handcraft' && result.craftingSummary && result.craftingSummary.isWorkshopActivity) {
+                const { successful, failed, activityName } = result.craftingSummary;
+                showToast(`5x ${activityName}: ${successful} õnnestus, ${failed} ebaõnnestus`, 'success');
+            } else {
+                showToast(`5x ${activity.name} lõpetatud!`, 'success');
+            }
 
         } catch (error: any) {
             console.error('5x Training error:', error);

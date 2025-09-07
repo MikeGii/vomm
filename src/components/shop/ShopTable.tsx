@@ -226,7 +226,7 @@ export const ShopTable: React.FC<ShopTableProps> = ({
                             </td>
                             <td className="td-price">
                                 <div className="price-compact">
-                                    <span className={`price-amount ${item.currency === 'pollid' ? 'pollid' : ''}`}>
+                                    <span className={`price-amount-shop ${item.currency === 'pollid' ? 'pollid' : ''}`}>
                                         {item.currency === 'pollid' ?
                                             `💎${item.basePollidPrice || item.pollidPrice}` :
                                             formatMoney(staticPrice)}

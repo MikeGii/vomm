@@ -142,29 +142,29 @@ export const DepartmentLeaderboard: React.FC = () => {
                 </div>
             ) : (
                 <>
-                    <div className="department-leaderboard-table">
+                    <div className="dept-table-container">
                         {paginatedData.length === 0 ? (
                             <div className="empty-state">
                                 <p>{getEmptyMessage()}</p>
                             </div>
                         ) : (
-                            <table className="leaderboard-table">
+                            <table className="dept-table">
                                 <thead>
                                 <tr>
-                                    <th className="rank-column">Koht</th>
-                                    <th className="name-column">
+                                    <th className="dept-rank-column">Koht</th>
+                                    <th className="dept-name-column">
                                         {view === 'crime' ? 'Osakond' : 'Nimi'}
                                     </th>
                                     {view === 'crime' ? (
                                         <>
-                                            <th className="crime-level-column">Kuritegevus</th>
-                                            <th className="crime-status-column">Staatus</th>
-                                            <th className="players-column">Ametnikke</th>
+                                            <th className="dept-crime-level-column">Kuritegevus</th>
+                                            <th className="dept-crime-status-column">Staatus</th>
+                                            <th className="dept-players-column">Ametnikke</th>
                                         </>
                                     ) : (
                                         <>
-                                            <th className="score-column">Maine</th>
-                                            <th className="players-column">Mängijaid</th>
+                                            <th className="dept-score-column">Maine</th>
+                                            <th className="dept-players-column">Mängijaid</th>
                                         </>
                                     )}
                                 </tr>
@@ -174,45 +174,45 @@ export const DepartmentLeaderboard: React.FC = () => {
                                     (paginatedData as DepartmentCrimeDisplay[]).map((crime, index) => {
                                         const globalRank = (currentPage - 1) * itemsPerPage + index + 1;
                                         return (
-                                            <tr key={crime.departmentId} className="leaderboard-row crime-row">
-                                                <td className="rank-column">
-                                                        <span className={`rank rank-${globalRank} ${globalRank <= 3 ? 'top-three' : ''}`}>
-                                                            {globalRank === 1 && '🥇'}
-                                                            {globalRank === 2 && '🥈'}
-                                                            {globalRank === 3 && '🥉'}
-                                                            {globalRank > 3 && globalRank}
-                                                        </span>
+                                            <tr key={crime.departmentId} className="dept-row dept-crime-row">
+                                                <td className="dept-rank-column">
+                                                <span className={`dept-rank dept-rank-${globalRank} ${globalRank <= 3 ? 'dept-top-three' : ''}`}>
+                                                    {globalRank === 1 && '🥇'}
+                                                    {globalRank === 2 && '🥈'}
+                                                    {globalRank === 3 && '🥉'}
+                                                    {globalRank > 3 && globalRank}
+                                                </span>
                                                 </td>
-                                                <td className="name-column">
-                                                    <div className="crime-department-info">
-                                                            <span className="department-name">
-                                                                🚨 {crime.departmentId}
-                                                            </span>
-                                                        <span className="department-prefecture">
-                                                                {crime.prefecture}
-                                                            </span>
+                                                <td className="dept-name-column">
+                                                    <div className="dept-crime-department-info">
+                                                    <span className="dept-department-name">
+                                                        🚨 {crime.departmentId}
+                                                    </span>
+                                                        <span className="dept-department-prefecture">
+                                                        {crime.prefecture}
+                                                    </span>
                                                     </div>
                                                 </td>
-                                                <td className="crime-level-column">
-                                                        <span
-                                                            className="crime-percentage"
-                                                            style={{ color: getCrimeColor(crime.currentCrimeLevel) }}
-                                                        >
-                                                            {crime.currentCrimeLevel.toFixed(1)}%
-                                                        </span>
+                                                <td className="dept-crime-level-column">
+                                                <span
+                                                    className="dept-crime-percentage"
+                                                    style={{ color: getCrimeColor(crime.currentCrimeLevel) }}
+                                                >
+                                                    {crime.currentCrimeLevel.toFixed(1)}%
+                                                </span>
                                                 </td>
-                                                <td className="crime-status-column">
-                                                        <span
-                                                            className="crime-status"
-                                                            style={{ color: getCrimeColor(crime.currentCrimeLevel) }}
-                                                        >
-                                                            {getCrimeDescription(crime.currentCrimeLevel)}
-                                                        </span>
+                                                <td className="dept-crime-status-column">
+                                                <span
+                                                    className="dept-crime-status"
+                                                    style={{ color: getCrimeColor(crime.currentCrimeLevel) }}
+                                                >
+                                                    {getCrimeDescription(crime.currentCrimeLevel)}
+                                                </span>
                                                 </td>
-                                                <td className="players-column">
-                                                        <span className="player-count">
-                                                            {crime.playerCount}
-                                                        </span>
+                                                <td className="dept-players-column">
+                                                <span className="dept-player-count">
+                                                    {crime.playerCount}
+                                                </span>
                                                 </td>
                                             </tr>
                                         );
@@ -221,26 +221,26 @@ export const DepartmentLeaderboard: React.FC = () => {
                                     (paginatedData as DepartmentScore[]).map((score, index) => {
                                         const globalRank = (currentPage - 1) * itemsPerPage + index + 1;
                                         return (
-                                            <tr key={score.id} className="leaderboard-row">
-                                                <td className="rank-column">
-                                                        <span className={`rank rank-${globalRank}`}>
-                                                            {globalRank}
-                                                        </span>
+                                            <tr key={score.id} className="dept-row">
+                                                <td className="dept-rank-column">
+                                                <span className={`dept-rank dept-rank-${globalRank}`}>
+                                                    {globalRank}
+                                                </span>
                                                 </td>
-                                                <td className="name-column">
-                                                        <span className="department-name">
-                                                            {getIconForView()}{score.name}
-                                                        </span>
+                                                <td className="dept-name-column">
+                                                <span className="dept-department-name">
+                                                    {getIconForView()}{score.name}
+                                                </span>
                                                 </td>
-                                                <td className="score-column">
-                                                        <span className="score-value">
-                                                            {score.score.toLocaleString('et-EE')}
-                                                        </span>
+                                                <td className="dept-score-column">
+                                                <span className="dept-score-value">
+                                                    {score.score.toLocaleString('et-EE')}
+                                                </span>
                                                 </td>
-                                                <td className="players-column">
-                                                        <span className="player-count">
-                                                            {score.playerCount}
-                                                        </span>
+                                                <td className="dept-players-column">
+                                                <span className="dept-player-count">
+                                                    {score.playerCount}
+                                                </span>
                                                 </td>
                                             </tr>
                                         );
