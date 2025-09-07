@@ -1,6 +1,6 @@
 // src/components/estate/CarTuningSelector.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { PlayerCar } from '../../types/vehicles';
@@ -8,10 +8,8 @@ import { getCarModelById } from '../../data/vehicles';
 import { calculateCarStats, calculateEnginePower } from '../../utils/vehicleCalculations';
 import {
     getPlayerInventory,
-    uninstallPartFromCar,
-    InventoryItem
+    uninstallPartFromCar
 } from '../../services/InventoryService';
-import { getBaseIdFromInventoryId } from '../../utils/inventoryUtils';
 import '../../styles/components/estate/CarTuningSelector.css';
 
 interface CarTuningSelectorProps {
@@ -31,8 +29,19 @@ const CarTuningSelector: React.FC<CarTuningSelectorProps> = ({
     const { showToast } = useToast();
 
     const [selectedCar, setSelectedCar] = useState<PlayerCar | null>(null);
-    const [installedParts, setInstalledParts] = useState<InventoryItem[]>([]);
     const [removingPartCategory, setRemovingPartCategory] = useState<string | null>(null);
+
+    const loadInstalledParts = useCallback(async (carId: string) => {
+        if (!currentUser) return;
+
+        try {
+            const inventory = await getPlayerInventory(currentUser.uid);
+            const installed = inventory.filter(item => item.installedOn === carId);
+            console.log('Loaded installed parts for car:', carId, installed.length, 'parts');
+        } catch (error) {
+            console.error('Viga paigaldatud osade laadimisel:', error);
+        }
+    }, [currentUser]);
 
     useEffect(() => {
         if (selectedCarId) {
@@ -43,21 +52,8 @@ const CarTuningSelector: React.FC<CarTuningSelectorProps> = ({
             }
         } else {
             setSelectedCar(null);
-            setInstalledParts([]);
         }
-    }, [selectedCarId, userCars]);
-
-    const loadInstalledParts = async (carId: string) => {
-        if (!currentUser) return;
-
-        try {
-            const inventory = await getPlayerInventory(currentUser.uid);
-            const installed = inventory.filter(item => item.installedOn === carId);
-            setInstalledParts(installed);
-        } catch (error) {
-            console.error('Viga paigaldatud osade laadimisel:', error);
-        }
-    };
+    }, [selectedCarId, userCars, loadInstalledParts]); // Added loadInstalledParts to dependencies
 
     const isSlotEmpty = (category: string): boolean => {
         return selectedCar?.emptyPartSlots?.[category as keyof typeof selectedCar.emptyPartSlots] || false;

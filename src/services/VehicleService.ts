@@ -7,8 +7,6 @@ import {
     query,
     where,
     Timestamp,
-    orderBy,
-    limit,
     runTransaction, getDoc, updateDoc, serverTimestamp
 } from 'firebase/firestore';
 import { firestore as db } from '../config/firebase';

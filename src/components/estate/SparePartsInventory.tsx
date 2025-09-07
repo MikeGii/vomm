@@ -1,6 +1,6 @@
 // src/components/estate/SparePartsInventory.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import {
@@ -30,11 +30,7 @@ const SparePartsInventory: React.FC<SparePartsInventoryProps> = ({
     const [installingPartId, setInstallingPartId] = useState<string | null>(null);
     const [sellingPartId, setSellingPartId] = useState<string | null>(null);
 
-    useEffect(() => {
-        loadSpareParts();
-    }, [currentUser]);
-
-    const loadSpareParts = async () => {
+    const loadSpareParts = useCallback(async () => {
         if (!currentUser) return;
 
         setLoading(true);
@@ -47,7 +43,11 @@ const SparePartsInventory: React.FC<SparePartsInventoryProps> = ({
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentUser, showToast]);
+
+    useEffect(() => {
+        loadSpareParts();
+    }, [loadSpareParts]);
 
     const handleInstallPart = async (inventoryItem: InventoryItem) => {
         if (!currentUser || !selectedCarId) return;

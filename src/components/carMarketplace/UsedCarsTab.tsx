@@ -1,6 +1,6 @@
 // src/components/carMarketplace/UsedCarsTab.tsx
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePlayerStats } from '../../contexts/PlayerStatsContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -22,22 +22,13 @@ const UsedCarsTab: React.FC = () => {
     const [sortBy, setSortBy] = useState<'price' | 'date' | 'mileage' | 'power'>('date');
     const [filterBrand, setFilterBrand] = useState<string>('all');
 
-    // Lae müügis olevad autod kui komponent laeb
-    useEffect(() => {
-        loadUsedCars();
-    }, []);
-
-    // Funktsioon müügis olevate autode laadimiseks
-    const loadUsedCars = async () => {
+    const loadUsedCars = useCallback(async () => {
         setLoading(true);
         try {
-            console.log('Loading used cars...');
             const cars = await getCarsForSale();
             console.log('Received cars:', cars);
 
-            // AJUTINE: Näita kõiki autosid, kaasa arvatud oma
-            // const filteredCars = cars.filter(car => car.ownerId !== currentUser?.uid);
-            const filteredCars = cars; // Näita kõiki
+            const filteredCars = cars;
 
             console.log('Showing all cars:', filteredCars);
 
@@ -48,7 +39,11 @@ const UsedCarsTab: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [showToast]);
+
+    useEffect(() => {
+        loadUsedCars();
+    }, [loadUsedCars]);
 
     // Funktsioon auto ostmiseks
     const handlePurchase = async (car: PlayerCar) => {
