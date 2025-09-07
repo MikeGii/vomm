@@ -220,102 +220,102 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({
                         <div className="attribute-item">
                             <span className="attribute-icon">💪</span>
                             <span className="attribute-level">
-                                {stats.attributes.strength.level}
-                                {equipmentBonuses?.strength && (
+                    {stats.attributes.strength.level}
+                                {equipmentBonuses && equipmentBonuses.strength > 0 && (
                                     <span className="equipment-bonus">+{equipmentBonuses.strength}</span>
                                 )}
-                            </span>
+                </span>
                         </div>
 
                         <div className="attribute-item">
                             <span className="attribute-icon">🏃</span>
                             <span className="attribute-level">
-                                {stats.attributes.agility.level}
-                                {equipmentBonuses?.agility && (
+                    {stats.attributes.agility.level}
+                                {equipmentBonuses && equipmentBonuses.agility > 0 && (
                                     <span className="equipment-bonus">+{equipmentBonuses.agility}</span>
                                 )}
-                            </span>
+                </span>
                         </div>
 
                         <div className="attribute-item">
                             <span className="attribute-icon">🎯</span>
                             <span className="attribute-level">
-                                {stats.attributes.dexterity.level}
-                                {equipmentBonuses?.dexterity && (
+                    {stats.attributes.dexterity.level}
+                                {equipmentBonuses && equipmentBonuses.dexterity > 0 && (
                                     <span className="equipment-bonus">+{equipmentBonuses.dexterity}</span>
                                 )}
-                            </span>
+                </span>
                         </div>
 
                         <div className="attribute-item">
                             <span className="attribute-icon">🧠</span>
                             <span className="attribute-level">
-                                {stats.attributes.intelligence.level}
-                                {equipmentBonuses?.intelligence && (
+                    {stats.attributes.intelligence.level}
+                                {equipmentBonuses && equipmentBonuses.intelligence > 0 && (
                                     <span className="equipment-bonus">+{equipmentBonuses.intelligence}</span>
                                 )}
-                            </span>
+                </span>
                         </div>
 
                         <div className="attribute-item">
                             <span className="attribute-icon">🏋️</span>
                             <span className="attribute-level">
-                                {stats.attributes.endurance.level}
-                                {equipmentBonuses?.endurance && (
+                    {stats.attributes.endurance.level}
+                                {equipmentBonuses && equipmentBonuses.endurance > 0 && (
                                     <span className="equipment-bonus">+{equipmentBonuses.endurance}</span>
                                 )}
-                            </span>
+                </span>
                         </div>
 
                         {/* Kitchen & Lab Attributes - NO equipment bonuses */}
                         <div className="attribute-item">
                             <span className="attribute-icon">🍳</span>
                             <span className="attribute-level">
-                                {stats.attributes.cooking.level}
-                            </span>
+                    {stats.attributes.cooking.level}
+                </span>
                         </div>
 
                         <div className="attribute-item">
                             <span className="attribute-icon">🥤</span>
                             <span className="attribute-level">
-                                {stats.attributes.brewing.level}
-                            </span>
+                    {stats.attributes.brewing.level}
+                </span>
                         </div>
 
                         <div className="attribute-item">
                             <span className="attribute-icon">🧪</span>
                             <span className="attribute-level">
-                                {stats.attributes.chemistry.level}
-                            </span>
+                    {stats.attributes.chemistry.level}
+                </span>
                         </div>
 
                         {/* Handicraft Attributes - NO equipment bonuses */}
                         <div className="attribute-item">
                             <span className="attribute-icon">🪡</span>
                             <span className="attribute-level">
-                                {stats.attributes.sewing.level}
-                            </span>
+                    {stats.attributes.sewing.level}
+                </span>
                         </div>
 
                         <div className="attribute-item">
                             <span className="attribute-icon">🏥</span>
                             <span className="attribute-level">
-                                {stats.attributes.medicine.level}
-                            </span>
+                    {stats.attributes.medicine.level}
+                </span>
                         </div>
 
                         <div className="attribute-item">
                             <span className="attribute-icon">🖨️</span>
                             <span className="attribute-level">
-                                {stats.attributes.printing.level}
-                            </span>
+                    {stats.attributes.printing.level}
+                </span>
                         </div>
 
                         <div className="attribute-item">
                             <span className="attribute-icon">✂️</span>
                             <span className="attribute-level">
-                                {stats.attributes.lasercutting.level}
-                            </span>
+                    {stats.attributes.lasercutting.level}
+                </span>
                         </div>
                     </div>
                 </div>

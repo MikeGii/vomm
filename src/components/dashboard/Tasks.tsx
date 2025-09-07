@@ -79,13 +79,6 @@ export const Tasks: React.FC = () => {
                     />
                 )}
             </div>
-
-            {tasks.streak > 0 && (
-                <div className={`streak-display ${isVip ? 'vip-streak' : ''}`}>
-                    <span className="streak-icon">🔥</span>
-                    <span>{tasks.streak} päeva järjest</span>
-                </div>
-            )}
         </div>
     );
 };
@@ -176,7 +169,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, type, onClaim, claiming, isVi
                         onClick={onClaim}
                         disabled={claiming}
                     >
-                        {claiming ? 'Nõuan...' : 'Nõua auhind'}
+                        {claiming ? 'Nõuan...' : 'Saa auhind'}
                     </button>
                 )}
             </div>

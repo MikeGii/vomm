@@ -218,7 +218,6 @@ export async function purchaseUsedCar(
                 sellerGarageSlots[sellerSlotIndex] = {
                     slotId: sellerGarageSlots[sellerSlotIndex].slotId,
                     isEmpty: true
-                    // carId välja ei lisata üldse kui see on tühi
                 };
             }
 

@@ -1,11 +1,15 @@
-// src/components/training/ActivitySelector.tsx - CORRECTED
-import React from 'react';
+// src/components/training/ActivitySelector.tsx - FIXED VERSION
+import React, { useState, useEffect} from 'react';
 import { TrainingActivity, PlayerStats } from '../../types';
 import { calculateEquipmentBonuses } from '../../services/EquipmentBonusService';
 import { CRAFTING_INGREDIENTS } from '../../data/shop/craftingIngredients';
 import { getBaseIdFromInventoryId } from '../../utils/inventoryUtils';
 import '../../styles/components/training/ActivitySelector.css';
 import { useEstate } from '../../contexts/EstateContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
+import { purchaseItem } from '../../services/ShopService';
+import { getAllItemsWithStock } from '../../services/ShopStockService';
 import { ALL_SHOP_ITEMS } from '../../data/shop';
 
 interface ActivitySelectorProps {
@@ -13,8 +17,10 @@ interface ActivitySelectorProps {
     selectedActivity: string;
     onActivitySelect: (activityId: string) => void;
     onTrain: () => void;
+    onTrain5x?: () => void;
+    onTrainCustom?: (amount: number) => void;
+    onRefreshStats?: () => Promise<void>;
     isTraining: boolean;
-    canTrain: boolean;
     playerStats: PlayerStats | null;
     trainingType?: 'sports' | 'kitchen-lab' | 'handicraft';
 }
@@ -24,15 +30,105 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                                                                       selectedActivity,
                                                                       onActivitySelect,
                                                                       onTrain,
+                                                                      onTrain5x,
+                                                                      onTrainCustom,
+                                                                      onRefreshStats,
                                                                       isTraining,
-                                                                      canTrain,
                                                                       playerStats,
                                                                       trainingType = 'sports'
                                                                   }) => {
     const selectedActivityData = activities.find(a => a.id === selectedActivity);
     const equipmentBonuses = playerStats?.equipment ? calculateEquipmentBonuses(playerStats.equipment) : null;
+
+    const { currentUser } = useAuth();
+    const { showToast } = useToast();
+
     const playerLevel = playerStats?.level || 1;
     const { canUse3DPrinter, canUseLaserCutter } = useEstate();
+
+    const [customAmount, setCustomAmount] = useState<number>(1);
+    const [customAmountError, setCustomAmountError] = useState<string>('');
+
+    const [purchasingItems, setPurchasingItems] = useState<Record<string, boolean>>({});
+    const [purchaseQuantities, setPurchaseQuantities] = useState<Record<string, number>>({});
+
+    const [stockData, setStockData] = useState<Map<string, number>>(new Map());
+
+    // Check stock for required items when activity changes
+    useEffect(() => {
+        if (selectedActivityData?.requiredItems) {
+            const loadStockData = async () => {
+                try {
+                    const itemsWithStock = await getAllItemsWithStock();
+                    const stockMap = new Map<string, number>();
+
+                    itemsWithStock.forEach(({ item, currentStock, hasUnlimitedStock }) => {
+                        stockMap.set(item.id, hasUnlimitedStock ? 999999 : currentStock);
+                    });
+
+                    setStockData(stockMap);
+                } catch (error) {
+                    console.error('Error loading stock data:', error);
+                }
+            };
+
+            void loadStockData();
+        }
+    }, [selectedActivityData?.requiredItems]);
+
+    const getItemStockAmount = (itemId: string): number => {
+        return stockData.get(itemId) ?? -1;
+    };
+
+    const handlePurchaseMaterial = async (itemId: string, quantity: number) => {
+        if (!currentUser || !playerStats) return;
+
+        setPurchasingItems(prev => ({ ...prev, [itemId]: true }));
+
+        try {
+            const result = await purchaseItem(currentUser.uid, itemId, quantity);
+            if (result.success) {
+                showToast(`Ostetud ${quantity}x ${getItemName(itemId)}`, 'success');
+                // Update local stock data
+                setStockData(prev => {
+                    const newMap = new Map(prev);
+                    const currentStock = newMap.get(itemId) || 0;
+                    if (currentStock !== 999999) { // Don't update unlimited stock items
+                        newMap.set(itemId, Math.max(0, currentStock - quantity));
+                    }
+                    return newMap;
+                });
+                // Trigger parent refresh if available
+                if (onRefreshStats) {
+                    await onRefreshStats();
+                }
+            } else {
+                showToast(result.message || 'Ostmine ebaõnnestus', 'error');
+            }
+        } catch (error: any) {
+            showToast(error.message || 'Viga ostmisel', 'error');
+        } finally {
+            setPurchasingItems(prev => ({ ...prev, [itemId]: false }));
+        }
+    };
+
+    const getItemPrice = (itemId: string): number => {
+        const craftingItem = CRAFTING_INGREDIENTS.find(item => item.id === itemId);
+        return craftingItem?.basePrice || 0;
+    };
+
+    const updatePurchaseQuantity = (itemId: string, quantity: number) => {
+        const itemStock = getItemStockAmount(itemId);
+        const maxAllowed = itemStock > 0 ? Math.min(99, itemStock) : 99;
+        setPurchaseQuantities(prev => ({
+            ...prev,
+            [itemId]: Math.max(1, Math.min(maxAllowed, quantity))
+        }));
+    };
+
+    const getPurchaseQuantity = (itemId: string): number => {
+        return purchaseQuantities[itemId] || 1;
+    };
 
     const remainingClicks = trainingType === 'sports'
         ? (playerStats?.trainingData?.remainingClicks || 0)
@@ -170,7 +266,7 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
             <div className="crafting-info">
                 <div className="required-items">
                     <h4>Vajalikud materjalid:</h4>
-                    <ul>
+                    <div className="materials-compact-list">
                         {activity.requiredItems.map((item, index) => {
                             const currentQuantity = playerStats?.inventory
                                 ? playerStats.inventory
@@ -182,39 +278,99 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                                 : 0;
 
                             const hasEnough = currentQuantity >= item.quantity;
+                            const missing = Math.max(0, item.quantity - currentQuantity);
+                            const itemPrice = getItemPrice(item.id);
+                            const purchaseQty = getPurchaseQuantity(item.id);
+                            const totalCost = itemPrice * purchaseQty;
+                            const canAfford = (playerStats?.money || 0) >= totalCost;
+                            const isPurchasing = purchasingItems[item.id] || false;
+
+                            const itemStock = getItemStockAmount(item.id);
+                            const isCheckingItemStock = stockData.size === 0 && selectedActivityData?.requiredItems;
+                            const isOutOfStock = itemStock === 0;
+                            const hasStockForPurchase = itemStock >= purchaseQty || itemStock === -1;
 
                             return (
-                                <li key={index} className={`material-item ${hasEnough ? 'available' : 'missing'}`}>
-                                <span className="material-status-icon">
-                                    {hasEnough ? '✅' : '❌'}
-                                </span>
-                                    <span className="material-name">
-                                    {getItemName(item.id)}
-                                </span>
-                                    <span className="material-quantity">
-                                    {currentQuantity}/{item.quantity}
-                                </span>
-                                </li>
+                                <div key={index} className={`material-compact ${hasEnough ? 'sufficient' : 'insufficient'}`}>
+                                    <div className="material-main">
+                                    <span className="material-icon">
+                                        {hasEnough ? '✅' : '⚠️'}
+                                    </span>
+                                        <div className="material-details">
+                                            <span className="material-name">{getItemName(item.id)}</span>
+                                            <span className={`material-status ${hasEnough ? 'sufficient' : 'insufficient'}`}>
+                                            {currentQuantity}/{item.quantity}
+                                        </span>
+                                        </div>
+
+                                        {!hasEnough && itemPrice > 0 && (
+                                            <div className="purchase-compact">
+                                                {isCheckingItemStock ? (
+                                                    <span className="stock-loading">⏳</span>
+                                                ) : isOutOfStock ? (
+                                                    <span className="stock-out">❌</span>
+                                                ) : (
+                                                    <>
+                                                        <div className="qty-controls">
+                                                            <button
+                                                                className="qty-btn-sm"
+                                                                onClick={() => updatePurchaseQuantity(item.id, purchaseQty - 1)}
+                                                                disabled={purchaseQty <= 1 || isPurchasing}
+                                                            >
+                                                                -
+                                                            </button>
+                                                            <span className="qty-display">{purchaseQty}</span>
+                                                            <button
+                                                                className="qty-btn-sm"
+                                                                onClick={() => updatePurchaseQuantity(item.id, purchaseQty + 1)}
+                                                                disabled={isPurchasing || (itemStock !== 999999 && purchaseQty >= Math.min(99, itemStock))}
+                                                            >
+                                                                +
+                                                            </button>
+                                                        </div>
+                                                        <button
+                                                            className={`buy-btn-compact ${!canAfford ? 'no-funds' : !hasStockForPurchase ? 'no-stock' : ''}`}
+                                                            onClick={() => handlePurchaseMaterial(item.id, purchaseQty)}
+                                                            disabled={!canAfford || isPurchasing || !hasStockForPurchase}
+                                                            title={
+                                                                !canAfford ? `Pole raha (${totalCost}€)` :
+                                                                    !hasStockForPurchase ? `Laos ${itemStock}` :
+                                                                        `Osta ${purchaseQty}x (${totalCost}€)`
+                                                            }
+                                                        >
+                                                            {isPurchasing ? '⏳' : `${totalCost}€`}
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {!hasEnough && (
+                                        <div className="material-info-compact">
+                                            <span className="missing-info">Puudub: {missing}</span>
+                                            {itemStock !== -1 && (
+                                                <span className="stock-info-compact">
+                                                Laos: {itemStock === 999999 ? '∞' : itemStock}
+                                            </span>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                             );
                         })}
-                    </ul>
+                    </div>
                 </div>
 
                 <div className="produced-items">
                     <h4>Toodetakse:</h4>
-                    <ul>
+                    <div className="produced-compact-list">
                         {activity.producedItems.map((item, index) => (
-                            <li key={index} className="produced-item">
-                                <span className="produced-icon">🏭</span>
-                                <span className="produced-name">
-                                {getItemName(item.id)}
-                            </span>
-                                <span className="produced-quantity">
-                                x{item.quantity}
-                            </span>
-                            </li>
+                            <span key={index} className="produced-compact">
+                            🏭 {getItemName(item.id)} x{item.quantity}
+                        </span>
                         ))}
-                    </ul>
+                    </div>
                 </div>
             </div>
         );
@@ -242,12 +398,133 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
             return unlockedLevels;
         }
 
-        return unlockedLevels.slice(-1);  // <-- Changed to show only last 1
+        return unlockedLevels.slice(-1);
     };
 
     const sortedLevels = getFilteredLevels();
 
-    // FIXED: Enhanced button logic with workshop equipment checks
+    const canTrain5x = (): { canTrain: boolean; reason?: string } => {
+        if (!selectedActivityData) return { canTrain: false, reason: 'Vali tegevus' };
+
+        // Check if we have at least 5 clicks
+        if (remainingClicks < 5) {
+            return { canTrain: false, reason: `Vajad vähemalt 5 treeningut (sul on ${remainingClicks})` };
+        }
+
+        // Check level requirement
+        if (!canTrainActivity(selectedActivityData)) {
+            return { canTrain: false, reason: 'Nõuded pole täidetud' };
+        }
+
+        // Check materials for kitchen/lab and handicraft (need 5x the materials)
+        if ((trainingType === 'kitchen-lab' || trainingType === 'handicraft') && selectedActivityData.requiredItems) {
+            for (const required of selectedActivityData.requiredItems) {
+                const needed5x = required.quantity * 5;
+
+                const currentQuantity = playerStats?.inventory
+                    ? playerStats.inventory
+                        .filter(invItem => {
+                            const baseId = getBaseIdFromInventoryId(invItem.id);
+                            return baseId === required.id && invItem.category === 'crafting';
+                        })
+                        .reduce((sum, invItem) => sum + invItem.quantity, 0)
+                    : 0;
+
+                if (currentQuantity < needed5x) {
+                    const itemName = getItemName(required.id);
+                    return { canTrain: false, reason: `${itemName}: vajad ${needed5x}, sul on ${currentQuantity}` };
+                }
+            }
+        }
+
+        return { canTrain: true };
+    };
+
+    const validateCustomAmount = (amount: number): { isValid: boolean; error: string } => {
+        if (!selectedActivityData) return { isValid: false, error: 'Vali tegevus' };
+
+        if (amount < 1) return { isValid: false, error: 'Miinimum 1 treening' };
+        if (amount > 999) return { isValid: false, error: 'Maksimum 999 treeningut' };
+        if (amount > remainingClicks) {
+            return { isValid: false, error: `Pole piisavalt klikke (${remainingClicks} saadaval)` };
+        }
+
+        // Check level requirement
+        if (!canTrainActivity(selectedActivityData)) {
+            return { isValid: false, error: 'Nõuded pole täidetud' };
+        }
+
+        // Check materials for kitchen/lab and handicraft
+        if ((trainingType === 'kitchen-lab' || trainingType === 'handicraft') && selectedActivityData.requiredItems) {
+            for (const required of selectedActivityData.requiredItems) {
+                const neededCustom = required.quantity * amount;
+
+                const currentQuantity = playerStats?.inventory
+                    ? playerStats.inventory
+                        .filter(invItem => {
+                            const baseId = getBaseIdFromInventoryId(invItem.id);
+                            return baseId === required.id && invItem.category === 'crafting';
+                        })
+                        .reduce((sum, invItem) => sum + invItem.quantity, 0)
+                    : 0;
+
+                if (currentQuantity < neededCustom) {
+                    const itemName = getItemName(required.id);
+                    return { isValid: false, error: `${itemName}: vajad ${neededCustom}, sul on ${currentQuantity}` };
+                }
+            }
+        }
+
+        return { isValid: true, error: '' };
+    };
+
+    const handleCustomAmountChange = (value: string) => {
+        const amount = parseInt(value) || 1;
+        setCustomAmount(amount);
+
+        if (playerStats?.isVip) {
+            const validation = validateCustomAmount(amount);
+            setCustomAmountError(validation.error);
+        }
+    };
+
+    const canTrainCustom = (): { canTrain: boolean; reason?: string } => {
+        if (!selectedActivityData) return { canTrain: false, reason: 'Vali tegevus' };
+
+        if (customAmount < 1) return { canTrain: false, reason: 'Vähemalt 1 treening' };
+        if (customAmount > remainingClicks) {
+            return { canTrain: false, reason: `Pole piisavalt klikke (${remainingClicks})` };
+        }
+
+        // Check level requirement
+        if (!canTrainActivity(selectedActivityData)) {
+            return { canTrain: false, reason: 'Nõuded pole täidetud' };
+        }
+
+        // Check materials for kitchen/lab and handicraft (need customAmount x materials)
+        if ((trainingType === 'kitchen-lab' || trainingType === 'handicraft') && selectedActivityData.requiredItems) {
+            for (const required of selectedActivityData.requiredItems) {
+                const neededCustom = required.quantity * customAmount;
+
+                const currentQuantity = playerStats?.inventory
+                    ? playerStats.inventory
+                        .filter(invItem => {
+                            const baseId = getBaseIdFromInventoryId(invItem.id);
+                            return baseId === required.id && invItem.category === 'crafting';
+                        })
+                        .reduce((sum, invItem) => sum + invItem.quantity, 0)
+                    : 0;
+
+                if (currentQuantity < neededCustom) {
+                    const itemName = getItemName(required.id);
+                    return { canTrain: false, reason: `${itemName}: vajad ${neededCustom}, sul on ${currentQuantity}` };
+                }
+            }
+        }
+
+        return { canTrain: true };
+    };
+
     const getButtonState = () => {
         if (!selectedActivityData) return { disabled: true, text: 'Vali tegevus' };
 
@@ -341,7 +618,6 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                                         <p>Sinu tase: {playerLevel}</p>
                                     </>
                                 )}
-                                {/* FIXED: Workshop equipment warnings */}
                                 {trainingType === 'handicraft' && (
                                     <>
                                         {selectedActivityData.rewards.printing && !hasWorkshopEquipment('printing') && (
@@ -388,16 +664,100 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                         </ul>
                     </div>
 
-                    <button
-                        className={`train-button ${buttonState.disabled ? 'disabled' : ''} ${remainingClicks === 0 ? 'no-clicks' : ''}`}
-                        onClick={onTrain}
-                        disabled={buttonState.disabled}
-                    >
-                        <span className="button-text">{buttonState.text}</span>
-                        {!buttonState.disabled && (
-                            <span className="clicks-badge">{remainingClicks}</span>
-                        )}
-                    </button>
+                    <div className="training-buttons">
+                        <button
+                            className={`train-button ${buttonState.disabled ? 'disabled' : ''} ${remainingClicks === 0 ? 'no-clicks' : ''}`}
+                            onClick={onTrain}
+                            disabled={buttonState.disabled}
+                        >
+                            <span className="button-text">{buttonState.text}</span>
+                            {!buttonState.disabled && (
+                                <span className="clicks-badge">{remainingClicks}</span>
+                            )}
+                        </button>
+
+                        <button
+                            className={`train-button train-5x ${!canTrain5x().canTrain ? 'disabled' : ''}`}
+                            onClick={() => onTrain5x?.()}
+                            disabled={!canTrain5x().canTrain || isTraining}
+                            title={!canTrain5x().canTrain ? canTrain5x().reason : undefined}
+                        >
+                            <span className="button-text">
+                                {isTraining ? 'Treenid...' :
+                                    trainingType === 'sports' ? 'Treeni 5x' : 'Valmista 5x'}
+                            </span>
+                            {canTrain5x().canTrain && !isTraining && (
+                                <span className="clicks-badge">{remainingClicks}</span>
+                            )}
+                        </button>
+
+                        <div className="vip-training-section">
+                            <div className="vip-header">
+                                <div className="vip-badge">
+                                    <span className="crown-icon">👑</span>
+                                    <span className="vip-text">VIP Treening</span>
+                                </div>
+                                {!playerStats?.isVip && (
+                                    <div className="vip-unlock-hint">
+                                        Vali suvaline arv treeninguid
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className={`vip-controls ${!playerStats?.isVip ? 'locked' : ''}`}>
+                                <div className="amount-input-container">
+                                    <label className="input-label">Kogus:</label>
+                                    <div className="input-wrapper">
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="999"
+                                            value={customAmount}
+                                            onChange={(e) => handleCustomAmountChange(e.target.value)}
+                                            className={`vip-amount-input ${customAmountError ? 'error' : ''}`}
+                                            disabled={!playerStats?.isVip || isTraining}
+                                            placeholder={playerStats?.isVip ? "1-999" : "VIP"}
+                                        />
+                                        <div className="input-suffix">x</div>
+                                    </div>
+                                    {playerStats?.isVip && customAmountError && (
+                                        <div className="input-error">{customAmountError}</div>
+                                    )}
+                                </div>
+
+                                <button
+                                    className={`vip-train-button ${
+                                        !playerStats?.isVip ? 'vip-locked' :
+                                            !canTrainCustom().canTrain || isTraining ? 'disabled' : ''
+                                    }`}
+                                    onClick={() => playerStats?.isVip && canTrainCustom().canTrain ? onTrainCustom?.(customAmount) : undefined}
+                                    disabled={!playerStats?.isVip || !canTrainCustom().canTrain || isTraining}
+                                    title={
+                                        !playerStats?.isVip ? 'VIP funktsioon - Vali suvaline arv treeninguid' :
+                                            !canTrainCustom().canTrain ? canTrainCustom().reason :
+                                                `Treeni ${customAmount} korda`
+                                    }
+                                >
+                                    <div className="button-content">
+                                        <span className="button-text">
+                                            {!playerStats?.isVip ? 'Ava VIP-ga' :
+                                                isTraining ? 'Treenid...' :
+                                                    !canTrainCustom().canTrain ? 'Pole võimalik' :
+                                                        trainingType === 'sports' ? 'Treeni' : 'Valmista'}
+                                        </span>
+                                        {playerStats?.isVip && canTrainCustom().canTrain && !isTraining && (
+                                            <span className="clicks-remaining">{remainingClicks} klikki</span>
+                                        )}
+                                    </div>
+                                    {!playerStats?.isVip && (
+                                        <div className="vip-overlay">
+                                            <span className="lock-icon">🔒</span>
+                                        </div>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

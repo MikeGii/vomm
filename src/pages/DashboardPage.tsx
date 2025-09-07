@@ -1,7 +1,7 @@
 // src/pages/DashboardPage.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, deleteDoc } from 'firebase/firestore';
+import {collection, query, where, getDocs, deleteDoc, updateDoc, doc} from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { PlayerStatsCard } from '../components/dashboard/PlayerStatsCard';
@@ -119,27 +119,57 @@ function DashboardPage() {
         initializeDashboard();
     }, [currentUser, initializationDone, showToast, navigate, refreshStats, playerStats]);
 
-    // REACT TO STATS CHANGES (runs when playerStats updates)
+// REACT TO STATS CHANGES (runs when playerStats updates)
     useEffect(() => {
-        if (!playerStats || loading) return;
+        if (!playerStats || loading || !currentUser?.uid) return;
 
-        // Check if prefecture selection is needed after graduation
-        if (playerStats.completedCourses?.includes('lopueksam') && !playerStats.prefecture) {
-            setShowPrefectureSelection(true);
-        }
-        // Check if department selection is needed after prefecture selection
-        else if (playerStats.completedCourses?.includes('lopueksam') &&
-            playerStats.prefecture &&
-            !playerStats.department) {
-            setShowDepartmentSelection(true);
-        }
-        // Check if prefecture selection is needed for abipolitseinik
-        else if (playerStats.completedCourses?.includes('basic_police_training_abipolitseinik') &&
-            !playerStats.prefecture &&
-            !playerStats.completedCourses?.includes('sisekaitseakadeemia_entrance')) {
-            setShowPrefectureSelection(true);
-        }
-    }, [playerStats, loading]);
+        const handlePrefectureLogic = async () => {
+            const position = playerStats.policePosition;
+            const prefecture = playerStats.prefecture;
+
+            // CASE 1: Kadett should always have Sisekaitseakadeemia
+            if (position === 'kadett' && prefecture !== 'Sisekaitseakadeemia') {
+                try {
+                    const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+                    await updateDoc(statsRef, {
+                        prefecture: 'Sisekaitseakadeemia'
+                    });
+                    // Don't call refreshStats here - the context listener will handle it
+                } catch (error) {
+                    console.error('Error updating kadett prefecture:', error);
+                }
+                return;
+            }
+
+            // CASE 2: Abipolitseinik needs prefecture selection
+            if (position === 'abipolitseinik' && !prefecture) {
+                setShowPrefectureSelection(true);
+                return;
+            }
+
+            // CASE 3: Graduated officers need prefecture selection
+            if (position &&
+                position !== 'abipolitseinik' &&
+                position !== 'kadett' &&
+                (!prefecture || prefecture === 'Sisekaitseakadeemia')) {
+                setShowPrefectureSelection(true);
+                return;
+            }
+
+            // CASE 4: Graduated officers with prefecture need department
+            if (position &&
+                position !== 'abipolitseinik' &&
+                position !== 'kadett' &&
+                prefecture &&
+                prefecture !== 'Sisekaitseakadeemia' &&
+                !playerStats.department) {
+                setShowDepartmentSelection(true);
+                return;
+            }
+        };
+
+        handlePrefectureLogic();
+    }, [playerStats, loading, currentUser?.uid]);
 
     // Handler for when health is updated from the modal
     const handleHealthUpdate = async () => {
