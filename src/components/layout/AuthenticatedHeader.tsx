@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth, firestore } from '../../config/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatMoney, formatPollid } from '../../utils/currencyUtils';
 import { PlayerStats } from '../../types';
@@ -13,6 +13,8 @@ import '../../styles/layout/Header.css';
 export const AuthenticatedHeader: React.FC = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
+    const [onlineCount, setOnlineCount] = useState<number>(0);
+    const [loadingOnlineCount, setLoadingOnlineCount] = useState(true);
     const navigate = useNavigate();
     const menuRef = useRef<HTMLDivElement>(null);
     const { currentUser } = useAuth();
@@ -30,6 +32,35 @@ export const AuthenticatedHeader: React.FC = () => {
 
         return () => unsubscribe();
     }, [currentUser]);
+
+    // Fetch online players count
+    useEffect(() => {
+        const fetchOnlinePlayersCount = async () => {
+            try {
+                const twentyFourHoursAgo = new Date();
+                twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+                const playersQuery = query(
+                    collection(firestore, 'playerStats'),
+                    where('lastSeen', '>=', Timestamp.fromDate(twentyFourHoursAgo))
+                );
+
+                const snapshot = await getDocs(playersQuery);
+                setOnlineCount(snapshot.size);
+            } catch (error) {
+                console.error('Viga aktiivsete mängijate lugemisel:', error);
+                setOnlineCount(0);
+            } finally {
+                setLoadingOnlineCount(false);
+            }
+        };
+
+        fetchOnlinePlayersCount();
+
+        // Uuenda iga 5 minuti tagant
+        const interval = setInterval(fetchOnlinePlayersCount, 5 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -106,6 +137,14 @@ export const AuthenticatedHeader: React.FC = () => {
                     </div>
                 </div>
                 <div className="header-right">
+
+                    <div className="header-stat-item header-online-count">
+                        <span className="header-stat-label">Aktiivsed 24h</span>
+                        <span className="header-stat-value">
+                            {loadingOnlineCount ? '—' : onlineCount}
+                        </span>
+                    </div>
+
                     <div className="menu-container" ref={menuRef}>
                         <button
                             className="menu-burger"

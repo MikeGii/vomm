@@ -1,11 +1,12 @@
 // src/contexts/PlayerStatsContext.tsx
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { doc, onSnapshot, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, getDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats } from '../types';
 import { useAuth } from './AuthContext';
 import { initializePlayerStats } from '../services/PlayerService';
 import { checkRankUpdate } from '../utils/rankUtils';
+import { updateLastSeenIfNeeded } from '../services/LastSeenService';
 
 interface PlayerStatsContextType {
     playerStats: PlayerStats | null;
@@ -34,6 +35,9 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const isUpdatingRankRef = useRef<boolean>(false);
     const unsubscribeRef = useRef<(() => void) | null>(null);
 
+    // Track lastSeen updates to avoid too frequent calls
+    const lastSeenUpdateRef = useRef<number | null>(null);
+
     // Manual refresh function - simplified to avoid loops
     const refreshStats = useCallback(async () => {
         if (!currentUser) return;
@@ -56,6 +60,25 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
     }, [currentUser]);
 
+    // Update lastSeen when user is active
+    useEffect(() => {
+        if (!currentUser || !playerStats) return;
+
+        // Uuenda lastSeen kui kontekst laadib esimest korda
+        const updateLastSeenOnActivity = async () => {
+            await updateLastSeenIfNeeded(currentUser.uid, playerStats.lastSeen);
+        };
+
+        updateLastSeenOnActivity();
+
+        // Uuenda lastSeen iga 5 minuti tagant aktiivsuse ajal
+        const activityInterval = setInterval(() => {
+            updateLastSeenIfNeeded(currentUser.uid, playerStats.lastSeen);
+        }, 5 * 60 * 1000); // 5 minutit
+
+        return () => clearInterval(activityInterval);
+    }, [currentUser, playerStats?.lastSeen]);
+
     useEffect(() => {
         if (!currentUser) {
             setPlayerStats(null);
@@ -65,7 +88,6 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
         const setupListener = async () => {
             try {
-
                 const userDoc = await getDoc(doc(firestore, 'users', currentUser.uid));
                 const username = userDoc.exists() ? userDoc.data().username : 'Tundmatu';
 
