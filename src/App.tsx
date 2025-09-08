@@ -25,6 +25,7 @@ import SettingsPage from "./pages/SettingsPage";
 import VIPPage from "./pages/VIPPage";
 import RealEstatePage from "./pages/RealEstatePage";
 import CarMarketplacePage from './pages/CarMarketplacePage';
+import { ChatFloatingButton } from './components/chat/ChatFloatingButton';
 
 function App() {
     return (
@@ -36,7 +37,6 @@ function App() {
                             <DebugMenu />
                             <Routes>
                                 <Route path="/" element={<HomePage />} />
-
                                 <Route path="/admin" element={<AdminPage />} />
 
                                 <Route
@@ -163,6 +163,10 @@ function App() {
 
                                 <Route path="*" element={<Navigate to="/" />} />
                             </Routes>
+
+                            {/* Chat floating button - nähtav kõikidel kaitstud lehtedel */}
+                            <ChatFloatingButton />
+
                             <DebugMenu />
                         </ToastProvider>
                     </EstateProvider>
