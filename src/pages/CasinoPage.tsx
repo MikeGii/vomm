@@ -1,5 +1,5 @@
 // src/pages/CasinoPage.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -7,7 +7,12 @@ import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { CasinoCounter } from '../components/casino/CasinoCounter';
 import { SlotMachine } from '../components/casino/SlotMachine';
-import { getRemainingCasinoPlays, playSlotMachine, SlotResult } from '../services/CasinoService';
+import {
+    getRemainingCasinoPlays,
+    playSlotMachine,
+    SlotResult,
+    checkAndResetCasinoData
+} from '../services/CasinoService';
 import '../styles/pages/Casino.css';
 
 const CasinoPage: React.FC = () => {
@@ -16,8 +21,29 @@ const CasinoPage: React.FC = () => {
     const { showToast } = useToast();
     const { playerStats, loading, refreshStats } = usePlayerStats();
     const [isPlaying, setIsPlaying] = useState(false);
+    const [isCheckingReset, setIsCheckingReset] = useState(false);
 
-    // REMOVED: useEffect with onSnapshot listener
+    // Check and reset casino data when page loads or hour changes
+    useEffect(() => {
+        const checkCasinoReset = async () => {
+            if (playerStats && currentUser && !isCheckingReset) {
+                setIsCheckingReset(true);
+                try {
+                    const resetOccurred = await checkAndResetCasinoData(currentUser.uid, playerStats);
+                    if (resetOccurred) {
+                        // Refresh stats to get updated casino data
+                        await refreshStats();
+                    }
+                } catch (error) {
+                    console.error('Error checking casino reset:', error);
+                } finally {
+                    setIsCheckingReset(false);
+                }
+            }
+        };
+
+        checkCasinoReset();
+    }, [playerStats?.casinoData?.lastPlayTime, currentUser, refreshStats, isCheckingReset]);
 
     const handleSlotPlay = async (betAmount: number): Promise<SlotResult> => {
         if (!currentUser || !playerStats) {
@@ -60,7 +86,7 @@ const CasinoPage: React.FC = () => {
     }
 
     const remainingPlays = playerStats ? getRemainingCasinoPlays(playerStats) : 5;
-    const canPlay = remainingPlays > 0 && !isPlaying;
+    const canPlay = remainingPlays > 0 && !isPlaying && !isCheckingReset;
 
     return (
         <div className="page">
