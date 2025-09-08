@@ -147,6 +147,7 @@ export interface PlayerStats {
         lastPlayTime: number;
         hourlyReset: number;
     };
+    lastSeen?: Timestamp;
 }
 
 // Course definition
