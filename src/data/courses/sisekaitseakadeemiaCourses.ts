@@ -38,7 +38,7 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
         id: 'law_studies_curriculum',
         name: 'Õigusteaduste õppekava',
         description: 'Põhjalik õigusteaduse kursus, mis hõlmab kriminaalõigust, karistusseadustikku ja menetlusõigust.',
-        duration: 7200,
+        duration: 10800,
         requirements: {
             completedCourses: ['sisekaitseakadeemia_entrance'],
             totalWorkedHours: 20,
@@ -71,7 +71,7 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
         id: 'physical_preparation',
         name: 'Füüsilised ettevalmistused',
         description: 'Intensiivne füüsilise ettevalmistuse programm, mis arendab jõudu, vastupidavust ja taktilist valmisolekut.',
-        duration: 7200,
+        duration: 10800,
         requirements: {
             completedCourses: ['sisekaitseakadeemia_entrance'],
             totalWorkedHours: 20,
@@ -105,7 +105,7 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
         id: 'firearm_handling_glock',
         name: 'Tulirelva käsitsemine - Glock',
         description: 'Spetsialiseeritud koolitus Glock teenistusrelva käsitsemiseks. Täiustab lasketehnikat ja taktilist relvakasutust.',
-        duration: 7200,
+        duration: 10800,
         requirements: {
             completedCourses: ['sisekaitseakadeemia_entrance'],
             totalWorkedHours: 20,
@@ -141,7 +141,7 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
         id: 'firearm_handling_r20',
         name: 'Tugirelva käsitsemine - R20',
         description: 'Spetsialiseeritud koolitus tugirelva LMT R-20 teenistusrelva käsitsemiseks. Täiustab lasketehnikat ja taktilist relvakasutust.',
-        duration: 10800,
+        duration: 14400,
         requirements: {
             completedCourses: ['sisekaitseakadeemia_entrance'],
             totalWorkedHours: 25,
@@ -176,9 +176,9 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
         id: 'self-defence_training',
         name: 'Enesekaitse kursus',
         description: 'Omanda enesekaitse ja kinnipidamise võtete oskused, mida rakendada enda töös ohutult ja tulemuslikult',
-        duration: 7200,
+        duration: 10800,
         requirements: {
-            completedCourses: ['sisekaitseakadeemia_entrance', 'physical_preparation'],
+            completedCourses: ['physical_preparation'],
             totalWorkedHours: 20,
             attributes: {
                 strength: 10,
@@ -207,78 +207,10 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
         }
     },
     {
-        id: 'document_inspection_course',
-        name: 'Dokumentide kontroll',
-        description: 'Koolituse läbides oskad kontrollida isikuid ja nende dokumente',
-        duration: 7200, // 2 hours
-        requirements: {
-            completedCourses: ['sisekaitseakadeemia_entrance', 'law_studies_curriculum'],
-            totalWorkedHours: 20,
-            attributes: {
-                intelligence: 15
-            }
-        },
-        rewards: {
-            experience: 300,
-            reputation: 50,
-            money: 400
-        },
-        category: 'sisekaitseakadeemia',
-        completionQuestion: {
-            question: 'Kuidas nimetatakse elementi dokumendil, millel erineva vaatenurga all värvid vahelduvad?',
-            answers: [
-                'IPI',
-                'OVD',
-                'OFV',
-            ],
-            correctAnswerIndex: 1,
-            rewards: {
-                experience: 150,
-                money: 150,
-                reputation: 25,
-            }
-        }
-    },
-    {
-        id: 'response_training',
-        name: 'Avaliku korra praktika',
-        description: 'Kursuse läbides oskad reageerida ja lahendada lihtsamaid väljakutseid ning koostada vajalikke protokolle',
-        duration: 10800,
-        requirements: {
-            completedCourses: ['sisekaitseakadeemia_entrance', 'self-defence_training', 'law_studies_curriculum', 'firearm_handling_glock'],
-            totalWorkedHours: 20,
-            attributes: {
-                intelligence: 15,
-                agility: 15,
-                endurance: 15
-            }
-        },
-        rewards: {
-            experience: 500,
-            reputation: 75,
-            money: 600
-        },
-        category: 'sisekaitseakadeemia',
-        completionQuestion: {
-            question: 'Kes on avaliku korra eest vastutav isik?',
-            answers: [
-                'Politseiametnik',
-                'Isik, kelle valduses avaliku korda rikutakse',
-                'Isik, kes on rikkunud avaliku korda',
-            ],
-            correctAnswerIndex: 2,
-            rewards: {
-                experience: 200,
-                money: 250,
-                reputation: 50,
-            }
-        }
-    },
-    {
         id: 'medical_training',
         name: 'Meditsiini koolitus',
         description: 'Omanda baasteadmised ja oskused, kuidas anda sündmuskohal elupäästvat esmaabi erinevate traumade puhul. Õpid ohutut patsiendi käsitlemist ning stabiliseerimist. Tunned ära erinevad traumad ja haigusseisundid.',
-        duration: 10800,
+        duration: 14400,
         requirements: {
             completedCourses: ['sisekaitseakadeemia_entrance'],
             totalWorkedHours: 20,
@@ -308,12 +240,114 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
         }
     },
     {
+        id: 'document_inspection_course',
+        name: 'Dokumentide kontroll',
+        description: 'Koolituse läbides oskad kontrollida isikuid ja nende dokumente',
+        duration: 10800,
+        requirements: {
+            completedCourses: ['law_studies_curriculum'],
+            totalWorkedHours: 20,
+            attributes: {
+                intelligence: 15
+            }
+        },
+        rewards: {
+            experience: 300,
+            reputation: 50,
+            money: 400
+        },
+        category: 'sisekaitseakadeemia',
+        completionQuestion: {
+            question: 'Kuidas nimetatakse elementi dokumendil, millel erineva vaatenurga all värvid vahelduvad?',
+            answers: [
+                'IPI',
+                'OVD',
+                'OFV',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 150,
+                money: 150,
+                reputation: 25,
+            }
+        }
+    },
+    {
+        id: 'traffic_accident_procedural',
+        name: 'Liiklusõnnetuse vormistamise koolitus',
+        description: 'Koolituse läbides oskad tegutseda liiklusõnnetusega sündmuskohal ning protokollida ja vormistada liiklusõnnetusega seonduvaid' +
+            ' dokumente',
+        duration: 10800,
+        requirements: {
+            completedCourses: ['law_studies_curriculum', 'medical_training'],
+            totalWorkedHours: 25,
+            attributes: {
+                intelligence: 20
+            }
+        },
+        rewards: {
+            experience: 700,
+            reputation: 75,
+            money: 600
+        },
+        category: 'sisekaitseakadeemia',
+        completionQuestion: {
+            question: 'Liiklusõnnetuse sündmuskoha skeemi joonestamisel võetakse mõõtude alguseks:',
+            answers: [
+                'Mediaanpunkt',
+                'Nullpunkt',
+                'Alguspunkt',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 150,
+                money: 150,
+                reputation: 25,
+            }
+        }
+    },
+    {
+        id: 'response_training',
+        name: 'Avaliku korra praktika',
+        description: 'Kursuse läbides oskad reageerida ja lahendada lihtsamaid väljakutseid ning koostada vajalikke protokolle',
+        duration: 14400,
+        requirements: {
+            completedCourses: ['sisekaitseakadeemia_entrance', 'self-defence_training', 'law_studies_curriculum', 'firearm_handling_glock'],
+            totalWorkedHours: 20,
+            attributes: {
+                intelligence: 15,
+                agility: 15,
+                endurance: 15
+            }
+        },
+        rewards: {
+            experience: 700,
+            reputation: 75,
+            money: 600
+        },
+        category: 'sisekaitseakadeemia',
+        completionQuestion: {
+            question: 'Kes on avaliku korra eest vastutav isik?',
+            answers: [
+                'Politseiametnik',
+                'Isik, kelle valduses avaliku korda rikutakse',
+                'Isik, kes on rikkunud avaliku korda',
+            ],
+            correctAnswerIndex: 2,
+            rewards: {
+                experience: 200,
+                money: 250,
+                reputation: 50,
+            }
+        }
+    },
+    {
         id: 'procedural_practice',
         name: 'Menetluspraktika',
         description: 'Oled omandanud peamised oskused Sisekaitseakadeemias ja nüüd peab iseseisvalt kõiki oskuseid rakendama patrulltöös',
-        duration: 14400,
+        duration: 18000,
         requirements: {
-            completedCourses: ['sisekaitseakadeemia_entrance', 'response_training', 'medical_training', 'document_inspection_course'],
+            completedCourses: ['response_training', 'medical_training', 'document_inspection_course'],
             totalWorkedHours: 30,
             attributes: {
                 intelligence: 20,
@@ -348,16 +382,16 @@ export const SISEKAITSEAKADEEMIA_COURSES: Course[] = [
         id: 'lopueksam',
         name: 'Lõpueksam',
         description: 'Sisekaitseakadeemia lõpueksam. Pead demonstreerima kõiki omandatud oskusi ja teadmisi. Läbimine annab sulle politseiametniku staatuse ja inspektori auastme.',
-        duration: 7200,
+        duration: 10800,
         requirements: {
-            level: 30,
-            completedCourses: ['procedural_practice'],
-            totalWorkedHours: 30,
+            level: 35,
+            completedCourses: ['procedural_practice', 'traffic_accident_procedural'],
+            totalWorkedHours: 40,
         },
         rewards: {
-            experience: 1000,
-            reputation: 500,
-            money: 250,
+            experience: 2500,
+            reputation: 700,
+            money: 600,
             unlocksRank: 'Inspektor',
             unlocksStatus: 'Politseiametnik'
         },

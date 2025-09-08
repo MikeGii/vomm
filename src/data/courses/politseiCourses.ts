@@ -6,7 +6,7 @@ export const POLITSEI_COURSES: Course[] = [
         id: 'police_ground_leader_course',
         name: 'Välijuhi koolitus 1. päev',
         description: 'Koolitus edukaks välitöö juhtimiseks',
-        duration: 10800,
+        duration: 14400,
         requirements: {
             level: 35,
             completedCourses: ['lopueksam'],
@@ -75,7 +75,7 @@ export const POLITSEI_COURSES: Course[] = [
         id: 'medical_course_police',
         name: 'Meditsiini täiendõpe',
         description: 'Koolitus efektiivseks ja kiireks esmaabi andmiseks',
-        duration: 7200,
+        duration: 10800,
         requirements: {
             level: 35,
             completedCourses: ['lopueksam'],
@@ -182,7 +182,7 @@ export const POLITSEI_COURSES: Course[] = [
         id: 'riot_police_course',
         name: 'Massiohje koolitus 1. päev',
         description: 'Koolitus teadmiste omandamiseks ja tegutsemiseks massirahutuste korral',
-        duration: 10800,
+        duration: 14400,
         requirements: {
             level: 40,
             completedCourses: ['medical_course_police'],
@@ -218,7 +218,7 @@ export const POLITSEI_COURSES: Course[] = [
         id: 'riot_police_course_02',
         name: 'Massiohje koolitus 2. päev',
         description: 'Koolitus teadmiste omandamiseks ja tegutsemiseks massirahutuste korral',
-        duration: 10800,
+        duration: 14400,
         requirements: {
             level: 42,
             completedCourses: ['riot_police_course'],
@@ -253,7 +253,7 @@ export const POLITSEI_COURSES: Course[] = [
         id: 'emergency_police_course_houses',
         name: 'Ohtlikes hoonetes liikumine ja paiknemine',
         description: 'Koolitus välitöötajatele ja kiirreageerijatele, kuidas liikuda ohtlikes hoonetes, kus võib olla relvastatud isikuid',
-        duration: 14000,
+        duration: 14400,
         requirements: {
             level: 50,
             completedCourses: ['medical_course_police'],
@@ -284,7 +284,7 @@ export const POLITSEI_COURSES: Course[] = [
         id: 'enhanced_law_studies',
         name: 'Süüteomenetluse täiendkoolitus',
         description: 'Koolitus põhjalikumaks süüteomenetluse läbiviimiseks',
-        duration: 10800,
+        duration: 18000,
         requirements: {
             level: 40,
             completedCourses: ['lopueksam'],
@@ -346,7 +346,7 @@ export const POLITSEI_COURSES: Course[] = [
         id: 'police_drone_course',
         name: 'Politseidrooni kasutamise koolitus',
         description: 'Koolitus professionaalseks ja sihipäraseks drooni kasutamise oskuseks',
-        duration: 7200,
+        duration: 10800,
         requirements: {
             level: 40,
             completedCourses: ['lopueksam'],
@@ -460,7 +460,7 @@ export const POLITSEI_COURSES: Course[] = [
         id: 'basic_computer_course',
         name: 'Arvutisüsteemide algkoolitus',
         description: 'Baasõpe ja sissejuhatus IT süsteemidesse',
-        duration: 10800,
+        duration: 14400,
         requirements: {
             level: 45,
             completedCourses: ['lopueksam'],
@@ -492,7 +492,7 @@ export const POLITSEI_COURSES: Course[] = [
         id: 'advanced_computer_skills',
         name: 'Arvutisüsteemide täiendkoolitus 1. osa',
         description: 'Täiendkoolitus arvutivõrkude ja IT süsteemidest edasijõudnutele',
-        duration: 14400,
+        duration: 18000,
         requirements: {
             level: 50,
             completedCourses: ['basic_computer_course'],
@@ -769,7 +769,7 @@ export const POLITSEI_COURSES: Course[] = [
         id: 'police_group_leader_course',
         name: 'Grupijuhi teadmiste koolitus',
         description: 'Koolitus ja ettevalmistus meeskonna juhtimiseks ja grupijuhi ülesannete täitmiseks',
-        duration: 14400,
+        duration: 18000,
         requirements: {
             level: 45,
             completedCourses: ['police_ground_leader_course', 'enhanced_law_studies', 'medical_course_police'],
@@ -799,7 +799,7 @@ export const POLITSEI_COURSES: Course[] = [
         id: 'police_group_leader_course_advanced',
         name: 'Grupijuhi täiendkoolitus',
         description: 'Grupijuhi täiendkoolitus edukaks grupi manageerimiseks ja juhtimiseks koos püshholoogia põhitõdedega',
-        duration: 18000,
+        duration: 28800,
         requirements: {
             level: 70,
             completedCourses: ['police_group_leader_course'],
@@ -830,7 +830,7 @@ export const POLITSEI_COURSES: Course[] = [
         id: 'personal_systems_course',
         name: 'Personalitöö ja tööaja arvestamise algkursus',
         description: 'Algkursus tundmaks personalitöö põhimõtteid ja tööaja arvestamist ja töötajate graafiku koostamist',
-        duration: 14400,
+        duration: 18000,
         requirements: {
             level: 75,
             completedCourses: ['police_group_leader_course_advanced'],
@@ -861,7 +861,7 @@ export const POLITSEI_COURSES: Course[] = [
         id: 'advanced_leader_course',
         name: 'Keskastme juhtide algkoolitus',
         description: 'Algkoolitus õppimaks juhtima suuremat struktuuri koos allüksuste ja nende juhtidega',
-        duration: 28800,
+        duration: 43200,
         requirements: {
             level: 85,
             completedCourses: ['police_group_leader_course_advanced', 'personal_systems_course'],

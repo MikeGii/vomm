@@ -35,7 +35,7 @@ export const ABIPOLITSEINIK_COURSES: Course[] = [
         id: 'firearm_training_abipolitseinik',
         name: 'Tulirelva koolitus',
         description: 'Omanda tulirelva käsitsemise oskused ja ohutusnõuded. Õpid relva hooldust, laskmistehnikaid ja taktikalist relvakasutust.',
-        duration: 300,
+        duration: 600,
         requirements: {
             level: 5,
             completedCourses: ['basic_police_training_abipolitseinik'],
@@ -65,7 +65,7 @@ export const ABIPOLITSEINIK_COURSES: Course[] = [
         id: 'electrical_shock_weapon_abipolitseinik',
         name: 'Elektrišokirelva koolitus',
         description: 'Omanda elektrišokirelva käsitsemise oskused ja ohutusnõuded. Õpid taseri hooldust, laskmistehnikaid ja elektrirelva kasutust.',
-        duration: 600,
+        duration: 1200,
         requirements: {
             level: 5,
             completedCourses: ['basic_police_training_abipolitseinik'],
@@ -95,7 +95,7 @@ export const ABIPOLITSEINIK_COURSES: Course[] = [
         id: 'police_apollo_usage_abipolitseinik',
         name: 'E-Politsei kasutamise õigus',
         description: 'Omanda baasteadmised ja kasutusõigus e-politsei rakenduse "Apollo" jaoks.',
-        duration: 900,
+        duration: 1200,
         requirements: {
             level: 7,
             completedCourses: ['basic_police_training_abipolitseinik', 'firearm_training_abipolitseinik'],
@@ -124,7 +124,7 @@ export const ABIPOLITSEINIK_COURSES: Course[] = [
         id: 'police_car_training_abipolitseinik',
         name: 'Alarmsõiduki juhtimise koolitus',
         description: 'Omanda teadmised ja oskused ohutuks ja efektiivseks alarmsõiduki juhtimiseks.',
-        duration: 1200,
+        duration: 1800,
         requirements: {
             level: 9,
             completedCourses: ['basic_police_training_abipolitseinik', 'firearm_training_abipolitseinik'],
@@ -155,7 +155,7 @@ export const ABIPOLITSEINIK_COURSES: Course[] = [
         id: 'speed_measurement_abipolitseinik',
         name: 'Kiirusmõõtja pädevus',
         description: 'Spetsialiseeritud koolitus liikluskiiruse mõõtmise seadmete kasutamiseks ja liiklusrikkumiste dokumenteerimiseks.',
-        duration: 1200,
+        duration: 1800,
         requirements: {
             level: 10,
             completedCourses: ['basic_police_training_abipolitseinik', 'firearm_training_abipolitseinik'],
@@ -183,14 +183,14 @@ export const ABIPOLITSEINIK_COURSES: Course[] = [
         }
     },
     {
-        id: 'independent_competence_abipolitseinik',
-        name: 'Iseseisva pädevuse koolitus (IPAP)',
-        description: 'Põhjalik koolitus iseseisva tööülesannete täitmiseks. Omandad oskused iseseisvaks patrullimiseks ja otsuste tegemiseks.',
-        duration: 7200,
+        id: 'riot_course_abipolitseinik',
+        name: 'Kriis ja kriisirolli koolitus',
+        description: 'Koolitus abipolitsienikele hädaolukorras, eriolukorras ja sõjaseisukorra ajal.',
+        duration: 3600,
         requirements: {
-            level: 15,
-            completedCourses: ['basic_police_training_abipolitseinik', 'firearm_training_abipolitseinik', 'speed_measurement_abipolitseinik', 'police_apollo_usage_abipolitseinik', 'police_car_training_abipolitseinik'],
-            totalWorkedHours: 10,
+            level: 12,
+            completedCourses: ['basic_police_training_abipolitseinik', 'firearm_training_abipolitseinik'],
+            totalWorkedHours: 15,
             attributes: {
                 intelligence: 5,
                 strength: 5,
@@ -198,8 +198,43 @@ export const ABIPOLITSEINIK_COURSES: Course[] = [
             }
         },
         rewards: {
-            experience: 300,
-            reputation: 100,
+            experience: 200,
+            reputation: 50,
+        },
+        category: 'abipolitseinik',
+        completionQuestion: {
+            question: 'Kas kriisirolliga abipolitseinikul on õigus keelduda töö tegemisest tööandja juures, kellega tal on sõlmitud tööleping, kui' +
+                'ta kaasatakse kriisi lahendamisse?',
+            answers: [
+                'Ei, aga teatud tingimustel on',
+                'Jah'
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 50,
+                money: 50,
+                reputation: 25
+            }
+        }
+    },
+    {
+        id: 'independent_competence_abipolitseinik',
+        name: 'Iseseisva pädevuse koolitus (IPAP)',
+        description: 'Põhjalik koolitus iseseisva tööülesannete täitmiseks. Omandad oskused iseseisvaks patrullimiseks ja otsuste tegemiseks.',
+        duration: 14400,
+        requirements: {
+            level: 15,
+            completedCourses: ['speed_measurement_abipolitseinik', 'police_apollo_usage_abipolitseinik', 'police_car_training_abipolitseinik', 'riot_course_abipolitseinik', 'electrical_shock_weapon_abipolitseinik'],
+            totalWorkedHours: 15,
+            attributes: {
+                intelligence: 10,
+                strength: 10,
+                endurance: 10,
+            }
+        },
+        rewards: {
+            experience: 500,
+            reputation: 150,
         },
         category: 'abipolitseinik',
         completionQuestion: {
