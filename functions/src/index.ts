@@ -101,3 +101,77 @@ export const monthlyCrimeReset = onSchedule(
         await monthlyResetCrime();
     }
 );
+
+/**
+ * Chat sõnumite puhastamine - kustutab üle 48h vanad sõnumid
+ */
+const cleanOldChatMessages = async (): Promise<void> => {
+    try {
+        const cutoffTime = admin.firestore.Timestamp.fromDate(
+            new Date(Date.now() - 48 * 60 * 60 * 1000) // 48 tundi tagasi
+        );
+
+        // Leia kõik prefecture chat kogumikud
+        const prefectureChatsSnapshot = await db.collection('prefectureChat').get();
+
+        let totalDeleted = 0;
+        let batch = db.batch();
+        let batchCount = 0;
+
+        for (const prefectureDoc of prefectureChatsSnapshot.docs) {
+            const prefectureName = prefectureDoc.id;
+
+            // Leia vanad sõnumid selles prefecture's
+            const oldMessagesQuery = db
+                .collection('prefectureChat')
+                .doc(prefectureName)
+                .collection('messages')
+                .where('timestamp', '<', cutoffTime);
+
+            const oldMessagesSnapshot = await oldMessagesQuery.get();
+
+            for (const messageDoc of oldMessagesSnapshot.docs) {
+                batch.delete(messageDoc.ref);
+                batchCount++;
+                totalDeleted++;
+
+                // Firebase batch limit on 500 - commit ja alusta uut batch-i
+                if (batchCount >= 450) {
+                    await batch.commit();
+                    logger.info(`Committed batch with ${batchCount} deletions`);
+                    batch = db.batch(); // Loo uus batch
+                    batchCount = 0;
+                }
+            }
+
+            logger.info(`Found ${oldMessagesSnapshot.size} old messages in ${prefectureName}`);
+        }
+
+        // Commit viimane batch kui midagi on järel
+        if (batchCount > 0) {
+            await batch.commit();
+            logger.info(`Committed final batch with ${batchCount} deletions`);
+        }
+
+        logger.info(`Successfully deleted ${totalDeleted} old chat messages across all prefectures`);
+
+    } catch (error) {
+        logger.error("Error cleaning old chat messages:", error);
+        throw error;
+    }
+};
+
+/**
+ * Chat puhastamine - käivitub iga 6 tunni tagant
+ */
+export const cleanOldMessages = onSchedule(
+    {
+        schedule: "0 */6 * * *", // Iga 6 tunni tagant
+        timeZone: "Europe/Tallinn",
+        region: "europe-west1",
+    },
+    async () => {
+        logger.info("Starting chat message cleanup at:", new Date().toISOString());
+        await cleanOldChatMessages();
+    }
+);

@@ -20,6 +20,7 @@ import { PlayerAbilities } from "../components/dashboard/PlayerAbilities";
 import { InstructionsModal } from '../components/dashboard/InstructionsModal';
 import { getActiveEvent } from "../services/EventService";
 import { Tasks } from '../components/dashboard/Tasks';
+import { ChatFloatingButton } from '../components/chat/ChatFloatingButton';
 import Footer from "../components/layout/footer";
 import { HealthModal } from '../components/health/HealthModal';
 
