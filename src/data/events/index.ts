@@ -1,4 +1,4 @@
-import { WorkEvent } from '../../types/events.types';
+import { WorkEvent } from '../../types';
 import { PATROL_EVENTS } from './patrolEvents';
 import { ACADEMY_EVENTS } from './academyEvents';
 

@@ -3,27 +3,68 @@ import { WorkActivity, WorkRewards } from '../types';
 import { isUnitLeader} from "../../../utils/playerStatus";
 import { PlayerStats} from "../../../types";
 
-// Calculate total exp and money for work duration
+// Calculate total exp and money for work duration with player bonuses
 export const calculateWorkRewards = (
     activity: WorkActivity,
     hours: number,
     playerRank?: string | null,
     playerStats?: PlayerStats
 ): WorkRewards => {
-    let totalExp = 0;
+    let baseExp = 0;
 
+    // Calculate base experience from work activity (existing logic)
     for (let hour = 1; hour <= hours; hour++) {
         const hourExp = activity.baseExpPerHour * (1 + (activity.expGrowthRate * (hour - 1)));
-        totalExp += Math.floor(hourExp);
+        baseExp += Math.floor(hourExp);
     }
+
+    // Apply player level and attribute bonuses
+    const finalExp = applyPlayerBonuses(baseExp, playerStats);
 
     // Calculate money for police officers (using rank and position for salary)
     const money = playerRank && playerStats ? calculateSalaryForOfficer(playerRank, hours, playerStats) : 0;
 
     return {
-        experience: totalExp,
+        experience: finalExp,
         money
     };
+};
+
+// Apply player level and attribute bonuses to base experience
+const applyPlayerBonuses = (baseExp: number, playerStats?: PlayerStats): number => {
+    if (!playerStats) return baseExp;
+
+    // Player level bonus: 3% per level starting from level 30
+    const playerLevel = playerStats.level || 1;
+    let levelBonus = 0;
+    if (playerLevel >= 30) {
+        levelBonus = (playerLevel - 29) * 0.03; // 3% for each level above 29
+    }
+    const levelMultiplier = 1 + levelBonus;
+
+    // Attribute bonus: 0.01% per attribute level
+    const totalAttributes = getTotalAttributeLevels(playerStats);
+    const attributeBonus = totalAttributes * 0.0001; // 0.01% = 0.0001
+    const attributeMultiplier = 1 + attributeBonus;
+
+    // Apply both multipliers
+    const finalExp = Math.floor(baseExp * levelMultiplier * attributeMultiplier);
+
+    return finalExp;
+};
+
+// Calculate total attribute levels from player stats
+const getTotalAttributeLevels = (playerStats: PlayerStats): number => {
+    if (!playerStats.attributes) return 0;
+
+    const attributes = playerStats.attributes;
+    return (
+        (attributes.strength?.level || 0) +
+        (attributes.agility?.level || 0) +
+        (attributes.dexterity?.level || 0) +
+        (attributes.intelligence?.level || 0) +
+        (attributes.endurance?.level || 0)
+    );
 };
 
 // Calculate salary based on rank, position, and hours worked

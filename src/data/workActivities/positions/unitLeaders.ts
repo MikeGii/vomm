@@ -16,17 +16,6 @@ export const UNIT_LEADER_ACTIVITIES: WorkActivity[] = [
         maxHours: 10,
         allowedFor: ['talituse_juht_patrol']
     },
-    {
-        id: 'patrol_unit_leader_01',
-        name: 'Talituse juhi kohustused',
-        description: 'Talituse juhina juhid tervet üksust ja korraldad üksuse tegevust',
-        minLevel: 85,
-        requiredCourses: ['advanced_leader_course', 'basic_computer_course'],
-        baseExpPerHour: 2000,
-        expGrowthRate: 0.12,
-        maxHours: 10,
-        allowedFor: ['talituse_juht_patrol']
-    },
 
     // Investigation unit leader work activities
 

@@ -32,7 +32,7 @@ export const ACADEMY_EVENTS: WorkEvent[] = [
                 resultText: 'Isik lahkus ise, kui märkas sind jälgimas. Olukord lahenes.'
             }
         ],
-        activityTypes: ['academy_guard_duty']
+        activityTypes: ['kadett_default_work']
     },
     {
         id: 'hangover_after_hard_evening',
@@ -66,7 +66,7 @@ export const ACADEMY_EVENTS: WorkEvent[] = [
                 resultText: 'Seekord sul vedas, keegi ei tundnud alkoholilõhna. Ära rohkem nii tee!'
             }
         ],
-        activityTypes: ['academy_guard_duty']
+        activityTypes: ['kadett_default_work']
     },
     {
         id: 'invitation_to_marathon',
@@ -94,7 +94,7 @@ export const ACADEMY_EVENTS: WorkEvent[] = [
             }
 
         ],
-        activityTypes: ['academy_guard_duty']
+        activityTypes: ['kadett_default_work']
     },
     {
         id: 'practice_mistake',
@@ -127,6 +127,6 @@ export const ACADEMY_EVENTS: WorkEvent[] = [
                 resultText: 'Vanem ametnik nägi läbi vabanduse. Kaotasid usaldusväärsust.'
             }
         ],
-        activityTypes: ['academy_police_practice']
+        activityTypes: ['kadett_default_work']
     }
 ];

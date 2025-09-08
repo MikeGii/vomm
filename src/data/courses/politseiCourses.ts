@@ -260,7 +260,7 @@ export const POLITSEI_COURSES: Course[] = [
         description: 'Koolitus välitöötajatele ja kiirreageerijatele, kuidas liikuda ohtlikes hoonetes, kus võib olla relvastatud isikuid',
         duration: 14400,
         requirements: {
-            level: 50,
+            level: 45,
             completedCourses: ['medical_course_police'],
             totalWorkedHours: 80
         },
@@ -453,7 +453,7 @@ export const POLITSEI_COURSES: Course[] = [
         description: 'Koolitus efektiivse esmaabi andmiseks ja tegutsemine lahingolukorras meedikuna 1. päev',
         duration: 18000,
         requirements: {
-            level: 70,
+            level: 65,
             completedCourses: ['medical_course_police'],
             totalWorkedHours: 120,
             attributes: {
