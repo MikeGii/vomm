@@ -30,7 +30,10 @@ export const POLICE_POSITIONS: PolicePosition[] = [
     },
     {
         id: 'kadett',
-        name: 'Kadett'
+        name: 'Kadett',
+        requirements: {
+            minimumLevel: 15
+        }
     },
 
     // Üksuste töötajad
@@ -39,7 +42,13 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Patrullpolitseinik',
         departmentUnit: 'patrol',
         requirements: {
-            completedCourses: ['lopueksam']
+            minimumLevel: 30,
+            completedCourses: ['lopueksam'],
+            attributes: {
+                strength: 25,
+                agility: 30,
+                endurance: 25
+            }
         }
     },
     {
@@ -49,7 +58,12 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         requirements: {
             minimumLevel: 45,
             completedCourses: ['evidence_place_course'],
-            minimumWorkedHours: 50
+            minimumWorkedHours: 50,
+            attributes: {
+                intelligence: 50,
+                agility: 40,
+                dexterity: 45
+            }
         }
     },
     {
@@ -61,9 +75,9 @@ export const POLICE_POSITIONS: PolicePosition[] = [
             completedCourses: ['riot_police_course', 'medical_course_police'],
             minimumWorkedHours: 80,
             attributes: {
-                strength: 45,
-                agility: 45,
-                endurance: 50
+                strength: 50,
+                agility: 50,
+                endurance: 55
             }
         }
     },
@@ -77,8 +91,9 @@ export const POLICE_POSITIONS: PolicePosition[] = [
             minimumWorkedHours: 70,
             attributes: {
                 strength: 40,
-                agility: 50,
-                endurance: 45
+                agility: 55,
+                endurance: 50,
+                intelligence: 35
             }
         }
     },
@@ -91,7 +106,8 @@ export const POLICE_POSITIONS: PolicePosition[] = [
             completedCourses: ['cyber_crime_course', 'advanced_computer_skills'],
             minimumWorkedHours: 80,
             attributes: {
-                intelligence: 60
+                intelligence: 65,
+                dexterity: 40
             }
         }
     },
@@ -104,20 +120,25 @@ export const POLICE_POSITIONS: PolicePosition[] = [
             completedCourses: ['lopueksam', 'detective_course'],
             minimumWorkedHours: 75,
             attributes: {
-                intelligence: 45,
-                dexterity: 40
+                intelligence: 80,
+                dexterity: 45,
+                agility: 40
             }
         }
     },
 
-    // Grupijuhid (kasutavad teie antud kriteeriume)
+    // Grupijuhid
     {
         id: 'grupijuht_patrol',
         name: 'Grupijuht',
         departmentUnit: 'patrol',
         requirements: {
             minimumLevel: 55,
-            completedCourses: ['police_group_leader_course'],
+            completedCourses: [
+                'police_group_leader_course',
+                'police_ground_leader_course_02',
+                'medical_course_police'
+            ],
             minimumWorkedHours: 150,
             minimumReputation: 5000,
             attributes: {
@@ -134,8 +155,13 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Menetluse grupijuht',
         departmentUnit: 'procedural_service',
         requirements: {
-            minimumLevel: 60,
-            completedCourses: ['police_group_leader_course', 'evidence_place_course', 'enhanced_law_studies'],
+            minimumLevel: 65,
+            completedCourses: [
+                'police_group_leader_course',
+                'evidence_place_course',
+                'enhanced_law_studies_advanced',
+                'detective_course'
+            ],
             minimumWorkedHours: 150,
             minimumReputation: 5000,
             attributes: {
@@ -152,8 +178,15 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Kiirreageerijate grupijuht',
         departmentUnit: 'emergency_response',
         requirements: {
-            minimumLevel: 65,
-            completedCourses: ['police_group_leader_course', 'riot_police_course', 'medical_course_police', 'police_atv_course', 'police_drone_course'],
+            minimumLevel: 70,
+            completedCourses: [
+                'police_group_leader_course',
+                'riot_police_course_02',
+                'medical_course_police_advanced',
+                'police_atv_course',
+                'police_drone_course',
+                'emergency_police_course_houses'
+            ],
             minimumWorkedHours: 150,
             minimumReputation: 5000,
             attributes: {
@@ -170,8 +203,11 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Koertegrupi grupijuht',
         departmentUnit: 'k9_unit',
         requirements: {
-            minimumLevel: 60,
-            completedCourses: ['police_group_leader_course', 'dog_handler_course'],
+            minimumLevel: 70,
+            completedCourses: [
+                'police_group_leader_course',
+                'dog_specialist_course'
+            ],
             minimumWorkedHours: 150,
             minimumReputation: 5000,
             attributes: {
@@ -188,8 +224,12 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Küberkuritegevuse grupijuht',
         departmentUnit: 'cyber_crime',
         requirements: {
-            minimumLevel: 65,
-            completedCourses: ['police_group_leader_course', 'cyber_crime_course', 'advanced_computer_skills'],
+            minimumLevel: 70,
+            completedCourses: [
+                'police_group_leader_course',
+                'cyber_crime_course_02',
+                'advanced_computer_skills_02'
+            ],
             minimumWorkedHours: 150,
             minimumReputation: 5000,
             attributes: {
@@ -206,8 +246,13 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Kuritegude grupijuht',
         departmentUnit: 'crime_unit',
         requirements: {
-            minimumLevel: 65,
-            completedCourses: ['police_group_leader_course', 'narcotic_psyhotropic_substances', 'anatomic_basic_course'],
+            minimumLevel: 70,
+            completedCourses: [
+                'police_group_leader_course',
+                'narcotic_psyhotropic_substances',
+                'detective_course',
+                'forensics_basics'
+            ],
             minimumWorkedHours: 150,
             minimumReputation: 5000,
             attributes: {
@@ -245,7 +290,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'procedural_service',
         requirements: {
             minimumLevel: 90,
-            completedCourses: ['advanced_leader_course', 'forensics_basics', 'basic_computer_course'],
+            completedCourses: ['advanced_leader_course', 'anatomic_basic_course', 'basic_computer_course', 'narcotic_psyhotropic_substances'],
             minimumWorkedHours: 300,
             minimumReputation: 9000,
             attributes: {
@@ -263,7 +308,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'emergency_response',
         requirements: {
             minimumLevel: 95,
-            completedCourses: ['advanced_leader_course', 'forensics_basics', 'basic_computer_course'],
+            completedCourses: ['advanced_leader_course', 'anatomic_basic_course', 'basic_computer_course'],
             minimumWorkedHours: 300,
             minimumReputation: 9000,
             attributes: {
@@ -281,7 +326,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'k9_unit',
         requirements: {
             minimumLevel: 90,
-            completedCourses: ['advanced_leader_course', 'forensics_basics', 'basic_computer_course', 'dog_specialist_course'],
+            completedCourses: ['advanced_leader_course', 'anatomic_basic_course', 'basic_computer_course', 'dog_master_course_02', 'narcotic_psyhotropic_substances'],
             minimumWorkedHours: 300,
             minimumReputation: 10000,
             attributes: {
@@ -299,7 +344,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'cyber_crime',
         requirements: {
             minimumLevel: 95,
-            completedCourses: ['advanced_leader_course', 'forensics_basics', 'cyber_crime_course_02', 'advanced_computer_skills_02'],
+            completedCourses: ['advanced_leader_course', 'cyber_crime_course_02', 'advanced_computer_skills_02'],
             minimumWorkedHours: 300,
             minimumReputation: 10000,
             attributes: {
@@ -317,7 +362,7 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         departmentUnit: 'crime_unit',
         requirements: {
             minimumLevel: 95,
-            completedCourses: ['advanced_leader_course', 'forensics_basics', 'basic_computer_course'],
+            completedCourses: ['advanced_leader_course', 'anatomic_basic_course', 'basic_computer_course', 'detective_course_advanced_02', 'narcotic_psyhotropic_substances'],
             minimumWorkedHours: 300,
             minimumReputation: 10000,
             attributes: {

@@ -172,18 +172,23 @@ export class PositionProcessor {
     private processStandardPosition(baseInfo: PositionInfo, position: any): PositionInfo {
         this.processRequirements(baseInfo, position.requirements);
 
-        if (this.currentUnit === position.departmentUnit) {
-            baseInfo.missingRequirements.push('Sa juba töötad selles üksuses');
-        } else {
-            if (baseInfo.missingRequirements.length === 0) {
-                baseInfo.canSwitch = true;
-            }
+        // Check if applying to the exact same position
+        if (baseInfo.isCurrentPosition) {
+            baseInfo.missingRequirements.push('Sa juba töötad sellel ametikohal');
+            return baseInfo;
         }
 
-        // Special case for patrullpolitseinik
-        if (position.id === 'patrullpolitseinik' && this.currentUnit !== 'patrol') {
+        // Allow switching within the same unit or to different units
+        if (baseInfo.missingRequirements.length === 0) {
             baseInfo.canSwitch = true;
-            baseInfo.missingRequirements = [];
+        }
+
+        // Special case for patrullpolitseinik - always allow switching to it
+        if (position.id === 'patrullpolitseinik') {
+            baseInfo.canSwitch = true;
+            baseInfo.missingRequirements = baseInfo.missingRequirements.filter(req =>
+                !req.includes('Sa juba töötad') && !req.includes('Pead töötama')
+            );
         }
 
         return baseInfo;

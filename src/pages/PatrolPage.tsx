@@ -22,7 +22,7 @@ import {
     getRemainingWorkTime,
     getWorkHistory
 } from '../services/WorkService';
-import { getAvailableWorkActivities } from '../data/workActivities';
+import {getAvailableWorkActivities, getDefaultWorkActivityForPosition} from '../data/workActivities';
 import { getActiveEvent, processEventChoice } from '../services/EventService';
 import '../styles/pages/Patrol.css';
 import {isAbipolitseinik, isKadett, isPoliceOfficer} from "../utils/playerStatus";
@@ -40,9 +40,7 @@ const PatrolPage: React.FC = () => {
     const isProcessingWorkEndRef = useRef(false);
 
     // State
-    const [availableActivities, setAvailableActivities] = useState<WorkActivity[]>([]);
     const [selectedDepartment, setSelectedDepartment] = useState<string>('');
-    const [selectedActivity, setSelectedActivity] = useState<string>('');
     const [selectedHours, setSelectedHours] = useState<number>(1);
     const [isStartingWork, setIsStartingWork] = useState(false);
     const [remainingTime, setRemainingTime] = useState<number>(0);
@@ -117,13 +115,6 @@ const PatrolPage: React.FC = () => {
     useEffect(() => {
         if (!playerStats) return;
 
-        const activities = getAvailableWorkActivities(
-            playerStats.level,
-            playerStats.completedCourses || [],
-            playerStats.policePosition
-        );
-        setAvailableActivities(activities);
-
         // Update remaining time if working
         if (playerStats.activeWork) {
             const remaining = getRemainingWorkTime(playerStats.activeWork);
@@ -179,11 +170,13 @@ const PatrolPage: React.FC = () => {
             ? playerStats.department
             : selectedDepartment;
 
-        if (!departmentToUse || !selectedActivity || selectedHours < 1) {
+        const workActivity = getDefaultWorkActivityForPosition(playerStats.policePosition ?? null);
+
+        if (!departmentToUse || !workActivity || selectedHours < 1) {
             if (playerStatus.isPolitseiametnik && !playerStats.department) {
                 showToast('Su osakond pole määratud! Võta ühendust administraatoriga.', 'error');
             } else {
-                showToast('Palun vali osakond, tegevus ja tunnid!', 'warning');
+                showToast('Palun vali osakond ja tunnid!', 'warning');
             }
             return;
         }
@@ -206,7 +199,7 @@ const PatrolPage: React.FC = () => {
 
             await startWork(
                 currentUser.uid,
-                selectedActivity,
+                workActivity.id,
                 playerStats.prefecture || '',
                 departmentToUse,
                 selectedHours
@@ -219,8 +212,8 @@ const PatrolPage: React.FC = () => {
         } finally {
             setIsStartingWork(false);
         }
-    }, [currentUser, playerStats, isStartingWork, selectedDepartment, selectedActivity,
-        selectedHours, showToast, refreshStats, playerStatus.isPolitseiametnik]);
+    }, [currentUser, playerStats, isStartingWork, selectedDepartment, selectedHours, showToast, refreshStats, playerStatus.isPolitseiametnik]);
+
 
     // Optimized work completion checking with better event handling
     useEffect(() => {
@@ -422,16 +415,14 @@ const PatrolPage: React.FC = () => {
                         )}
 
                         <WorkActivitySelector
-                            activities={availableActivities}
-                            selectedActivity={selectedActivity}
                             selectedHours={selectedHours}
-                            onActivitySelect={setSelectedActivity}
                             onHoursSelect={setSelectedHours}
                             onStartWork={handleStartWork}
                             isStarting={isStartingWork}
                             isKadett={playerStatus.isKadett}
                             playerRank={playerStats.rank}
                             playerStats={playerStats}
+                            policePosition={playerStats.policePosition}
                         />
                     </div>
                 )}
