@@ -15,14 +15,14 @@ import { checkAndApplyHealthRecovery } from '../services/HealthService';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
-import { WorkActivity, WorkEvent, EventChoice } from '../types';
+import { WorkEvent, EventChoice } from '../types';
 import {
     startWork,
     checkAndCompleteWork,
     getRemainingWorkTime,
     getWorkHistory
 } from '../services/WorkService';
-import {getAvailableWorkActivities, getDefaultWorkActivityForPosition} from '../data/workActivities';
+import {getDefaultWorkActivityForPosition} from '../data/workActivities';
 import { getActiveEvent, processEventChoice } from '../services/EventService';
 import '../styles/pages/Patrol.css';
 import {isAbipolitseinik, isKadett, isPoliceOfficer} from "../utils/playerStatus";
