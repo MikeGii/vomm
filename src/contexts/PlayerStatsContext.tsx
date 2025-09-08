@@ -1,6 +1,6 @@
 // src/contexts/PlayerStatsContext.tsx
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { doc, onSnapshot, updateDoc, getDoc, Timestamp } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, getDoc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats } from '../types';
 import { useAuth } from './AuthContext';
@@ -35,9 +35,6 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const isUpdatingRankRef = useRef<boolean>(false);
     const unsubscribeRef = useRef<(() => void) | null>(null);
 
-    // Track lastSeen updates to avoid too frequent calls
-    const lastSeenUpdateRef = useRef<number | null>(null);
-
     // Manual refresh function - simplified to avoid loops
     const refreshStats = useCallback(async () => {
         if (!currentUser) return;
@@ -62,22 +59,25 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     // Update lastSeen when user is active
     useEffect(() => {
-        if (!currentUser || !playerStats) return;
-
-        // Uuenda lastSeen kui kontekst laadib esimest korda
-        const updateLastSeenOnActivity = async () => {
-            await updateLastSeenIfNeeded(currentUser.uid, playerStats.lastSeen);
-        };
-
-        updateLastSeenOnActivity();
+        if (!currentUser) return;
 
         // Uuenda lastSeen iga 5 minuti tagant aktiivsuse ajal
         const activityInterval = setInterval(() => {
-            updateLastSeenIfNeeded(currentUser.uid, playerStats.lastSeen);
+            if (playerStats?.lastSeen !== undefined) {
+                updateLastSeenIfNeeded(currentUser.uid, playerStats.lastSeen);
+            } else {
+                updateLastSeenIfNeeded(currentUser.uid);
+            }
         }, 5 * 60 * 1000); // 5 minutit
 
+        // Uuenda lastSeen kohe kui kontekst laadib
+        if (playerStats) {
+            updateLastSeenIfNeeded(currentUser.uid, playerStats.lastSeen);
+        }
+
         return () => clearInterval(activityInterval);
-    }, [currentUser, playerStats?.lastSeen]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentUser, playerStats]);
 
     useEffect(() => {
         if (!currentUser) {
