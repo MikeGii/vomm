@@ -51,6 +51,36 @@ export const getRemainingCasinoPlays = (stats: PlayerStats): number => {
 
     return Math.max(0, MAX_PLAYS_PER_HOUR - stats.casinoData.playsUsed);
 };
+export const checkAndResetCasinoData = async (userId: string, stats: PlayerStats): Promise<boolean> => {
+    if (!stats.casinoData) return false;
+
+    const currentHour = new Date().getHours();
+    const lastPlayHour = new Date(stats.casinoData.lastPlayTime).getHours();
+
+    // Reset if it's a new hour
+    if (currentHour !== lastPlayHour) {
+        try {
+            const statsRef = doc(firestore, 'playerStats', userId);
+            const resetCasinoData: CasinoData = {
+                playsUsed: 0,
+                lastPlayTime: Date.now(),
+                hourlyReset: Date.now()
+            };
+
+            await updateDoc(statsRef, {
+                casinoData: resetCasinoData
+            });
+
+            return true; // Indicates reset happened
+        } catch (error) {
+            console.error('Error resetting casino data:', error);
+            return false;
+        }
+    }
+
+    return false; // No reset needed
+};
+
 
 // Simple slot machine game result
 export interface SlotResult {
