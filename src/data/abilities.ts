@@ -3,8 +3,9 @@ import { IconType } from 'react-icons';
 import {GiPistolGun, GiElectric, GiPoliceCar, GiMachineGunMagazine, GiSniffingDog, GiStrong} from 'react-icons/gi';
 import { MdSpeed } from 'react-icons/md';
 import {FaTabletAlt, FaMedkit, FaClinicMedical} from 'react-icons/fa';
-import {FaComputer, FaPeopleGroup, FaPeopleLine} from 'react-icons/fa6';
+import {FaComputer, FaPeopleGroup, FaPeopleLine, FaShieldDog} from 'react-icons/fa6';
 import { GoLaw } from 'react-icons/go';
+import {PiDetectiveBold} from "react-icons/pi";
 
 export interface TrainingBonus {
     attribute: 'strength' | 'agility' | 'dexterity' | 'intelligence' | 'endurance';
@@ -208,6 +209,28 @@ export const ABILITIES: Ability[] = [
         trainingBonuses: [
             { attribute: 'dexterity', percentage: 0.05 },
             { attribute: 'agility', percentage: 0.05 }
+        ]
+    },
+    {
+        id: 'doggys_master',
+        name: 'Koertega tegutsemine',
+        description: 'Oled läbinud koolituse koos K9 üksusega edukaks tegutsemiseks',
+        icon: FaShieldDog,
+        requiredCourse: 'dog_master_course_01',
+        trainingBonuses: [
+            { attribute: 'dexterity', percentage: 0.08 },
+            { attribute: 'agility', percentage: 0.08 }
+        ]
+    },
+    {
+        id: 'master_detective',
+        name: 'Teadmistega jälitaja',
+        description: 'Tead jälitustegevuse seadusandlust, oskad teha rahvusvaheliselt koostööd',
+        icon: PiDetectiveBold,
+        requiredCourse: 'detective_course_advanced_02',
+        trainingBonuses: [
+            { attribute: 'intelligence', percentage: 0.1 },
+            { attribute: 'dexterity', percentage: 0.1 }
         ]
     },
     {

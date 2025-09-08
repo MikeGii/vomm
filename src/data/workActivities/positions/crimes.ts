@@ -35,5 +35,16 @@ export const CRIME_ACTIVITIES: WorkActivity[] = [
         expGrowthRate: 0.12,
         maxHours: 12,
         allowedFor: ['jälitaja'],
+    },
+    {
+        id: 'crime_unit_work_04',
+        name: 'Lahenda raskeid kuritegusid',
+        description: 'Kogenud jälitajane lahendad kõiksugu raskeid kuritegusid ning teed koostööd rahvusvaheliselt, et tabada suuremaid grupeeringuid',
+        minLevel: 85,
+        requiredCourses: ['narcotic_psyhotropic_substances', 'anatomic_basic_course', 'detective_course_advanced_02'],
+        baseExpPerHour: 1350,
+        expGrowthRate: 0.12,
+        maxHours: 12,
+        allowedFor: ['jälitaja'],
     }
 ];
