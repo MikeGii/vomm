@@ -22,7 +22,6 @@ const AdminPage: React.FC = () => {
     // Add the user management tab to your tabs array
     const tabs = [
         { id: 'tools', label: 'Admin tööriistad' },
-        { id: 'shop', label: 'Poe haldus' },
         { id: 'applications', label: 'Kandideerimised' },
         { id: 'users', label: 'Kasutajate haldus' }
     ];

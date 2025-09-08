@@ -1,6 +1,6 @@
 // src/components/patrol/WorkActivitySelector.tsx
-import React, { useEffect } from 'react';
-import {PlayerStats, WorkActivity} from '../../types';
+import React from 'react';
+import {PlayerStats} from '../../types';
 import { CrimeImpactIndicator } from './CrimeImpactIndicator';
 import {calculateSalaryForOfficer, calculateWorkRewards, getDefaultWorkActivityForPosition} from '../../data/workActivities';
 import '../../styles/components/patrol/WorkActivitySelector.css';

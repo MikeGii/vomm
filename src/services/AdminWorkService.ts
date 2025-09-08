@@ -1,4 +1,4 @@
-// src/services/AdminWorkService.ts - VIP-aware version
+// src/services/AdminWorkService.ts
 import {
     collection,
     getDocs,
@@ -11,11 +11,11 @@ import {
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats } from '../types';
-import { getWorkActivityById, calculateWorkRewards } from '../data/workActivities';
 import { calculateLevelFromExp } from './PlayerService';
 
 /**
  * Complete all player work without triggering events (Admin only)
+ * Updated for new position-based work system
  */
 export const completeAllPlayersWorkAdmin = async (): Promise<{
     completedCount: number;
@@ -56,20 +56,11 @@ export const completeAllPlayersWorkAdmin = async (): Promise<{
                     eventsCleanedCount++;
                 }
 
-                // Calculate work completion rewards
-                const workActivity = getWorkActivityById(stats.activeWork.workId);
-                if (!workActivity) {
-                    errors.push(`Work activity not found for user ${userId}`);
-                    continue;
-                }
+                // Use expected rewards from activeWork (already calculated when work started)
+                const expReward = stats.activeWork.expectedExp || 0;
+                const moneyReward = stats.activeWork.expectedMoney || 0;
 
-                const actualRewards = calculateWorkRewards(
-                    workActivity,
-                    stats.activeWork.totalHours,
-                    stats.rank
-                );
-
-                const newExp = stats.experience + actualRewards.experience;
+                const newExp = stats.experience + expReward;
                 const newLevel = calculateLevelFromExp(newExp);
                 const newTotalWorkedHours = (stats.totalWorkedHours || 0) + stats.activeWork.totalHours;
 
@@ -89,8 +80,8 @@ export const completeAllPlayersWorkAdmin = async (): Promise<{
                 };
 
                 // Add money if there's a reward
-                if (actualRewards.money > 0) {
-                    updateData.money = (stats.money || 0) + actualRewards.money;
+                if (moneyReward > 0) {
+                    updateData.money = (stats.money || 0) + moneyReward;
                 }
 
                 // Add to batch
@@ -101,14 +92,14 @@ export const completeAllPlayersWorkAdmin = async (): Promise<{
                 const historyEntry = {
                     userId,
                     workId: stats.activeWork.workId,
-                    workName: workActivity.name,
+                    workName: `Töö lõpetatud (${stats.activeWork.workId})`, // Generic name since we don't look up activity
                     prefecture: stats.activeWork.prefecture,
                     department: stats.activeWork.department,
                     startedAt: stats.activeWork.startedAt,
                     completedAt: Timestamp.now(),
                     hoursWorked: stats.activeWork.totalHours,
-                    expEarned: actualRewards.experience,
-                    moneyEarned: actualRewards.money
+                    expEarned: expReward,
+                    moneyEarned: moneyReward
                 };
 
                 const historyRef = doc(collection(firestore, 'workHistory'));
