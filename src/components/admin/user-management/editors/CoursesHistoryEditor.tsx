@@ -1,6 +1,6 @@
 // src/components/admin/user-management/editors/CoursesHistoryEditor.tsx
 import React, { useState, useMemo } from 'react';
-import { PlayerStats, Course } from '../../../../types';
+import { PlayerStats } from '../../../../types';
 import { getCourseById } from '../../../../data/courses';
 
 interface CoursesHistoryEditorProps {

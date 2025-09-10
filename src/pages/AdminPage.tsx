@@ -8,6 +8,7 @@ import { TabNavigation } from '../components/ui/TabNavigation';
 import { AdminTools } from '../components/admin/AdminTools';
 import { AdminApplicationsTab } from '../components/admin/AdminApplicationsTab';
 import { UserManagement } from '../components/admin/user-management/UserManagement';
+import { VehicleManagement } from '../components/admin/VehicleManagement';
 import { useAuth } from '../contexts/AuthContext';
 import '../styles/pages/Admin.css';
 
@@ -23,7 +24,8 @@ const AdminPage: React.FC = () => {
     const tabs = [
         { id: 'tools', label: 'Admin tööriistad' },
         { id: 'applications', label: 'Kandideerimised' },
-        { id: 'users', label: 'Kasutajate haldus' }
+        { id: 'users', label: 'Kasutajate haldus' },
+        { id: 'vehicles', label: 'Sõidukid' },
     ];
 
     if (!isAdmin) {
@@ -68,6 +70,8 @@ const AdminPage: React.FC = () => {
                 {activeTab === 'tools' && <AdminTools />}
                 {activeTab === 'applications' && <AdminApplicationsTab />}
                 {activeTab === 'users' && <UserManagement />}
+                {activeTab === 'vehicles' && <VehicleManagement />}
+
             </main>
         </div>
     );
