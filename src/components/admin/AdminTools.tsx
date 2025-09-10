@@ -4,7 +4,6 @@ import { CheatDetector } from './tools/CheatDetector';
 import { LevelRecalculator } from './tools/LevelRecalculator';
 import { WorkManager } from './tools/WorkManager';
 import { CrimeInitializer } from './tools/CrimeInitializer';
-import { VehicleDataMigrator } from './tools/VehicleDataMigrator'; // ADD THIS LINE
 import '../../styles/components/admin/AdminTools.css';
 
 export const AdminTools: React.FC = () => {
@@ -36,12 +35,6 @@ export const AdminTools: React.FC = () => {
                     <CrimeInitializer />
                 </div>
 
-                {/* ADD THIS NEW SECTION */}
-                {/* Vehicle Data Migration */}
-                <div className="tool-category">
-                    <h3 className="category-title">Andmete Migratsioon</h3>
-                    <VehicleDataMigrator />
-                </div>
 
                 {/* Security Tools */}
                 <div className="tool-category">

@@ -64,36 +64,6 @@ export const GarageTab: React.FC = () => {
             console.log(`Database lookup failed for ${carModelId}, trying hardcoded fallback`);
         }
 
-        // Fallback: Try hardcoded data for old cars
-        try {
-            const { getCarModelById: getHardcodedModel } = await import('../../data/vehicles');
-            const hardcodedModel = getHardcodedModel(carModelId);
-
-            if (hardcodedModel) {
-                // Convert hardcoded CarModel to VehicleModel format
-                const convertedModel: VehicleModel = {
-                    id: hardcodedModel.id,
-                    brandId: '',
-                    brandName: hardcodedModel.brand,
-                    model: hardcodedModel.model,
-                    mass: hardcodedModel.mass,
-                    basePrice: hardcodedModel.basePrice,
-                    defaultEngineId: hardcodedModel.defaultEngine,
-                    compatibleEngineIds: hardcodedModel.compatibleEngines,
-                    imageUrl: hardcodedModel.imageUrl,
-                    createdAt: { seconds: 0, nanoseconds: 0 } as any,
-                    updatedAt: { seconds: 0, nanoseconds: 0 } as any,
-                    createdBy: 'legacy'
-                };
-
-                cacheManager.set(cacheKey, convertedModel, MODEL_CACHE_DURATION);
-                setCarModels(prev => new Map(prev).set(carModelId, convertedModel));
-                return convertedModel;
-            }
-        } catch (error) {
-            console.warn(`Could not load hardcoded model ${carModelId}:`, error);
-        }
-
         return null;
     }, [carModels]);
 
