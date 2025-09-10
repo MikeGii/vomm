@@ -37,7 +37,7 @@ export const TrainingEditor: React.FC<TrainingEditorProps> = ({
                     {/* Physical Attributes */}
                     <h4 className="subsection-title">Füüsilised omadused</h4>
 
-                    <div className="attributes-grid">
+                    <div className="attributes-grid-management">
                         <div className="attribute-group">
                             <label>💪 Jõud:</label>
                             <div className="attribute-fields">
@@ -147,7 +147,7 @@ export const TrainingEditor: React.FC<TrainingEditorProps> = ({
                     {/* Crafting Attributes */}
                     <h4 className="subsection-title">Käsitööoskused</h4>
 
-                    <div className="attributes-grid">
+                    <div className="attributes-grid-management">
                         <div className="attribute-group">
                             <label>👨‍🍳 Koka kunst:</label>
                             <div className="attribute-fields">

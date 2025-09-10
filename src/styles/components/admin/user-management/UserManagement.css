@@ -565,7 +565,7 @@
 }
 
 /* Attributes grid */
-.attributes-grid {
+.attributes-grid-management {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 1rem;
@@ -757,9 +757,7 @@
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
-    .attributes-grid, .training-clicks-grid, .health-grid {
-        grid-template-columns: 1fr;
-    }
+
 
     .courses-checklist {
         grid-template-columns: 1fr;
@@ -773,15 +771,6 @@
         flex-direction: column;
         align-items: stretch;
     }
-}
-
-/* Rank info section */
-.rank-info {
-    background: rgba(255, 215, 0, 0.05);
-    border: 1px solid #ffd700;
-    border-radius: 6px;
-    padding: 1rem;
-    margin-top: 1.5rem;
 }
 
 .rank-requirements {
@@ -1125,13 +1114,6 @@
     font-size: 0.85rem;
     color: #999;
     margin-bottom: 0.5rem;
-}
-
-.stat-value {
-    display: block;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #ffd700;
 }
 
 .no-courses {
