@@ -1,5 +1,5 @@
 // src/components/admin/vehicle-management/EnginesTab.tsx
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { VehicleEngine, VehicleModel } from '../../../types/vehicleDatabase';
 import {
     getAllVehicleEngines,
@@ -62,16 +62,12 @@ export const EnginesTab: React.FC = () => {
 
     const { showToast } = useToast();
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
     // Reset to page 1 when filter changes
     useEffect(() => {
         setCurrentPage(1);
     }, [selectedBrand]);
 
-    const loadData = async (forceRefresh: boolean = false) => {
+    const loadData = useCallback(async (forceRefresh: boolean = false) => {
         try {
             setIsLoading(true);
             setIsFromCache(false);
@@ -117,7 +113,12 @@ export const EnginesTab: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [showToast]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
+
 
     const processEngineData = async (enginesData: VehicleEngine[], modelsData: VehicleModel[]) => {
         // Enhance engines with usage data

@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { TabNavigation } from '../ui/TabNavigation';
 import { BrandsModelsTab } from './vehicle-management/BrandsModelsTab';
 import { EnginesTab } from './vehicle-management/EnginesTab';
-import CarMigrationTab from './vehicle-management/CarMigrationTab'; // Add this import
 import '../../styles/components/admin/VehicleManagement.css';
 
 export const VehicleManagement: React.FC = () => {
@@ -11,8 +10,7 @@ export const VehicleManagement: React.FC = () => {
 
     const subTabs = [
         { id: 'brands', label: 'Margid & Mudelid' },
-        { id: 'engines', label: 'Mootorid' },
-        { id: 'migration', label: 'Auto Migratsioon' }
+        { id: 'engines', label: 'Mootorid' }
     ];
 
     return (
@@ -31,7 +29,6 @@ export const VehicleManagement: React.FC = () => {
             <div className="vehicle-management-content">
                 {activeSubTab === 'brands' && <BrandsModelsTab />}
                 {activeSubTab === 'engines' && <EnginesTab />}
-                {activeSubTab === 'migration' && <CarMigrationTab />} {/* Add this line */}
             </div>
         </div>
     );

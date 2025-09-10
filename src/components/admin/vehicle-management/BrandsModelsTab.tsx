@@ -1,5 +1,5 @@
 // src/components/admin/vehicle-management/BrandsModelsTab.tsx
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { VehicleBrand, VehicleModel, VehicleEngine } from '../../../types/vehicleDatabase';
 import {
     getAllVehicleBrands,
@@ -59,11 +59,9 @@ const VEHICLE_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 export const BrandsModelsTab: React.FC = () => {
     const [brands, setBrands] = useState<VehicleBrand[]>([]);
     const [models, setModels] = useState<ExtendedVehicleModel[]>([]);
-    const [engines, setEngines] = useState<VehicleEngine[]>([]);
     const [selectedBrand, setSelectedBrand] = useState<string>('all');
     const [isLoading, setIsLoading] = useState(true);
     const [viewMode, setViewMode] = useState<'brands' | 'models'>('models');
-    const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
     const [isFromCache, setIsFromCache] = useState(false);
 
     const [brandModalOpen, setBrandModalOpen] = useState(false);
@@ -76,16 +74,12 @@ export const BrandsModelsTab: React.FC = () => {
 
     const { showToast } = useToast();
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
     // Reset to page 1 when view mode or filter changes
     useEffect(() => {
         setCurrentPage(1);
     }, [viewMode, selectedBrand]);
 
-    const loadData = async (forceRefresh: boolean = false) => {
+    const loadData = useCallback(async (forceRefresh: boolean = false) => {
         try {
             setIsLoading(true);
             setIsFromCache(false);
@@ -98,7 +92,6 @@ export const BrandsModelsTab: React.FC = () => {
                 if (cachedData) {
                     console.log('📦 Using cached vehicle data');
                     await processVehicleData(cachedData.brands, cachedData.models, cachedData.engines);
-                    setLastRefresh(new Date());
                     setIsFromCache(true);
                     setIsLoading(false);
                     return;
@@ -123,7 +116,6 @@ export const BrandsModelsTab: React.FC = () => {
             cacheManager.set(cacheKey, dataToCache, VEHICLE_CACHE_DURATION);
 
             await processVehicleData(brandsData, modelsData, enginesData);
-            setLastRefresh(new Date());
             setIsFromCache(false);
 
             if (forceRefresh) {
@@ -135,11 +127,15 @@ export const BrandsModelsTab: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [showToast]); // FIXED: Remove the () parentheses
+
+// Fix the useEffect dependency (line ~115):
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const processVehicleData = async (brandsData: VehicleBrand[], modelsData: VehicleModel[], enginesData: VehicleEngine[]) => {
         setBrands(brandsData);
-        setEngines(enginesData);
 
         // Enhance models with engine data
         const enhancedModels = modelsData.map(model => {

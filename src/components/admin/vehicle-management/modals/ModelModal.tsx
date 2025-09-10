@@ -93,7 +93,7 @@ export const ModelModal: React.FC<ModelModalProps> = ({
         } else {
             setFilteredEngines([]);
         }
-    }, [formData.brandId, availableBrands, availableEngines]);
+    }, [formData.brandId, availableBrands, availableEngines, formData.defaultEngineId]);
 
     // Reset form when modal opens/closes or model changes
     useEffect(() => {

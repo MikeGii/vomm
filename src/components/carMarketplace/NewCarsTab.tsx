@@ -1,5 +1,5 @@
 // src/components/carMarketplace/NewCarsTab.tsx
-import React, { useState, useMemo, useEffect } from 'react';
+import React, {useState, useMemo, useEffect, useCallback} from 'react';
 import { usePlayerStats } from '../../contexts/PlayerStatsContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -42,12 +42,7 @@ const NewCarsTab: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(20);
 
-    // Laadi andmed komponendi käivitumisel
-    useEffect(() => {
-        loadMarketplaceData();
-    }, []);
-
-    const loadMarketplaceData = async () => {
+    const loadMarketplaceData = useCallback (async () => {
         try {
             setIsLoading(true);
 
@@ -95,7 +90,11 @@ const NewCarsTab: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [showToast]);
+    
+    useEffect(() => {
+        loadMarketplaceData();
+    }, [loadMarketplaceData]);
 
     // FIXED: Rename and fix the pagination logic
     const paginationData = useMemo(() => {
