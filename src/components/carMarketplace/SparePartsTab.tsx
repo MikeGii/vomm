@@ -111,7 +111,7 @@ const SparePartsTab: React.FC = () => {
                 <div className="player-money">
                     <span className="money-text">Sinu raha:</span>
                     <span className="money-value">
-                        ${playerStats?.money.toLocaleString() || 0}
+                        €{playerStats?.money.toLocaleString() || 0}
                     </span>
                 </div>
             </div>
@@ -158,7 +158,7 @@ const SparePartsTab: React.FC = () => {
                                 </td>
                                 <td className="part-price-cell">
                                     <span className={`price-tag ${!canAfford ? 'price-red' : ''}`}>
-                                        ${part.price.toLocaleString()}
+                                        €{part.price.toLocaleString()}
                                     </span>
                                 </td>
                                 <td className="part-action-cell">

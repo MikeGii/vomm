@@ -44,7 +44,7 @@ const CarListItem: React.FC<CarListItemProps> = ({
             <td className="car-acceleration">{stats.acceleration}s</td>
             <td className="car-price">
                 <span className={!canAfford ? 'price-unaffordable' : ''}>
-                    ${carModel.basePrice.toLocaleString()}
+                    €{carModel.basePrice.toLocaleString()}
                 </span>
             </td>
             <td className="car-action">
