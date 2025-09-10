@@ -1,0 +1,99 @@
+/* src/styles/components/admin/VehicleManagement.css */
+.vehicle-management {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    background: #1a1a1a;
+    border-radius: 12px;
+    border: 1px solid #333;
+}
+
+.vehicle-management-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.vehicle-management-header h2 {
+    color: #ffd700;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.vehicle-management-header p {
+    color: #999;
+    font-size: 1rem;
+}
+
+.vehicle-management-content {
+    margin-top: 2rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .vehicle-management {
+        padding: 1rem;
+        margin: 0 1rem;
+    }
+
+    .vehicle-management-header h2 {
+        font-size: 1.5rem;
+    }
+}
+
+.tab-content-placeholder {
+    text-align: center;
+    padding: 3rem 2rem;
+    background-color: #252525;
+    border: 1px solid #444;
+    border-radius: 8px;
+}
+
+.tab-content-placeholder h3 {
+    color: #ffd700;
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.tab-content-placeholder p {
+    color: #ccc;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.placeholder-info {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.placeholder-info ul {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+}
+
+.placeholder-info li {
+    color: #f0f0f0;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #333;
+    font-size: 1rem;
+}
+
+.placeholder-info li:last-child {
+    border-bottom: none;
+}
+
+/* Mobile responsiveness for placeholders */
+@media (max-width: 768px) {
+    .tab-content-placeholder {
+        padding: 2rem 1rem;
+    }
+
+    .tab-content-placeholder h3 {
+        font-size: 1.5rem;
+    }
+
+    .placeholder-info li {
+        font-size: 0.9rem;
+        padding: 0.5rem 0;
+    }
+}

@@ -119,7 +119,7 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
 
     const updatePurchaseQuantity = (itemId: string, quantity: number) => {
         const itemStock = getItemStockAmount(itemId);
-        const maxAllowed = itemStock > 0 ? Math.min(99, itemStock) : 99;
+        const maxAllowed = itemStock > 0 ? Math.min(999, itemStock) : 999;
         setPurchaseQuantities(prev => ({
             ...prev,
             [itemId]: Math.max(1, Math.min(maxAllowed, quantity))
@@ -323,7 +323,7 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                                                             <button
                                                                 className="qty-btn-sm"
                                                                 onClick={() => updatePurchaseQuantity(item.id, purchaseQty + 1)}
-                                                                disabled={isPurchasing || (itemStock !== 999999 && purchaseQty >= Math.min(99, itemStock))}
+                                                                disabled={isPurchasing || (itemStock !== 999999 && purchaseQty >= Math.min(999, itemStock))}
                                                             >
                                                                 +
                                                             </button>

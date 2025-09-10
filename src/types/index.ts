@@ -4,6 +4,7 @@
 import {Timestamp} from "firebase/firestore";
 import { InventoryItem} from "./inventory";
 import { CharacterEquipment } from './equipment';
+import {AdminPermissions} from "./admin";
 
 export interface User {
     uid: string;
@@ -148,6 +149,7 @@ export interface PlayerStats {
         hourlyReset: number;
     };
     lastSeen?: Timestamp;
+    adminPermissions?: AdminPermissions;
 }
 
 // Course definition

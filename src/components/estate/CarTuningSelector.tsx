@@ -4,7 +4,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { PlayerCar } from '../../types/vehicles';
-import { getCarModelById } from '../../data/vehicles';
+import { getVehicleModelById } from '../../services/VehicleDatabaseService'; // Changed import
+import { VehicleModel } from '../../types/vehicleDatabase'; // Added import
+import { cacheManager } from '../../services/CacheManager'; // Added import
 import { calculateCarStats, calculateEnginePower } from '../../utils/vehicleCalculations';
 import {
     getPlayerInventory,
@@ -19,6 +21,9 @@ interface CarTuningSelectorProps {
     onCarUpdated?: () => void;
 }
 
+// Cache duration for car models
+const MODEL_CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+
 const CarTuningSelector: React.FC<CarTuningSelectorProps> = ({
                                                                  userCars,
                                                                  onCarSelect,
@@ -29,7 +34,48 @@ const CarTuningSelector: React.FC<CarTuningSelectorProps> = ({
     const { showToast } = useToast();
 
     const [selectedCar, setSelectedCar] = useState<PlayerCar | null>(null);
+    const [carModels, setCarModels] = useState<Map<string, VehicleModel>>(new Map());
     const [removingPartCategory, setRemovingPartCategory] = useState<string | null>(null);
+
+    // Helper function to get car model (database-only)
+    const getCarModel = useCallback(async (carModelId: string): Promise<VehicleModel | null> => {
+        // Check memory cache first
+        if (carModels.has(carModelId)) {
+            return carModels.get(carModelId) || null;
+        }
+
+        // Check persistent cache
+        const cacheKey = `car_model_${carModelId}`;
+        const cachedModel = cacheManager.get<VehicleModel>(cacheKey, MODEL_CACHE_DURATION);
+
+        if (cachedModel) {
+            setCarModels(prev => new Map(prev).set(carModelId, cachedModel));
+            return cachedModel;
+        }
+
+        // Load from database
+        try {
+            const model = await getVehicleModelById(carModelId);
+            if (model) {
+                cacheManager.set(cacheKey, model, MODEL_CACHE_DURATION);
+                setCarModels(prev => new Map(prev).set(carModelId, model));
+                return model;
+            }
+        } catch (error) {
+            console.error(`Failed to load car model ${carModelId}:`, error);
+        }
+
+        return null;
+    }, [carModels]);
+
+    // Preload car models when userCars change
+    useEffect(() => {
+        const loadModels = async () => {
+            const uniqueModelIds = [...new Set(userCars.map(car => car.carModelId))];
+            await Promise.all(uniqueModelIds.map(id => getCarModel(id)));
+        };
+        loadModels();
+    }, [userCars, getCarModel]);
 
     const loadInstalledParts = useCallback(async (carId: string) => {
         if (!currentUser) return;
@@ -53,7 +99,7 @@ const CarTuningSelector: React.FC<CarTuningSelectorProps> = ({
         } else {
             setSelectedCar(null);
         }
-    }, [selectedCarId, userCars, loadInstalledParts]); // Added loadInstalledParts to dependencies
+    }, [selectedCarId, userCars, loadInstalledParts]);
 
     const isSlotEmpty = (category: string): boolean => {
         return selectedCar?.emptyPartSlots?.[category as keyof typeof selectedCar.emptyPartSlots] || false;
@@ -205,11 +251,17 @@ const CarTuningSelector: React.FC<CarTuningSelectorProps> = ({
                 >
                     <option value="">-- Vali auto --</option>
                     {userCars.map(car => {
-                        const model = getCarModelById(car.carModelId);
-                        if (!model) return null;
+                        const model = carModels.get(car.carModelId);
+                        if (!model) {
+                            return (
+                                <option key={car.id} value={car.id} disabled>
+                                    Tundmatu mudel ({car.carModelId})
+                                </option>
+                            );
+                        }
                         return (
                             <option key={car.id} value={car.id}>
-                                {model.brand} {model.model} ({car.mileage.toLocaleString()} km)
+                                {model.brandName} {model.model} ({car.mileage.toLocaleString()} km)
                             </option>
                         );
                     })}
@@ -228,9 +280,28 @@ const CarTuningSelector: React.FC<CarTuningSelectorProps> = ({
 
                     <div className="car-stats-preview">
                         {(() => {
-                            const model = getCarModelById(selectedCar.carModelId);
-                            if (!model) return null;
-                            const stats = calculateCarStats(selectedCar, model);
+                            const model = carModels.get(selectedCar.carModelId);
+                            if (!model) {
+                                return (
+                                    <div className="error-message">
+                                        Auto mudeli andmeid ei leitud
+                                    </div>
+                                );
+                            }
+
+                            // Convert to legacy format for calculateCarStats
+                            const legacyModel = {
+                                id: model.id,
+                                brand: model.brandName,
+                                model: model.model,
+                                mass: model.mass,
+                                compatibleEngines: model.compatibleEngineIds,
+                                defaultEngine: model.defaultEngineId,
+                                basePrice: model.basePrice,
+                                imageUrl: model.imageUrl
+                            };
+
+                            const stats = calculateCarStats(selectedCar, legacyModel);
 
                             const stockEngine = {
                                 ...selectedCar.engine,

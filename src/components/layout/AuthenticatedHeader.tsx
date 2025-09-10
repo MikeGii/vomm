@@ -91,8 +91,15 @@ export const AuthenticatedHeader: React.FC = () => {
     // Determine if training should be shown based on actual progress (no tutorial)
     const showTraining = playerStats?.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
 
-    // Check if current user is admin
-    const isAdmin = currentUser?.uid === 'WUucfDi2DAat9sgDY75mDZ8ct1k2';
+    // Updated admin access check
+    const hasAdminAccess = playerStats?.adminPermissions?.hasAdminAccess || false;
+    const allowedTabs = playerStats?.adminPermissions?.allowedTabs || [];
+
+    // Keep the hardcoded admin check as backup
+    const isSuperAdmin = currentUser?.uid === 'WUucfDi2DAat9sgDY75mDZ8ct1k2';
+
+    // Final admin access check - either super admin OR has admin permissions
+    const isAdmin = isSuperAdmin || hasAdminAccess;
 
     // Enhanced status text with more detailed progression
     const getStatusText = (): string => {
@@ -141,8 +148,8 @@ export const AuthenticatedHeader: React.FC = () => {
                     <div className="header-stat-item header-online-count">
                         <span className="header-stat-label">Aktiivsed 24h</span>
                         <span className="header-stat-value">
-                            {loadingOnlineCount ? '—' : onlineCount}
-                        </span>
+                           {loadingOnlineCount ? '—' : onlineCount}
+                       </span>
                     </div>
 
                     <div className="menu-container" ref={menuRef}>
@@ -261,15 +268,15 @@ export const AuthenticatedHeader: React.FC = () => {
                                     className={`menu-item ${playerStats && playerStats.level >= 60 ? '' : 'menu-item-locked'}`}
                                     disabled={!playerStats || playerStats.level < 60}
                                 >
-                                    <span className="menu-icon">
-                                        {playerStats && playerStats.level >= 60 ? '🏡' : '🔒'}
-                                    </span>
+                                   <span className="menu-icon">
+                                       {playerStats && playerStats.level >= 60 ? '🏡' : '🔒'}
+                                   </span>
                                     <span>
-                                        Minu kodu
+                                       Minu kodu
                                         {playerStats && playerStats.level < 60 && (
                                             <span className="menu-item-level-req"> (Tase 60)</span>
                                         )}
-                                    </span>
+                                   </span>
                                 </button>
 
                                 <button
@@ -281,16 +288,16 @@ export const AuthenticatedHeader: React.FC = () => {
                                     }}
                                     className={`menu-item ${playerStats && playerStats.level >= 60 ? '' : 'menu-item-locked'}`}
                                     disabled={!playerStats || playerStats.level < 60}
-                                    >
-                                    <span className="menu-icon">
-                                        {playerStats && playerStats.level >= 60 ? '🚗' : '🔒'}
-                                    </span>
+                                >
+                                   <span className="menu-icon">
+                                       {playerStats && playerStats.level >= 60 ? '🚗' : '🔒'}
+                                   </span>
                                     <span>
-                                        Autode turg
+                                       Autode turg
                                         {playerStats && playerStats.level < 60 && (
                                             <span className="menu-item-level-req"> (Tase 60)</span>
                                         )}
-                                    </span>
+                                   </span>
                                 </button>
 
                                 <div className="menu-divider"></div>
@@ -332,15 +339,15 @@ export const AuthenticatedHeader: React.FC = () => {
                                     className={`menu-item ${playerStats && playerStats.level >= 20 ? '' : 'menu-item-locked'}`}
                                     disabled={!playerStats || playerStats.level < 20}
                                 >
-                                    <span className="menu-icon">
-                                        {playerStats && playerStats.level >= 20 ? '🥊' : '🔒'}
-                                    </span>
+                                   <span className="menu-icon">
+                                       {playerStats && playerStats.level >= 20 ? '🥊' : '🔒'}
+                                   </span>
                                     <span>
-                                        Võitlusklubi
+                                       Võitlusklubi
                                         {playerStats && playerStats.level < 20 && (
                                             <span className="menu-item-level-req"> (Tase 20)</span>
                                         )}
-                                    </span>
+                                   </span>
                                 </button>
 
 
@@ -368,12 +375,19 @@ export const AuthenticatedHeader: React.FC = () => {
                                     <span>Tagasiside & Kontakt</span>
                                 </button>
 
-                                {/* Admin Menu Item - Only visible to admin */}
+                                {/* Admin Menu Item - Updated logic for admin permissions */}
                                 {isAdmin && (
                                     <>
                                         <div className="menu-divider"></div>
                                         <div className="menu-section">
-                                            <div className="menu-section-title">Admin</div>
+                                            <div className="menu-section-title">
+                                                Admin
+                                                {hasAdminAccess && !isSuperAdmin && (
+                                                    <span style={{fontSize: '0.7rem', color: '#999', marginLeft: '4px'}}>
+                                                       ({allowedTabs.length} tabi)
+                                                   </span>
+                                                )}
+                                            </div>
                                             <button
                                                 onClick={() => {
                                                     navigate('/admin');
