@@ -96,7 +96,7 @@ const NewCarsTab: React.FC = () => {
                 <div className="money-display">
                     <span>Sinu raha: </span>
                     <span className="money-amount">
-                        ${playerStats?.money?.toLocaleString() || 0}
+                        €{playerStats?.money?.toLocaleString() || 0}
                     </span>
                 </div>
             </div>

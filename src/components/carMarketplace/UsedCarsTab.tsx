@@ -192,7 +192,7 @@ const UsedCarsTab: React.FC = () => {
                     <div className="money-display">
                         <span className="money-label">Sinu raha:</span>
                         <span className="money-amount">
-                            ${playerStats?.money.toLocaleString() || 0}
+                            €{playerStats?.money.toLocaleString() || 0}
                         </span>
                     </div>
                 </div>
@@ -271,7 +271,7 @@ const UsedCarsTab: React.FC = () => {
                                     </td>
                                     <td className="car-price">
                                             <span className={`price ${!canAfford ? 'price-unaffordable' : ''}`}>
-                                                ${car.salePrice?.toLocaleString()}
+                                                €{car.salePrice?.toLocaleString()}
                                             </span>
                                     </td>
                                     <td className="car-action">
