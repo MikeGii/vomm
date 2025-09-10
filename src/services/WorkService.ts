@@ -363,3 +363,109 @@ export const getWorkHistory = async (
         hasMore: totalCount > page * itemsPerPage
     };
 };
+
+// Cancel active work with 50% reward penalty
+export const cancelWork = async (userId: string): Promise<{
+    success: boolean;
+    message?: string;
+    rewards?: { experience: number; money: number };
+}> => {
+    const statsRef = doc(firestore, 'playerStats', userId);
+
+    try {
+        const result = await runTransaction(firestore, async (transaction) => {
+            const statsDoc = await transaction.get(statsRef);
+
+            if (!statsDoc.exists()) {
+                return { success: false, message: 'Mängija andmed puuduvad' };
+            }
+
+            const stats = statsDoc.data() as PlayerStats;
+
+            if (!stats.activeWork) {
+                return { success: false, message: 'Sul pole aktiivset tööd' };
+            }
+
+            const workActivity = getWorkActivityById(stats.activeWork.workId);
+            if (!workActivity) {
+                return { success: false, message: 'Töötegevus ei ole saadaval' };
+            }
+
+            // Calculate how much time has passed
+            const now = Timestamp.now();
+            const startTime = stats.activeWork.startedAt as Timestamp;
+            const totalWorkTime = stats.activeWork.totalHours * 3600 * 1000; // Total work time in milliseconds
+            const timeWorked = now.toMillis() - startTime.toMillis(); // Time actually worked in milliseconds
+
+            // Calculate hours worked (with minimum of 0.1 hours to give some reward)
+            const hoursWorked = Math.max(0.1, timeWorked / (1000 * 3600));
+
+            // Calculate rewards for time actually worked
+            const workedRewards = calculateWorkRewards(workActivity, hoursWorked, stats.rank, stats);
+
+            // Apply 50% penalty
+            const penalizedRewards = {
+                experience: Math.floor(workedRewards.experience * 0.5),
+                money: Math.floor(workedRewards.money * 0.5)
+            };
+
+            // Calculate new stats
+            const newExp = stats.experience + penalizedRewards.experience;
+            const newLevel = calculateLevelFromExp(newExp);
+            const newTotalWorkedHours = (stats.totalWorkedHours || 0) + hoursWorked;
+
+            // VIP logic for training clicks
+            const nonWorkingClicks = stats.isVip ? 100 : 50;
+
+            // Update player stats
+            const updateData: any = {
+                activeWork: null,
+                experience: newExp,
+                level: newLevel,
+                totalWorkedHours: newTotalWorkedHours,
+                'trainingData.isWorking': false,
+                'trainingData.remainingClicks': nonWorkingClicks,
+                'kitchenLabTrainingData.remainingClicks': nonWorkingClicks,
+                'handicraftTrainingData.remainingClicks': nonWorkingClicks
+            };
+
+            // Add money if there's a reward
+            if (penalizedRewards.money > 0) {
+                updateData.money = (stats.money || 0) + penalizedRewards.money;
+            }
+
+            transaction.update(statsRef, updateData);
+
+            // Create work history entry for cancelled work
+            const historyEntry: WorkHistoryEntry = {
+                userId,
+                workId: stats.activeWork.workId,
+                workName: `${workActivity.name} (Katkestatud)`,
+                prefecture: stats.activeWork.prefecture,
+                department: stats.activeWork.department,
+                startedAt: stats.activeWork.startedAt,
+                completedAt: now,
+                hoursWorked: hoursWorked,
+                expEarned: penalizedRewards.experience,
+                moneyEarned: penalizedRewards.money
+            };
+
+            const historyRef = doc(collection(firestore, 'workHistory'));
+            transaction.set(historyRef, historyEntry);
+
+            return {
+                success: true,
+                rewards: penalizedRewards,
+                message: 'Töö edukalt katkestatud'
+            };
+        });
+
+        return result;
+    } catch (error: any) {
+        console.error('Error cancelling work:', error);
+        return {
+            success: false,
+            message: error.message || 'Töö katkestamine ebaõnnestus'
+        };
+    }
+};

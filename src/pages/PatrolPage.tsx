@@ -20,7 +20,8 @@ import {
     startWork,
     checkAndCompleteWork,
     getRemainingWorkTime,
-    getWorkHistory
+    getWorkHistory,
+    cancelWork
 } from '../services/WorkService';
 import {getDefaultWorkActivityForPosition} from '../data/workActivities';
 import { getActiveEvent, processEventChoice } from '../services/EventService';
@@ -52,6 +53,8 @@ const PatrolPage: React.FC = () => {
     const [eventDocumentId, setEventDocumentId] = useState<string | null>(null);
     const [isProcessingEvent, setIsProcessingEvent] = useState(false);
     const [healthCheckDone, setHealthCheckDone] = useState(false);
+
+    const [isCancellingWork, setIsCancellingWork] = useState(false);
 
     // Player status checks - Memoized
     const playerStatus = React.useMemo(() => {
@@ -327,6 +330,37 @@ const PatrolPage: React.FC = () => {
         return playerStatus.isKadett ? 'Praktika ja tööamps' : 'Teenistus';
     };
 
+    const handleCancelWork = useCallback(async () => {
+        if (!currentUser || !playerStats?.activeWork || isCancellingWork) {
+            return;
+        }
+
+        setIsCancellingWork(true);
+
+        try {
+            const result = await cancelWork(currentUser.uid);
+
+            if (result.success && result.rewards) {
+                const expGained = result.rewards.experience;
+                const moneyGained = result.rewards.money;
+
+                let message = `Töö katkestatud! Saite: +${expGained} XP`;
+                if (moneyGained > 0) {
+                    message += `, +${moneyGained}€`;
+                }
+
+                showToast(message, 'info', 4000);
+                await refreshStats();
+            } else {
+                showToast(result.message || 'Töö katkestamine ebaõnnestus', 'error');
+            }
+        } catch (error: any) {
+            showToast(error.message || 'Töö katkestamine ebaõnnestus', 'error');
+        } finally {
+            setIsCancellingWork(false);
+        }
+    }, [currentUser, playerStats?.activeWork, isCancellingWork, showToast, refreshStats]);
+
     if (loading) {
         return (
             <div className="page">
@@ -376,7 +410,10 @@ const PatrolPage: React.FC = () => {
                         <ActiveWorkProgress
                             activeWork={playerStats.activeWork}
                             remainingTime={remainingTime}
+                            onCancelWork={handleCancelWork}
+                            isCancelling={isCancellingWork}
                         />
+
                         <WorkBoosterPanel
                             inventory={playerStats.inventory || []}
                             currentUserId={currentUser!.uid}
