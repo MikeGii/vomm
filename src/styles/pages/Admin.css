@@ -105,3 +105,43 @@
         padding: 1.5rem;
     }
 }
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.admin-permissions-info {
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    color: #ffd700;
+    font-size: 0.9rem;
+}
+
+.tab-access-denied {
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid #dc3545;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.tab-access-denied h3 {
+    color: #dc3545;
+    margin-bottom: 1rem;
+}
+
+.tab-access-denied p {
+    color: #999;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: #999;
+}

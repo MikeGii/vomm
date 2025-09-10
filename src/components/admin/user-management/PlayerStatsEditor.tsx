@@ -7,6 +7,7 @@ import { PoliceInfoEditor } from './editors/PoliceInfoEditor';
 import { GameStatsEditor } from './editors/GameStatsEditor';
 import { TrainingEditor } from './editors/TrainingEditor';
 import { CoursesHistoryEditor } from './editors/CoursesHistoryEditor';
+import { AdminPermissionsEditor } from './editors/AdminPermissionsEditor';
 
 interface PlayerStatsEditorProps {
     user: PlayerStats;
@@ -25,7 +26,8 @@ export const PlayerStatsEditor: React.FC<PlayerStatsEditorProps> = ({
         police: false,
         game: false,
         training: false,
-        courses: false
+        courses: false,
+        adminPermissions: false
     });
 
     // Reset edited data when user changes
@@ -133,6 +135,14 @@ export const PlayerStatsEditor: React.FC<PlayerStatsEditorProps> = ({
                     user={editedUser}
                     isOpen={openSections.courses}
                     onToggle={() => toggleSection('courses')}
+                    onFieldUpdate={updateField}
+                />
+
+                {/* Admin Permissions */}
+                <AdminPermissionsEditor
+                    user={editedUser}
+                    isOpen={openSections.adminPermissions}
+                    onToggle={() => toggleSection('adminPermissions')}
                     onFieldUpdate={updateField}
                 />
             </div>

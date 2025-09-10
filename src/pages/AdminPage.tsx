@@ -1,6 +1,4 @@
 // src/pages/AdminPage.tsx
-// Updated version with UserManagement integration
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
@@ -10,24 +8,63 @@ import { AdminApplicationsTab } from '../components/admin/AdminApplicationsTab';
 import { UserManagement } from '../components/admin/user-management/UserManagement';
 import { VehicleManagement } from '../components/admin/VehicleManagement';
 import { useAuth } from '../contexts/AuthContext';
+import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import '../styles/pages/Admin.css';
 
 const AdminPage: React.FC = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
+    const { playerStats, loading } = usePlayerStats();
     const [activeTab, setActiveTab] = useState<string>('tools');
 
-    // Check if user is admin
-    const isAdmin = currentUser?.uid === 'WUucfDi2DAat9sgDY75mDZ8ct1k2';
+    // Uuendatud admin õiguste kontroll
+    const hasAdminAccess = playerStats?.adminPermissions?.hasAdminAccess || false;
+    const allowedTabs = playerStats?.adminPermissions?.allowedTabs || [];
 
-    // Add the user management tab to your tabs array
-    const tabs = [
+    // Super admin kontroll (backup)
+    const isSuperAdmin = currentUser?.uid === 'WUucfDi2DAat9sgDY75mDZ8ct1k2';
+
+    // Lõplik admin ligipääsu kontroll
+    const isAdmin = isSuperAdmin || hasAdminAccess;
+
+    // Filtreeri tabad vastavalt õigustele
+    const allTabs = [
         { id: 'tools', label: 'Admin tööriistad' },
         { id: 'applications', label: 'Kandideerimised' },
         { id: 'users', label: 'Kasutajate haldus' },
         { id: 'vehicles', label: 'Sõidukid' },
     ];
 
+    // Super admin näeb kõiki tabbe, teised ainult lubatuid
+    const availableTabs = isSuperAdmin
+        ? allTabs
+        : allTabs.filter(tab => allowedTabs.includes(tab.id as any));
+
+    // Seadista esimene lubatud tab kui praegune pole lubatud
+    React.useEffect(() => {
+        if (!isSuperAdmin && availableTabs.length > 0) {
+            const currentTabAllowed = availableTabs.some(tab => tab.id === activeTab);
+            if (!currentTabAllowed) {
+                setActiveTab(availableTabs[0].id);
+            }
+        }
+    }, [availableTabs, activeTab, isSuperAdmin]);
+
+    // Loading state
+    if (loading) {
+        return (
+            <div className="page">
+                <AuthenticatedHeader />
+                <main className="admin-container">
+                    <div className="loading">
+                        Kontrollime õigusi...
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
+    // Access denied
     if (!isAdmin) {
         return (
             <div className="page">
@@ -35,7 +72,7 @@ const AdminPage: React.FC = () => {
                 <main className="admin-container">
                     <div className="access-denied">
                         <h1>Juurdepääs keelatud</h1>
-                        <p>Sul pole õigusi selle lehe külastamiseks.</p>
+                        <p>Sul pole admin õigusi selle lehe külastamiseks.</p>
                         <button
                             className="back-to-dashboard"
                             onClick={() => navigate('/dashboard')}
@@ -48,6 +85,9 @@ const AdminPage: React.FC = () => {
         );
     }
 
+    // Kontroll, kas kasutaja saab vaadata praegust tabi
+    const canViewCurrentTab = isSuperAdmin || allowedTabs.includes(activeTab as any);
+
     return (
         <div className="page">
             <AuthenticatedHeader />
@@ -59,19 +99,37 @@ const AdminPage: React.FC = () => {
                     ← Tagasi töölauale
                 </button>
 
-                <h1 className="admin-title">Administraatori paneel</h1>
+                <div className="admin-header">
+                    <h1 className="admin-title">Administraatori paneel</h1>
+                    {hasAdminAccess && !isSuperAdmin && (
+                        <div className="admin-permissions-info">
+                            <span>Lubatud tabad: {allowedTabs.length}/{allTabs.length}</span>
+                        </div>
+                    )}
+                </div>
 
                 <TabNavigation
-                    tabs={tabs}
+                    tabs={availableTabs}
                     activeTab={activeTab}
                     onTabChange={setActiveTab}
                 />
 
-                {activeTab === 'tools' && <AdminTools />}
-                {activeTab === 'applications' && <AdminApplicationsTab />}
-                {activeTab === 'users' && <UserManagement />}
-                {activeTab === 'vehicles' && <VehicleManagement />}
+                {/* Näita komponente ainult kui on õigus */}
+                {canViewCurrentTab && (
+                    <>
+                        {activeTab === 'tools' && <AdminTools />}
+                        {activeTab === 'applications' && <AdminApplicationsTab />}
+                        {activeTab === 'users' && <UserManagement />}
+                        {activeTab === 'vehicles' && <VehicleManagement />}
+                    </>
+                )}
 
+                {!canViewCurrentTab && (
+                    <div className="tab-access-denied">
+                        <h3>Juurdepääs sellele tabiile keelatud</h3>
+                        <p>Sul pole õigusi selle tabi vaatamiseks.</p>
+                    </div>
+                )}
             </main>
         </div>
     );
