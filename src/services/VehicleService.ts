@@ -7,12 +7,21 @@ import {
     query,
     where,
     Timestamp,
-    runTransaction, getDoc, updateDoc, serverTimestamp
+    runTransaction,
+    getDoc,
+    updateDoc,
+    serverTimestamp
 } from 'firebase/firestore';
 import { firestore as db } from '../config/firebase';
-import { PlayerCar, CarModel } from '../types/vehicles';
+import { PlayerCar } from '../types/vehicles';
+import { VehicleModel, VehicleEngine } from '../types/vehicleDatabase';
 import { GarageSlot } from '../types/estate';
-import { createStockEngine } from '../data/vehicles';
+
+// Import database services
+import {
+    getVehicleEngineById,
+    getVehicleModelById,
+} from './VehicleDatabaseService';
 
 async function ensureGarageSlots(
     transaction: any,
@@ -59,9 +68,24 @@ async function ensureGarageSlots(
     return newSlots;
 }
 
+// Create stock engine from database engine
+function createStockEngineFromDatabase(dbEngine: VehicleEngine) {
+    return {
+        id: `engine_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        code: dbEngine.code,
+        brand: dbEngine.brandName,
+        basePower: dbEngine.basePower,
+        turbo: 'stock' as const,
+        ecu: 'stock' as const,
+        intake: 'stock' as const,
+        exhaust: 'stock' as const
+    };
+}
+
+// Updated purchase function - works with VehicleModel from database
 export async function purchaseNewCar(
     userId: string,
-    carModel: CarModel
+    carModel: VehicleModel
 ): Promise<{ success: boolean; message: string; carId?: string }> {
     try {
         return await runTransaction(db, async (transaction) => {
@@ -99,6 +123,12 @@ export async function purchaseNewCar(
                 throw new Error('Garaažis pole ruumi');
             }
 
+            // Get the default engine from database
+            const defaultEngine = await getVehicleEngineById(carModel.defaultEngineId);
+            if (!defaultEngine) {
+                throw new Error(`Auto vaikimisi mootor ei ole saadaval (ID: ${carModel.defaultEngineId})`);
+            }
+
             // Create new car
             const newCar: PlayerCar = {
                 id: `car_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -106,7 +136,7 @@ export async function purchaseNewCar(
                 carModelId: carModel.id,
                 mileage: 0,
                 purchaseDate: new Date(),
-                engine: createStockEngine(carModel.defaultEngine),
+                engine: createStockEngineFromDatabase(defaultEngine),
                 isForSale: false
             };
 
@@ -132,7 +162,7 @@ export async function purchaseNewCar(
 
             return {
                 success: true,
-                message: `${carModel.brand} ${carModel.model} ostetud!`,
+                message: `${carModel.brandName} ${carModel.model} ostetud!`,
                 carId: newCar.id
             };
         });
@@ -471,3 +501,23 @@ export const updateCarParts = async (
         return { success: false, message: 'Viga osade vahetamisel' };
     }
 };
+
+// Helper function to get car model with database lookup (replaces hardcoded getCarModelById)
+export async function getCarModelFromDatabase(carModelId: string): Promise<VehicleModel | null> {
+    try {
+        return await getVehicleModelById(carModelId);
+    } catch (error) {
+        console.error('Error fetching car model:', error);
+        return null;
+    }
+}
+
+// Helper function to get engine by code from database (replaces hardcoded getEngineByCode)
+export async function getEngineFromDatabase(engineId: string): Promise<VehicleEngine | null> {
+    try {
+        return await getVehicleEngineById(engineId);
+    } catch (error) {
+        console.error('Error fetching engine:', error);
+        return null;
+    }
+}

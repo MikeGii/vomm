@@ -55,6 +55,25 @@ export const getAllVehicleBrands = async (): Promise<VehicleBrand[]> => {
     } as VehicleBrand));
 };
 
+export const getVehicleBrandById = async (id: string): Promise<VehicleBrand | null> => {
+    try {
+        const docRef = doc(firestore, BRANDS_COLLECTION, id);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            return {
+                id: docSnap.id,
+                ...docSnap.data()
+            } as VehicleBrand;
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Error fetching vehicle brand by ID:', error);
+        return null;
+    }
+};
+
 export const updateVehicleBrand = async (
     id: string,
     updates: Partial<CreateVehicleBrandData>
@@ -98,6 +117,49 @@ export const getAllVehicleEngines = async (): Promise<VehicleEngine[]> => {
         id: doc.id,
         ...doc.data()
     } as VehicleEngine));
+};
+
+export const getVehicleEngineById = async (id: string): Promise<VehicleEngine | null> => {
+    try {
+        const docRef = doc(firestore, ENGINES_COLLECTION, id);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            return {
+                id: docSnap.id,
+                ...docSnap.data()
+            } as VehicleEngine;
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Error fetching vehicle engine by ID:', error);
+        return null;
+    }
+};
+
+export const getVehicleEngineByCode = async (code: string): Promise<VehicleEngine | null> => {
+    try {
+        const querySnapshot = await getDocs(
+            query(
+                collection(firestore, ENGINES_COLLECTION),
+                where('code', '==', code)
+            )
+        );
+
+        if (!querySnapshot.empty) {
+            const doc = querySnapshot.docs[0];
+            return {
+                id: doc.id,
+                ...doc.data()
+            } as VehicleEngine;
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Error fetching vehicle engine by code:', error);
+        return null;
+    }
 };
 
 export const getVehicleEnginesByBrand = async (brandName: string): Promise<VehicleEngine[]> => {
@@ -174,6 +236,25 @@ export const getAllVehicleModels = async (): Promise<VehicleModel[]> => {
         id: doc.id,
         ...doc.data()
     } as VehicleModel));
+};
+
+export const getVehicleModelById = async (id: string): Promise<VehicleModel | null> => {
+    try {
+        const docRef = doc(firestore, MODELS_COLLECTION, id);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            return {
+                id: docSnap.id,
+                ...docSnap.data()
+            } as VehicleModel;
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Error fetching vehicle model by ID:', error);
+        return null;
+    }
 };
 
 export const getVehicleModelsByBrand = async (brandId: string): Promise<VehicleModel[]> => {

@@ -5,10 +5,15 @@ import { useAuth } from '../../contexts/AuthContext';
 import { usePlayerStats } from '../../contexts/PlayerStatsContext';
 import { useToast } from '../../contexts/ToastContext';
 import { getCarsForSale, purchaseUsedCar } from '../../services/VehicleService';
-import { getCarModelById } from '../../data/vehicles';
+import { getVehicleModelById } from '../../services/VehicleDatabaseService'; // Changed import
 import { calculateCarStats } from '../../utils/vehicleCalculations';
 import { PlayerCar } from '../../types/vehicles';
+import { VehicleModel } from '../../types/vehicleDatabase'; // Added import
+import { cacheManager } from '../../services/CacheManager';
 import '../../styles/components/carMarketplace/UsedCarsTab.css';
+
+// Cache for car models to avoid repeated database calls
+const MODEL_CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
 const UsedCarsTab: React.FC = () => {
     const { currentUser } = useAuth();
@@ -17,10 +22,44 @@ const UsedCarsTab: React.FC = () => {
 
     // State muutujad
     const [usedCars, setUsedCars] = useState<Array<PlayerCar & { sellerName?: string }>>([]);
+    const [carModels, setCarModels] = useState<Map<string, VehicleModel>>(new Map()); // Cache car models
     const [loading, setLoading] = useState(true);
     const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
     const [sortBy, setSortBy] = useState<'price' | 'date' | 'mileage' | 'power'>('date');
     const [filterBrand, setFilterBrand] = useState<string>('all');
+
+    // Helper function to get car model (with caching)
+    const getCarModel = useCallback(async (carModelId: string): Promise<VehicleModel | null> => {
+        // Check memory cache first
+        if (carModels.has(carModelId)) {
+            return carModels.get(carModelId) || null;
+        }
+
+        // Check persistent cache
+        const cacheKey = `car_model_${carModelId}`;
+        const cachedModel = cacheManager.get<VehicleModel>(cacheKey, MODEL_CACHE_DURATION);
+
+        if (cachedModel) {
+            // Update memory cache
+            setCarModels(prev => new Map(prev).set(carModelId, cachedModel));
+            return cachedModel;
+        }
+
+        // Load from database
+        try {
+            const model = await getVehicleModelById(carModelId);
+            if (model) {
+                // Update both caches
+                cacheManager.set(cacheKey, model, MODEL_CACHE_DURATION);
+                setCarModels(prev => new Map(prev).set(carModelId, model));
+                return model;
+            }
+        } catch (error) {
+            console.error(`Error loading car model ${carModelId}:`, error);
+        }
+
+        return null;
+    }, [carModels]);
 
     const loadUsedCars = useCallback(async () => {
         setLoading(true);
@@ -28,18 +67,18 @@ const UsedCarsTab: React.FC = () => {
             const cars = await getCarsForSale();
             console.log('Received cars:', cars);
 
-            const filteredCars = cars;
+            // Preload all unique car models
+            const uniqueModelIds = [...new Set(cars.map(car => car.carModelId))];
+            await Promise.all(uniqueModelIds.map(id => getCarModel(id)));
 
-            console.log('Showing all cars:', filteredCars);
-
-            setUsedCars(filteredCars);
+            setUsedCars(cars);
         } catch (error) {
             console.error('Error loading used cars:', error);
             showToast('Viga autode laadimisel', 'error');
         } finally {
             setLoading(false);
         }
-    }, [showToast]);
+    }, [showToast, getCarModel]);
 
     useEffect(() => {
         loadUsedCars();
@@ -83,7 +122,7 @@ const UsedCarsTab: React.FC = () => {
     // Saa unikaalsed brändid filtri jaoks
     const availableBrands = [...new Set(
         usedCars
-            .map(car => getCarModelById(car.carModelId)?.brand)
+            .map(car => carModels.get(car.carModelId)?.brandName)
             .filter(Boolean)
     )];
 
@@ -91,16 +130,39 @@ const UsedCarsTab: React.FC = () => {
     const filteredByBrand = filterBrand === 'all'
         ? usedCars
         : usedCars.filter(car => {
-            const model = getCarModelById(car.carModelId);
-            return model?.brand === filterBrand;
+            const model = carModels.get(car.carModelId);
+            return model?.brandName === filterBrand;
         });
 
     // Sorteeri autod
     const sortedCars = [...filteredByBrand].sort((a, b) => {
-        const modelA = getCarModelById(a.carModelId);
-        const modelB = getCarModelById(b.carModelId);
+        const modelA = carModels.get(a.carModelId);
+        const modelB = carModels.get(b.carModelId);
 
         if (!modelA || !modelB) return 0;
+
+        // Convert VehicleModel to CarModel format for calculateCarStats
+        const carModelA = {
+            id: modelA.id,
+            brand: modelA.brandName,
+            model: modelA.model,
+            mass: modelA.mass,
+            compatibleEngines: modelA.compatibleEngineIds,
+            defaultEngine: modelA.defaultEngineId,
+            basePrice: modelA.basePrice,
+            imageUrl: modelA.imageUrl
+        };
+
+        const carModelB = {
+            id: modelB.id,
+            brand: modelB.brandName,
+            model: modelB.model,
+            mass: modelB.mass,
+            compatibleEngines: modelB.compatibleEngineIds,
+            defaultEngine: modelB.defaultEngineId,
+            basePrice: modelB.basePrice,
+            imageUrl: modelB.imageUrl
+        };
 
         switch (sortBy) {
             case 'price':
@@ -108,12 +170,11 @@ const UsedCarsTab: React.FC = () => {
             case 'mileage':
                 return a.mileage - b.mileage;
             case 'power':
-                const statsA = calculateCarStats(a, modelA);
-                const statsB = calculateCarStats(b, modelB);
+                const statsA = calculateCarStats(a, carModelA);
+                const statsB = calculateCarStats(b, carModelB);
                 return statsB.power - statsA.power; // Võimsam enne
             case 'date':
             default:
-                // listedAt võib olla Date või Timestamp
                 const dateA = a.listedAt instanceof Date ? a.listedAt.getTime() :
                     // @ts-ignore
                     (a.listedAt?.toDate?.() || new Date()).getTime();
@@ -203,7 +264,6 @@ const UsedCarsTab: React.FC = () => {
             </div>
 
             {/* Autode nimekiri */}
-            {/* Autode tabel */}
             {sortedCars.length === 0 ? (
                 <div className="no-cars-message">
                     <h3>Hetkel pole ühtegi kasutatud autot müügis</h3>
@@ -227,28 +287,41 @@ const UsedCarsTab: React.FC = () => {
                         </thead>
                         <tbody>
                         {sortedCars.map(car => {
-                            const carModel = getCarModelById(car.carModelId);
+                            const carModel = carModels.get(car.carModelId);
                             if (!carModel) return null;
 
                             const canAfford = (playerStats?.money || 0) >= (car.salePrice || 0);
                             const isPurchasingThis = isPurchasing === car.id;
-                            const carStats = calculateCarStats(car, carModel);
+
+                            // Convert to old CarModel format for calculateCarStats
+                            const legacyCarModel = {
+                                id: carModel.id,
+                                brand: carModel.brandName,
+                                model: carModel.model,
+                                mass: carModel.mass,
+                                compatibleEngines: carModel.compatibleEngineIds,
+                                defaultEngine: carModel.defaultEngineId,
+                                basePrice: carModel.basePrice,
+                                imageUrl: carModel.imageUrl
+                            };
+
+                            const carStats = calculateCarStats(car, legacyCarModel);
                             const tuningBadges = getTuningBadges(car);
 
                             return (
                                 <tr key={car.id} className={`car-row ${!canAfford ? 'unaffordable' : ''}`}>
-                                    <td className="car-brand">{carModel.brand}</td>
+                                    <td className="car-brand">{carModel.brandName}</td>
                                     <td className="car-model">{carModel.model}</td>
                                     <td className="car-engine">
                                         <span className="engine-code">{car.engine.code}</span>
                                     </td>
                                     <td className="car-power">
-                                            <span className="power-value">
-                                                {Math.round(carStats.power)} kW
-                                            </span>
+                                        <span className="power-value">
+                                            {Math.round(carStats.power)} kW
+                                        </span>
                                         <span className="horsepower">
-                                                ({Math.round(carStats.power * 1.341)} hp)
-                                            </span>
+                                            ({Math.round(carStats.power * 1.341)} hp)
+                                        </span>
                                     </td>
                                     <td className="car-mileage">
                                         {car.mileage.toLocaleString()} km
@@ -258,8 +331,8 @@ const UsedCarsTab: React.FC = () => {
                                             <div className="tuning-badges-inline">
                                                 {tuningBadges.map(badge => (
                                                     <span key={badge} className="tuning-badge-small">
-                                                            {badge}
-                                                        </span>
+                                                        {badge}
+                                                    </span>
                                                 ))}
                                             </div>
                                         ) : (
@@ -270,9 +343,9 @@ const UsedCarsTab: React.FC = () => {
                                         {car.sellerName || 'Kasutaja'}
                                     </td>
                                     <td className="car-price">
-                                            <span className={`price ${!canAfford ? 'price-unaffordable' : ''}`}>
-                                                €{car.salePrice?.toLocaleString()}
-                                            </span>
+                                        <span className={`price ${!canAfford ? 'price-unaffordable' : ''}`}>
+                                            €{car.salePrice?.toLocaleString()}
+                                        </span>
                                     </td>
                                     <td className="car-action">
                                         <button
