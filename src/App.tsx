@@ -26,6 +26,7 @@ import VIPPage from "./pages/VIPPage";
 import RealEstatePage from "./pages/RealEstatePage";
 import CarMarketplacePage from './pages/CarMarketplacePage';
 import { ChatFloatingButton } from './components/chat/ChatFloatingButton';
+import DragRacePage from './pages/DragRacePage';
 
 function App() {
     return (
@@ -160,6 +161,8 @@ function App() {
                                         </ProtectedRoute>
                                     }
                                 />
+
+                                <Route path="/kiirendusrada" element={<DragRacePage />} />
 
                                 <Route path="*" element={<Navigate to="/" />} />
                             </Routes>
