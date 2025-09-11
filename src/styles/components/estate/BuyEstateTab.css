@@ -259,3 +259,63 @@
         font-size: 0.875rem;
     }
 }
+
+/* Garage warning styles */
+.garage-warning {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid #ffc107;
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #ffc107;
+}
+
+.garage-warning-details {
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid #dc3545;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-top: 1rem;
+    color: #dc3545;
+}
+
+.garage-warning-details strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #dc3545;
+}
+
+.garage-warning-details .suggestion {
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    background: rgba(74, 144, 226, 0.1);
+    border-radius: 4px;
+    color: #4a90e2;
+    font-size: 0.9rem;
+}
+
+/* Estate item with garage issue */
+.estate-list-item.garage-issue {
+    border-left: 3px solid #ffc107;
+}
+
+.estate-list-item.garage-issue .purchase-btn {
+    opacity: 0.6;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .garage-warning {
+        font-size: 0.8rem;
+        padding: 0.4rem;
+    }
+
+    .garage-warning-details {
+        padding: 0.75rem;
+    }
+
+    .garage-warning-details .suggestion {
+        font-size: 0.85rem;
+    }
+}

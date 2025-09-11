@@ -5,6 +5,7 @@ import {PlayerEstate, EstateProperty, EstateTransaction, GarageSlot} from '../ty
 import { InventoryItem } from '../types';
 import { getBaseIdFromInventoryId } from '../utils/inventoryUtils';
 import { AVAILABLE_ESTATES } from "../data/estates";
+import { getUserCars } from './VehicleService';
 
 export const getPlayerEstate = async (userId: string): Promise<PlayerEstate | null> => {
     try {
@@ -348,6 +349,36 @@ export const purchaseEstate = async (
                 };
             }
 
+            // NEW: Check garage capacity if downsizing
+            if (newEstate.hasGarage && currentEstate?.currentEstate?.hasGarage) {
+                const currentCapacity = currentEstate.currentEstate.garageCapacity || 0;
+                const newCapacity = newEstate.garageCapacity || 0;
+
+                if (newCapacity < currentCapacity) {
+                    // Player is downsizing garage - check if they have too many cars
+                    const userCars = await getUserCars(userId);
+
+                    if (userCars.length > newCapacity) {
+                        return {
+                            success: false,
+                            message: `Ei saa osta seda kinnisvara! Sul on ${userCars.length} autot, kuid uues garaažis on ainult ${newCapacity} kohta. Müü enne ${userCars.length - newCapacity} autot ära.`
+                        };
+                    }
+                }
+            }
+
+            // If moving from garage to no-garage property
+            if (currentEstate?.currentEstate?.hasGarage && !newEstate.hasGarage) {
+                const userCars = await getUserCars(userId);
+
+                if (userCars.length > 0) {
+                    return {
+                        success: false,
+                        message: `Ei saa osta seda kinnisvara! Sul on ${userCars.length} autot, kuid uuel kinnisvaral pole garaažis ruumi.`
+                    };
+                }
+            }
+
             const newBalance = playerStats.money - estateTransaction.finalPrice;
 
             // Update player money
@@ -359,17 +390,12 @@ export const purchaseEstate = async (
             let garageSlots = userData.estateData?.garageSlots || [];
 
             if (newEstate.hasGarage && newEstate.garageCapacity > 0) {
-                // Kui vanal kinnisvaral polnud garaaži või uus on suurem
                 if (!currentEstate?.currentEstate?.hasGarage ||
                     newEstate.garageCapacity !== (currentEstate?.currentEstate?.garageCapacity || 0)) {
 
-                    // Salvesta olemasolevad autod
                     const existingCars = garageSlots.filter((slot: GarageSlot) => !slot.isEmpty);
-
-                    // Loo uued slotid
                     garageSlots = createEmptyGarageSlots(newEstate.garageCapacity);
 
-                    // Paiguta olemasolevad autod tagasi
                     existingCars.forEach((carSlot: GarageSlot, index: number) => {
                         if (index < garageSlots.length) {
                             garageSlots[index] = {
@@ -381,15 +407,12 @@ export const purchaseEstate = async (
                     });
                 }
             } else {
-                // Kui uuel kinnisvaral pole garaaži, tühjenda slotid
                 garageSlots = [];
             }
 
-            // Uuenda kasutaja dokument
             transaction.update(userRef, {
                 'estateData.garageSlots': garageSlots
             });
-            // LÕPP - garaaži slottide loogika
 
             // Update or create estate record
             const estateData = {
