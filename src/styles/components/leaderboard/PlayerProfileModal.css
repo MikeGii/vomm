@@ -1,7 +1,9 @@
+/* src/styles/components/modals/PlayerProfileModal.css */
+
 /* ================================
-   MODAL OVERLAY
+   MODAL OVERLAY - FIXED Z-INDEX
    ================================ */
-.modal-overlay {
+.pp-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -11,30 +13,51 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9999;
-    animation: fadeIn 0.3s ease;
+    z-index: 99999; /* Much higher z-index */
+    animation: pp-fadeIn 0.3s ease;
+    backdrop-filter: blur(4px);
+    padding: 1rem;
+    /* Ensure it's not affected by parent stacking contexts */
+    isolation: isolate;
+}
+
+/* Force the modal to be on top of everything */
+.pp-modal-overlay::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(4px);
 }
 
 /* ================================
    PLAYER PROFILE MODAL - BASE
    ================================ */
-.player-profile-modal {
-    background: rgba(17, 17, 17, 0.95);
+.pp-modal-content {
+    background: rgba(17, 17, 17, 0.98); /* Slightly more opaque */
     border: 1px solid #2a2a2a;
     border-radius: 16px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 85vh;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
     overflow-y: auto;
     padding: 2rem;
     position: relative;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    animation: slideUp 0.3s ease;
+    box-shadow:
+            0 25px 50px rgba(0, 0, 0, 0.8),
+            0 0 0 1px rgba(255, 255, 255, 0.1);
+    animation: pp-slideUp 0.3s ease;
+    z-index: 100000; /* Explicit z-index for the modal content */
+    /* Ensure the modal creates its own stacking context */
+    isolation: isolate;
 }
 
-/* VIP modal - subtle golden enhancement */
-.player-profile-modal.vip-profile {
+/* VIP modal enhancement */
+.pp-modal-content.pp-vip-profile {
     border: 1px solid rgba(255, 215, 0, 0.25);
     box-shadow:
             0 0 15px rgba(255, 215, 0, 0.08),
@@ -44,7 +67,7 @@
 /* ================================
    CLOSE BUTTON
    ================================ */
-.modal-close-btn {
+.pp-modal-close-btn {
     position: absolute;
     top: 1rem;
     right: 1rem;
@@ -64,7 +87,7 @@
     z-index: 10;
 }
 
-.modal-close-btn:hover {
+.pp-modal-close-btn:hover {
     background: rgba(231, 76, 60, 0.2);
     border-color: #e74c3c;
     color: #e74c3c;
@@ -74,14 +97,14 @@
 /* ================================
    HEADER SECTION
    ================================ */
-.profile-header {
+.pp-profile-header {
     text-align: center;
     margin-bottom: 1.5rem;
     padding-bottom: 1.5rem;
     border-bottom: 1px solid #2a2a2a;
 }
 
-.profile-username {
+.pp-profile-username {
     font-size: 1.6rem;
     color: #f0f0f0;
     margin: 0 0 0.5rem 0;
@@ -89,19 +112,19 @@
     letter-spacing: 0.5px;
 }
 
-.vip-profile .profile-username {
+.pp-vip-profile .pp-profile-username {
     color: rgba(255, 215, 0, 0.9);
     text-shadow: 0 0 10px rgba(255, 215, 0, 0.15);
 }
 
-.profile-badges {
+.pp-profile-badges {
     display: flex;
     justify-content: center;
     gap: 0.4rem;
     flex-wrap: wrap;
 }
 
-.profile-badge {
+.pp-profile-badge {
     background: rgba(42, 42, 42, 0.6);
     border: 1px solid #333;
     color: #999;
@@ -112,7 +135,7 @@
     letter-spacing: 0.3px;
 }
 
-.profile-vip-badge {
+.pp-profile-vip-badge {
     background: rgba(255, 215, 0, 0.15);
     border: 1px solid rgba(255, 215, 0, 0.3);
     color: rgba(255, 215, 0, 0.9);
@@ -121,14 +144,14 @@
 /* ================================
    STATS GRID
    ================================ */
-.profile-stats-grid {
+.pp-profile-stats-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
     margin-bottom: 1.5rem;
 }
 
-.profile-stat-item {
+.pp-profile-stat-item {
     background: rgba(26, 26, 26, 0.6);
     border: 1px solid #2a2a2a;
     border-radius: 10px;
@@ -137,12 +160,12 @@
     transition: all 0.3s ease;
 }
 
-.profile-stat-item:hover {
+.pp-profile-stat-item:hover {
     background: rgba(26, 26, 26, 0.8);
     border-color: #333;
 }
 
-.profile-stat-label {
+.pp-profile-stat-label {
     display: block;
     font-size: 0.7rem;
     color: #666;
@@ -152,25 +175,68 @@
     font-weight: 600;
 }
 
-.profile-stat-value {
+.pp-profile-stat-value {
     display: block;
     font-size: 1.3rem;
     color: #e0e0e0;
     font-weight: 700;
 }
 
-.vip-profile .profile-stat-item:hover {
-    border-color: rgba(255, 215, 0, 0.2);
+/* ================================
+   DRIVING SKILLS SECTION
+   ================================ */
+.pp-driving-skills {
+    background: rgba(26, 26, 26, 0.4);
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
 }
 
-.vip-profile .profile-stat-value {
-    color: rgba(255, 215, 0, 0.85);
+.pp-driving-skills-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+}
+
+.pp-driving-skill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0.75rem;
+    background: rgba(42, 42, 42, 0.3);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.pp-driving-skill:hover {
+    background: rgba(42, 42, 42, 0.5);
+}
+
+.pp-skill-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.pp-skill-name {
+    font-size: 0.75rem;
+    color: #888;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.pp-skill-value {
+    font-size: 1.2rem;
+    color: #4a90e2;
+    font-weight: 700;
 }
 
 /* ================================
-   ESTATE SECTION
+   COURSES SECTION
    ================================ */
-.profile-estate-section {
+.pp-courses-section {
     background: rgba(26, 26, 26, 0.4);
     border: 1px solid #2a2a2a;
     border-radius: 10px;
@@ -179,26 +245,127 @@
     text-align: center;
 }
 
-.estate-name {
-    color: #4a90e2;
-    font-weight: 600;
+.pp-courses-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
-.no-estate {
-    color: #666;
-    font-style: italic;
+.pp-courses-icon {
+    font-size: 1.5rem;
+}
+
+.pp-courses-number {
+    font-size: 1.5rem;
+    color: #4CAF50;
+    font-weight: 700;
+}
+
+.pp-courses-text {
+    color: #888;
+    font-size: 0.9rem;
 }
 
 /* ================================
-   ATTRIBUTES
+   ESTATE SECTION
    ================================ */
-.profile-attributes {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #2a2a2a;
+.pp-estate-section {
+    background: rgba(26, 26, 26, 0.4);
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
 }
 
-.profile-section-title {
+.pp-estate-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.pp-estate-icon {
+    font-size: 1.2rem;
+}
+
+.pp-estate-name {
+    color: #4a90e2;
+    font-weight: 600;
+    flex: 1;
+}
+
+.pp-garage-info {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.pp-no-estate, .pp-estate-loading {
+    color: #666;
+    font-style: italic;
+    text-align: center;
+}
+
+/* ================================
+   CARS SECTION
+   ================================ */
+.pp-cars-section {
+    background: rgba(26, 26, 26, 0.4);
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.pp-cars-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.pp-car-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.75rem;
+    background: rgba(42, 42, 42, 0.3);
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.pp-car-item:hover {
+    background: rgba(42, 42, 42, 0.5);
+}
+
+.pp-car-brand {
+    color: #f0f0f0;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.pp-car-model {
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.pp-car-power {
+    color: #4CAF50;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+.pp-no-cars, .pp-cars-loading {
+    color: #666;
+    font-style: italic;
+    text-align: center;
+}
+
+/* ================================
+   SECTION TITLES
+   ================================ */
+.pp-section-title {
     color: #888;
     font-size: 0.8rem;
     text-transform: uppercase;
@@ -208,17 +375,26 @@
     text-align: center;
 }
 
-.vip-profile .profile-section-title {
+.pp-vip-profile .pp-section-title {
     color: rgba(255, 215, 0, 0.7);
 }
 
-.profile-attributes-grid {
+/* ================================
+   GENERAL ATTRIBUTES
+   ================================ */
+.pp-attributes {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #2a2a2a;
+}
+
+.pp-attributes-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 0.5rem;
 }
 
-.profile-attribute {
+.pp-attribute {
     background: rgba(26, 26, 26, 0.5);
     border: 1px solid #2a2a2a;
     border-radius: 8px;
@@ -227,20 +403,20 @@
     transition: all 0.3s ease;
 }
 
-.profile-attribute:hover {
+.pp-attribute:hover {
     background: rgba(26, 26, 26, 0.7);
     border-color: #333;
     transform: translateY(-1px);
 }
 
-.profile-attribute-icon {
+.pp-attribute-icon {
     display: block;
     font-size: 1.3rem;
     margin-bottom: 0.2rem;
     filter: saturate(0.8);
 }
 
-.profile-attribute-level {
+.pp-attribute-level {
     display: block;
     font-size: 0.95rem;
     color: #e0e0e0;
@@ -250,7 +426,7 @@
 /* ================================
    FOOTER
    ================================ */
-.profile-footer {
+.pp-profile-footer {
     text-align: center;
     padding-top: 1rem;
     margin-top: 1.5rem;
@@ -262,16 +438,12 @@
 /* ================================
    ANIMATIONS
    ================================ */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+@keyframes pp-fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
-@keyframes slideUp {
+@keyframes pp-slideUp {
     from {
         opacity: 0;
         transform: translateY(15px);
@@ -285,25 +457,25 @@
 /* ================================
    SCROLLBAR
    ================================ */
-.player-profile-modal::-webkit-scrollbar {
+.pp-modal-content::-webkit-scrollbar {
     width: 6px;
 }
 
-.player-profile-modal::-webkit-scrollbar-track {
+.pp-modal-content::-webkit-scrollbar-track {
     background: rgba(26, 26, 26, 0.5);
     border-radius: 3px;
 }
 
-.player-profile-modal::-webkit-scrollbar-thumb {
+.pp-modal-content::-webkit-scrollbar-thumb {
     background: #333;
     border-radius: 3px;
 }
 
-.player-profile-modal::-webkit-scrollbar-thumb:hover {
+.pp-modal-content::-webkit-scrollbar-thumb:hover {
     background: #444;
 }
 
-.vip-profile::-webkit-scrollbar-thumb {
+.pp-vip-profile::-webkit-scrollbar-thumb {
     background: rgba(255, 215, 0, 0.2);
 }
 
@@ -311,52 +483,135 @@
    MOBILE RESPONSIVE
    ================================ */
 @media (max-width: 768px) {
-    .player-profile-modal {
-        width: 95%;
-        padding: 1.5rem;
-        max-height: 90vh;
+    .pp-modal-overlay {
+        padding: 0.5rem;
     }
 
-    .profile-stats-grid {
+    .pp-modal-content {
+        padding: 1.5rem;
+        max-height: 95vh;
+        border-radius: 12px;
+    }
+
+    .pp-profile-stats-grid {
         gap: 0.5rem;
     }
-}
 
-@media (max-width: 480px) {
-    .player-profile-modal {
-        padding: 1.25rem;
-        width: 98%;
-    }
-
-    .modal-close-btn {
-        width: 28px;
-        height: 28px;
-        font-size: 1.1rem;
-    }
-
-    .profile-username {
-        font-size: 1.4rem;
-    }
-
-    .profile-stats-grid {
+    .pp-driving-skills-grid {
         grid-template-columns: 1fr;
         gap: 0.5rem;
     }
 
-    .profile-attributes-grid {
+    .pp-driving-skill {
+        flex-direction: row;
+        gap: 0.75rem;
+        text-align: left;
+    }
+
+    .pp-skill-icon {
+        font-size: 1.2rem;
+        margin-bottom: 0;
+    }
+
+    .pp-skill-name {
+        flex: 1;
+        margin-bottom: 0;
+        text-align: left;
+    }
+
+    .pp-attributes-grid {
         grid-template-columns: repeat(3, 1fr);
         gap: 0.4rem;
     }
+}
 
-    .profile-attribute {
-        padding: 0.5rem;
+@media (max-width: 480px) {
+    .pp-modal-content {
+        padding: 1rem;
+        border-radius: 8px;
     }
 
-    .profile-attribute-icon {
+    .pp-modal-close-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 1.1rem;
+        top: 0.75rem;
+        right: 0.75rem;
+    }
+
+    .pp-profile-username {
+        font-size: 1.3rem;
+    }
+
+    .pp-profile-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .pp-car-item {
+        grid-template-columns: 1fr auto;
+        gap: 0.5rem;
+    }
+
+    .pp-car-brand::after {
+        content: " ";
+    }
+
+    .pp-car-model {
+        grid-column: 1;
+        color: #888;
+        font-size: 0.8rem;
+    }
+
+    .pp-car-power {
+        grid-column: 2;
+        grid-row: 1 / 3;
+    }
+
+    .pp-attributes-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.3rem;
+    }
+
+    .pp-attribute {
+        padding: 0.5rem 0.3rem;
+    }
+
+    .pp-attribute-icon {
         font-size: 1.1rem;
     }
 
-    .profile-attribute-level {
+    .pp-attribute-level {
         font-size: 0.85rem;
+    }
+
+    .pp-courses-count {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .pp-estate-info {
+        flex-direction: column;
+        gap: 0.25rem;
+        text-align: center;
+    }
+}
+
+@media (max-width: 360px) {
+    .pp-modal-content {
+        padding: 0.75rem;
+    }
+
+    .pp-profile-header {
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    .pp-driving-skills,
+    .pp-courses-section,
+    .pp-estate-section,
+    .pp-cars-section {
+        margin-bottom: 1rem;
+        padding: 0.75rem;
     }
 }
