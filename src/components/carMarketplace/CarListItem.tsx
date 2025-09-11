@@ -11,6 +11,7 @@ interface CarListItemProps {
     engines: VehicleEngine[];
     onPurchase: (model: VehicleModel) => void;
     playerMoney: number;
+    playerPollid?: number;
     isPurchasing?: boolean;
 }
 
@@ -19,6 +20,7 @@ const CarListItem: React.FC<CarListItemProps> = ({
                                                      engines,
                                                      onPurchase,
                                                      playerMoney,
+                                                     playerPollid = 0,
                                                      isPurchasing = false
                                                  }) => {
     // Leia vaikimisi mootor
@@ -71,9 +73,15 @@ const CarListItem: React.FC<CarListItemProps> = ({
     };
 
     const stats = calculateCarStats(tempCar, tempModel);
-    const canAfford = model.currency === 'pollid'
-        ? playerMoney >= (model.basePollidPrice || 0) * 10000
-        : playerMoney >= model.basePrice;
+    const carPrice = model.currency === 'pollid'
+        ? (model.basePollidPrice || 0)
+        : model.basePrice;
+
+    const playerCurrency = model.currency === 'pollid'
+        ? playerPollid
+        : playerMoney;
+
+    const canAfford = playerCurrency >= carPrice;
 
     return (
         <tr className="car-list-item">
@@ -97,7 +105,7 @@ const CarListItem: React.FC<CarListItemProps> = ({
                     onClick={() => onPurchase(model)}
                     disabled={!canAfford || isPurchasing}
                 >
-                    {!canAfford ? 'Pole raha' :
+                    {!canAfford ? (model.currency === 'pollid' ? 'Pole pollideid' : 'Pole raha') :
                         isPurchasing ? '...' : 'Osta'}
                 </button>
             </td>

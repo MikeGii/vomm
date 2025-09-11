@@ -9,7 +9,7 @@ import {
     checkTuningRequirements,
     createDefaultUniversalTuning
 } from '../../types/vehicles';
-import { calculateCarStats } from '../../utils/vehicleCalculations';
+import {calculateCarStats, getTuningBasePrice} from '../../utils/vehicleCalculations';
 import '../../styles/components/estate/VehicleTuning.css';
 import { useToast } from '../../contexts/ToastContext';
 
@@ -65,7 +65,8 @@ const VehicleTuning: React.FC<VehicleTuningProps> = ({
         // Calculate upgrade cost
         const config = UNIVERSAL_TUNING_CONFIG[category];
         const stage = config.stages[newLevel];
-        const upgradeCost = Math.floor(model.basePrice * (stage.pricePercent / 100));
+        const tuningBasePrice = getTuningBasePrice(model);
+        const upgradeCost = Math.floor(tuningBasePrice * (stage.pricePercent / 100));
 
         if (newLevel > currentTuning[category] && playerStats.money < upgradeCost) {
             showToast(`Sul pole piisavalt raha! Vajad ${upgradeCost.toLocaleString()}€, sul on ${playerStats.money.toLocaleString()}€`, 'error');
@@ -131,7 +132,8 @@ const VehicleTuning: React.FC<VehicleTuningProps> = ({
                             checkTuningRequirements(category, index, playerStats.level, playerAttributes).canUpgrade :
                             true;
                         const reqCheck = checkTuningRequirements(category, index, playerStats.level, playerAttributes);
-                        const upgradeCost = Math.floor(model.basePrice * (stage.pricePercent / 100));
+                        const tuningBasePrice = getTuningBasePrice(model);
+                        const upgradeCost = Math.floor(tuningBasePrice * (stage.pricePercent / 100));
 
                         // NEW: Calculate preview stats
                         const previewStats = index !== currentLevel ? calculatePreviewStats(category, index) : null;

@@ -24,8 +24,6 @@ import {
 import { getTuningBasePrice } from '../utils/vehicleCalculations';
 import { VehicleModel, VehicleEngine } from '../types/vehicleDatabase';
 import { GarageSlot } from '../types/estate';
-
-// Import database services
 import {
     getVehicleEngineById,
     getVehicleModelById,
@@ -92,7 +90,7 @@ export async function purchaseNewCar(
 ): Promise<{ success: boolean; message: string; carId?: string }> {
     try {
         return await runTransaction(db, async (transaction) => {
-            const userRef = doc(db, 'users', userId);
+            const userRef = doc(db, 'playerStats', userId);
             const userDoc = await transaction.get(userRef);
 
             if (!userDoc.exists()) {

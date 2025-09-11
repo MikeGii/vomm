@@ -330,8 +330,30 @@ export const ModelModal: React.FC<ModelModalProps> = ({
                         </select>
                         <div className="form-help">Millises valuutas auto müüakse</div>
                     </div>
+                </div>
 
-                    {/* Pollid price field - only show if currency is pollid */}
+                <div className="form-row">
+                    {/* Money price field - show when currency is money */}
+                    {formData.currency === 'money' && (
+                        <div className="form-group">
+                            <label className="form-label required">
+                                Hind (€)
+                            </label>
+                            <input
+                                type="number"
+                                className="form-input"
+                                value={formData.basePrice}
+                                onChange={(e) => handleInputChange('basePrice', parseInt(e.target.value) || 0)}
+                                min={100}
+                                max={10000000}
+                                placeholder="nt. 15000"
+                            />
+                            {errors.basePrice && <div className="form-error">{errors.basePrice}</div>}
+                            <div className="form-help">Auto hind eurodes</div>
+                        </div>
+                    )}
+
+                    {/* Pollid price field - show when currency is pollid */}
                     {formData.currency === 'pollid' && (
                         <div className="form-group">
                             <label className="form-label required">
@@ -369,7 +391,7 @@ export const ModelModal: React.FC<ModelModalProps> = ({
                                                 onChange={(e) => handleEngineToggle(engine.id, e.target.checked)}
                                             />
                                             <label htmlFor={`engine-${engine.id}`}>
-                                                {engine.code} ({engine.basePower} HP)
+                                                {engine.code} ({engine.basePower} KW)
                                             </label>
                                         </div>
                                     ))}
@@ -385,7 +407,7 @@ export const ModelModal: React.FC<ModelModalProps> = ({
                                 <div className="selected-items">
                                     {selectedCompatibleEngines.map(engine => (
                                         <div key={engine.id} className="selected-item">
-                                            {engine.code} ({engine.basePower}HP)
+                                            {engine.code} ({engine.basePower}KW)
                                             <button
                                                 type="button"
                                                 onClick={() => handleEngineToggle(engine.id, false)}
@@ -411,7 +433,7 @@ export const ModelModal: React.FC<ModelModalProps> = ({
                                 <option value="">Vali vaikimisi mootor...</option>
                                 {selectedCompatibleEngines.map(engine => (
                                     <option key={engine.id} value={engine.id}>
-                                        {engine.code} ({engine.basePower} HP)
+                                        {engine.code} ({engine.basePower} KW)
                                     </option>
                                 ))}
                             </select>

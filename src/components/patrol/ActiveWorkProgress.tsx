@@ -94,9 +94,6 @@ export const ActiveWorkProgress: React.FC<ActiveWorkProgressProps> = ({
                 </div>
             </div>
 
-            <p className="work-warning">
-                ⚠️ Töö ajal ei saa võtta koolitusi ja treeninguid on piiratud (10 korda tunnis)
-            </p>
 
             {/* Confirmation Dialog */}
             {showConfirmDialog && (
