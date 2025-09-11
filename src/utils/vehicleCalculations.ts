@@ -8,8 +8,7 @@ import {
     UniversalTuningState,
     calculateUniversalPowerMultiplier,
     calculateUniversalGrip,
-    UNIVERSAL_TUNING_CONFIG,
-    createDefaultUniversalTuning
+    UNIVERSAL_TUNING_CONFIG
 } from '../types/vehicles';
 
 // ============= UNIVERSAL TUNING FUNCTIONS =============
