@@ -4,7 +4,6 @@ import { CheatDetector } from './tools/CheatDetector';
 import { LevelRecalculator } from './tools/LevelRecalculator';
 import { WorkManager } from './tools/WorkManager';
 import { CrimeInitializer } from './tools/CrimeInitializer';
-import { MigrationPanel } from './MigrationPanel'; // Add this
 import '../../styles/components/admin/AdminTools.css';
 
 export const AdminTools: React.FC = () => {
@@ -16,15 +15,6 @@ export const AdminTools: React.FC = () => {
             </div>
 
             <div className="tools-grid">
-                {/* CRITICAL OPERATIONS - Separate section */}
-                <div className="tool-category critical">
-                    <h3 className="category-title">⚠️ Kriitilised Operatsioonid</h3>
-                    <div className="critical-warning">
-                        <p>Need tööriistad mõjutavad kogu mängu ja on pöördumatud!</p>
-                    </div>
-                    <MigrationPanel />
-                </div>
-
                 {/* Work Management */}
                 <div className="tool-category">
                     <h3 className="category-title">Tööde Haldus</h3>
