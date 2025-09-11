@@ -1095,27 +1095,6 @@
     margin-top: 1.5rem;
 }
 
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-}
-
-.stat-item {
-    background: #333;
-    padding: 1rem;
-    border-radius: 6px;
-    border: 1px solid #444;
-    text-align: center;
-}
-
-.stat-label {
-    display: block;
-    font-size: 0.85rem;
-    color: #999;
-    margin-bottom: 0.5rem;
-}
-
 .no-courses {
     text-align: center;
     color: #999;

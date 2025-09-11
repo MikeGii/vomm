@@ -394,7 +394,6 @@ export const cancelWork = async (userId: string): Promise<{
             // Calculate how much time has passed
             const now = Timestamp.now();
             const startTime = stats.activeWork.startedAt as Timestamp;
-            const totalWorkTime = stats.activeWork.totalHours * 3600 * 1000; // Total work time in milliseconds
             const timeWorked = now.toMillis() - startTime.toMillis(); // Time actually worked in milliseconds
 
             // Calculate hours worked (with minimum of 0.1 hours to give some reward)

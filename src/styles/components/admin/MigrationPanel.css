@@ -1,0 +1,251 @@
+/* src/styles/components/admin/MigrationPanel.css */
+
+.migration-panel {
+    padding: 2rem;
+    background: #1a1a1a;
+    border-radius: 8px;
+    min-height: 400px;
+}
+
+.migration-panel.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    font-size: 1.1rem;
+}
+
+.migration-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #333;
+}
+
+.migration-header h2 {
+    color: #f0f0f0;
+    margin: 0;
+}
+
+.migration-status {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.migration-status.not_started {
+    background: #444;
+    color: #ffa726;
+}
+
+.migration-status.in_progress {
+    background: #2196f3;
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+.migration-status.completed {
+    background: #4caf50;
+    color: white;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.migration-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card-migration {
+    background: #0f0f0f;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.stat-card h3 {
+    color: #888;
+    font-size: 0.9rem;
+    margin: 0 0 0.5rem 0;
+    text-transform: uppercase;
+}
+
+.stat-value-migration {
+    color: #4a90e2;
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label-migration {
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.migration-description {
+    background: #0f0f0f;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.migration-description h3 {
+    color: #f0f0f0;
+    margin: 0 0 1rem 0;
+}
+
+.migration-description ol {
+    color: #ccc;
+    padding-left: 1.5rem;
+}
+
+.migration-description li {
+    margin-bottom: 0.5rem;
+}
+
+.migration-actions {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.btn-migrate {
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #ff5722, #d84315);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-migrate:hover:not(:disabled) {
+    background: linear-gradient(135deg, #d84315, #bf360c);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 87, 34, 0.4);
+}
+
+.btn-migrate:disabled {
+    background: #444;
+    color: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.migration-completed {
+    color: #4caf50;
+    font-size: 1.1rem;
+}
+
+.migration-completed button {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.migration-warnings {
+    background: rgba(255, 152, 0, 0.1);
+    border: 1px solid #ff9800;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.migration-warnings h4 {
+    color: #ff9800;
+    margin: 0 0 1rem 0;
+}
+
+.migration-warnings ul {
+    color: #ffcc80;
+    padding-left: 1.5rem;
+}
+
+.migration-warnings li {
+    margin-bottom: 0.5rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .migration-panel {
+        padding: 1rem;
+    }
+
+    .migration-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .migration-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+}
+
+.test-section {
+    background: rgba(76, 175, 80, 0.1);
+    border: 1px solid #4caf50;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.test-section h3 {
+    color: #4caf50;
+    margin: 0 0 1rem 0;
+}
+
+.test-controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.test-input {
+    flex: 1;
+    padding: 0.5rem;
+    background: #0f0f0f;
+    border: 1px solid #4caf50;
+    color: #f0f0f0;
+    border-radius: 4px;
+}
+
+.btn-test {
+    padding: 0.5rem 1rem;
+    background: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-test:disabled {
+    background: #666;
+    cursor: not-allowed;
+}
+
+.test-note {
+    color: #81c784;
+    font-size: 0.9rem;
+    margin: 0;
+}

@@ -552,3 +552,28 @@
     font-size: 0.8rem;
     color: #dc3545;
 }
+
+/* Add to AdminTools.css */
+.tool-category.critical {
+    border: 2px solid #ff5722;
+    background: rgba(255, 87, 34, 0.05);
+}
+
+.tool-category.critical .category-title {
+    color: #ff5722;
+}
+
+.critical-warning {
+    background: rgba(255, 152, 0, 0.1);
+    border: 1px solid #ff9800;
+    border-radius: 4px;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.critical-warning p {
+    color: #ff9800;
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+}

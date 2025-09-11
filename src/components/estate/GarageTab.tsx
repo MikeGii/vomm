@@ -1,17 +1,16 @@
-// src/components/estate/GarageTab.tsx
+// src/components/estate/GarageTab.tsx - FIXED: Use correct property names
+
 import React, {useCallback, useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEstate } from '../../contexts/EstateContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { getUserCars, listCarForSale, unlistCarFromSale } from '../../services/VehicleService';
-import { getVehicleModelById } from '../../services/VehicleDatabaseService'; // Changed import
+import { getVehicleModelById } from '../../services/VehicleDatabaseService';
 import { calculateCarStats } from '../../utils/vehicleCalculations';
-import CarTuningSelector from './CarTuningSelector';
-import SparePartsInventory from './SparePartsInventory';
 import { PlayerCar } from '../../types/vehicles';
-import { VehicleModel } from '../../types/vehicleDatabase'; // Added import
-import { cacheManager } from '../../services/CacheManager'; // Added import
+import { VehicleModel } from '../../types/vehicleDatabase';
+import { cacheManager } from '../../services/CacheManager';
 import '../../styles/components/estate/GarageTab.css';
 
 // Cache duration for car models
@@ -24,26 +23,22 @@ export const GarageTab: React.FC = () => {
     const navigate = useNavigate();
 
     const [userCars, setUserCars] = useState<PlayerCar[]>([]);
-    const [carModels, setCarModels] = useState<Map<string, VehicleModel>>(new Map()); // Cache car models
+    const [carModels, setCarModels] = useState<Map<string, VehicleModel>>(new Map());
     const [loading, setLoading] = useState(true);
     const [selectedCarId, setSelectedCarId] = useState<string | null>(null);
     const [salePrice, setSalePrice] = useState<string>('');
     const [isListing, setIsListing] = useState(false);
 
-    const [selectedTuningCarId, setSelectedTuningCarId] = useState<string | null>(null);
+    // Check if player has garage access - FIXED: Use correct property names
+    const hasGarageAccess = playerEstate?.currentEstate?.hasGarage &&
+        (playerEstate?.currentEstate?.garageCapacity || 0) > 0;
 
-    // Check if player has garage access
-    const hasGarageAccess = playerEstate?.currentEstate?.hasGarage || false;
-    const garageCapacity = playerEstate?.currentEstate?.garageCapacity || 0;
-
-    // Helper function to get car model (with caching and fallback)
+    // Helper function to get car model (with caching)
     const getCarModel = useCallback(async (carModelId: string): Promise<VehicleModel | null> => {
-        // Check memory cache first
         if (carModels.has(carModelId)) {
             return carModels.get(carModelId) || null;
         }
 
-        // Check persistent cache
         const cacheKey = `car_model_${carModelId}`;
         const cachedModel = cacheManager.get<VehicleModel>(cacheKey, MODEL_CACHE_DURATION);
 
@@ -52,7 +47,6 @@ export const GarageTab: React.FC = () => {
             return cachedModel;
         }
 
-        // Try to load from database first
         try {
             const model = await getVehicleModelById(carModelId);
             if (model) {
@@ -61,12 +55,13 @@ export const GarageTab: React.FC = () => {
                 return model;
             }
         } catch (error) {
-            console.log(`Database lookup failed for ${carModelId}, trying hardcoded fallback`);
+            console.error(`Failed to load car model ${carModelId}:`, error);
         }
 
         return null;
     }, [carModels]);
 
+    // Load user cars
     const loadUserCars = useCallback(async () => {
         if (!currentUser) return;
 
@@ -75,304 +70,228 @@ export const GarageTab: React.FC = () => {
             const cars = await getUserCars(currentUser.uid);
             setUserCars(cars);
 
-            // Preload all car models
+            // Preload car models
             const uniqueModelIds = [...new Set(cars.map(car => car.carModelId))];
             await Promise.all(uniqueModelIds.map(id => getCarModel(id)));
-
         } catch (error) {
-            console.error('Error loading cars:', error);
+            console.error('Viga autode laadimisel:', error);
             showToast('Viga autode laadimisel', 'error');
         } finally {
             setLoading(false);
         }
-    }, [currentUser, showToast, getCarModel]);
+    }, [currentUser, getCarModel, showToast]);
 
     useEffect(() => {
-        if (hasGarageAccess && currentUser) {
-            loadUserCars();
-        } else {
-            setLoading(false);
-        }
-    }, [hasGarageAccess, currentUser, loadUserCars]);
-
-    const handleListForSale = async (carId: string) => {
-        if (!currentUser) return;
-
-        const price = parseInt(salePrice);
-        if (!price || price < 100) {
-            showToast('Hind peab olema vähemalt $100', 'error');
-            return;
-        }
-
-        setIsListing(true);
-        try {
-            const result = await listCarForSale(currentUser.uid, carId, price);
-            if (result.success) {
-                showToast(result.message, 'success');
-                setSelectedCarId(null);
-                setSalePrice('');
-                await loadUserCars();
-            } else {
-                showToast(result.message, 'error');
-            }
-        } catch (error) {
-            showToast('Viga auto müüki panemisel', 'error');
-        } finally {
-            setIsListing(false);
-        }
-    };
-
-    const handleUnlistFromSale = async (carId: string) => {
-        if (!currentUser) return;
-
-        setIsListing(true);
-        try {
-            const result = await unlistCarFromSale(currentUser.uid, carId);
-            if (result.success) {
-                showToast(result.message, 'success');
-                await loadUserCars();
-            } else {
-                showToast(result.message, 'error');
-            }
-        } catch (error) {
-            showToast('Viga auto müügist eemaldamisel', 'error');
-        } finally {
-            setIsListing(false);
-        }
-    };
-
-    const handlePartInstalled = () => {
         loadUserCars();
+    }, [loadUserCars]);
+
+    const handleListCar = async (carId: string, price: number) => {
+        if (!currentUser) return;
+
+        setIsListing(true);
+        try {
+            await listCarForSale(currentUser.uid, carId, price);
+            showToast('Auto müügile pandud!', 'success');
+            await loadUserCars();
+            setSelectedCarId(null);
+            setSalePrice('');
+        } catch (error: any) {
+            showToast(error.message || 'Viga auto müügile panemisel', 'error');
+        } finally {
+            setIsListing(false);
+        }
     };
 
-    // If no garage access
-    if (!hasGarageAccess) {
-        return (
-            <div className="garage-tab">
-                <div className="garage-header">
-                    <h2>🚗 Garaaž</h2>
-                </div>
-                <div className="garage-content">
-                    <div className="no-garage-access">
-                        <div className="no-garage-icon">🏠🚫</div>
-                        <h3>Sul ei ole garaažiruumi</h3>
-                        <p>Garaažiga kinnisvara ostmiseks külasta "Osta kinnisvara" vahekaarti.</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    const handleUnlistCar = async (carId: string) => {
+        if (!currentUser) return;
+
+        setIsListing(true);
+        try {
+            await unlistCarFromSale(currentUser.uid, carId);
+            showToast('Auto müügilt maha võetud!', 'success');
+            await loadUserCars();
+            setSelectedCarId(null);
+        } catch (error: any) {
+            showToast(error.message || 'Viga auto müügilt mahavõtmisel', 'error');
+        } finally {
+            setIsListing(false);
+        }
+    };
 
     if (loading) {
         return (
             <div className="garage-tab">
-                <div className="garage-header">
-                    <h2>🚗 Sinu Garaaž</h2>
-                </div>
-                <div className="garage-content">
-                    <div className="loading">Laadin garaaži...</div>
+                <div className="loading">Laen garaaži andmeid...</div>
+            </div>
+        );
+    }
+
+    if (!hasGarageAccess) {
+        return (
+            <div className="garage-tab">
+                <div className="no-garage-access">
+                    <div className="no-garage-icon">🏠</div>
+                    <h3>Garaaž pole saadaval</h3>
+                    <p>
+                        Sul pole veel garaažiga kinnisasja. Osta garaažiga kinnisvara,
+                        et saaksid autosid hoida ja neid tuunida.
+                    </p>
                 </div>
             </div>
         );
     }
 
+    // FIXED: Use correct property name
+    const garageCapacity = playerEstate?.currentEstate?.garageCapacity || 0;
     const usedSlots = userCars.length;
     const freeSlots = garageCapacity - usedSlots;
 
     return (
         <div className="garage-tab">
             <div className="garage-header">
-                <h2>🚗 Sinu Garaaž</h2>
+                <h2>Garaaž</h2>
                 <div className="garage-info">
-                    <div className="capacity-display">
-                        <span>Kasutatud: {usedSlots}/{garageCapacity}</span>
-                        <span className="free-slots">Vabad kohad: {freeSlots}</span>
+                    <div className="garage-capacity-display">
+                        <span>Kasutatud kohad: {usedSlots}/{garageCapacity}</span>
+                        <span className="garage-free-slots">Vabu kohti: {freeSlots}</span>
                     </div>
                 </div>
             </div>
 
             <div className="garage-content">
-                {userCars.length === 0 ? (
-                    <div className="no-vehicles">
-                        <div className="empty-garage-icon">🚗💨</div>
-                        <h3>Sul ei ole veel ühtegi sõidukit</h3>
-                        <p>Sõidukeid saad osta autoturult.</p>
-                        <button
-                            className="btn-go-marketplace"
-                            onClick={() => navigate('/car-marketplace')}
-                        >
-                            Mine autoturule
-                        </button>
+                {/* Temporary message about new tuning system */}
+                <div className="garage-tuning-notice">
+                    <div className="garage-notice-box">
+                        <h4>🔧 Uus tuuningu süsteem tuleb varsti!</h4>
+                        <p>
+                            Töötame uue universaalse tuuningu süsteemi kallal.
+                            Vana varuosade süsteem on ajutiselt välja lülitatud.
+                        </p>
                     </div>
-                ) : (
-                    <>
-                        <div className="vehicles-grid">
-                            {userCars.map((car) => {
-                                const carModel = carModels.get(car.carModelId);
+                </div>
 
-                                // Show placeholder for cars without model data
-                                if (!carModel) {
-                                    return (
-                                        <div key={car.id} className="vehicle-card error">
-                                            <div className="vehicle-header">
-                                                <h4>Tundmatu mudel</h4>
-                                                <span className="error-badge">Model ID: {car.carModelId}</span>
-                                            </div>
-                                            <p>Auto mudeli andmeid ei leitud. Võimalik, et see vajab migratsiooni.</p>
-                                        </div>
-                                    );
-                                }
+                {/* Cars Section */}
+                <div className="garage-cars-section">
+                    <h3 className="garage-section-title">🚗 Sinu autod</h3>
+
+                    {userCars.length === 0 ? (
+                        <div className="garage-no-vehicles">
+                            <div className="garage-empty-icon">🏗️</div>
+                            <h3>Garaaž on tühi</h3>
+                            <p>Sul pole veel ühtegi autot. Mine autobaazerisse ja osta endale sõiduk!</p>
+                            <button
+                                className="garage-btn-marketplace"
+                                onClick={() => navigate('/car-marketplace')}
+                            >
+                                Mine autobaazerisse
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="garage-vehicles-grid">
+                            {userCars.map(car => {
+                                const model = carModels.get(car.carModelId);
+                                if (!model) return null;
 
                                 // Convert to legacy format for calculateCarStats
-                                const legacyCarModel = {
-                                    id: carModel.id,
-                                    brand: carModel.brandName,
-                                    model: carModel.model,
-                                    mass: carModel.mass,
-                                    compatibleEngines: carModel.compatibleEngineIds,
-                                    defaultEngine: carModel.defaultEngineId,
-                                    basePrice: carModel.basePrice,
-                                    imageUrl: carModel.imageUrl
+                                const legacyModel = {
+                                    id: model.id,
+                                    brand: model.brandName,
+                                    model: model.model,
+                                    mass: model.mass,
+                                    compatibleEngines: model.compatibleEngineIds,
+                                    defaultEngine: model.defaultEngineId,
+                                    basePrice: model.basePrice,
+                                    imageUrl: model.imageUrl
                                 };
 
-                                const stats = calculateCarStats(car, legacyCarModel);
-                                const isSellingMode = selectedCarId === car.id;
+                                const stats = calculateCarStats(car, legacyModel);
 
                                 return (
-                                    <div key={car.id} className={`vehicle-card ${car.isForSale ? 'for-sale' : ''}`}>
-                                        <div className="vehicle-header">
-                                            <h4>{carModel.brandName} {carModel.model}</h4>
-                                            {car.isForSale && (
-                                                <span className="sale-badge">
-                                                    Müügis: ${car.salePrice?.toLocaleString()}
-                                                </span>
-                                            )}
+                                    <div key={car.id} className="garage-vehicle-card">
+                                        <div className="garage-vehicle-header">
+                                            <h4>{model.brandName} {model.model}</h4>
+                                            <span className="garage-vehicle-engine">{car.engine.code}</span>
                                         </div>
 
-                                        <div className="vehicle-stats">
-                                            <div className="stat">
-                                                <span className="label">Mootor:</span>
-                                                <span className="value">{car.engine.code}</span>
+                                        <div className="garage-vehicle-stats">
+                                            <div className="garage-vehicle-stat-item">
+                                                <span className="garage-stat-label">Võimsus:</span>
+                                                <span className="garage-stat-value">{stats.power} kW</span>
                                             </div>
-                                            <div className="stat">
-                                                <span className="label">Võimsus:</span>
-                                                <span className="value">{stats.power} kW</span>
+                                            <div className="garage-vehicle-stat-item">
+                                                <span className="garage-stat-label">Kiirendus:</span>
+                                                <span className="garage-stat-value">{stats.acceleration.toFixed(1)}s</span>
                                             </div>
-                                            <div className="stat">
-                                                <span className="label">Mass:</span>
-                                                <span className="value">{stats.mass} kg</span>
-                                            </div>
-                                            <div className="stat">
-                                                <span className="label">0-100:</span>
-                                                <span className="value">{stats.acceleration}s</span>
-                                            </div>
-                                            <div className="stat">
-                                                <span className="label">Läbisõit:</span>
-                                                <span className="value">{car.mileage.toLocaleString()} km</span>
+                                            <div className="garage-vehicle-stat-item">
+                                                <span className="garage-stat-label">Läbisõit:</span>
+                                                <span className="garage-stat-value">{Math.round(car.mileage).toLocaleString()} km</span>
                                             </div>
                                         </div>
 
-                                        <div className="vehicle-tuning">
-                                            {car.engine.turbo !== 'stock' && (
-                                                <span className="tuning-badge">Turbo: {car.engine.turbo}</span>
-                                            )}
-                                            {car.engine.ecu !== 'stock' && (
-                                                <span className="tuning-badge">ECU: {car.engine.ecu}</span>
-                                            )}
-                                            {car.engine.intake !== 'stock' && (
-                                                <span className="tuning-badge">Intake: {car.engine.intake}</span>
-                                            )}
-                                            {car.engine.exhaust !== 'stock' && (
-                                                <span className="tuning-badge">Exhaust: {car.engine.exhaust}</span>
-                                            )}
-                                        </div>
-
-                                        <div className="vehicle-actions">
-                                            {!car.isForSale ? (
-                                                <>
-                                                    <button className="btn-tune" disabled>
-                                                        Tuuni (varsti)
+                                        <div className="garage-vehicle-actions">
+                                            {car.isForSale ? (
+                                                <div className="garage-sale-status">
+                                                    <p className="garage-sale-info">
+                                                        Müügis hinnaga: <strong>{car.salePrice?.toLocaleString()} €</strong>
+                                                    </p>
+                                                    <button
+                                                        className="garage-btn-unlist"
+                                                        onClick={() => handleUnlistCar(car.id)}
+                                                        disabled={isListing}
+                                                    >
+                                                        {isListing ? 'Eemaldamine...' : 'Võta müügilt maha'}
                                                     </button>
-                                                    {!isSellingMode ? (
-                                                        <button
-                                                            className="btn-sell"
-                                                            onClick={() => setSelectedCarId(car.id)}
-                                                        >
-                                                            Pane müüki
-                                                        </button>
-                                                    ) : (
-                                                        <div className="sell-controls">
-                                                            <input
-                                                                type="number"
-                                                                placeholder="Hind ($)"
-                                                                value={salePrice}
-                                                                onChange={(e) => setSalePrice(e.target.value)}
-                                                                min="100"
-                                                            />
-                                                            <button
-                                                                className="btn-confirm"
-                                                                onClick={() => handleListForSale(car.id)}
-                                                                disabled={isListing}
-                                                            >
-                                                                ✓
-                                                            </button>
-                                                            <button
-                                                                className="btn-cancel"
-                                                                onClick={() => {
-                                                                    setSelectedCarId(null);
-                                                                    setSalePrice('');
-                                                                }}
-                                                                disabled={isListing}
-                                                            >
-                                                                ✕
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </>
+                                                </div>
                                             ) : (
-                                                <button
-                                                    className="btn-unlist"
-                                                    onClick={() => handleUnlistFromSale(car.id)}
-                                                    disabled={isListing}
-                                                >
-                                                    Eemalda müügist
-                                                </button>
+                                                <div className="garage-sell-controls">
+                                                    <input
+                                                        type="number"
+                                                        placeholder="Müügihind (€)"
+                                                        value={selectedCarId === car.id ? salePrice : ''}
+                                                        onChange={(e) => {
+                                                            setSelectedCarId(car.id);
+                                                            setSalePrice(e.target.value);
+                                                        }}
+                                                        className="garage-price-input"
+                                                    />
+                                                    <button
+                                                        className="garage-btn-list"
+                                                        onClick={() => {
+                                                            const price = parseInt(salePrice);
+                                                            if (price > 0) {
+                                                                handleListCar(car.id, price);
+                                                            } else {
+                                                                showToast('Sisesta kehtiv hind', 'error');
+                                                            }
+                                                        }}
+                                                        disabled={!salePrice || isListing || selectedCarId !== car.id}
+                                                    >
+                                                        {isListing ? 'Paneme müüki...' : 'Pane müüki'}
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
                                     </div>
                                 );
                             })}
 
+                            {/* Add vehicle card (if there's space) */}
                             {freeSlots > 0 && (
-                                <div className="add-vehicle-card">
-                                    <div className="add-icon">➕</div>
-                                    <h4>Lisa uus auto</h4>
-                                    <p>Sul on {freeSlots} vaba kohta</p>
+                                <div className="garage-add-vehicle-card">
+                                    <div className="garage-add-vehicle-icon">🏗️</div>
+                                    <h4>Lisa auto</h4>
+                                    <p>Sul on veel {freeSlots} vaba garaažikohta</p>
                                     <button
-                                        className="btn-add-car"
+                                        className="garage-btn-add-car"
                                         onClick={() => navigate('/car-marketplace')}
                                     >
-                                        Mine autoturule
+                                        Mine autobaazerisse
                                     </button>
                                 </div>
                             )}
                         </div>
-
-                        <div className="tuning-section">
-                            <CarTuningSelector
-                                userCars={userCars}
-                                onCarSelect={setSelectedTuningCarId}
-                                selectedCarId={selectedTuningCarId}
-                                onCarUpdated={handlePartInstalled}
-                            />
-
-                            <SparePartsInventory
-                                selectedCarId={selectedTuningCarId}
-                                onPartInstalled={handlePartInstalled}
-                            />
-                        </div>
-                    </>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );

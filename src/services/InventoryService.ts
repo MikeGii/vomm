@@ -1,4 +1,4 @@
-// src/services/InventoryService.ts
+// src/services/InventoryService.ts - UPDATED: Disabled spare parts system
 
 import {
     doc,
@@ -7,17 +7,18 @@ import {
     serverTimestamp,
 } from 'firebase/firestore';
 import { firestore as db } from '../config/firebase';
-import { createTimestampedId, getBaseIdFromInventoryId } from '../utils/inventoryUtils';
-import { PlayerCar, TurboLevel, ECULevel, IntakeLevel, ExhaustLevel } from "../types/vehicles";
-import { getPartById, getPartSellPrice, getStockPartPrice } from "../data/vehicles/spareParts";
+
+// MIGRATION FLAG - Set to true to disable old spare parts system
+const SPARE_PARTS_SYSTEM_DISABLED = true;
 
 export interface InventoryItem {
     itemId: string;
     purchaseDate: Date;
     purchasePrice: number;
-    installedOn?: string | null; // Changed: explicitly allow null
+    installedOn?: string | null;
 }
 
+// UPDATED: Block spare parts purchases
 export const purchaseItem = async (
     userId: string,
     purchase: {
@@ -26,16 +27,22 @@ export const purchaseItem = async (
         price: number;
     }
 ): Promise<void> => {
+    // Check if this is a spare part purchase
+    if (SPARE_PARTS_SYSTEM_DISABLED) {
+        const sparePartPrefixes = ['turbo_', 'ecu_', 'intake_', 'exhaust_'];
+        if (sparePartPrefixes.some(prefix => purchase.itemId.startsWith(prefix))) {
+            throw new Error('Varuosade süsteem on uuendamisel. Uus universaalne tuuningu süsteem tuleb varsti!');
+        }
+    }
+
     try {
         await runTransaction(db, async (transaction) => {
-            // ALL READS FIRST
             const statsRef = doc(db, 'playerStats', userId);
             const inventoryRef = doc(db, 'inventories', userId);
 
             const statsSnap = await transaction.get(statsRef);
             const inventorySnap = await transaction.get(inventoryRef);
 
-            // VALIDATION
             if (!statsSnap.exists()) {
                 throw new Error('Mängija statistikat ei leitud');
             }
@@ -47,19 +54,17 @@ export const purchaseItem = async (
                 throw new Error('Pole piisavalt raha');
             }
 
-            // PREPARE DATA - No undefined values
+            // For non-spare parts, continue with normal inventory logic
             const currentTime = new Date();
             const items: InventoryItem[] = [];
             for (let i = 0; i < purchase.quantity; i++) {
                 items.push({
-                    itemId: createTimestampedId(purchase.itemId),
+                    itemId: `${purchase.itemId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                     purchaseDate: currentTime,
                     purchasePrice: purchase.price
-                    // No installedOn field - avoids undefined
                 });
             }
 
-            // ALL WRITES
             transaction.update(statsRef, {
                 money: currentMoney - totalCost
             });
@@ -67,7 +72,7 @@ export const purchaseItem = async (
             if (!inventorySnap.exists()) {
                 transaction.set(inventoryRef, {
                     userId: userId,
-                    spareParts: items,
+                    spareParts: items, // Keep field name for compatibility
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp()
                 });
@@ -80,11 +85,12 @@ export const purchaseItem = async (
             }
         });
     } catch (error) {
-        console.error('Viga osa ostmisel:', error);
+        console.error('Viga osta ostmisel:', error);
         throw error;
     }
 };
 
+// UPDATED: Return existing inventory for migration purposes
 export const getPlayerInventory = async (userId: string): Promise<InventoryItem[]> => {
     try {
         const inventoryRef = doc(db, 'inventories', userId);
@@ -101,26 +107,19 @@ export const getPlayerInventory = async (userId: string): Promise<InventoryItem[
     }
 };
 
+// DISABLED FUNCTIONS - Throw errors to prevent usage
+
 export const getUninstalledParts = async (
     userId: string,
     category?: 'turbo' | 'ecu' | 'intake' | 'exhaust'
 ): Promise<InventoryItem[]> => {
-    try {
-        const inventory = await getPlayerInventory(userId);
-        let uninstalled = inventory.filter(item => !item.installedOn);
-
-        if (category) {
-            uninstalled = uninstalled.filter(item => {
-                const baseId = getBaseIdFromInventoryId(item.itemId);
-                return baseId.startsWith(category);
-            });
-        }
-
-        return uninstalled;
-    } catch (error) {
-        console.error('Viga installimata osade laadimisel:', error);
-        return [];
+    if (SPARE_PARTS_SYSTEM_DISABLED) {
+        console.log('Spare parts system disabled - returning empty array');
+        return []; // Return empty instead of throwing error for UI compatibility
     }
+
+    // Legacy code removed - return empty for now
+    return [];
 };
 
 export const installPartOnCar = async (
@@ -128,96 +127,7 @@ export const installPartOnCar = async (
     carId: string,
     inventoryItemId: string
 ): Promise<void> => {
-    try {
-        await runTransaction(db, async (transaction) => {
-            // ALL READS FIRST
-            const inventoryRef = doc(db, 'inventories', userId);
-            const carRef = doc(db, 'cars', carId);
-
-            const inventorySnap = await transaction.get(inventoryRef);
-            const carSnap = await transaction.get(carRef);
-
-            // VALIDATION
-            if (!inventorySnap.exists()) {
-                throw new Error('Inventaari ei leitud');
-            }
-            if (!carSnap.exists()) {
-                throw new Error('Autot ei leitud');
-            }
-
-            const spareParts: InventoryItem[] = inventorySnap.data().spareParts || [];
-            const partIndex = spareParts.findIndex(p => p.itemId === inventoryItemId);
-
-            if (partIndex === -1) {
-                throw new Error('Osa ei leitud inventaarist');
-            }
-
-            const part = spareParts[partIndex];
-            if (part.installedOn) {
-                throw new Error('Osa on juba paigaldatud');
-            }
-
-            const baseId = getBaseIdFromInventoryId(part.itemId);
-            const partData = getPartById(baseId);
-            if (!partData) {
-                throw new Error('Osa andmeid ei leitud');
-            }
-
-            const carData = carSnap.data() as PlayerCar;
-            if (carData.ownerId !== userId) {
-                throw new Error('See ei ole sinu auto');
-            }
-
-            // PREPARE UPDATES
-            // Remove old part if exists
-            const currentPartLevel = carData.engine[partData.category as keyof typeof carData.engine];
-            if (currentPartLevel !== 'stock') {
-                const oldPartIndex = spareParts.findIndex((p: InventoryItem) =>
-                    p.installedOn === carId &&
-                    getBaseIdFromInventoryId(p.itemId).startsWith(partData.category)
-                );
-                if (oldPartIndex !== -1) {
-                    delete spareParts[oldPartIndex].installedOn; // Remove the field entirely
-                }
-            }
-
-            // Install new part
-            spareParts[partIndex].installedOn = carId;
-
-            // Update engine
-            const updatedEngine = { ...carData.engine };
-            const emptySlots = { ...(carData.emptyPartSlots || {}) };
-
-            if (partData.category === 'turbo') {
-                updatedEngine.turbo = partData.level as TurboLevel;
-                emptySlots.turbo = false; // NEW: Mark slot as filled
-            } else if (partData.category === 'ecu') {
-                updatedEngine.ecu = partData.level as ECULevel;
-                emptySlots.ecu = false;
-            } else if (partData.category === 'intake') {
-                updatedEngine.intake = partData.level as IntakeLevel;
-                emptySlots.intake = false;
-            } else if (partData.category === 'exhaust') {
-                updatedEngine.exhaust = partData.level as ExhaustLevel;
-                emptySlots.exhaust = false;
-            }
-
-            // ALL WRITES
-            transaction.update(inventoryRef, {
-                spareParts: spareParts,
-                updatedAt: serverTimestamp()
-            });
-
-            transaction.update(carRef, {
-                engine: updatedEngine,
-                emptyPartSlots: emptySlots, // NEW: Update empty slots
-                updatedAt: serverTimestamp()
-            });
-        });
-    } catch (error) {
-        console.error('Viga osa paigaldamisel:', error);
-        throw error;
-    }
+    throw new Error('Varuosade paigaldamine on välja lülitatud. Uus universaalne tuuningu süsteem tuleb varsti!');
 };
 
 export const uninstallPartFromCar = async (
@@ -225,168 +135,14 @@ export const uninstallPartFromCar = async (
     carId: string,
     partCategory: 'turbo' | 'ecu' | 'intake' | 'exhaust'
 ): Promise<void> => {
-    try {
-        await runTransaction(db, async (transaction) => {
-            const inventoryRef = doc(db, 'inventories', userId);
-            const carRef = doc(db, 'cars', carId);
-
-            const inventorySnap = await transaction.get(inventoryRef);
-            const carSnap = await transaction.get(carRef);
-
-            if (!carSnap.exists()) {
-                throw new Error('Autot ei leitud');
-            }
-
-            const carData = carSnap.data() as PlayerCar;
-
-            // NEW: Check if this part slot is already empty
-            const emptySlots = carData.emptyPartSlots || {};
-            if (emptySlots[partCategory]) {
-                throw new Error('Selles kategoorias ei ole ühtegi osa paigaldatud');
-            }
-
-            const currentPartLevel = carData.engine[partCategory];
-            let spareParts: InventoryItem[] = [];
-
-            if (inventorySnap.exists()) {
-                spareParts = inventorySnap.data().spareParts || [];
-            }
-
-            if (currentPartLevel === 'stock') {
-                // Removing stock part - add it to inventory
-                const stockPartId = `${partCategory}_stock`;
-                const stockPrice = getStockPartPrice(partCategory);
-
-                const stockItem: InventoryItem = {
-                    itemId: createTimestampedId(stockPartId),
-                    purchaseDate: new Date(),
-                    purchasePrice: stockPrice
-                };
-
-                spareParts.push(stockItem);
-            } else {
-                // Removing upgraded part - find it in inventory and uninstall + add stock part
-                const partIndex = spareParts.findIndex((p: InventoryItem) =>
-                    p.installedOn === carId &&
-                    getBaseIdFromInventoryId(p.itemId).startsWith(partCategory)
-                );
-
-                if (partIndex !== -1) {
-                    delete spareParts[partIndex].installedOn;
-                }
-
-                // Also add a stock part
-                const stockPartId = `${partCategory}_stock`;
-                const stockPrice = getStockPartPrice(partCategory);
-
-                const stockItem: InventoryItem = {
-                    itemId: createTimestampedId(stockPartId),
-                    purchaseDate: new Date(),
-                    purchasePrice: stockPrice
-                };
-
-                spareParts.push(stockItem);
-            }
-
-            // NEW: Mark this part slot as empty and reset engine to base values
-            const updatedEngine = { ...carData.engine };
-            const updatedEmptySlots = { ...emptySlots, [partCategory]: true };
-
-            // Don't set to 'stock' - instead remove the part entirely (or set to null/empty state)
-            if (partCategory === 'turbo') {
-                updatedEngine.turbo = 'stock'; // Keep as stock for now, but mark slot empty
-            } else if (partCategory === 'ecu') {
-                updatedEngine.ecu = 'stock';
-            } else if (partCategory === 'intake') {
-                updatedEngine.intake = 'stock';
-            } else if (partCategory === 'exhaust') {
-                updatedEngine.exhaust = 'stock';
-            }
-
-            // Write updates
-            if (!inventorySnap.exists()) {
-                transaction.set(inventoryRef, {
-                    userId: userId,
-                    spareParts: spareParts,
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
-                });
-            } else {
-                transaction.update(inventoryRef, {
-                    spareParts: spareParts,
-                    updatedAt: serverTimestamp()
-                });
-            }
-
-            transaction.update(carRef, {
-                engine: updatedEngine,
-                emptyPartSlots: updatedEmptySlots, // NEW: Track empty slots
-                updatedAt: serverTimestamp()
-            });
-        });
-    } catch (error) {
-        console.error('Viga osa eemaldamisel:', error);
-        throw error;
-    }
+    throw new Error('Varuosade eemaldamine on välja lülitatud. Uus universaalne tuuningu süsteem tuleb varsti!');
 };
 
 export const sellPartFromInventory = async (
     userId: string,
     inventoryItemId: string
 ): Promise<void> => {
-    try {
-        await runTransaction(db, async (transaction) => {
-            // ALL READS FIRST
-            const inventoryRef = doc(db, 'inventories', userId);
-            const statsRef = doc(db, 'playerStats', userId);
-
-            const inventorySnap = await transaction.get(inventoryRef);
-            const statsSnap = await transaction.get(statsRef);
-
-            if (!inventorySnap.exists()) {
-                throw new Error('Inventaari ei leitud');
-            }
-
-            const spareParts: InventoryItem[] = inventorySnap.data().spareParts || [];
-            const partToSell = spareParts.find((p: InventoryItem) =>
-                p.itemId === inventoryItemId
-            );
-
-            if (!partToSell) {
-                throw new Error('Osa ei leitud inventaarist');
-            }
-
-            if (partToSell.installedOn) {
-                throw new Error('Paigaldatud osa ei saa müüa');
-            }
-
-            const sellPrice = getPartSellPrice(
-                getBaseIdFromInventoryId(partToSell.itemId),
-                partToSell.purchasePrice
-            );
-
-            // PREPARE UPDATES
-            const updatedParts = spareParts.filter((p: InventoryItem) =>
-                p.itemId !== inventoryItemId
-            );
-
-            // ALL WRITES
-            transaction.update(inventoryRef, {
-                spareParts: updatedParts,
-                updatedAt: serverTimestamp()
-            });
-
-            if (statsSnap.exists()) {
-                const currentMoney = statsSnap.data().money || 0;
-                transaction.update(statsRef, {
-                    money: currentMoney + sellPrice
-                });
-            }
-        });
-    } catch (error) {
-        console.error('Viga osa müümisel:', error);
-        throw error;
-    }
+    throw new Error('Varuosade müük on välja lülitatud. Uus universaalne tuuningu süsteem tuleb varsti!');
 };
 
 export const hasPartInInventory = async (
@@ -394,50 +150,180 @@ export const hasPartInInventory = async (
     category: string,
     level: string
 ): Promise<boolean> => {
+    if (SPARE_PARTS_SYSTEM_DISABLED) {
+        return false;
+    }
+    return false;
+};
+
+// MIGRATION HELPER FUNCTIONS
+
+/**
+ * Get spare parts inventory for migration purposes
+ * Returns existing spare parts so they can be converted to money/credits
+ */
+export const getSparePartsForMigration = async (userId: string): Promise<{
+    installedParts: InventoryItem[];
+    uninstalledParts: InventoryItem[];
+    totalValue: number;
+}> => {
     try {
         const inventory = await getPlayerInventory(userId);
-        return inventory.some(item => {
-            if (item.installedOn) return false;
-            const baseId = getBaseIdFromInventoryId(item.itemId);
-            return baseId === `${category}_${level}`;
-        });
+
+        const installedParts = inventory.filter(item => item.installedOn);
+        const uninstalledParts = inventory.filter(item => !item.installedOn);
+
+        // Calculate total value (50% of purchase price for uninstalled, 75% for installed)
+        const uninstalledValue = uninstalledParts.reduce((sum, item) =>
+            sum + Math.floor(item.purchasePrice * 0.5), 0);
+        const installedValue = installedParts.reduce((sum, item) =>
+            sum + Math.floor(item.purchasePrice * 0.75), 0);
+
+        return {
+            installedParts,
+            uninstalledParts,
+            totalValue: uninstalledValue + installedValue
+        };
     } catch (error) {
-        console.error('Viga osa kontrollimisel:', error);
-        return false;
+        console.error('Error getting spare parts for migration:', error);
+        return {
+            installedParts: [],
+            uninstalledParts: [],
+            totalValue: 0
+        };
     }
 };
 
+/**
+ * Clear spare parts inventory after migration
+ * This removes all spare parts from player inventory
+ */
+export const clearSparePartsInventory = async (userId: string): Promise<void> => {
+    try {
+        await runTransaction(db, async (transaction) => {
+            const inventoryRef = doc(db, 'inventories', userId);
+            const inventorySnap = await transaction.get(inventoryRef);
+
+            if (inventorySnap.exists()) {
+                transaction.update(inventoryRef, {
+                    spareParts: [], // Clear all spare parts
+                    migratedAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+            }
+        });
+    } catch (error) {
+        console.error('Error clearing spare parts inventory:', error);
+        throw error;
+    }
+};
+
+/**
+ * Get inventory summary for migration info
+ */
 export const getInventorySummary = async (userId: string): Promise<{
     turbo: number;
     ecu: number;
     intake: number;
     exhaust: number;
     total: number;
+    estimatedValue: number;
+}> => {
+    if (SPARE_PARTS_SYSTEM_DISABLED) {
+        // For migration purposes, still calculate summary
+        try {
+            const inventory = await getPlayerInventory(userId);
+            const summary = {
+                turbo: 0,
+                ecu: 0,
+                intake: 0,
+                exhaust: 0,
+                total: 0,
+                estimatedValue: 0
+            };
+
+            inventory.forEach(item => {
+                // Extract category from itemId (e.g., "turbo_stage1_123456789")
+                const parts = item.itemId.split('_');
+                if (parts.length >= 2) {
+                    const category = parts[0];
+                    if (category in summary && category !== 'total') {
+                        summary[category as keyof typeof summary]++;
+                        summary.total++;
+                        // Estimate value (50% of purchase price)
+                        summary.estimatedValue += Math.floor(item.purchasePrice * 0.5);
+                    }
+                }
+            });
+
+            return summary;
+        } catch (error) {
+            console.error('Error getting inventory summary:', error);
+        }
+    }
+
+    return { turbo: 0, ecu: 0, intake: 0, exhaust: 0, total: 0, estimatedValue: 0 };
+};
+
+// UTILITY FUNCTIONS for migration
+
+/**
+ * Check if player has any spare parts that need migration
+ */
+export const hasSparePartsForMigration = async (userId: string): Promise<boolean> => {
+    try {
+        const inventory = await getPlayerInventory(userId);
+        return inventory.length > 0;
+    } catch (error) {
+        console.error('Error checking spare parts for migration:', error);
+        return false;
+    }
+};
+
+/**
+ * Get detailed spare parts breakdown for migration UI
+ */
+export const getSparePartsBreakdown = async (userId: string): Promise<{
+    categories: Record<string, { count: number; value: number; items: InventoryItem[] }>;
+    totalItems: number;
+    totalValue: number;
 }> => {
     try {
         const inventory = await getPlayerInventory(userId);
-        const uninstalled = inventory.filter(item => !item.installedOn);
+        const breakdown: Record<string, { count: number; value: number; items: InventoryItem[] }> = {};
+        let totalItems = 0;
+        let totalValue = 0;
 
-        const summary = {
-            turbo: 0,
-            ecu: 0,
-            intake: 0,
-            exhaust: 0,
-            total: 0
-        };
+        inventory.forEach(item => {
+            const parts = item.itemId.split('_');
+            if (parts.length >= 2) {
+                const category = parts[0];
+                const itemValue = Math.floor(item.purchasePrice * (item.installedOn ? 0.75 : 0.5));
 
-        uninstalled.forEach(item => {
-            const baseId = getBaseIdFromInventoryId(item.itemId);
-            const category = baseId.split('_')[0];
-            if (category in summary && category !== 'total') {
-                summary[category as keyof typeof summary]++;
-                summary.total++;
+                if (!breakdown[category]) {
+                    breakdown[category] = { count: 0, value: 0, items: [] };
+                }
+
+                breakdown[category].count++;
+                breakdown[category].value += itemValue;
+                breakdown[category].items.push(item);
+
+                totalItems++;
+                totalValue += itemValue;
             }
         });
 
-        return summary;
+        return {
+            categories: breakdown,
+            totalItems,
+            totalValue
+        };
     } catch (error) {
-        console.error('Viga inventaari kokkuvõtte laadimisel:', error);
-        return { turbo: 0, ecu: 0, intake: 0, exhaust: 0, total: 0 };
+        console.error('Error getting spare parts breakdown:', error);
+        return {
+            categories: {},
+            totalItems: 0,
+            totalValue: 0
+        };
     }
 };
