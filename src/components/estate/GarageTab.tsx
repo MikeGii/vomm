@@ -1,16 +1,23 @@
-// src/components/estate/GarageTab.tsx - FIXED: Use correct property names
+// src/components/estate/GarageTab.tsx - Updated with tuning integration and proper class names
 
 import React, {useCallback, useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEstate } from '../../contexts/EstateContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
-import { getUserCars, listCarForSale, unlistCarFromSale } from '../../services/VehicleService';
+import { usePlayerStats } from '../../contexts/PlayerStatsContext';
+import {
+    getUserCars,
+    listCarForSale,
+    unlistCarFromSale,
+    updateCarUniversalTuning
+} from '../../services/VehicleService';
 import { getVehicleModelById } from '../../services/VehicleDatabaseService';
 import { calculateCarStats } from '../../utils/vehicleCalculations';
-import { PlayerCar } from '../../types/vehicles';
+import {PlayerCar, UniversalTuningCategory,} from '../../types/vehicles';
 import { VehicleModel } from '../../types/vehicleDatabase';
 import { cacheManager } from '../../services/CacheManager';
+import { VehicleTuning } from './VehicleTuning';
 import '../../styles/components/estate/GarageTab.css';
 
 // Cache duration for car models
@@ -20,6 +27,7 @@ export const GarageTab: React.FC = () => {
     const { playerEstate } = useEstate();
     const { currentUser } = useAuth();
     const { showToast } = useToast();
+    const { playerStats } = usePlayerStats();
     const navigate = useNavigate();
 
     const [userCars, setUserCars] = useState<PlayerCar[]>([]);
@@ -28,8 +36,9 @@ export const GarageTab: React.FC = () => {
     const [selectedCarId, setSelectedCarId] = useState<string | null>(null);
     const [salePrice, setSalePrice] = useState<string>('');
     const [isListing, setIsListing] = useState(false);
+    const [tuningCarId, setTuningCarId] = useState<string | null>(null);
 
-    // Check if player has garage access - FIXED: Use correct property names
+    // Check if player has garage access
     const hasGarageAccess = playerEstate?.currentEstate?.hasGarage &&
         (playerEstate?.currentEstate?.garageCapacity || 0) > 0;
 
@@ -85,6 +94,23 @@ export const GarageTab: React.FC = () => {
         loadUserCars();
     }, [loadUserCars]);
 
+    // Handle tuning update
+    const handleTuningUpdate = async (carId: string, category: UniversalTuningCategory, newLevel: number) => {
+        if (!currentUser || !playerStats) return;
+
+        try {
+            const result = await updateCarUniversalTuning(currentUser.uid, carId, category, newLevel);
+            if (result.success) {
+                showToast(result.message, 'success');
+                await loadUserCars(); // Reload to get updated stats
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error: any) {
+            console.error('Tuning update failed:', error);
+            throw error; // Let the VehicleTuning component handle the error display
+        }
+    };
     const handleListCar = async (carId: string, price: number) => {
         if (!currentUser) return;
 
@@ -120,17 +146,17 @@ export const GarageTab: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="garage-tab">
-                <div className="loading">Laen garaaži andmeid...</div>
+            <div className="garage-estate-tab">
+                <div className="garage-estate-loading">Laen garaaži andmeid...</div>
             </div>
         );
     }
 
     if (!hasGarageAccess) {
         return (
-            <div className="garage-tab">
-                <div className="no-garage-access">
-                    <div className="no-garage-icon">🏠</div>
+            <div className="garage-estate-tab">
+                <div className="garage-estate-no-access">
+                    <div className="garage-estate-no-access-icon">🏠</div>
                     <h3>Garaaž pole saadaval</h3>
                     <p>
                         Sul pole veel garaažiga kinnisasja. Osta garaažiga kinnisvara,
@@ -141,53 +167,45 @@ export const GarageTab: React.FC = () => {
         );
     }
 
-    // FIXED: Use correct property name
     const garageCapacity = playerEstate?.currentEstate?.garageCapacity || 0;
     const usedSlots = userCars.length;
     const freeSlots = garageCapacity - usedSlots;
 
+    // Get tuning car and model for modal
+    const tuningCar = tuningCarId ? userCars.find(car => car.id === tuningCarId) : null;
+    const tuningModel = tuningCar ? carModels.get(tuningCar.carModelId) : null;
+
     return (
-        <div className="garage-tab">
-            <div className="garage-header">
-                <h2>Garaaž</h2>
-                <div className="garage-info">
-                    <div className="garage-capacity-display">
-                        <span>Kasutatud kohad: {usedSlots}/{garageCapacity}</span>
-                        <span className="garage-free-slots">Vabu kohti: {freeSlots}</span>
+        <div className="garage-estate-tab">
+            <div className="garage-estate-header">
+                <h2 className="garage-estate-title">Garaaž</h2>
+                <div className="garage-estate-info">
+                    <div className="garage-estate-capacity-display">
+                        <span className="garage-estate-capacity-used">Kasutatud kohad: {usedSlots}/{garageCapacity}</span>
+                        <span className="garage-estate-capacity-free">Vabu kohti: {freeSlots}</span>
                     </div>
                 </div>
             </div>
 
-            <div className="garage-content">
-                {/* Temporary message about new tuning system */}
-                <div className="garage-tuning-notice">
-                    <div className="garage-notice-box">
-                        <h4>🔧 Uus tuuningu süsteem tuleb varsti!</h4>
-                        <p>
-                            Töötame uue universaalse tuuningu süsteemi kallal.
-                            Vana varuosade süsteem on ajutiselt välja lülitatud.
-                        </p>
-                    </div>
-                </div>
-
+            <div className="garage-estate-content">
                 {/* Cars Section */}
-                <div className="garage-cars-section">
-                    <h3 className="garage-section-title">🚗 Sinu autod</h3>
+                <div className="garage-estate-cars-section">
+                    <h3 className="garage-estate-section-title">🚗 Sinu autod</h3>
 
                     {userCars.length === 0 ? (
-                        <div className="garage-no-vehicles">
-                            <div className="garage-empty-icon">🏗️</div>
+                        <div className="garage-estate-no-vehicles">
+                            <div className="garage-estate-empty-icon">🏗️</div>
                             <h3>Garaaž on tühi</h3>
-                            <p>Sul pole veel ühtegi autot. Mine autobaazerisse ja osta endale sõiduk!</p>
+                            <p>Sul pole veel ühtegi autot. Mine automüügiplatsile ja osta endale sõiduk!</p>
                             <button
-                                className="garage-btn-marketplace"
+                                className="garage-estate-btn-marketplace"
                                 onClick={() => navigate('/car-marketplace')}
                             >
-                                Mine autobaazerisse
+                                Mine automüügiplatsile
                             </button>
                         </div>
                     ) : (
-                        <div className="garage-vehicles-grid">
+                        <div className="garage-estate-vehicles-grid">
                             {userCars.map(car => {
                                 const model = carModels.get(car.carModelId);
                                 if (!model) return null;
@@ -207,35 +225,47 @@ export const GarageTab: React.FC = () => {
                                 const stats = calculateCarStats(car, legacyModel);
 
                                 return (
-                                    <div key={car.id} className="garage-vehicle-card">
-                                        <div className="garage-vehicle-header">
-                                            <h4>{model.brandName} {model.model}</h4>
-                                            <span className="garage-vehicle-engine">{car.engine.code}</span>
+                                    <div key={car.id} className="garage-estate-vehicle-card">
+                                        <div className="garage-estate-vehicle-header">
+                                            <h4 className="garage-estate-vehicle-name">{model.brandName} {model.model}</h4>
+                                            <span className="garage-estate-vehicle-engine">{car.engine.code}</span>
                                         </div>
 
-                                        <div className="garage-vehicle-stats">
-                                            <div className="garage-vehicle-stat-item">
-                                                <span className="garage-stat-label">Võimsus:</span>
-                                                <span className="garage-stat-value">{stats.power} kW</span>
+                                        <div className="garage-estate-vehicle-stats">
+                                            <div className="garage-estate-vehicle-stat-item">
+                                                <span className="garage-estate-stat-label">Võimsus:</span>
+                                                <span className="garage-estate-stat-value">{stats.power} kW</span>
                                             </div>
-                                            <div className="garage-vehicle-stat-item">
-                                                <span className="garage-stat-label">Kiirendus:</span>
-                                                <span className="garage-stat-value">{stats.acceleration.toFixed(1)}s</span>
+                                            <div className="garage-estate-vehicle-stat-item">
+                                                <span className="garage-estate-stat-label">Kiirendus:</span>
+                                                <span className="garage-estate-stat-value">{stats.acceleration.toFixed(1)}s</span>
                                             </div>
-                                            <div className="garage-vehicle-stat-item">
-                                                <span className="garage-stat-label">Läbisõit:</span>
-                                                <span className="garage-stat-value">{Math.round(car.mileage).toLocaleString()} km</span>
+                                            <div className="garage-estate-vehicle-stat-item">
+                                                <span className="garage-estate-stat-label">Haare:</span>
+                                                <span className="garage-estate-stat-value">{stats.grip.toFixed(2)}</span>
+                                            </div>
+                                            <div className="garage-estate-vehicle-stat-item">
+                                                <span className="garage-estate-stat-label">Läbisõit:</span>
+                                                <span className="garage-estate-stat-value">{Math.round(car.mileage).toLocaleString()} km</span>
                                             </div>
                                         </div>
 
-                                        <div className="garage-vehicle-actions">
+                                        <div className="garage-estate-vehicle-actions">
+                                            {/* Tuning Button */}
+                                            <button
+                                                className="garage-estate-btn-tune"
+                                                onClick={() => setTuningCarId(car.id)}
+                                            >
+                                                🔧 Konfigureeri
+                                            </button>
+
                                             {car.isForSale ? (
-                                                <div className="garage-sale-status">
-                                                    <p className="garage-sale-info">
+                                                <div className="garage-estate-sale-status">
+                                                    <p className="garage-estate-sale-info">
                                                         Müügis hinnaga: <strong>{car.salePrice?.toLocaleString()} €</strong>
                                                     </p>
                                                     <button
-                                                        className="garage-btn-unlist"
+                                                        className="garage-estate-btn-unlist"
                                                         onClick={() => handleUnlistCar(car.id)}
                                                         disabled={isListing}
                                                     >
@@ -243,7 +273,7 @@ export const GarageTab: React.FC = () => {
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <div className="garage-sell-controls">
+                                                <div className="garage-estate-sell-controls">
                                                     <input
                                                         type="number"
                                                         placeholder="Müügihind (€)"
@@ -252,10 +282,10 @@ export const GarageTab: React.FC = () => {
                                                             setSelectedCarId(car.id);
                                                             setSalePrice(e.target.value);
                                                         }}
-                                                        className="garage-price-input"
+                                                        className="garage-estate-price-input"
                                                     />
                                                     <button
-                                                        className="garage-btn-list"
+                                                        className="garage-estate-btn-list"
                                                         onClick={() => {
                                                             const price = parseInt(salePrice);
                                                             if (price > 0) {
@@ -277,15 +307,15 @@ export const GarageTab: React.FC = () => {
 
                             {/* Add vehicle card (if there's space) */}
                             {freeSlots > 0 && (
-                                <div className="garage-add-vehicle-card">
-                                    <div className="garage-add-vehicle-icon">🏗️</div>
+                                <div className="garage-estate-add-vehicle-card">
+                                    <div className="garage-estate-add-vehicle-icon">🏗️</div>
                                     <h4>Lisa auto</h4>
                                     <p>Sul on veel {freeSlots} vaba garaažikohta</p>
                                     <button
-                                        className="garage-btn-add-car"
+                                        className="garage-estate-btn-add-car"
                                         onClick={() => navigate('/car-marketplace')}
                                     >
-                                        Mine autobaazerisse
+                                        Mine automüügiplatsile
                                     </button>
                                 </div>
                             )}
@@ -293,6 +323,26 @@ export const GarageTab: React.FC = () => {
                     )}
                 </div>
             </div>
+
+            {/* Tuning Modal */}
+            {tuningCarId && tuningCar && tuningModel && playerStats && (
+                <VehicleTuning
+                    car={tuningCar}
+                    model={{
+                        id: tuningModel.id,
+                        brand: tuningModel.brandName,
+                        model: tuningModel.model,
+                        mass: tuningModel.mass,
+                        compatibleEngines: tuningModel.compatibleEngineIds,
+                        defaultEngine: tuningModel.defaultEngineId,
+                        basePrice: tuningModel.basePrice,
+                        imageUrl: tuningModel.imageUrl
+                    }}
+                    playerStats={playerStats}
+                    onTuningUpdate={handleTuningUpdate}
+                    onClose={() => setTuningCarId(null)}
+                />
+            )}
         </div>
     );
 };

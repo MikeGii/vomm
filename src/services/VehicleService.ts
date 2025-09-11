@@ -13,7 +13,14 @@ import {
     serverTimestamp
 } from 'firebase/firestore';
 import { firestore as db } from '../config/firebase';
-import {createDefaultUniversalTuning, PlayerCar, UniversalTuningState} from '../types/vehicles';
+import {
+    createDefaultUniversalTuning,
+    PlayerCar,
+    UNIVERSAL_TUNING_CONFIG,
+    UniversalTuningState,
+    UniversalTuningCategory,
+    checkTuningRequirements
+} from '../types/vehicles';
 import { VehicleModel, VehicleEngine } from '../types/vehicleDatabase';
 import { GarageSlot } from '../types/estate';
 
@@ -460,7 +467,7 @@ export async function getCarsForSale(): Promise<Array<PlayerCar & { sellerName?:
 export const updateCarUniversalTuning = async (
     userId: string,
     carId: string,
-    tuningCategory: keyof UniversalTuningState,
+    tuningCategory: UniversalTuningCategory,
     newLevel: number
 ): Promise<{ success: boolean; message: string }> => {
     try {
@@ -484,6 +491,65 @@ export const updateCarUniversalTuning = async (
 
         // Get current tuning or create default
         const currentTuning = carData.universalTuning || createDefaultUniversalTuning();
+        const currentLevel = currentTuning[tuningCategory];
+
+        // Validate that we're not upgrading without meeting requirements
+        if (newLevel > currentLevel) {
+            // Get player stats to check requirements
+            const userRef = doc(db, 'playerStats', userId);
+            const userSnap = await getDoc(userRef);
+
+            if (!userSnap.exists()) {
+                return { success: false, message: 'Mängija andmed ei leitud' };
+            }
+
+            const playerStats = userSnap.data();
+            const playerAttributes = {
+                handling: playerStats.attributes?.handling?.level || 0,
+                reactionTime: playerStats.attributes?.reactionTime?.level || 0,
+                gearShifting: playerStats.attributes?.gearShifting?.level || 0
+            };
+
+            // Check requirements
+            const reqCheck = checkTuningRequirements(
+                tuningCategory,
+                newLevel,
+                playerStats.level,
+                playerAttributes
+            );
+
+            if (!reqCheck.canUpgrade) {
+                return {
+                    success: false,
+                    message: `Nõuded ei ole täidetud: ${reqCheck.missingRequirements.join(', ')}`
+                };
+            }
+
+            // Check if player has enough money for upgrade
+            const config = UNIVERSAL_TUNING_CONFIG[tuningCategory];
+            const stage = config.stages[newLevel];
+
+            // Get the car model to calculate cost
+            const carModel = await getVehicleModelById(carData.carModelId);
+
+            if (!carModel) {
+                return { success: false, message: 'Auto mudel ei leitud' };
+            }
+
+            const upgradeCost = Math.floor(carModel.basePrice * (stage.pricePercent / 100));
+
+            if (playerStats.money < upgradeCost) {
+                return {
+                    success: false,
+                    message: `Sul pole piisavalt raha! Vajad ${upgradeCost.toLocaleString()}€, sul on ${playerStats.money.toLocaleString()}€`
+                };
+            }
+
+            // Deduct money for upgrade
+            await updateDoc(userRef, {
+                money: playerStats.money - upgradeCost
+            });
+        }
 
         // Update the specific category
         const updatedTuning = {

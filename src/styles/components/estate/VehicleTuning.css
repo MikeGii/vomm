@@ -1,0 +1,326 @@
+/* src/styles/components/estate/VehicleTuning.css - COMPACT VERSION */
+
+/* Overlay */
+.vehicle-tuning-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+/* Main Modal - COMPACT */
+.vehicle-tuning-modal {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    max-width: 800px; /* Reduced from 900px */
+    max-height: 85vh; /* Reduced from 90vh */
+    width: 100%;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Header - COMPACT */
+.vehicle-tuning-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem; /* Reduced padding */
+    border-bottom: 1px solid #333;
+    background: #0f0f0f;
+    border-radius: 12px 12px 0 0;
+}
+
+.vehicle-tuning-title {
+    color: #f0f0f0;
+    margin: 0;
+    font-size: 1.1rem; /* Smaller title */
+}
+
+.vehicle-tuning-close-button {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px; /* Smaller button */
+    height: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: background 0.2s;
+}
+
+.vehicle-tuning-close-button:hover {
+    background: #c82333;
+}
+
+/* COMPACT: Combine skills and stats into one section */
+.vehicle-tuning-info-section {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #333;
+    background: #141414;
+}
+
+.vehicle-tuning-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.vehicle-tuning-skills-group,
+.vehicle-tuning-stats-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.vehicle-tuning-group-title {
+    color: #4a90e2;
+    margin: 0 0 0.5rem 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.vehicle-tuning-driving-skill,
+.vehicle-tuning-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #0f0f0f;
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #333;
+}
+
+.vehicle-tuning-skill-icon {
+    width: 18px; /* Smaller icons */
+    height: 18px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
+.vehicle-tuning-skill-text,
+.vehicle-tuning-stat-text {
+    color: #f0f0f0;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* Tuning Categories - COMPACT */
+.vehicle-tuning-categories {
+    padding: 1rem 1.5rem; /* Reduced padding */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); /* Smaller minimum width */
+    gap: 1rem; /* Reduced gap */
+}
+
+/* Category - COMPACT */
+.vehicle-tuning-category {
+    background: #141414;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.vehicle-tuning-category-header {
+    background: #0f0f0f;
+    padding: 0.75rem; /* Reduced padding */
+    border-bottom: 1px solid #333;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.vehicle-tuning-emoji {
+    font-size: 1rem; /* Smaller emoji */
+}
+
+.vehicle-tuning-category-title {
+    color: #f0f0f0;
+    margin: 0;
+    font-size: 0.9rem; /* Smaller title */
+    font-weight: 600;
+}
+
+.vehicle-tuning-description {
+    color: #888;
+    font-size: 0.75rem; /* Smaller description */
+    margin-left: auto;
+}
+
+/* Tuning Stages - COMPACT VERTICAL LAYOUT */
+.vehicle-tuning-stages {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+}
+
+.vehicle-tuning-stage {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 0.75rem; /* Reduced padding */
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.vehicle-tuning-stage:hover {
+    border-color: #4a90e2;
+}
+
+.vehicle-tuning-stage-current {
+    border-color: #28a745;
+    background: #1a2e1a;
+}
+
+.vehicle-tuning-stage-locked {
+    border-color: #666;
+    background: #1a1a1a;
+    opacity: 0.7;
+}
+
+/* Stage Info - HORIZONTAL LAYOUT */
+.vehicle-tuning-stage-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.vehicle-tuning-stage-name {
+    color: #f0f0f0;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.vehicle-tuning-stage-benefits {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.vehicle-tuning-stage-power {
+    color: #4CAF50;
+}
+
+.vehicle-tuning-stage-grip {
+    color: #4CAF50;
+}
+
+.vehicle-tuning-grip-negative {
+    color: #ff6b6b;
+}
+
+.vehicle-tuning-stage-cost {
+    color: #ffa500;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+/* Stage Actions - COMPACT ROW */
+.vehicle-tuning-stage-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.vehicle-tuning-stage-button {
+    flex: 1;
+    padding: 0.4rem 0.75rem; /* Smaller button */
+    border: 1px solid #4a90e2;
+    background: #4a90e2;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.vehicle-tuning-stage-button:hover:not(:disabled) {
+    background: #357abd;
+    border-color: #357abd;
+}
+
+.vehicle-tuning-stage-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.vehicle-tuning-button-current {
+    background: #28a745;
+    border-color: #28a745;
+}
+
+/* Requirements - COMPACT */
+.vehicle-tuning-stage-requirements {
+    font-size: 0.7rem;
+    color: #ff6b6b;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.vehicle-tuning-missing-req {
+    background: rgba(255, 107, 107, 0.1);
+    padding: 0.15rem 0.3rem;
+    border-radius: 3px;
+    border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .vehicle-tuning-modal {
+        max-height: 90vh;
+        margin: 0.5rem;
+    }
+
+    .vehicle-tuning-info-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .vehicle-tuning-categories {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+
+    .vehicle-tuning-stage-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .vehicle-tuning-stage-benefits {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .vehicle-tuning-header {
+        padding: 0.75rem 1rem;
+    }
+
+    .vehicle-tuning-title {
+        font-size: 1rem;
+    }
+
+    .vehicle-tuning-categories {
+        padding: 0.75rem;
+    }
+
+    .vehicle-tuning-stage-actions {
+        flex-direction: column;
+    }
+}

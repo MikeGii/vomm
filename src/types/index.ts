@@ -33,6 +33,9 @@ export interface PlayerAttributes {
     medicine: AttributeData;
     printing: AttributeData;
     lasercutting: AttributeData;
+    handling: AttributeData;
+    reactionTime: AttributeData;
+    gearShifting: AttributeData;
 }
 
 export interface TrainingActivity {
