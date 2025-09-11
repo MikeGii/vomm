@@ -3,10 +3,14 @@
 /* ================================
    DRAG RACE PAGE LAYOUT
    ================================ */
+.page-container{
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+}
+
+
 .dr-page {
     min-height: 100vh;
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-    color: #f0f0f0;
     padding: 0;
 }
 

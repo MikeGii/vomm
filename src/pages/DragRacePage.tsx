@@ -4,7 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { useToast } from '../contexts/ToastContext';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
-import { DragRaceHeader } from '../components/dragrace/DragRaceHeader';
 import { FuelDisplay } from '../components/dragrace/FuelDisplay';
 import { ActiveCarDisplay } from '../components/dragrace/ActiveCarDisplay';
 import { TrainingOptions } from '../components/dragrace/TrainingOptions';
@@ -212,9 +211,6 @@ const DragRacePage: React.FC = () => {
         <div className="page-container">
             <AuthenticatedHeader />
 
-            <div className="dr-page">
-                <DragRaceHeader />
-
                 <div className="dr-content">
                 <button
                     className="back-to-dashboard"
@@ -274,7 +270,6 @@ const DragRacePage: React.FC = () => {
                 />
             )}
             </div>
-        </div>
     );
 };
 
