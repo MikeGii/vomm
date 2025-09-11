@@ -17,9 +17,10 @@ export interface VehicleModel {
     model: string; // e.g., "E36 318i", "A4 B5"
     mass: number; // in kg
     basePrice: number; // in game currency
+    basePollidPrice?: number;
+    currency: 'money' | 'pollid';
     defaultEngineId: string; // Reference to VehicleEngine
     compatibleEngineIds: string[]; // Array of compatible engine IDs
-    imageUrl?: string;
     createdAt: Timestamp;
     updatedAt: Timestamp;
     createdBy: string;
@@ -45,6 +46,8 @@ export interface CreateVehicleModelData {
     model: string;
     mass: number;
     basePrice: number;
+    basePollidPrice?: number;
+    currency: 'money' | 'pollid';
     defaultEngineId: string;
     compatibleEngineIds: string[];
 }

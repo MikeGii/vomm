@@ -446,9 +446,9 @@ export const BrandsModelsTab: React.FC = () => {
                                 <th>Mark</th>
                                 <th>Mudel</th>
                                 <th>Mass (kg)</th>
-                                <th>Hind ($)</th>
+                                <th>Hind</th>
                                 <th>Vaikimisi mootor</th>
-                                <th>Võimsus (HP)</th>
+                                <th>Võimsus (KW)</th>
                                 <th>Ühilduvaid</th>
                                 <th>Toimingud</th>
                             </tr>
@@ -459,7 +459,17 @@ export const BrandsModelsTab: React.FC = () => {
                                     <td className="brand-name">{model.brandName}</td>
                                     <td className="model-name">{model.model}</td>
                                     <td>{model.mass.toLocaleString()}</td>
-                                    <td>{model.basePrice.toLocaleString()}</td>
+                                    <td>
+                                        {model.currency === 'pollid' ? (
+                                            <span className="price-pollid">
+                                            💎{model.basePollidPrice?.toLocaleString() || 0}
+                                        </span>
+                                        ) : (
+                                            <span className="price-money">
+                                            €{model.basePrice.toLocaleString()}
+                                        </span>
+                                        )}
+                                    </td>
                                     <td className="engine-code">{model.defaultEngine?.code || 'N/A'}</td>
                                     <td>{model.defaultEngine?.basePower || 'N/A'}</td>
                                     <td>{model.compatibleEngineCount}</td>

@@ -218,7 +218,8 @@ export const createVehicleModel = async (
 
     // Remove undefined values that Firestore doesn't like
     Object.keys(modelData).forEach(key => {
-        if (modelData[key] === undefined) {
+        if (modelData[key] === undefined ||
+            (key === 'basePollidPrice' && modelData.currency !== 'pollid')) {
             delete modelData[key];
         }
     });

@@ -150,7 +150,8 @@ const UsedCarsTab: React.FC = () => {
             compatibleEngines: modelA.compatibleEngineIds,
             defaultEngine: modelA.defaultEngineId,
             basePrice: modelA.basePrice,
-            imageUrl: modelA.imageUrl
+            basePollidPrice: modelA.basePollidPrice,
+            currency: modelA.currency
         };
 
         const carModelB = {
@@ -161,7 +162,8 @@ const UsedCarsTab: React.FC = () => {
             compatibleEngines: modelB.compatibleEngineIds,
             defaultEngine: modelB.defaultEngineId,
             basePrice: modelB.basePrice,
-            imageUrl: modelB.imageUrl
+            basePollidPrice: modelB.basePollidPrice,
+            currency: modelB.currency
         };
 
         switch (sortBy) {
@@ -301,7 +303,8 @@ const UsedCarsTab: React.FC = () => {
                                 compatibleEngines: carModel.compatibleEngineIds,
                                 defaultEngine: carModel.defaultEngineId,
                                 basePrice: carModel.basePrice,
-                                imageUrl: carModel.imageUrl
+                                basePollidPrice: carModel.basePollidPrice,
+                                currency: carModel.currency
                             };
 
                             const carStats = calculateCarStats(car, legacyCarModel);

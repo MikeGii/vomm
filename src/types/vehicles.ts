@@ -201,7 +201,8 @@ export interface CarModel {
     compatibleEngines: string[];
     defaultEngine: string;
     basePrice: number;
-    imageUrl?: string;
+    basePollidPrice?: number;
+    currency: 'money' | 'pollid';
 }
 
 // Clean PlayerCar interface

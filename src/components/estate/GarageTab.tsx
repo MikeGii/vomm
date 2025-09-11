@@ -219,7 +219,8 @@ export const GarageTab: React.FC = () => {
                                     compatibleEngines: model.compatibleEngineIds,
                                     defaultEngine: model.defaultEngineId,
                                     basePrice: model.basePrice,
-                                    imageUrl: model.imageUrl
+                                    basePollidPrice: model.basePollidPrice,
+                                    currency: model.currency
                                 };
 
                                 const stats = calculateCarStats(car, legacyModel);
@@ -336,7 +337,8 @@ export const GarageTab: React.FC = () => {
                         compatibleEngines: tuningModel.compatibleEngineIds,
                         defaultEngine: tuningModel.defaultEngineId,
                         basePrice: tuningModel.basePrice,
-                        imageUrl: tuningModel.imageUrl
+                        basePollidPrice: tuningModel.basePollidPrice,
+                        currency: tuningModel.currency
                     }}
                     playerStats={playerStats}
                     onTuningUpdate={handleTuningUpdate}

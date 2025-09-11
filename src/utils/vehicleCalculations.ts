@@ -82,6 +82,20 @@ export function calculateCarStats(car: PlayerCar, model: CarModel): CarStats {
     };
 }
 
+// ============= DUAL CURRENCY TUNING HELPER =============
+
+/**
+ * Arvuta tuunimise baas hind vastavalt auto valuutale
+ * 100 pollid = 1,000,000 euros tuunimise arvutamiseks
+ */
+export function getTuningBasePrice(carModel: CarModel): number {
+    if (carModel.currency === 'pollid') {
+        const pollidPrice = carModel.basePollidPrice || 0;
+        return pollidPrice * 10000; // 100 pollid = 1,000,000 euros
+    }
+    return carModel.basePrice;
+}
+
 // ============= UNIVERSAL TUNING HELPER FUNCTIONS =============
 
 // Check if car has any universal tuning upgrades
@@ -127,15 +141,19 @@ export function calculateUpgradeCost(
 // ============= CAR VALUE FUNCTIONS =============
 
 export function suggestSalePrice(car: PlayerCar, model: CarModel): number {
-    const basePrice = model.basePrice;
+    // Kasuta uut dual currency funktsioonid
+    const tuningBasePrice = getTuningBasePrice(model);
     const mileageFactor = Math.max(0.3, 1 - (car.mileage / 200000));
     const ageFactor = Math.max(0.4, 1 - ((Date.now() - car.purchaseDate.getTime()) / (365 * 24 * 60 * 60 * 1000 * 5)));
+
+    // Kasuta auto põhihinda müügihinna arvutamiseks (mitte tuunimise hinda)
+    const basePrice = model.currency === 'pollid' ? (model.basePollidPrice || 0) : model.basePrice;
 
     // Add tuning value to sale price
     let tuningValue = 0;
     if (car.universalTuning) {
         // Add 50% of tuning cost to sale price
-        tuningValue = calculateTotalTuningCost(car.universalTuning, basePrice) * 0.5;
+        tuningValue = calculateTotalTuningCost(car.universalTuning, tuningBasePrice) * 0.5;
     }
 
     return Math.floor((basePrice * mileageFactor * ageFactor) + tuningValue);

@@ -21,6 +21,7 @@ import {
     UniversalTuningCategory,
     checkTuningRequirements
 } from '../types/vehicles';
+import { getTuningBasePrice } from '../utils/vehicleCalculations';
 import { VehicleModel, VehicleEngine } from '../types/vehicleDatabase';
 import { GarageSlot } from '../types/estate';
 
@@ -101,8 +102,17 @@ export async function purchaseNewCar(
             const userData = userDoc.data();
 
             // Check money
-            if (userData.money < carModel.basePrice) {
-                throw new Error('Pole piisavalt raha');
+            const carPrice = carModel.currency === 'pollid'
+                ? (carModel.basePollidPrice || 0)
+                : carModel.basePrice;
+
+            const playerCurrency = carModel.currency === 'pollid'
+                ? (userData.pollid || 0)
+                : userData.money;
+
+            if (playerCurrency < carPrice) {
+                const currencyName = carModel.currency === 'pollid' ? 'pollidid' : 'raha';
+                throw new Error(`Pole piisavalt ${currencyName}`);
             }
 
             // Get estate data for garage capacity
@@ -162,8 +172,9 @@ export async function purchaseNewCar(
             });
 
             // Update user money
+            const updateField = carModel.currency === 'pollid' ? 'pollid' : 'money';
             transaction.update(userRef, {
-                money: userData.money - carModel.basePrice
+                [updateField]: playerCurrency - carPrice
             });
 
             return {
@@ -536,7 +547,20 @@ export const updateCarUniversalTuning = async (
                 return { success: false, message: 'Auto mudel ei leitud' };
             }
 
-            const upgradeCost = Math.floor(carModel.basePrice * (stage.pricePercent / 100));
+            const carModelForTuning = {
+                id: carModel.id,
+                brand: carModel.brandName,
+                model: carModel.model,
+                mass: carModel.mass,
+                compatibleEngines: carModel.compatibleEngineIds,
+                defaultEngine: carModel.defaultEngineId,
+                basePrice: carModel.basePrice,
+                basePollidPrice: carModel.basePollidPrice,
+                currency: carModel.currency
+            };
+
+            const tuningBasePrice = getTuningBasePrice(carModelForTuning);
+            const upgradeCost = Math.floor(tuningBasePrice * (stage.pricePercent / 100));
 
             if (playerStats.money < upgradeCost) {
                 return {

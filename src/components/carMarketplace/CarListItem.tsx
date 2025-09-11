@@ -66,12 +66,14 @@ const CarListItem: React.FC<CarListItemProps> = ({
         compatibleEngines: model.compatibleEngineIds,
         defaultEngine: model.defaultEngineId,
         basePrice: model.basePrice,
-        imageUrl: model.imageUrl
+        basePollidPrice: model.basePollidPrice,
+        currency: model.currency
     };
 
-    // Arvuta statistika
     const stats = calculateCarStats(tempCar, tempModel);
-    const canAfford = playerMoney >= model.basePrice;
+    const canAfford = model.currency === 'pollid'
+        ? playerMoney >= (model.basePollidPrice || 0) * 10000
+        : playerMoney >= model.basePrice;
 
     return (
         <tr className="car-list-item">
@@ -83,7 +85,10 @@ const CarListItem: React.FC<CarListItemProps> = ({
             <td className="car-acceleration">{stats.acceleration}s</td>
             <td className="car-price">
                 <span className={!canAfford ? 'price-unaffordable' : ''}>
-                    €{model.basePrice.toLocaleString()}
+                    {model.currency === 'pollid' ?
+                        `💎${model.basePollidPrice?.toLocaleString() || 0}` :
+                        `€${model.basePrice.toLocaleString()}`
+                    }
                 </span>
             </td>
             <td className="car-action">
