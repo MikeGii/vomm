@@ -1,5 +1,5 @@
 // src/components/dragrace/CarSelectionModal.tsx (Updated)
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PlayerCar } from '../../types/vehicles';
 import { VehicleModel } from '../../types/vehicleDatabase';
 import { ActiveCarService } from '../../services/ActiveCarService';
@@ -22,13 +22,8 @@ export const CarSelectionModal: React.FC<CarSelectionModalProps> = ({
     const [isLoading, setIsLoading] = useState(true);
     const [selectedCarId, setSelectedCarId] = useState<string>('');
 
-    useEffect(() => {
-        if (isOpen) {
-            loadPlayerCars();
-        }
-    }, [isOpen, currentUserId]);
-
-    const loadPlayerCars = async () => {
+    // FIXED: Remove circular dependency in useCallback
+    const loadPlayerCars = useCallback(async () => {
         try {
             setIsLoading(true);
             const playerCars = await ActiveCarService.getPlayerCars(currentUserId);
@@ -38,7 +33,13 @@ export const CarSelectionModal: React.FC<CarSelectionModalProps> = ({
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [currentUserId]);
+
+    useEffect(() => {
+        if (isOpen) {
+            loadPlayerCars();
+        }
+    }, [isOpen, loadPlayerCars])
 
     const handleSelectCar = () => {
         if (selectedCarId) {

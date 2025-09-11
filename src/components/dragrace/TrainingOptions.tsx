@@ -20,16 +20,21 @@ export const TrainingOptions: React.FC<TrainingOptionsProps> = ({
     const canTrain = fuelSystem && fuelSystem.currentFuel > 0 && !isTraining;
 
     const getAttributeLevel = (attributeName: string): number => {
+        // Add null checks for attributes
+        if (!playerStats.attributes) return 0;
         return (playerStats.attributes as any)?.[attributeName]?.level || 0;
     };
 
     const getAttributeExperience = (attributeName: string): { current: number; needed: number } => {
+        // Add null checks for attributes
+        if (!playerStats.attributes) return { current: 0, needed: 100 };
+
         const attr = (playerStats.attributes as any)?.[attributeName];
         if (!attr) return { current: 0, needed: 100 };
 
         return {
-            current: attr.experience,
-            needed: attr.experienceForNextLevel
+            current: attr.experience || 0,
+            needed: attr.experienceForNextLevel || 100
         };
     };
 

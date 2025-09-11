@@ -162,7 +162,7 @@ function App() {
                                     }
                                 />
 
-                                <Route path="/kiirendusrada" element={<DragRacePage />} />
+                                <Route path="/drag-race" element={<DragRacePage />} />
 
                                 <Route path="*" element={<Navigate to="/" />} />
                             </Routes>

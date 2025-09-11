@@ -1,4 +1,4 @@
-// src/pages/DragRacePage.tsx (Fixed version)
+// src/pages/DragRacePage.tsx - COMPLETE FIXED VERSION
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
@@ -11,13 +11,16 @@ import { TrainingOptions } from '../components/dragrace/TrainingOptions';
 import { CarSelectionModal } from '../components/dragrace/CarSelectionModal';
 import { FuelPurchaseModal } from '../components/dragrace/FuelPurchaseModal';
 import { DragRaceService } from '../services/DragRaceService';
+import { DragRaceInstructions } from '../components/dragrace/DragRaceInstructions';
 import { ActiveCarService } from '../services/ActiveCarService';
 import { FuelSystem, TrainingType, FuelPurchaseOption } from '../types/dragRace';
 import { PlayerCar } from '../types/vehicles';
+import { useNavigate } from 'react-router-dom';
 import { VehicleModel } from '../types/vehicleDatabase';
 import '../styles/pages/DragRace.css';
 
 const DragRacePage: React.FC = () => {
+    const navigate = useNavigate();
     const { currentUser } = useAuth();
     const { playerStats, loading: statsLoading } = usePlayerStats();
     const { showToast } = useToast();
@@ -25,30 +28,20 @@ const DragRacePage: React.FC = () => {
     // State management
     const [fuelSystem, setFuelSystem] = useState<FuelSystem | null>(null);
     const [activeCar, setActiveCar] = useState<{ car: PlayerCar; model: VehicleModel } | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
     const [isTraining, setIsTraining] = useState(false);
-
-    // Local state for immediate UI updates
-    const [localPlayerStats, setLocalPlayerStats] = useState(playerStats);
 
     // Modal states
     const [showCarSelection, setShowCarSelection] = useState(false);
     const [showFuelPurchase, setShowFuelPurchase] = useState(false);
     const [fuelPurchaseOptions, setFuelPurchaseOptions] = useState<FuelPurchaseOption[]>([]);
 
-    // Update local stats when playerStats changes
-    useEffect(() => {
-        if (playerStats) {
-            setLocalPlayerStats(playerStats);
-        }
-    }, [playerStats]);
-
-    // FIXED: Use useCallback to fix ESLint warning
+    // Load drag race data
     const loadDragRaceData = useCallback(async () => {
         if (!currentUser || !playerStats) return;
 
         try {
-            setIsLoading(true);
+
+            await DragRaceService.initializeDragRaceAttributes(currentUser.uid);
 
             // Load fuel system
             const fuel = await DragRaceService.checkAndResetFuel(currentUser.uid);
@@ -67,22 +60,21 @@ const DragRacePage: React.FC = () => {
             console.error('Error loading drag race data:', error);
             showToast('Viga andmete laadimisel', 'error');
         } finally {
-            setIsLoading(false);
         }
     }, [currentUser, playerStats, showToast]);
 
-    // Load initial data
+    // Load initial data when player stats are available
     useEffect(() => {
         if (!currentUser || !playerStats || statsLoading) return;
-
         loadDragRaceData();
     }, [currentUser, playerStats, statsLoading, loadDragRaceData]);
 
+    // FIXED: Clean training handler - no local state management
     const handleTraining = async (trainingType: TrainingType) => {
-        if (!currentUser || !localPlayerStats || !fuelSystem) return;
+        if (!currentUser || !playerStats || !fuelSystem) return;
 
         // Check if has active car
-        if (!localPlayerStats.activeCarId) {
+        if (!playerStats.activeCarId) {
             showToast('Määra esmalt aktiivne auto!', 'error');
             setShowCarSelection(true);
             return;
@@ -98,41 +90,20 @@ const DragRacePage: React.FC = () => {
         try {
             setIsTraining(true);
 
+            // Call service - PlayerStatsContext will automatically update via onSnapshot
             const result = await DragRaceService.performTraining(
                 currentUser.uid,
                 trainingType,
-                localPlayerStats
+                playerStats
             );
 
-            // Update local fuel state immediately
+            // Only update fuel system locally for immediate UI feedback
             setFuelSystem(prev => prev ? {
                 ...prev,
                 currentFuel: result.remainingFuel
             } : null);
 
-            // Update local player stats immediately for UI responsiveness
-            setLocalPlayerStats(prev => {
-                if (!prev?.attributes) return prev;
-
-                const updatedAttributes = { ...prev.attributes };
-                const currentAttr = updatedAttributes[trainingType];
-
-                if (currentAttr) {
-                    updatedAttributes[trainingType] = {
-                        ...currentAttr,
-                        level: result.currentLevel,
-                        experience: result.currentExperience,
-                        experienceForNextLevel: result.experienceForNextLevel
-                    };
-                }
-
-                return {
-                    ...prev,
-                    attributes: updatedAttributes
-                };
-            });
-
-            // Show appropriate success message
+            // Show success message
             if (result.levelUp) {
                 if (result.levelsGained && result.levelsGained > 1) {
                     showToast(`🎉 ${result.levelsGained} taset tõusis! Uus tase: ${result.newLevel} (+${result.experienceGained} XP)`, 'success');
@@ -151,16 +122,15 @@ const DragRacePage: React.FC = () => {
         }
     };
 
+    // FIXED: Clean car selection handler
     const handleCarSelection = async (carId: string) => {
         if (!currentUser) return;
 
         try {
+            // Set active car - PlayerStatsContext will update automatically
             await ActiveCarService.setActiveCar(currentUser.uid, carId);
 
-            // Update local state immediately
-            setLocalPlayerStats(prev => prev ? { ...prev, activeCarId: carId } : prev);
-
-            // Reload active car data
+            // Reload active car data for immediate UI update
             const activeCarData = await ActiveCarService.getActiveCar(currentUser.uid, carId);
             setActiveCar(activeCarData);
 
@@ -173,11 +143,12 @@ const DragRacePage: React.FC = () => {
         }
     };
 
+    // FIXED: Clean fuel purchase setup
     const handleFuelPurchase = async () => {
-        if (!currentUser || !localPlayerStats) return;
+        if (!currentUser || !playerStats) return;
 
         try {
-            const options = await DragRaceService.getFuelPurchaseOptions(currentUser.uid, localPlayerStats);
+            const options = await DragRaceService.getFuelPurchaseOptions(currentUser.uid, playerStats);
             setFuelPurchaseOptions(options);
             setShowFuelPurchase(true);
         } catch (error: any) {
@@ -186,29 +157,21 @@ const DragRacePage: React.FC = () => {
         }
     };
 
+    // FIXED: Clean fuel purchase handler
     const handleFuelPurchaseConfirm = async (purchaseType: 'money' | 'pollid', quantity: number) => {
-        if (!currentUser || !localPlayerStats) return;
+        if (!currentUser || !playerStats) return;
 
         try {
+            // Purchase fuel - PlayerStatsContext will update currency automatically
             const result = await DragRaceService.purchaseFuel(
                 currentUser.uid,
                 purchaseType,
                 quantity,
-                localPlayerStats
+                playerStats
             );
 
             if (result.success) {
-                // Update local state immediately for instant UI feedback
-                setLocalPlayerStats(prev => {
-                    if (!prev) return prev;
-                    const currencyField = purchaseType === 'money' ? 'money' : 'pollid';
-                    return {
-                        ...prev,
-                        [currencyField]: (prev[currencyField as keyof typeof prev] as number) - result.totalCost
-                    };
-                });
-
-                // Update fuel state immediately
+                // Update fuel state immediately for UI feedback
                 setFuelSystem(prev => prev ? {
                     ...prev,
                     currentFuel: result.newFuelCount,
@@ -220,14 +183,12 @@ const DragRacePage: React.FC = () => {
                 const currencyText = purchaseType === 'money' ? '€' : 'pollid';
                 let message = `Kütus ostetud! ${result.actualQuantity} katset (-${result.totalCost} ${currencyText})`;
 
-                // Show warning if couldn't buy full quantity
                 if (result.actualQuantity < quantity) {
                     message += ` (said osta ainult ${result.actualQuantity}/${quantity})`;
                 }
 
                 showToast(message, 'success');
                 setShowFuelPurchase(false);
-
             }
         } catch (error: any) {
             console.error('Fuel purchase error:', error);
@@ -235,18 +196,8 @@ const DragRacePage: React.FC = () => {
         }
     };
 
-    if (statsLoading || isLoading) {
-        return (
-            <div className="page-container">
-                <AuthenticatedHeader />
-                <div className="dr-loading-container">
-                    <div className="dr-loading-spinner">Laen...</div>
-                </div>
-            </div>
-        );
-    }
-
-    if (!localPlayerStats) {
+    // Error state - check playerStats from context
+    if (!playerStats) {
         return (
             <div className="page-container">
                 <AuthenticatedHeader />
@@ -265,6 +216,17 @@ const DragRacePage: React.FC = () => {
                 <DragRaceHeader />
 
                 <div className="dr-content">
+                <button
+                    className="back-to-dashboard"
+                    onClick={() => navigate('/dashboard')}
+                >
+                    ← Tagasi töölauale
+                </button>
+
+                <div className="dr-content">
+                    <DragRaceInstructions />
+
+                <div className="dr-content">
                     <div className="dr-main">
                         {/* Fuel and Active Car Info */}
                         <div className="dr-info-section">
@@ -279,9 +241,9 @@ const DragRacePage: React.FC = () => {
                             />
                         </div>
 
-                        {/* Training Options - Use local stats for immediate updates */}
+                        {/* Training Options - Use context playerStats directly */}
                         <TrainingOptions
-                            playerStats={localPlayerStats}
+                            playerStats={playerStats}
                             fuelSystem={fuelSystem}
                             isTraining={isTraining}
                             onTraining={handleTraining}
@@ -289,8 +251,9 @@ const DragRacePage: React.FC = () => {
                     </div>
                 </div>
             </div>
+                </div>
 
-            {/* Modals */}
+            {/* Car Selection Modal */}
             {showCarSelection && (
                 <CarSelectionModal
                     isOpen={showCarSelection}
@@ -300,15 +263,17 @@ const DragRacePage: React.FC = () => {
                 />
             )}
 
+            {/* Fuel Purchase Modal */}
             {showFuelPurchase && (
                 <FuelPurchaseModal
                     isOpen={showFuelPurchase}
                     onClose={() => setShowFuelPurchase(false)}
                     onPurchase={handleFuelPurchaseConfirm}
                     purchaseOptions={fuelPurchaseOptions}
-                    playerStats={localPlayerStats}
+                    playerStats={playerStats}
                 />
             )}
+            </div>
         </div>
     );
 };

@@ -36,7 +36,6 @@ export const FuelPurchaseModal: React.FC<FuelPurchaseModalProps> = ({
 
     // Check remaining money purchases availability
     const moneyPurchasesLeft = moneyOption?.remaining || 0;
-    const maxMoneyQuantity = Math.min(selectedQuantity, moneyPurchasesLeft);
 
     return (
         <div className="dr-modal-overlay" onClick={onClose}>

@@ -18,8 +18,49 @@ import {
     FuelPurchaseOption
 } from '../types/dragRace';
 import { PlayerStats, AttributeData } from '../types';
+import { initializeAttributes } from './TrainingService';
 
 export class DragRaceService {
+
+    // Initialize drag race attributes if they don't exist
+    static async initializeDragRaceAttributes(userId: string): Promise<void> {
+        const statsRef = doc(firestore, 'playerStats', userId);
+        const statsDoc = await getDoc(statsRef);
+
+        if (!statsDoc.exists()) {
+            throw new Error('Player stats not found');
+        }
+
+        const playerStats = statsDoc.data() as PlayerStats;
+
+        // Check if drag race attributes exist
+        const dragRaceAttributes = ['handling', 'reactionTime', 'gearShifting'];
+        const updates: any = {};
+        let needsUpdate = false;
+
+        // Initialize base attributes if they don't exist
+        if (!playerStats.attributes) {
+            updates.attributes = initializeAttributes();
+            needsUpdate = true;
+        } else {
+            // Initialize specific drag race attributes if missing
+            dragRaceAttributes.forEach(attr => {
+                // Add null check for attributes
+                if (playerStats.attributes && !playerStats.attributes[attr as keyof typeof playerStats.attributes]) {
+                    updates[`attributes.${attr}`] = {
+                        level: 1,
+                        experience: 0,
+                        experienceForNextLevel: 100
+                    };
+                    needsUpdate = true;
+                }
+            });
+        }
+
+        if (needsUpdate) {
+            await updateDoc(statsRef, updates);
+        }
+    }
 
     // Get or create fuel system for user
     static async getFuelSystem(userId: string): Promise<FuelSystem> {
@@ -121,6 +162,19 @@ export class DragRaceService {
         trainingType: TrainingType,
         playerStats: PlayerStats
     ): Promise<TrainingResult> {
+        // Initialize drag race attributes if needed
+        await this.initializeDragRaceAttributes(userId);
+
+        // Refetch player stats to get initialized attributes
+        const statsRef = doc(firestore, 'playerStats', userId);
+        const updatedStatsDoc = await getDoc(statsRef);
+
+        if (!updatedStatsDoc.exists()) {
+            throw new Error('Player stats not found');
+        }
+
+        const updatedPlayerStats = updatedStatsDoc.data() as PlayerStats;
+
         // Check fuel availability
         const fuelSystem = await this.checkAndResetFuel(userId);
 
@@ -129,22 +183,27 @@ export class DragRaceService {
         }
 
         // Check if player has active car
-        if (!playerStats.activeCarId) {
+        if (!updatedPlayerStats.activeCarId) {
             throw new Error('Määra esmalt aktiivne auto!');
         }
 
-        // Calculate XP gain
-        const xpGained = this.calculateTrainingXP(trainingType, playerStats);
+        // Calculate XP gain using updated stats
+        const xpGained = this.calculateTrainingXP(trainingType, updatedPlayerStats);
 
-        // Get current attribute data
+        // Get current attribute data - now guaranteed to exist
         const trainingOption = TRAINING_OPTIONS.find(option => option.id === trainingType);
-        if (!trainingOption || !playerStats.attributes) {
+        if (!trainingOption || !updatedPlayerStats.attributes) {
             throw new Error('Vigane treeningu tüüp');
         }
 
-        const currentAttributeData = playerStats.attributes[trainingType] as AttributeData;
+        const currentAttributeData = updatedPlayerStats.attributes[trainingType] as AttributeData;
 
-        // FIXED: Calculate multiple level-ups properly
+        // Ensure the attribute exists
+        if (!currentAttributeData) {
+            throw new Error(`Drag race atribuut ${trainingType} ei ole inicializeeritud`);
+        }
+
+        // Calculate multiple level-ups properly
         let newLevel = currentAttributeData.level;
         let remainingXP = currentAttributeData.experience + xpGained;
         let expForNextLevel = currentAttributeData.experienceForNextLevel;
@@ -187,7 +246,7 @@ export class DragRaceService {
         });
 
         // Update car mileage
-        const carRef = doc(firestore, 'cars', playerStats.activeCarId);
+        const carRef = doc(firestore, 'cars', updatedPlayerStats.activeCarId);
         batch.update(carRef, {
             mileage: increment(FUEL_CONSTANTS.MILEAGE_PER_ATTEMPT)
         });
@@ -274,14 +333,14 @@ export class DragRaceService {
 
         const batch = writeBatch(firestore);
 
-        // FIXED: Update the correct collection - use playerStats consistently
+        // Update the correct collection - use playerStats consistently
         const userRef = doc(firestore, 'playerStats', userId);
         const currencyField = purchaseType === 'money' ? 'money' : 'pollid';
 
         // Use increment to ensure atomic updates
         batch.update(userRef, {
             [currencyField]: increment(-totalCost),
-            lastModified: Timestamp.now() // Add timestamp for better tracking
+            lastModified: Timestamp.now()
         });
 
         // Update fuel and paid attempts

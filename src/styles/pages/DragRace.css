@@ -389,7 +389,7 @@
 
 .dr-training-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
 }
 
@@ -401,6 +401,9 @@
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
 }
 
 .dr-training-option::before {
@@ -1037,18 +1040,23 @@
 /* ================================
    RESPONSIVE DESIGN
    ================================ */
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
     .dr-content {
         padding: 1.5rem;
     }
 
     .dr-training-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
     }
 
     .dr-info-section {
         grid-template-columns: 1fr;
         gap: 1.5rem;
+    }
+
+    .dr-training-option {
+        min-height: 350px;
     }
 }
 
@@ -1103,6 +1111,11 @@
     .dr-modal-footer {
         padding: 1rem;
     }
+
+    .dr-training-option {
+        min-height: auto;
+        padding: 1.25rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1138,6 +1151,10 @@
 
     .dr-modal-button {
         width: 100%;
+    }
+
+    .dr-training-option {
+        padding: 1rem;
     }
 }
 
