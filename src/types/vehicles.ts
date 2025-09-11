@@ -48,7 +48,7 @@ export const UNIVERSAL_TUNING_CONFIG: Record<UniversalTuningCategory, {
     requirements: TuningRequirements[]; // NEW: Add requirements for each stage
 }> = {
     injectors: {
-        name: 'Sissepritsed',
+        name: 'Sissepritse',
         emoji: '⛽',
         description: 'Kütuse sissepritse süsteem',
         stages: [
@@ -133,7 +133,7 @@ export const UNIVERSAL_TUNING_CONFIG: Record<UniversalTuningCategory, {
         ]
     },
     fuel_pump: {
-        name: 'Kütusepimp',
+        name: 'Kütusepump',
         emoji: '⛽',
         description: 'Kütuse tarnesüsteem',
         stages: [
@@ -150,7 +150,7 @@ export const UNIVERSAL_TUNING_CONFIG: Record<UniversalTuningCategory, {
         ]
     },
     differential: {
-        name: 'Diferentsiaal',
+        name: 'Differentsiaal',
         emoji: '⚙️',
         description: 'Jõu jaotuse süsteem',
         stages: [

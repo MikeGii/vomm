@@ -324,3 +324,25 @@
         flex-direction: column;
     }
 }
+
+.vehicle-tuning-category-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    filter: brightness(0) invert(1); /* Make icons white */
+}
+
+/* Update the existing category header to accommodate the icon */
+.vehicle-tuning-category-header {
+    background: #0f0f0f;
+    padding: 0.75rem;
+    border-bottom: 1px solid #333;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* Increased gap to accommodate icon */
+}
+
+/* Remove or update the emoji style since we're using icons now */
+.vehicle-tuning-emoji {
+    display: none; /* Hide emoji since we have proper icons */
+}

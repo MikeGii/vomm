@@ -11,6 +11,7 @@ import {
 } from '../../types/vehicles';
 import { calculateCarStats } from '../../utils/vehicleCalculations';
 import '../../styles/components/estate/VehicleTuning.css';
+import { useToast } from '../../contexts/ToastContext';
 
 interface VehicleTuningProps {
     car: PlayerCar;
@@ -20,21 +21,23 @@ interface VehicleTuningProps {
     onClose: () => void;
 }
 
-export const VehicleTuning: React.FC<VehicleTuningProps> = ({
-                                                                car,
-                                                                model,
-                                                                playerStats,
-                                                                onTuningUpdate,
-                                                                onClose
-                                                            }) => {
+const VehicleTuning: React.FC<VehicleTuningProps> = ({
+                                                         car,
+                                                         model,
+                                                         playerStats,
+                                                         onTuningUpdate,
+                                                         onClose
+                                                     }) => {
+    const { showToast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
     const [updatingCategory, setUpdatingCategory] = useState<string | null>(null);
+    const [localTuning, setLocalTuning] = useState(car.universalTuning || createDefaultUniversalTuning());
 
-    // Get current tuning or create default
-    const currentTuning = car.universalTuning || createDefaultUniversalTuning();
+    // Use local tuning state for immediate updates
+    const currentTuning = localTuning;
 
-    // Calculate current stats
-    const currentStats = calculateCarStats(car, model);
+    // Recalculate stats based on local tuning state
+    const currentStats = calculateCarStats({ ...car, universalTuning: localTuning }, model);
 
     // Get player driving attributes
     const playerAttributes = {
@@ -54,7 +57,7 @@ export const VehicleTuning: React.FC<VehicleTuningProps> = ({
             );
 
             if (!reqCheck.canUpgrade) {
-                alert(`Ei saa uuendada: ${reqCheck.missingRequirements.join(', ')}`);
+                showToast(`Nõuded ei ole täidetud: ${reqCheck.missingRequirements.join(', ')}`, 'error');
                 return;
             }
         }
@@ -65,7 +68,7 @@ export const VehicleTuning: React.FC<VehicleTuningProps> = ({
         const upgradeCost = Math.floor(model.basePrice * (stage.pricePercent / 100));
 
         if (newLevel > currentTuning[category] && playerStats.money < upgradeCost) {
-            alert(`Sul pole piisavalt raha! Vajad ${upgradeCost.toLocaleString()}€, sul on ${playerStats.money.toLocaleString()}€`);
+            showToast(`Sul pole piisavalt raha! Vajad ${upgradeCost.toLocaleString()}€, sul on ${playerStats.money.toLocaleString()}€`, 'error');
             return;
         }
 
@@ -73,13 +76,20 @@ export const VehicleTuning: React.FC<VehicleTuningProps> = ({
         setUpdatingCategory(category);
         try {
             await onTuningUpdate(car.id, category, newLevel);
+            showToast('Varuosad edukalt uuendatud!', 'success');
         } catch (error) {
             console.error('Tuning update failed:', error);
-            alert('Tuuningu uuendamine ebaõnnestus');
+            showToast('Varuosade uuendamine ebaõnnestus', 'error');
         } finally {
             setIsUpdating(false);
             setUpdatingCategory(null);
         }
+    };
+
+    const calculatePreviewStats = (category: UniversalTuningCategory, newLevel: number) => {
+        const previewTuning = { ...currentTuning, [category]: newLevel };
+        const previewCar = { ...car, universalTuning: previewTuning };
+        return calculateCarStats(previewCar, model);
     };
 
     const renderTuningCategory = (category: UniversalTuningCategory) => {
@@ -87,10 +97,29 @@ export const VehicleTuning: React.FC<VehicleTuningProps> = ({
         const currentLevel = currentTuning[category];
         const isUpdatingThis = updatingCategory === category;
 
+        // Map category to icon filename
+        const getIconPath = (category: UniversalTuningCategory): string => {
+            const iconMap: Record<UniversalTuningCategory, string> = {
+                'injectors': 'injector.png',
+                'intake': 'intake.png',
+                'turbo': 'turbo.png',
+                'exhaust': 'exhaust.png',
+                'ecu': 'ecu.png',
+                'fuel_pump': 'injector.png', // Reuse injector icon for fuel pump
+                'differential': 'differential.png',
+                'tires': 'tire.png'
+            };
+            return `images/${iconMap[category]}`;
+        };
+
         return (
             <div key={category} className="vehicle-tuning-category">
                 <div className="vehicle-tuning-category-header">
-                    <span className="vehicle-tuning-emoji">{config.emoji}</span>
+                    <img
+                        src={getIconPath(category)}
+                        alt={config.name}
+                        className="vehicle-tuning-category-icon"
+                    />
                     <h4 className="vehicle-tuning-category-title">{config.name}</h4>
                     <span className="vehicle-tuning-description">{config.description}</span>
                 </div>
@@ -104,9 +133,11 @@ export const VehicleTuning: React.FC<VehicleTuningProps> = ({
                         const reqCheck = checkTuningRequirements(category, index, playerStats.level, playerAttributes);
                         const upgradeCost = Math.floor(model.basePrice * (stage.pricePercent / 100));
 
+                        // NEW: Calculate preview stats
+                        const previewStats = index !== currentLevel ? calculatePreviewStats(category, index) : null;
+
                         return (
                             <div key={index} className={`vehicle-tuning-stage ${isCurrentLevel ? 'vehicle-tuning-stage-current' : ''} ${!canUpgrade && index > currentLevel ? 'vehicle-tuning-stage-locked' : ''}`}>
-                                {/* COMPACT: Horizontal stage info */}
                                 <div className="vehicle-tuning-stage-info">
                                     <div className="vehicle-tuning-stage-name">
                                         {index === 0 ? 'Stock' : `Stage ${index}`}
@@ -117,8 +148,8 @@ export const VehicleTuning: React.FC<VehicleTuningProps> = ({
                                         )}
                                         {stage.gripModifier !== 0 && (
                                             <span className={`vehicle-tuning-stage-grip ${stage.gripModifier > 0 ? 'vehicle-tuning-grip-positive' : 'vehicle-tuning-grip-negative'}`}>
-                                                {stage.gripModifier > 0 ? '+' : ''}{(stage.gripModifier * 100).toFixed(0)}% haare
-                                            </span>
+                                            {stage.gripModifier > 0 ? '+' : ''}{(stage.gripModifier * 100).toFixed(0)}% haarduvus
+                                        </span>
                                         )}
                                     </div>
                                     {index > 0 && (
@@ -128,7 +159,16 @@ export const VehicleTuning: React.FC<VehicleTuningProps> = ({
                                     )}
                                 </div>
 
-                                {/* COMPACT: Actions and requirements in one row */}
+                                {/* NEW: Preview stats when hovering upgrade button */}
+                                {previewStats && canUpgrade && index > currentLevel && (
+                                    <div className="vehicle-tuning-stage-preview">
+                                        <span className="vehicle-tuning-preview-label">Eelvaade:</span>
+                                        <span className="vehicle-tuning-preview-power">{previewStats.power} kW</span>
+                                        <span className="vehicle-tuning-preview-accel">{previewStats.acceleration.toFixed(1)}s</span>
+                                        <span className="vehicle-tuning-preview-grip">{previewStats.grip.toFixed(2)}</span>
+                                    </div>
+                                )}
+
                                 <div className="vehicle-tuning-stage-actions">
                                     {!canUpgrade && index > currentLevel ? (
                                         <div className="vehicle-tuning-stage-requirements">
@@ -192,7 +232,7 @@ export const VehicleTuning: React.FC<VehicleTuningProps> = ({
                                 <span className="vehicle-tuning-stat-text">Kiirendus: {currentStats.acceleration.toFixed(1)}s</span>
                             </div>
                             <div className="vehicle-tuning-stat-item">
-                                <span className="vehicle-tuning-stat-text">Haare: {currentStats.grip.toFixed(2)}</span>
+                                <span className="vehicle-tuning-stat-text">Haarduvus: {currentStats.grip.toFixed(2)}</span>
                             </div>
                             <div className="vehicle-tuning-stat-item">
                                 <span className="vehicle-tuning-stat-text">Läbisõit: {Math.round(car.mileage).toLocaleString()} km</span>
@@ -209,3 +249,6 @@ export const VehicleTuning: React.FC<VehicleTuningProps> = ({
         </div>
     );
 };
+
+export { VehicleTuning };
+

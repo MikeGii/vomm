@@ -241,7 +241,7 @@ export const GarageTab: React.FC = () => {
                                                 <span className="garage-estate-stat-value">{stats.acceleration.toFixed(1)}s</span>
                                             </div>
                                             <div className="garage-estate-vehicle-stat-item">
-                                                <span className="garage-estate-stat-label">Haare:</span>
+                                                <span className="garage-estate-stat-label">Haarduvus:</span>
                                                 <span className="garage-estate-stat-value">{stats.grip.toFixed(2)}</span>
                                             </div>
                                             <div className="garage-estate-vehicle-stat-item">
