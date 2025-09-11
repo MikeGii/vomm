@@ -94,9 +94,12 @@ export const processEventChoice = async (
         // Apply consequences
         const updates: any = {};
 
+        // FIXED: Health calculation without arbitrary cap
         if (choice.consequences.health && stats.health) {
-            updates['health.current'] = Math.max(0, Math.min(100,
-                stats.health.current + choice.consequences.health));
+            const newHealthCurrent = stats.health.current + choice.consequences.health;
+            const maxHealth = stats.health.max || 100; // Use player's actual max health
+
+            updates['health.current'] = Math.max(0, Math.min(maxHealth, newHealthCurrent));
         }
 
         if (choice.consequences.money) {
@@ -106,6 +109,11 @@ export const processEventChoice = async (
         if (choice.consequences.reputation) {
             updates.reputation = Math.max(0,
                 stats.reputation + choice.consequences.reputation);
+        }
+
+        if (choice.consequences.experience) {
+            updates.experience = Math.max(0,
+                stats.experience + choice.consequences.experience);
         }
 
         // Apply consequences

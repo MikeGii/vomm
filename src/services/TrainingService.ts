@@ -48,6 +48,9 @@ export const initializeAttributes = (): PlayerAttributes => {
         medicine: createAttribute(),
         printing: createAttribute(),
         lasercutting: createAttribute(),
+        handling: createAttribute(),
+        reactionTime: createAttribute(),
+        gearShifting: createAttribute()
     };
 };
 

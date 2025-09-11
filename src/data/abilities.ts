@@ -209,12 +209,13 @@ export const ABILITIES: Ability[] = [
         trainingBonuses: [
             { attribute: 'dexterity', percentage: 0.05 },
             { attribute: 'agility', percentage: 0.05 }
-        ]
+        ],
+        replacedBy: 'doggys_master'
     },
     {
         id: 'doggys_master',
         name: 'Koertega tegutsemine',
-        description: 'Oled läbinud koolituse koos K9 üksusega edukaks tegutsemiseks',
+        description: 'Oled läbinud spetsialistide käe all personaalse koolituse koertega professionaalseks tegutsemiseks',
         icon: FaShieldDog,
         requiredCourse: 'dog_master_course_01',
         trainingBonuses: [

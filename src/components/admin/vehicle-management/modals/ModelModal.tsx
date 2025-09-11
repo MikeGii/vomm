@@ -34,6 +34,8 @@ export const ModelModal: React.FC<ModelModalProps> = ({
         model: '',
         mass: 1000,
         basePrice: 5000,
+        basePollidPrice: undefined,
+        currency: 'money',
         defaultEngineId: '',
         compatibleEngineIds: []
     });
@@ -104,6 +106,8 @@ export const ModelModal: React.FC<ModelModalProps> = ({
                     model: model.model,
                     mass: model.mass,
                     basePrice: model.basePrice,
+                    basePollidPrice: model.basePollidPrice,
+                    currency: model.currency,
                     defaultEngineId: model.defaultEngineId,
                     compatibleEngineIds: [...model.compatibleEngineIds]
                 });
@@ -113,6 +117,8 @@ export const ModelModal: React.FC<ModelModalProps> = ({
                     model: '',
                     mass: 1000,
                     basePrice: 5000,
+                    basePollidPrice: undefined,
+                    currency: 'money',
                     defaultEngineId: '',
                     compatibleEngineIds: []
                 });
@@ -142,10 +148,20 @@ export const ModelModal: React.FC<ModelModalProps> = ({
             newErrors.mass = 'Mass ei tohi olla üle 10000 kg';
         }
 
-        if (!formData.basePrice || formData.basePrice < 100) {
-            newErrors.basePrice = 'Hind peab olema vähemalt $100';
-        } else if (formData.basePrice > 10000000) {
-            newErrors.basePrice = 'Hind ei tohi olla üle $10,000,000';
+        if (formData.currency === 'pollid') {
+            if (!formData.basePollidPrice || formData.basePollidPrice < 1) {
+                newErrors.basePollidPrice = 'Pollid hind peab olema vähemalt 1';
+            } else if (formData.basePollidPrice > 1000) {
+                newErrors.basePollidPrice = 'Pollid hind ei tohi olla üle 1000';
+            }
+        }
+
+        if (formData.currency === 'money') {
+            if (!formData.basePrice || formData.basePrice < 100) {
+                newErrors.basePrice = 'Hind peab olema vähemalt €100';
+            } else if (formData.basePrice > 10000000) {
+                newErrors.basePrice = 'Hind ei tohi olla üle €10,000,000';
+            }
         }
 
         if (!formData.defaultEngineId) {
@@ -178,6 +194,8 @@ export const ModelModal: React.FC<ModelModalProps> = ({
                 model: formData.model.trim(),
                 mass: formData.mass,
                 basePrice: formData.basePrice,
+                basePollidPrice: formData.basePollidPrice,
+                currency: formData.currency,
                 defaultEngineId: formData.defaultEngineId,
                 compatibleEngineIds: formData.compatibleEngineIds
             };
@@ -297,22 +315,63 @@ export const ModelModal: React.FC<ModelModalProps> = ({
                         <div className="form-help">Auto mass kilogrammides</div>
                     </div>
 
+                    {/* Currency selection */}
                     <div className="form-group">
                         <label className="form-label required">
-                            Baashind ($)
+                            Valuuta
                         </label>
-                        <input
-                            type="number"
-                            className="form-input"
-                            value={formData.basePrice}
-                            onChange={(e) => handleInputChange('basePrice', parseInt(e.target.value) || 0)}
-                            min={100}
-                            max={10000000}
-                            placeholder="nt. 15000"
-                        />
-                        {errors.basePrice && <div className="form-error">{errors.basePrice}</div>}
-                        <div className="form-help">Mudeli alghind dollarites</div>
+                        <select
+                            className="form-select"
+                            value={formData.currency}
+                            onChange={(e) => handleInputChange('currency', e.target.value as 'money' | 'pollid')}
+                        >
+                            <option value="money">Raha (€)</option>
+                            <option value="pollid">Pollid (💎)</option>
+                        </select>
+                        <div className="form-help">Millises valuutas auto müüakse</div>
                     </div>
+                </div>
+
+                <div className="form-row">
+                    {/* Money price field - show when currency is money */}
+                    {formData.currency === 'money' && (
+                        <div className="form-group">
+                            <label className="form-label required">
+                                Hind (€)
+                            </label>
+                            <input
+                                type="number"
+                                className="form-input"
+                                value={formData.basePrice}
+                                onChange={(e) => handleInputChange('basePrice', parseInt(e.target.value) || 0)}
+                                min={100}
+                                max={10000000}
+                                placeholder="nt. 15000"
+                            />
+                            {errors.basePrice && <div className="form-error">{errors.basePrice}</div>}
+                            <div className="form-help">Auto hind eurodes</div>
+                        </div>
+                    )}
+
+                    {/* Pollid price field - show when currency is pollid */}
+                    {formData.currency === 'pollid' && (
+                        <div className="form-group">
+                            <label className="form-label required">
+                                Pollid hind (💎)
+                            </label>
+                            <input
+                                type="number"
+                                className="form-input"
+                                value={formData.basePollidPrice || ''}
+                                onChange={(e) => handleInputChange('basePollidPrice', parseInt(e.target.value) || undefined)}
+                                min={1}
+                                max={1000}
+                                placeholder="nt. 50"
+                            />
+                            {errors.basePollidPrice && <div className="form-error">{errors.basePollidPrice}</div>}
+                            <div className="form-help">Auto hind pollidites (100 pollid = 1M€ tuunimiseks)</div>
+                        </div>
+                    )}
                 </div>
 
                 {selectedBrand && (
@@ -332,7 +391,7 @@ export const ModelModal: React.FC<ModelModalProps> = ({
                                                 onChange={(e) => handleEngineToggle(engine.id, e.target.checked)}
                                             />
                                             <label htmlFor={`engine-${engine.id}`}>
-                                                {engine.code} ({engine.basePower} HP)
+                                                {engine.code} ({engine.basePower} KW)
                                             </label>
                                         </div>
                                     ))}
@@ -348,7 +407,7 @@ export const ModelModal: React.FC<ModelModalProps> = ({
                                 <div className="selected-items">
                                     {selectedCompatibleEngines.map(engine => (
                                         <div key={engine.id} className="selected-item">
-                                            {engine.code} ({engine.basePower}HP)
+                                            {engine.code} ({engine.basePower}KW)
                                             <button
                                                 type="button"
                                                 onClick={() => handleEngineToggle(engine.id, false)}
@@ -374,7 +433,7 @@ export const ModelModal: React.FC<ModelModalProps> = ({
                                 <option value="">Vali vaikimisi mootor...</option>
                                 {selectedCompatibleEngines.map(engine => (
                                     <option key={engine.id} value={engine.id}>
-                                        {engine.code} ({engine.basePower} HP)
+                                        {engine.code} ({engine.basePower} KW)
                                     </option>
                                 ))}
                             </select>

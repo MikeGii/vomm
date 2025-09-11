@@ -6,7 +6,6 @@ import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { TabNavigation } from '../components/ui/TabNavigation';
 import NewCarsTab from '../components/carMarketplace/NewCarsTab';
 import UsedCarsTab from '../components/carMarketplace/UsedCarsTab';
-import SparePartsTab from '../components/carMarketplace/SparePartsTab';
 import '../styles/pages/CarMarketplace.css';
 
 const CarMarketplacePage: React.FC = () => {
@@ -15,8 +14,7 @@ const CarMarketplacePage: React.FC = () => {
 
     const tabs = [
         { id: 'used', label: 'Kasutatud autod' },
-        { id: 'new', label: 'Uued autod' },
-        { id: 'parts', label: 'Varuosad' }
+        { id: 'new', label: 'Uued autod' }
     ];
 
     const renderTabContent = () => {
@@ -25,8 +23,6 @@ const CarMarketplacePage: React.FC = () => {
                 return <UsedCarsTab />;
             case 'new':
                 return <NewCarsTab />;
-            case 'parts':
-                return <SparePartsTab />;
             default:
                 return null;
         }

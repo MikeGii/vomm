@@ -140,8 +140,17 @@ const NewCarsTab: React.FC = () => {
             return;
         }
 
-        if (playerStats.money < model.basePrice) {
-            showToast('Sul pole piisavalt raha!', 'error');
+        const carPrice = model.currency === 'pollid'
+            ? (model.basePollidPrice || 0)
+            : model.basePrice;
+
+        const playerCurrency = model.currency === 'pollid'
+            ? (playerStats.pollid || 0)
+            : playerStats.money;
+
+        if (playerCurrency < carPrice) {
+            const currencyName = model.currency === 'pollid' ? 'pollideid' : 'raha';
+            showToast(`Sul pole piisavalt ${currencyName}!`, 'error');
             return;
         }
 
@@ -322,6 +331,7 @@ const NewCarsTab: React.FC = () => {
                             engines={engines}
                             onPurchase={handlePurchase}
                             playerMoney={playerStats?.money || 0}
+                            playerPollid={playerStats?.pollid || 0}
                             isPurchasing={isPurchasing}
                         />
                     ))}

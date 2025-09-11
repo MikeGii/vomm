@@ -228,11 +228,3 @@ export const purchaseItem = async (
         };
     }
 };
-
-/**
- * DEPRECATED - keeping for backward compatibility
- */
-export const calculateDynamicPrice = (basePrice: number, currentStock: number, maxStock: number): number => {
-    console.warn('calculateDynamicPrice is deprecated in ShopService - use calculateStaticPrice instead');
-    return basePrice;
-};

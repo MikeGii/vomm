@@ -13,6 +13,8 @@ import { useToast } from '../../../contexts/ToastContext';
 import { BrandModal } from './modals/BrandModal';
 import { ModelModal } from './modals/ModelModal';
 import '../../../styles/components/admin/vehicle-management/BrandsModelsTab.css';
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { firestore } from '../../../config/firebase';
 
 interface ExtendedVehicleModel extends VehicleModel {
     defaultEngine?: VehicleEngine;
@@ -68,6 +70,7 @@ export const BrandsModelsTab: React.FC = () => {
     const [modelModalOpen, setModelModalOpen] = useState(false);
     const [editingBrand, setEditingBrand] = useState<VehicleBrand | undefined>();
     const [editingModel, setEditingModel] = useState<VehicleModel | undefined>();
+    const [isMigrating, setIsMigrating] = useState(false);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -330,6 +333,47 @@ export const BrandsModelsTab: React.FC = () => {
         loadData(true);
     };
 
+    const handleMigration = async () => {
+        if (!window.confirm('Kas oled kindel, et soovid kõiki olemasolevaid autosid migreerida?')) {
+            return;
+        }
+
+        setIsMigrating(true);
+        try {
+            const modelsRef = collection(firestore, 'vehicleModels');
+            const snapshot = await getDocs(modelsRef);
+
+            let updated = 0;
+            let skipped = 0;
+
+            for (const docSnap of snapshot.docs) {
+                const data = docSnap.data();
+
+                if (!data.currency) {
+                    await updateDoc(doc(firestore, 'vehicleModels', docSnap.id), {
+                        currency: 'money'
+                    });
+                    console.log(`Updated: ${data.brandName} ${data.model}`);
+                    updated++;
+                } else {
+                    console.log(`Skipped: ${data.brandName} ${data.model}`);
+                    skipped++;
+                }
+            }
+
+            showToast(`Migratsioon lõpetatud! Uuendatud: ${updated}, vahele jäetud: ${skipped}`, 'success');
+
+            // Refresh data
+            loadData(true);
+
+        } catch (error: any) {
+            console.error('Migration error:', error);
+            showToast(`Migratsiooniviga: ${error.message}`, 'error');
+        } finally {
+            setIsMigrating(false);
+        }
+    };
+
     return (
         <div className="brands-models-tab">
             {/* Compact Header */}
@@ -446,9 +490,9 @@ export const BrandsModelsTab: React.FC = () => {
                                 <th>Mark</th>
                                 <th>Mudel</th>
                                 <th>Mass (kg)</th>
-                                <th>Hind ($)</th>
+                                <th>Hind</th>
                                 <th>Vaikimisi mootor</th>
-                                <th>Võimsus (HP)</th>
+                                <th>Võimsus (KW)</th>
                                 <th>Ühilduvaid</th>
                                 <th>Toimingud</th>
                             </tr>
@@ -459,7 +503,17 @@ export const BrandsModelsTab: React.FC = () => {
                                     <td className="brand-name">{model.brandName}</td>
                                     <td className="model-name">{model.model}</td>
                                     <td>{model.mass.toLocaleString()}</td>
-                                    <td>{model.basePrice.toLocaleString()}</td>
+                                    <td>
+                                        {model.currency === 'pollid' ? (
+                                            <span className="price-pollid">
+                                            💎{model.basePollidPrice?.toLocaleString() || 0}
+                                        </span>
+                                        ) : (
+                                            <span className="price-money">
+                                            €{model.basePrice.toLocaleString()}
+                                        </span>
+                                        )}
+                                    </td>
                                     <td className="engine-code">{model.defaultEngine?.code || 'N/A'}</td>
                                     <td>{model.defaultEngine?.basePower || 'N/A'}</td>
                                     <td>{model.compatibleEngineCount}</td>
