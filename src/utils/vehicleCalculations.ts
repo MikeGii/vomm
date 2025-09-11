@@ -1,57 +1,44 @@
-// src/utils/vehicleCalculations.ts - UPDATED FOR UNIVERSAL TUNING SYSTEM
+// src/utils/vehicleCalculations.ts - CLEANED: Universal tuning system only
 
 import {
-    Engine,
     CarModel,
     PlayerCar,
     CarStats,
-    POWER_MULTIPLIERS, // Keep for backward compatibility
     WEAR_PER_10000KM,
     UniversalTuningState,
     calculateUniversalPowerMultiplier,
-    calculateUniversalGrip, UNIVERSAL_TUNING_CONFIG, createDefaultUniversalTuning
+    calculateUniversalGrip,
+    UNIVERSAL_TUNING_CONFIG,
+    createDefaultUniversalTuning
 } from '../types/vehicles';
 
-// ============= EXISTING FUNCTIONS (Updated for new system) =============
+// ============= UNIVERSAL TUNING FUNCTIONS =============
 
-// Legacy engine power calculation (for old cars)
-export function calculateEnginePower(engine: Engine): number {
-    const basePower = engine.basePower;
-
-    const totalMultiplier =
-        POWER_MULTIPLIERS.turbo[engine.turbo] *
-        POWER_MULTIPLIERS.ecu[engine.ecu] *
-        POWER_MULTIPLIERS.intake[engine.intake] *
-        POWER_MULTIPLIERS.exhaust[engine.exhaust];
-
-    return Math.floor(basePower * totalMultiplier);
-}
-
-// NEW: Universal tuning power calculation
+// Universal tuning power calculation
 export function calculateUniversalEnginePower(basePower: number, tuning: UniversalTuningState): number {
     const universalMultiplier = calculateUniversalPowerMultiplier(tuning);
     return Math.floor(basePower * universalMultiplier);
 }
 
-// UPDATED: Support both tuning systems
-export function calculateFinalPower(car: PlayerCar, basePower?: number): number {
+// Calculate final power with wear
+export function calculateFinalPower(car: PlayerCar, basePower: number): number {
     let tunedPower: number;
 
-    // Check if car uses new universal tuning system
-    if (car.universalTuning && basePower !== undefined) {
-        // NEW SYSTEM: Use universal tuning
+    // Use universal tuning system
+    if (car.universalTuning) {
         tunedPower = calculateUniversalEnginePower(basePower, car.universalTuning);
     } else {
-        // OLD SYSTEM: Use legacy engine tuning
-        tunedPower = calculateEnginePower(car.engine);
+        // Car doesn't have tuning yet, use base power
+        tunedPower = basePower;
     }
 
-    // Apply wear regardless of tuning system
+    // Apply wear
     const wearMultiplier = calculateWearMultiplier(car.mileage);
     return Math.floor(tunedPower * wearMultiplier);
 }
 
-// Keep existing functions unchanged
+// ============= EXISTING UTILITY FUNCTIONS =============
+
 export function calculateWearMultiplier(mileage: number): number {
     const wearFactor = Math.floor(mileage / 10000) * WEAR_PER_10000KM;
     return Math.max(0.5, 1 - wearFactor);
@@ -67,29 +54,21 @@ export function calculateAcceleration(power: number, mass: number): number {
     return Math.round(acceleration * 10) / 10;
 }
 
-// UPDATED: Calculate car stats with grip support
+// Calculate car stats with universal tuning
 export function calculateCarStats(car: PlayerCar, model: CarModel): CarStats {
-    let finalPower: number;
+    const basePower = car.engine.basePower;
+    const finalPower = calculateFinalPower(car, basePower);
+
+    // Calculate grip using universal system
     let grip: number;
-
-    // Check if car uses new universal tuning system
     if (car.universalTuning) {
-        // NEW SYSTEM: Universal tuning
-        const basePower = car.engine.basePower;
-        finalPower = calculateFinalPower(car, basePower);
-
-        // Calculate grip using universal system
         grip = calculateUniversalGrip(car.universalTuning, basePower, finalPower);
-
-        // Use stored grip if available, otherwise calculate
+        // Use stored grip if available
         if (car.grip !== undefined) {
             grip = car.grip;
         }
     } else {
-        // OLD SYSTEM: Legacy tuning
-        finalPower = calculateFinalPower(car);
-
-        // Default grip for old cars (we can migrate this later)
+        // Default grip for cars without tuning
         grip = car.grip || 1.0;
     }
 
@@ -103,6 +82,7 @@ export function calculateCarStats(car: PlayerCar, model: CarModel): CarStats {
     };
 }
 
+// ============= UNIVERSAL TUNING HELPER FUNCTIONS =============
 
 // Check if car has any universal tuning upgrades
 export function hasUniversalTuningUpgrades(tuning: UniversalTuningState): boolean {
@@ -144,39 +124,7 @@ export function calculateUpgradeCost(
     return stage ? Math.floor(carBasePrice * (stage.pricePercent / 100)) : 0;
 }
 
-// ============= MIGRATION HELPERS =============
-
-// Convert old tuning to universal tuning (for migration)
-export function migrateToUniversalTuning(car: PlayerCar): UniversalTuningState {
-    const tuning = createDefaultUniversalTuning(); // Now uses imported function
-
-    // Map old levels to new levels
-    const levelMap = {
-        'stock': 0,
-        'stage1': 1,
-        'stage2': 2,
-        'stage3': 3,
-        'sport': 1,
-        'performance': 2
-    } as const;
-
-    // Convert existing tuning
-    tuning.turbo = levelMap[car.engine.turbo] || 0;
-    tuning.ecu = levelMap[car.engine.ecu] || 0;
-    tuning.intake = levelMap[car.engine.intake] || 0;
-    tuning.exhaust = levelMap[car.engine.exhaust] || 0;
-
-    return tuning;
-}
-
-// Backward compatibility: Keep the original calculateFinalPower signature
-export function calculateFinalPowerLegacy(engine: Engine, mileage: number): number {
-    const tunedPower = calculateEnginePower(engine);
-    const wearMultiplier = calculateWearMultiplier(mileage);
-    return Math.floor(tunedPower * wearMultiplier);
-}
-
-// ============= KEEP EXISTING FUNCTIONS =============
+// ============= CAR VALUE FUNCTIONS =============
 
 export function suggestSalePrice(car: PlayerCar, model: CarModel): number {
     const basePrice = model.basePrice;
@@ -186,7 +134,7 @@ export function suggestSalePrice(car: PlayerCar, model: CarModel): number {
     // Add tuning value to sale price
     let tuningValue = 0;
     if (car.universalTuning) {
-        // New system: Add 50% of tuning cost to sale price
+        // Add 50% of tuning cost to sale price
         tuningValue = calculateTotalTuningCost(car.universalTuning, basePrice) * 0.5;
     }
 

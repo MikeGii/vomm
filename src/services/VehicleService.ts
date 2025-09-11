@@ -13,7 +13,7 @@ import {
     serverTimestamp
 } from 'firebase/firestore';
 import { firestore as db } from '../config/firebase';
-import { PlayerCar } from '../types/vehicles';
+import {createDefaultUniversalTuning, PlayerCar, UniversalTuningState} from '../types/vehicles';
 import { VehicleModel, VehicleEngine } from '../types/vehicleDatabase';
 import { GarageSlot } from '../types/estate';
 
@@ -69,16 +69,11 @@ async function ensureGarageSlots(
 }
 
 // Create stock engine from database engine
-function createStockEngineFromDatabase(dbEngine: VehicleEngine) {
+function createEngineFromDatabase(dbEngine: VehicleEngine) {
     return {
-        id: `engine_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         code: dbEngine.code,
         brand: dbEngine.brandName,
-        basePower: dbEngine.basePower,
-        turbo: 'stock' as const,
-        ecu: 'stock' as const,
-        intake: 'stock' as const,
-        exhaust: 'stock' as const
+        basePower: dbEngine.basePower
     };
 }
 
@@ -103,23 +98,31 @@ export async function purchaseNewCar(
                 throw new Error('Pole piisavalt raha');
             }
 
-            // Get garage slots
-            const garageSlots = await ensureGarageSlots(
-                transaction,
-                userRef,
-                userData,
-                userId
-            );
+            // Get estate data for garage capacity
+            const estateRef = doc(db, 'playerEstates', userId);
+            const estateDoc = await transaction.get(estateRef);
 
-            // Check if garage exists
-            if (garageSlots.length === 0) {
+            if (!estateDoc.exists()) {
+                throw new Error('Kinnisvara andmed ei leitud');
+            }
+
+            const estateData = estateDoc.data();
+            const currentEstate = estateData.currentEstate;
+
+            // Check garage capacity
+            if (!currentEstate?.hasGarage || !currentEstate?.garageCapacity) {
                 throw new Error('Sul pole garaaži! Osta kõigepealt garaažiga kinnisvara.');
             }
 
-            // Find empty slot
-            const emptySlotIndex = garageSlots.findIndex((slot: GarageSlot) => slot.isEmpty);
+            // FIXED: Count actual cars instead of using garage slots
+            const carsQuery = query(
+                collection(db, 'cars'),
+                where('ownerId', '==', userId)
+            );
+            const carsSnapshot = await getDocs(carsQuery);
+            const currentCarCount = carsSnapshot.size;
 
-            if (emptySlotIndex === -1) {
+            if (currentCarCount >= currentEstate.garageCapacity) {
                 throw new Error('Garaažis pole ruumi');
             }
 
@@ -129,14 +132,18 @@ export async function purchaseNewCar(
                 throw new Error(`Auto vaikimisi mootor ei ole saadaval (ID: ${carModel.defaultEngineId})`);
             }
 
-            // Create new car
+            // Create new car with cleaned structure
             const newCar: PlayerCar = {
                 id: `car_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                 ownerId: userId,
                 carModelId: carModel.id,
                 mileage: 0,
                 purchaseDate: new Date(),
-                engine: createStockEngineFromDatabase(defaultEngine),
+
+                engine: createEngineFromDatabase(defaultEngine),
+                universalTuning: createDefaultUniversalTuning(),
+                grip: 1.0,
+
                 isForSale: false
             };
 
@@ -147,17 +154,9 @@ export async function purchaseNewCar(
                 purchaseDate: Timestamp.fromDate(newCar.purchaseDate)
             });
 
-            // Update garage slot
-            garageSlots[emptySlotIndex] = {
-                slotId: garageSlots[emptySlotIndex].slotId,
-                isEmpty: false,
-                carId: newCar.id
-            };
-
-            // Update user data
+            // Update user money
             transaction.update(userRef, {
-                money: userData.money - carModel.basePrice,
-                'estateData.garageSlots': garageSlots
+                money: userData.money - carModel.basePrice
             });
 
             return {
@@ -458,11 +457,11 @@ export async function getCarsForSale(): Promise<Array<PlayerCar & { sellerName?:
     }
 }
 
-export const updateCarParts = async (
+export const updateCarUniversalTuning = async (
     userId: string,
     carId: string,
-    partCategory: 'turbo' | 'ecu' | 'intake' | 'exhaust',
-    newLevel: string
+    tuningCategory: keyof UniversalTuningState,
+    newLevel: number
 ): Promise<{ success: boolean; message: string }> => {
     try {
         const carRef = doc(db, 'cars', carId);
@@ -478,27 +477,29 @@ export const updateCarParts = async (
             return { success: false, message: 'See ei ole sinu auto' };
         }
 
-        const updatedEngine = { ...carData.engine };
-
-        if (partCategory === 'turbo') {
-            updatedEngine.turbo = newLevel as 'stock' | 'stage1' | 'stage2' | 'stage3';
-        } else if (partCategory === 'ecu') {
-            updatedEngine.ecu = newLevel as 'stock' | 'stage1' | 'stage2' | 'stage3';
-        } else if (partCategory === 'intake') {
-            updatedEngine.intake = newLevel as 'stock' | 'sport' | 'performance';
-        } else if (partCategory === 'exhaust') {
-            updatedEngine.exhaust = newLevel as 'stock' | 'sport' | 'performance';
+        // Validate tuning level (0-3)
+        if (newLevel < 0 || newLevel > 3) {
+            return { success: false, message: 'Vigane tuuningu tase' };
         }
 
+        // Get current tuning or create default
+        const currentTuning = carData.universalTuning || createDefaultUniversalTuning();
+
+        // Update the specific category
+        const updatedTuning = {
+            ...currentTuning,
+            [tuningCategory]: newLevel
+        };
+
         await updateDoc(carRef, {
-            engine: updatedEngine,
+            universalTuning: updatedTuning,
             updatedAt: serverTimestamp()
         });
 
-        return { success: true, message: 'Osa vahetatud!' };
+        return { success: true, message: 'Tuuning uuendatud!' };
     } catch (error) {
-        console.error('Error updating car parts:', error);
-        return { success: false, message: 'Viga osade vahetamisel' };
+        console.error('Error updating car tuning:', error);
+        return { success: false, message: 'Viga tuuningu uuendamisel' };
     }
 };
 

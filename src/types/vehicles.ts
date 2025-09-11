@@ -1,24 +1,6 @@
-// src/types/vehicles.ts - UPDATED WITH UNIVERSAL TUNING SYSTEM
+// src/types/vehicles.ts - CLEANED: Universal tuning system only
 
-
-// ============= EXISTING CODE (Keep as-is for backward compatibility) =============
-export type TurboLevel = 'stock' | 'stage1' | 'stage2' | 'stage3';
-export type ECULevel = 'stock' | 'stage1' | 'stage2' | 'stage3';
-export type IntakeLevel = 'stock' | 'sport' | 'performance';
-export type ExhaustLevel = 'stock' | 'sport' | 'performance';
-
-export interface Engine {
-    id: string;
-    code: string;
-    brand: string;
-    basePower: number;
-    turbo: TurboLevel;
-    ecu: ECULevel;
-    intake: IntakeLevel;
-    exhaust: ExhaustLevel;
-}
-
-// ============= NEW UNIVERSAL TUNING SYSTEM =============
+// ============= UNIVERSAL TUNING SYSTEM =============
 
 // Universal tuning categories
 export type UniversalTuningCategory =
@@ -148,7 +130,13 @@ export const UNIVERSAL_TUNING_CONFIG: Record<UniversalTuningCategory, {
     }
 };
 
-// ============= UPDATED CAR INTERFACES =============
+// ============= ENGINE AND CAR INTERFACES =============
+
+export interface Engine {
+    code: string;
+    brand: string;
+    basePower: number;
+}
 
 export interface CarModel {
     id: string;
@@ -161,7 +149,7 @@ export interface CarModel {
     imageUrl?: string;
 }
 
-// Extended PlayerCar interface
+// Clean PlayerCar interface
 export interface PlayerCar {
     id: string;
     ownerId: string;
@@ -170,67 +158,28 @@ export interface PlayerCar {
     purchaseDate: Date;
     engine: Engine;
 
-    // NEW: Universal tuning system
+    // Universal tuning system
     universalTuning?: UniversalTuningState;
     grip?: number; // Default 1.0, affected by tuning
-
-    // OLD: Keep for backward compatibility (will be migrated)
-    emptyPartSlots?: {
-        turbo?: boolean;
-        ecu?: boolean;
-        intake?: boolean;
-        exhaust?: boolean;
-    };
 
     isForSale: boolean;
     salePrice?: number;
     listedAt?: Date;
 }
 
-// Updated CarStats interface
+// Car stats interface
 export interface CarStats {
     power: number;
     mass: number;
     acceleration: number;
-    grip: number; // NEW: Add grip to stats
+    grip: number;
 }
 
-// ============= EXISTING CODE (Keep unchanged) =============
-
-export interface GarageInventoryItem {
-    itemId: string;
-    partId: string;
-    purchaseDate: any;
-    purchasePrice: number;
-}
-
-// OLD: Keep for backward compatibility during migration
-export const POWER_MULTIPLIERS = {
-    turbo: {
-        stock: 1.0,
-        stage1: 1.4,
-        stage2: 1.8,
-        stage3: 3.0
-    },
-    ecu: {
-        stock: 1.0,
-        stage1: 1.15,
-        stage2: 1.25,
-        stage3: 1.35
-    },
-    intake: {
-        stock: 1.0,
-        sport: 1.08,
-        performance: 1.15
-    },
-    exhaust: {
-        stock: 1.0,
-        sport: 1.10,
-        performance: 1.20
-    }
-} as const;
+// ============= CONSTANTS =============
 
 export const WEAR_PER_10000KM = 0.02;
+
+// ============= OTHER INTERFACES =============
 
 export interface CarListingItem {
     car: PlayerCar;

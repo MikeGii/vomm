@@ -1,14 +1,14 @@
-// src/components/carMarketplace/UsedCarsTab.tsx
+// src/components/carMarketplace/UsedCarsTab.tsx - UPDATED: Universal tuning system
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePlayerStats } from '../../contexts/PlayerStatsContext';
 import { useToast } from '../../contexts/ToastContext';
 import { getCarsForSale, purchaseUsedCar } from '../../services/VehicleService';
-import { getVehicleModelById } from '../../services/VehicleDatabaseService'; // Changed import
-import { calculateCarStats } from '../../utils/vehicleCalculations';
-import { PlayerCar } from '../../types/vehicles';
-import { VehicleModel } from '../../types/vehicleDatabase'; // Added import
+import { getVehicleModelById } from '../../services/VehicleDatabaseService';
+import { calculateCarStats, hasUniversalTuningUpgrades } from '../../utils/vehicleCalculations';
+import { PlayerCar, UNIVERSAL_TUNING_CONFIG } from '../../types/vehicles';
+import { VehicleModel } from '../../types/vehicleDatabase';
 import { cacheManager } from '../../services/CacheManager';
 import '../../styles/components/carMarketplace/UsedCarsTab.css';
 
@@ -185,21 +185,20 @@ const UsedCarsTab: React.FC = () => {
         }
     });
 
-    // Tuuningu badge'i funktsioon
-    const getTuningBadges = (car: PlayerCar) => {
-        const badges = [];
+    // NEW: Universal tuning badge function
+    const getTuningBadges = (car: PlayerCar): string[] => {
+        const badges: string[] = [];
 
-        if (car.engine.turbo !== 'stock') {
-            badges.push(`Turbo ${car.engine.turbo}`);
-        }
-        if (car.engine.ecu !== 'stock') {
-            badges.push(`ECU ${car.engine.ecu}`);
-        }
-        if (car.engine.intake !== 'stock') {
-            badges.push(`${car.engine.intake} intake`);
-        }
-        if (car.engine.exhaust !== 'stock') {
-            badges.push(`${car.engine.exhaust} exhaust`);
+        if (car.universalTuning && hasUniversalTuningUpgrades(car.universalTuning)) {
+            // Show highest tuning levels for each category
+            Object.entries(car.universalTuning).forEach(([category, level]) => {
+                if (level > 0) {
+                    const config = UNIVERSAL_TUNING_CONFIG[category as keyof typeof UNIVERSAL_TUNING_CONFIG];
+                    if (config) {
+                        badges.push(`${config.emoji} ${config.name} ${level}`);
+                    }
+                }
+            });
         }
 
         return badges;
@@ -293,7 +292,7 @@ const UsedCarsTab: React.FC = () => {
                             const canAfford = (playerStats?.money || 0) >= (car.salePrice || 0);
                             const isPurchasingThis = isPurchasing === car.id;
 
-                            // Convert to old CarModel format for calculateCarStats
+                            // Convert to CarModel format for calculateCarStats
                             const legacyCarModel = {
                                 id: carModel.id,
                                 brand: carModel.brandName,
