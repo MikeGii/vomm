@@ -396,8 +396,9 @@ export const cancelWork = async (userId: string): Promise<{
             const startTime = stats.activeWork.startedAt as Timestamp;
             const timeWorked = now.toMillis() - startTime.toMillis(); // Time actually worked in milliseconds
 
-            // Calculate hours worked (with minimum of 0.1 hours to give some reward)
+            // Calculate hours and minutes worked
             const hoursWorked = Math.max(0.1, timeWorked / (1000 * 3600));
+            const minutesWorked = timeWorked / (1000 * 60);
 
             // Calculate rewards for time actually worked
             const workedRewards = calculateWorkRewards(workActivity, hoursWorked, stats.rank, stats);
@@ -413,8 +414,19 @@ export const cancelWork = async (userId: string): Promise<{
             const newLevel = calculateLevelFromExp(newExp);
             const newTotalWorkedHours = (stats.totalWorkedHours || 0) + hoursWorked;
 
-            // VIP logic for training clicks
+            // FIXED: Training clicks logic with minimum work duration check
             const nonWorkingClicks = stats.isVip ? 100 : 50;
+            let newTrainingClicks = stats.trainingData?.remainingClicks || 0;
+            let newKitchenClicks = stats.kitchenLabTrainingData?.remainingClicks || 0;
+            let newHandicraftClicks = stats.handicraftTrainingData?.remainingClicks || 0;
+
+            // Only restore full training clicks if worked for at least 59 minutes
+            if (minutesWorked >= 59) {
+                newTrainingClicks = nonWorkingClicks;
+                newKitchenClicks = nonWorkingClicks;
+                newHandicraftClicks = nonWorkingClicks;
+            }
+            // If worked less than 59 minutes, keep current click amounts (no bonus)
 
             // Update player stats
             const updateData: any = {
@@ -423,9 +435,9 @@ export const cancelWork = async (userId: string): Promise<{
                 level: newLevel,
                 totalWorkedHours: newTotalWorkedHours,
                 'trainingData.isWorking': false,
-                'trainingData.remainingClicks': nonWorkingClicks,
-                'kitchenLabTrainingData.remainingClicks': nonWorkingClicks,
-                'handicraftTrainingData.remainingClicks': nonWorkingClicks
+                'trainingData.remainingClicks': newTrainingClicks,
+                'kitchenLabTrainingData.remainingClicks': newKitchenClicks,
+                'handicraftTrainingData.remainingClicks': newHandicraftClicks
             };
 
             // Add money if there's a reward
