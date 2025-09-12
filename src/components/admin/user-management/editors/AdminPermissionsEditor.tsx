@@ -24,11 +24,15 @@ export const AdminPermissionsEditor: React.FC<AdminPermissionsEditorProps> = ({
         { id: 'tools', label: 'Admin tööriistad', description: 'Üldised admin tööriistad ja funktsioonid' },
         { id: 'applications', label: 'Kandideerimised', description: 'Töökohataotluste haldamine' },
         { id: 'users', label: 'Kasutajate haldus', description: 'Kasutajate andmete muutmine' },
-        { id: 'vehicles', label: 'Sõidukite haldus', description: 'Sõidukite andmebaasi haldamine' }
+        { id: 'vehicles', label: 'Sõidukite haldus', description: 'Sõidukite andmebaasi haldamine' },
+        { id: 'estates', label: 'Kinnisvara haldus', description: 'Kinnisvara andmebaasi haldamine' },
+        { id: 'updates', label: 'Uuendused', description: 'Mängu uuenduste lisamine ja haldamine' }
     ];
 
     const hasAdminAccess = user.adminPermissions?.hasAdminAccess || false;
-    const allowedTabs = user.adminPermissions?.allowedTabs || [];
+    const allowedTabs = user.adminPermissions && Array.isArray(user.adminPermissions.allowedTabs)
+        ? user.adminPermissions.allowedTabs
+        : [];
 
     const toggleAdminAccess = (hasAccess: boolean) => {
         if (hasAccess) {
@@ -47,15 +51,19 @@ export const AdminPermissionsEditor: React.FC<AdminPermissionsEditorProps> = ({
     };
 
     const toggleTab = (tabId: AdminTab) => {
+        // ✅ FIX: Add null check with early return
         if (!user.adminPermissions) return;
 
-        const currentTabs = user.adminPermissions.allowedTabs || [];
+        const currentTabs = Array.isArray(user.adminPermissions.allowedTabs)
+            ? user.adminPermissions.allowedTabs
+            : [];
+
         const updatedTabs = currentTabs.includes(tabId)
             ? currentTabs.filter(tab => tab !== tabId)
             : [...currentTabs, tabId];
 
         const updatedPermissions: AdminPermissions = {
-            ...user.adminPermissions,
+            ...user.adminPermissions, // Now TypeScript knows this isn't undefined
             allowedTabs: updatedTabs,
             grantedBy: currentUser?.uid || '',
             grantedAt: new Date()
@@ -120,7 +128,8 @@ export const AdminPermissionsEditor: React.FC<AdminPermissionsEditorProps> = ({
                             {/* Permission Summary */}
                             <div className="permission-summary">
                                 <strong>Kokkuvõte:</strong> Kasutaja näeb {allowedTabs.length} tabi {availableTabs.length}-st
-                                {user.adminPermissions?.grantedBy && (
+                                {/* ✅ FIX: Add null check for grantedBy */}
+                                {user.adminPermissions && user.adminPermissions.grantedBy && (
                                     <div className="permission-meta">
                                         <small>
                                             Õigused andis: {user.adminPermissions.grantedBy} <br/>

@@ -1,132 +1,372 @@
-/* src/styles/Features.css */
-.features {
+/* src/styles/components/Features.css */
+
+/* ================================
+   FEATURES SECTION BASE
+   ================================ */
+.features-section {
     width: 100%;
     padding: 4rem 0;
-    background-color: #0f0f0f;
+    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%);
+    position: relative;
+    overflow: hidden;
 }
 
-.features-container {
+/* ================================
+   BACKGROUND DECORATIVE ELEMENTS
+   ================================ */
+.features-section__background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.features-section__bg-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(74, 144, 226, 0.03) 0%, transparent 70%);
+    animation: features-bg-float 12s ease-in-out infinite;
+}
+
+.features-section__bg-circle--1 {
+    width: 400px;
+    height: 400px;
+    top: -200px;
+    left: -100px;
+    animation-delay: 0s;
+}
+
+.features-section__bg-circle--2 {
+    width: 300px;
+    height: 300px;
+    bottom: -150px;
+    right: -50px;
+    animation-delay: -6s;
+}
+
+@keyframes features-bg-float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(20px, -30px) scale(1.05); }
+    66% { transform: translate(-10px, 20px) scale(0.95); }
+}
+
+.features-section__bg-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+            linear-gradient(rgba(74, 144, 226, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(74, 144, 226, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: features-grid-move 20s linear infinite;
+}
+
+@keyframes features-grid-move {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(50px, 50px); }
+}
+
+/* ================================
+   CONTAINER AND TITLE
+   ================================ */
+.features-section__container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 2rem;
+    position: relative;
+    z-index: 2;
 }
 
-.features-title {
+.features-section__title {
     text-align: center;
     font-size: 2.5rem;
     color: #f0f0f0;
     margin-bottom: 3rem;
     font-weight: bold;
+    position: relative;
+    animation: features-title-fade-in 1s ease-out;
 }
 
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
+.features-section__title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #4a90e2, transparent);
+    border-radius: 2px;
+    animation: features-title-underline 1s ease-out 0.5s both;
 }
 
-.feature-card {
-    background-color: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 2rem;
-    text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    animation: fadeInUp 1s ease-out forwards;
-    opacity: 0;
-}
-
-.feature-card:nth-child(1) {
-    animation-delay: 0.1s;
-}
-
-.feature-card:nth-child(2) {
-    animation-delay: 0.2s;
-}
-
-.feature-card:nth-child(3) {
-    animation-delay: 0.3s;
-}
-
-@keyframes fadeInUp {
-    from {
+@keyframes features-title-fade-in {
+    0% {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(-20px);
     }
-    to {
+    100% {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
-.feature-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(74, 144, 226, 0.2);
-    border-color: #4a90e2;
+@keyframes features-title-underline {
+    0% { width: 0; }
+    100% { width: 80px; }
 }
 
-.feature-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
+/* ================================
+   FEATURES GRID
+   ================================ */
+.features-section__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
+    margin-top: 2rem;
+    position: relative;
 }
 
-.feature-title {
+/* ================================
+   FEATURE CARDS - ENHANCED
+   ================================ */
+.features-section__card {
+    position: relative;
+    opacity: 0;
+    transform: translateY(40px) scale(0.9);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    perspective: 1000px;
+}
+
+.features-section__card--visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.features-section__card-inner {
+    background: rgba(26, 26, 26, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(51, 51, 51, 0.6);
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+}
+
+.features-section__card:hover .features-section__card-inner {
+    transform: translateY(-8px) rotateX(5deg);
+    border-color: rgba(74, 144, 226, 0.5);
+    box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.3),
+            0 0 30px rgba(74, 144, 226, 0.1);
+}
+
+/* ================================
+   CARD DECORATIVE ELEMENTS
+   ================================ */
+.features-section__card-accent {
+    position: absolute;
+    top: 0;
+    left: 20%;
+    right: 20%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #4a90e2, transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.features-section__card:hover .features-section__card-accent {
+    opacity: 1;
+}
+
+.features-section__card-shine {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+            45deg,
+            transparent 30%,
+            rgba(255, 255, 255, 0.03) 50%,
+            transparent 70%
+    );
+    transform: translateX(-100%);
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.features-section__card:hover .features-section__card-shine {
+    transform: translateX(100%);
+}
+
+/* ================================
+   ICON WITH ENHANCED EFFECTS
+   ================================ */
+.features-section__icon-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1.5rem;
+}
+
+.features-section__icon {
+    font-size: 3.5rem;
+    display: block;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 2;
+}
+
+.features-section__icon-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, rgba(74, 144, 226, 0.2) 0%, transparent 70%);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 1;
+}
+
+.features-section__card:hover .features-section__icon {
+    transform: scale(1.1) rotateY(5deg);
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
+}
+
+.features-section__card:hover .features-section__icon-glow {
+    opacity: 1;
+    animation: features-icon-pulse 2s ease-in-out infinite;
+}
+
+@keyframes features-icon-pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.1); }
+}
+
+/* ================================
+   CARD TEXT CONTENT
+   ================================ */
+.features-section__card-title {
     font-size: 1.5rem;
     color: #f0f0f0;
     margin-bottom: 1rem;
     font-weight: 600;
+    transition: color 0.3s ease;
+    position: relative;
 }
 
-.feature-description {
+.features-section__card:hover .features-section__card-title {
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.features-section__card-description {
     font-size: 1rem;
     color: #b0b0b0;
     line-height: 1.6;
+    transition: color 0.3s ease;
+    position: relative;
 }
 
-/* Mobile responsiveness */
+.features-section__card:hover .features-section__card-description {
+    color: #c0c0c0;
+}
+
+/* ================================
+   MOBILE RESPONSIVENESS
+   ================================ */
 @media (max-width: 768px) {
-    .features {
+    .features-section {
         padding: 3rem 0;
     }
 
-    .features-title {
+    .features-section__title {
         font-size: 2rem;
     }
 
-    .features-grid {
+    .features-section__grid {
         grid-template-columns: 1fr;
-        gap: 1.5rem;
+        gap: 2rem;
     }
 
-    .feature-card {
-        padding: 1.5rem;
+    .features-section__card-inner {
+        padding: 2rem 1.5rem;
     }
 
-    .feature-icon {
-        font-size: 2.5rem;
+    .features-section__icon {
+        font-size: 3rem;
     }
 
-    .feature-title {
+    .features-section__card-title {
         font-size: 1.3rem;
+    }
+
+    .features-section__bg-circle {
+        display: none;
     }
 }
 
 @media (max-width: 480px) {
-    .features-container {
+    .features-section__container {
         padding: 0 1rem;
     }
 
-    .features-title {
+    .features-section__title {
         font-size: 1.7rem;
         margin-bottom: 2rem;
     }
 
-    .feature-title {
+    .features-section__card-inner {
+        padding: 1.5rem;
+    }
+
+    .features-section__icon {
+        font-size: 2.5rem;
+    }
+
+    .features-section__card-title {
         font-size: 1.2rem;
     }
 
-    .feature-description {
+    .features-section__card-description {
         font-size: 0.9rem;
+    }
+
+    .features-section__bg-grid {
+        display: none;
+    }
+}
+
+/* ================================
+   ACCESSIBILITY
+   ================================ */
+@media (prefers-reduced-motion: reduce) {
+    .features-section__card,
+    .features-section__icon,
+    .features-section__card-shine,
+    .features-section__bg-circle,
+    .features-section__bg-grid {
+        animation: none;
+        transition: none;
+    }
+
+    .features-section__card {
+        opacity: 1;
+        transform: none;
+    }
+
+    .features-section__card:hover .features-section__card-inner {
+        transform: none;
     }
 }

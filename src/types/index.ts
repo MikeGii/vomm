@@ -153,6 +153,7 @@ export interface PlayerStats {
     };
     lastSeen?: Timestamp;
     adminPermissions?: AdminPermissions;
+    activeCarId?: string;
 }
 
 // Course definition

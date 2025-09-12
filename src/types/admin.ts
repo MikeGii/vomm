@@ -6,4 +6,4 @@ export interface AdminPermissions {
     grantedAt: Date;
 }
 
-export type AdminTab = 'tools' | 'applications' | 'users' | 'vehicles';
+export type AdminTab = 'tools' | 'applications' | 'users' | 'vehicles' | 'estates' | 'updates';

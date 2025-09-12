@@ -1,0 +1,1294 @@
+/* src/styles/pages/DragRace.css */
+
+/* ================================
+   DRAG RACE PAGE LAYOUT
+   ================================ */
+.page-container{
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+}
+
+
+.dr-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    padding: 0;
+}
+
+.dr-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.dr-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Loading and Error States */
+.dr-loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+}
+
+.dr-loading-spinner {
+    font-size: 1.2rem;
+    color: #4a90e2;
+    animation: dr-pulse 1.5s ease-in-out infinite;
+}
+
+.dr-error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    color: #ff6b6b;
+}
+
+@keyframes dr-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ================================
+   HEADER SECTION
+   ================================ */
+.dr-header {
+    background: linear-gradient(135deg, #2a2a2a 0%, #3d3d3d 100%);
+    border-bottom: 2px solid #4a90e2;
+    padding: 2rem 0;
+    margin-bottom: 0;
+}
+
+.dr-header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    text-align: center;
+}
+
+.dr-page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 1rem 0;
+    color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.dr-title-icon {
+    font-size: 3rem;
+    animation: dr-race-flag 2s ease-in-out infinite;
+}
+
+.dr-page-description {
+    font-size: 1.1rem;
+    color: #bbb;
+    margin: 0;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+@keyframes dr-race-flag {
+    0%, 100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+}
+
+/* ================================
+   INFO SECTION (FUEL + ACTIVE CAR)
+   ================================ */
+.dr-info-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* ================================
+   FUEL DISPLAY
+   ================================ */
+.dr-fuel-display {
+    background: rgba(42, 42, 42, 0.8);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.dr-fuel-display::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb);
+    opacity: 0.8;
+}
+
+.dr-fuel-display:hover {
+    border-color: #4a90e2;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(74, 144, 226, 0.2);
+}
+
+.dr-fuel-display.dr-loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.dr-fuel-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.dr-fuel-icon {
+    font-size: 1.5rem;
+    animation: dr-fuel-pump 2s ease-in-out infinite;
+}
+
+.dr-fuel-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #f0f0f0;
+    margin: 0;
+}
+
+.dr-fuel-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.dr-fuel-current {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.dr-fuel-amount {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #4CAF50;
+    text-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+}
+
+.dr-fuel-label {
+    font-size: 1rem;
+    color: #bbb;
+}
+
+.dr-fuel-reset-info {
+    padding: 0.5rem;
+    background: rgba(255, 193, 7, 0.1);
+    border-radius: 6px;
+    border-left: 3px solid #ffc107;
+}
+
+.dr-reset-time {
+    font-size: 0.9rem;
+    color: #ffc107;
+    font-weight: 500;
+}
+
+.dr-fuel-purchase-button {
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.dr-fuel-purchase-button:hover {
+    background: linear-gradient(135deg, #357abd, #2868a8);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+}
+
+@keyframes dr-fuel-pump {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* ================================
+   ACTIVE CAR DISPLAY
+   ================================ */
+.dr-active-car-display {
+    background: rgba(42, 42, 42, 0.8);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.dr-active-car-display::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #4a90e2, #48dbfb, #0abde3);
+    opacity: 0.8;
+}
+
+.dr-active-car-display:hover {
+    border-color: #4a90e2;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(74, 144, 226, 0.2);
+}
+
+.dr-active-car-display.dr-no-car {
+    border-color: #666;
+    opacity: 0.8;
+}
+
+.dr-active-car-display.dr-no-car::before {
+    background: linear-gradient(90deg, #666, #777, #666);
+}
+
+.dr-car-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.dr-car-icon {
+    font-size: 1.5rem;
+    animation: dr-car-drive 3s ease-in-out infinite;
+}
+
+.dr-car-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #f0f0f0;
+    margin: 0;
+}
+
+.dr-car-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.dr-car-name {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.dr-car-brand {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #4a90e2;
+}
+
+.dr-car-model {
+    font-size: 1.1rem;
+    color: #bbb;
+}
+
+.dr-car-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.75rem;
+}
+
+.dr-car-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: rgba(26, 26, 26, 0.5);
+    border-radius: 6px;
+    border: 1px solid #333;
+}
+
+.dr-stat-label {
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.dr-stat-value {
+    font-weight: 600;
+    color: #4CAF50;
+}
+
+.dr-no-car-text {
+    color: #888;
+    font-style: italic;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.dr-select-car-button,
+.dr-change-car-button {
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.dr-select-car-button:hover,
+.dr-change-car-button:hover {
+    background: linear-gradient(135deg, #357abd, #2868a8);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+}
+
+@keyframes dr-car-drive {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(5px); }
+}
+
+/* ================================
+   TRAINING OPTIONS
+   ================================ */
+.dr-training-options {
+    background: rgba(42, 42, 42, 0.6);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.dr-training-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.dr-training-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #f0f0f0;
+    margin: 0 0 0.5rem 0;
+}
+
+.dr-training-description {
+    font-size: 1.1rem;
+    color: #bbb;
+    margin: 0;
+}
+
+.dr-training-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.dr-training-option {
+    background: rgba(26, 26, 26, 0.8);
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.dr-training-option::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1);
+    opacity: 0.6;
+}
+
+.dr-training-option:hover {
+    border-color: #4a90e2;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(74, 144, 226, 0.2);
+}
+
+.dr-option-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.dr-option-icon {
+    font-size: 2rem;
+    animation: dr-skill-bounce 2s ease-in-out infinite;
+}
+
+.dr-option-name {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #f0f0f0;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.dr-option-description {
+    color: #bbb;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.5;
+}
+
+.dr-option-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.dr-current-level {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: rgba(42, 42, 42, 0.5);
+    border-radius: 6px;
+}
+
+.dr-level-label {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.dr-level-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #4CAF50;
+}
+
+.dr-experience-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.dr-exp-info {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.dr-exp-current {
+    color: #4CAF50;
+    font-weight: 600;
+}
+
+.dr-exp-separator {
+    color: #666;
+}
+
+.dr-exp-needed {
+    color: #888;
+}
+
+.dr-exp-label {
+    color: #666;
+    margin-left: 0.25rem;
+}
+
+.dr-exp-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(42, 42, 42, 0.8);
+    border-radius: 4px;
+    border: 1px solid #333;
+    overflow: hidden;
+}
+
+.dr-exp-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #81C784);
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 3px;
+}
+
+.dr-xp-gain {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 6px;
+    border-left: 3px solid #4CAF50;
+}
+
+.dr-xp-label {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.dr-xp-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #4CAF50;
+}
+
+.dr-xp-source {
+    font-size: 0.8rem;
+    color: #666;
+    font-style: italic;
+}
+
+.dr-training-button {
+    width: 100%;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.dr-training-button:hover {
+    background: linear-gradient(135deg, #45a049, #3d8b40);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
+}
+
+.dr-training-button.dr-disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.dr-training-button.dr-disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.dr-training-button.dr-loading {
+    background: #888;
+    cursor: wait;
+}
+
+.dr-fuel-cost {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.dr-no-fuel-warning {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(255, 107, 107, 0.1);
+    border-radius: 6px;
+    border-left: 3px solid #ff6b6b;
+    color: #ff6b6b;
+    font-size: 0.9rem;
+}
+
+.dr-warning-icon {
+    font-size: 1rem;
+}
+
+@keyframes dr-skill-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
+
+/* ================================
+   MODAL STYLES
+   ================================ */
+.dr-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+    backdrop-filter: blur(4px);
+}
+
+.dr-modal {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: dr-modal-appear 0.3s ease-out;
+}
+
+.dr-result-modal {
+    max-width: 500px;
+}
+
+.dr-modal-header {
+    background: #333;
+    padding: 1.5rem;
+    border-bottom: 1px solid #444;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dr-modal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #f0f0f0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.dr-modal-icon {
+    font-size: 1.8rem;
+}
+
+.dr-modal-close {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.dr-modal-close:hover {
+    color: #f0f0f0;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.dr-modal-content {
+    padding: 1.5rem;
+    color: #f0f0f0;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.dr-modal-footer {
+    background: #333;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #444;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.dr-modal-button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.dr-modal-button.dr-primary {
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: white;
+}
+
+.dr-modal-button.dr-primary:hover {
+    background: linear-gradient(135deg, #357abd, #2868a8);
+    transform: translateY(-1px);
+}
+
+.dr-modal-button.dr-secondary {
+    background: #666;
+    color: #f0f0f0;
+}
+
+.dr-modal-button.dr-secondary:hover {
+    background: #777;
+}
+
+.dr-modal-button.dr-disabled {
+    background: #444;
+    color: #888;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.dr-modal-button.dr-disabled:hover {
+    transform: none;
+}
+
+@keyframes dr-modal-appear {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* ================================
+   CAR SELECTION MODAL
+   ================================ */
+.dr-modal-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem;
+    color: #888;
+}
+
+.dr-no-cars {
+    text-align: center;
+    padding: 2rem;
+    color: #888;
+}
+
+.dr-no-cars-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.dr-no-cars-hint {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.dr-selection-info {
+    color: #bbb;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.dr-cars-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.dr-car-option {
+    background: rgba(42, 42, 42, 0.6);
+    border: 2px solid #444;
+    border-radius: 8px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dr-car-option:hover {
+    border-color: #4a90e2;
+    background: rgba(74, 144, 226, 0.1);
+}
+
+.dr-car-option.dr-selected {
+    border-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.dr-car-option-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.dr-car-option-name {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.dr-car-option-brand {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f0f0f0;
+}
+
+.dr-car-option-model {
+    font-size: 0.95rem;
+    color: #bbb;
+}
+
+.dr-selection-indicator {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dr-checkmark {
+    color: #4CAF50;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.dr-car-option-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.dr-car-option-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.dr-stat-icon {
+    font-size: 1rem;
+}
+
+.dr-stat-text {
+    color: #4CAF50;
+    font-weight: 500;
+}
+
+/* ================================
+   FUEL PURCHASE MODAL
+   ================================ */
+.dr-fuel-purchase-info {
+    margin-bottom: 1.5rem;
+}
+
+.dr-purchase-description {
+    color: #bbb;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.dr-current-currency {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.dr-currency-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(42, 42, 42, 0.6);
+    border-radius: 6px;
+    border: 1px solid #444;
+}
+
+.dr-currency-icon {
+    font-size: 1.2rem;
+}
+
+.dr-currency-amount {
+    font-weight: 600;
+    color: #4CAF50;
+}
+
+.dr-purchase-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.dr-purchase-option {
+    background: rgba(42, 42, 42, 0.4);
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.dr-purchase-option:not(.dr-disabled):hover {
+    border-color: #4a90e2;
+    background: rgba(74, 144, 226, 0.1);
+}
+
+.dr-purchase-option.dr-disabled {
+    opacity: 0.6;
+    border-color: #333;
+}
+
+.dr-option-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.dr-option-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f0f0f0;
+    margin: 0;
+}
+
+.dr-option-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.dr-option-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.dr-price-amount {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #4CAF50;
+}
+
+.dr-price-unit {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.dr-option-limit,
+.dr-option-note {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.dr-option-unavailable {
+    font-size: 0.85rem;
+    color: #ff6b6b;
+    font-style: italic;
+}
+
+.dr-purchase-button {
+    width: 100%;
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dr-purchase-button:hover {
+    background: linear-gradient(135deg, #357abd, #2868a8);
+    transform: translateY(-1px);
+}
+
+.dr-purchase-button.dr-disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.dr-purchase-button.dr-disabled:hover {
+    transform: none;
+}
+
+.dr-fuel-reset-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: rgba(255, 193, 7, 0.1);
+    border-radius: 6px;
+    border-left: 3px solid #ffc107;
+    font-size: 0.85rem;
+    color: #ffc107;
+}
+
+.dr-reset-icon {
+    font-size: 1rem;
+}
+
+
+/* ================================
+   RESPONSIVE DESIGN
+   ================================ */
+@media (max-width: 1200px) {
+    .dr-content {
+        padding: 1.5rem;
+    }
+
+    .dr-training-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+
+    .dr-info-section {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .dr-training-option {
+        min-height: 350px;
+    }
+}
+
+@media (max-width: 768px) {
+    .dr-content {
+        padding: 1rem;
+    }
+
+    .dr-header-content {
+        padding: 0 1rem;
+    }
+
+    .dr-page-title {
+        font-size: 2rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .dr-title-icon {
+        font-size: 2.5rem;
+    }
+
+    .dr-page-description {
+        font-size: 1rem;
+    }
+
+    .dr-training-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .dr-car-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .dr-car-option-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .dr-current-currency {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .dr-modal {
+        margin: 0.5rem;
+        max-height: 95vh;
+    }
+
+    .dr-modal-header,
+    .dr-modal-content,
+    .dr-modal-footer {
+        padding: 1rem;
+    }
+
+    .dr-training-option {
+        min-height: auto;
+        padding: 1.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dr-content {
+        padding: 0.5rem;
+    }
+
+    .dr-fuel-display,
+    .dr-active-car-display,
+    .dr-training-option {
+        padding: 1rem;
+    }
+
+    .dr-page-title {
+        font-size: 1.5rem;
+    }
+
+    .dr-title-icon {
+        font-size: 2rem;
+    }
+
+    .dr-training-title {
+        font-size: 1.5rem;
+    }
+
+    .dr-option-name {
+        font-size: 1.1rem;
+    }
+
+    .dr-modal-footer {
+        flex-direction: column;
+    }
+
+    .dr-modal-button {
+        width: 100%;
+    }
+
+    .dr-training-option {
+        padding: 1rem;
+    }
+}
+
+/* ================================
+   LOADING SPINNER ANIMATION
+   ================================ */
+.dr-loading-spinner::after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #4a90e2;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: dr-spin 1s linear infinite;
+    margin-left: 0.5rem;
+}
+
+@keyframes dr-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ================================
+   UTILITY CLASSES
+   ================================ */
+.dr-hidden {
+    display: none !important;
+}
+
+.dr-visible {
+    display: block !important;
+}
+
+.dr-fade-in {
+    animation: dr-fade-in 0.5s ease-in-out;
+}
+
+@keyframes dr-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ================================
+   QUANTITY SELECTOR
+   ================================ */
+.dr-quantity-section {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: rgba(42, 42, 42, 0.4);
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.dr-quantity-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f0f0f0;
+    margin: 0 0 1rem 0;
+    text-align: center;
+}
+
+.dr-quantity-selector {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+}
+
+.dr-quantity-button {
+    width: 50px;
+    height: 50px;
+    border: 2px solid #666;
+    background: rgba(26, 26, 26, 0.8);
+    color: #f0f0f0;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dr-quantity-button:hover {
+    border-color: #4a90e2;
+    background: rgba(74, 144, 226, 0.1);
+    transform: translateY(-1px);
+}
+
+.dr-quantity-button.dr-selected {
+    border-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+.dr-quantity-info {
+    text-align: center;
+    color: #bbb;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.dr-quantity-info strong {
+    color: #4CAF50;
+}
+
+.dr-option-warning {
+    font-size: 0.85rem;
+    color: #ffc107;
+    font-style: italic;
+    background: rgba(255, 193, 7, 0.1);
+    padding: 0.5rem;
+    border-radius: 4px;
+    border-left: 3px solid #ffc107;
+    margin-top: 0.5rem;
+}
+
+/* Mobile responsiveness for quantity selector */
+@media (max-width: 480px) {
+    .dr-quantity-button {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+    }
+
+    .dr-quantity-selector {
+        gap: 0.4rem;
+    }
+}

@@ -80,7 +80,7 @@ export const ShopTable: React.FC<ShopTableProps> = ({
 
     const formatEffect = (item: any): React.ReactElement => {
         const consumable = item.consumableEffect;
-        if (!consumable) return <span className="no-data">-</span>;
+        if (!consumable) return <span className="no-data-shop-table">-</span>;
 
         switch (consumable.type) {
             case 'trainingClicks':

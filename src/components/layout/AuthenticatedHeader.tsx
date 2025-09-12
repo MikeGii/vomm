@@ -257,6 +257,28 @@ export const AuthenticatedHeader: React.FC = () => {
                                     <span>Pood</span>
                                 </button>
 
+                                {/* Kiirendusrada - Level 60 required */}
+                                <button
+                                    onClick={() => {
+                                        if (playerStats && playerStats.level >= 60) {
+                                            navigate('/drag-race');
+                                            setIsMenuOpen(false);
+                                        }
+                                    }}
+                                    className={`menu-item ${playerStats && playerStats.level >= 60 ? '' : 'menu-item-locked'}`}
+                                    disabled={!playerStats || playerStats.level < 60}
+                                     >
+                                       <span className="menu-icon">
+                                           {playerStats && playerStats.level >= 60 ? '🏁' : '🔒'}
+                                       </span>
+                                    <span>
+                                             Kiirendusrada
+                                        {playerStats && playerStats.level < 60 && (
+                                            <span className="menu-item-level-req"> (Tase 60)</span>
+                                        )}
+                                    </span>
+                                </button>
+
                                 {/* Minu kodu - Level 60 required */}
                                 <button
                                     onClick={() => {

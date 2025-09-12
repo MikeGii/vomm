@@ -1,5 +1,6 @@
 // src/components/admin/user-management/utils/dataUpdateUtils.ts
 import { PlayerStats } from '../../../../types';
+import {Timestamp} from "firebase/firestore";
 
 /**
  * Deep comparison to find only changed fields
@@ -57,8 +58,28 @@ export const convertToFirestoreUpdate = (changes: Record<string, any>): Record<s
     const update: Record<string, any> = {};
 
     for (const [path, value] of Object.entries(changes)) {
+        // Special handling for admin permissions
+        if (path === 'adminPermissions' && value) {
+            update[path] = {
+                ...value,
+                // Ensure allowedTabs is always saved as an array
+                allowedTabs: Array.isArray(value.allowedTabs)
+                    ? value.allowedTabs
+                    : [],
+                // Convert Date to Timestamp for Firebase
+                grantedAt: value.grantedAt instanceof Date
+                    ? Timestamp.fromDate(value.grantedAt)
+                    : Timestamp.now()
+            };
+        }
+        // Handle other Date fields
+        else if (value instanceof Date) {
+            update[path] = Timestamp.fromDate(value);
+        }
         // Use dot notation directly for Firestore
-        update[path] = value;
+        else {
+            update[path] = value;
+        }
     }
 
     return update;

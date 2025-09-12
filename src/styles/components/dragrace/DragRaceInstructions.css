@@ -1,0 +1,189 @@
+/* src/styles/components/dragrace/DragRaceInstructions.css */
+.dragrace-instructions {
+    background: linear-gradient(135deg, #1a2332, #1a1a1a);
+    border: 1px solid #4a90e2;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.dr-instructions-toggle {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    background: none;
+    border: none;
+    color: #f0f0f0;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.dr-instructions-toggle:hover {
+    background: rgba(74, 144, 226, 0.1);
+}
+
+.dr-toggle-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.dr-info-icon {
+    color: #4a90e2;
+    font-size: 1.2rem;
+}
+
+.dr-instructions-content {
+    padding: 0 1.5rem 1.5rem;
+    animation: dr-slideDown 0.3s ease;
+}
+
+@keyframes dr-slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dr-instruction-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #333;
+}
+
+.dr-instruction-section:last-child {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.dr-instruction-section h3 {
+    color: #4a90e2;
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dr-instruction-section p {
+    color: #b0b0b0;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.dr-instruction-section strong {
+    color: #f0f0f0;
+}
+
+.dr-instruction-section ol {
+    margin: 0;
+    padding-left: 1.2rem;
+    color: #b0b0b0;
+}
+
+.dr-instruction-section li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.dr-instruction-section li:last-child {
+    margin-bottom: 0;
+}
+
+/* Attributes grid for drag race skills */
+.dr-attributes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.dr-attribute-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #2a2a2a;
+    border-radius: 6px;
+    border: 1px solid #333;
+    transition: all 0.3s ease;
+}
+
+.dr-attribute-item:hover {
+    border-color: #4a90e2;
+    background: rgba(74, 144, 226, 0.05);
+}
+
+.dr-attr-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.dr-attr-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.dr-attr-info strong {
+    color: #f0f0f0;
+    font-size: 0.95rem;
+}
+
+.dr-attr-info span {
+    color: #888;
+    font-size: 0.85rem;
+}
+
+.dr-chevron-icon {
+    font-size: 0.9rem;
+    transition: transform 0.3s ease;
+    color: #4a90e2;
+}
+
+.dr-instructions-toggle[aria-expanded="true"] .dr-chevron-icon {
+    transform: rotate(180deg);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .dr-instructions-toggle {
+        padding: 1rem;
+        font-size: 1rem;
+    }
+
+    .dr-instructions-content {
+        padding: 0 1rem 1rem;
+    }
+
+    .dr-attributes-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .dr-instruction-section h3 {
+        font-size: 0.9rem;
+    }
+
+    .dr-attribute-item {
+        padding: 0.5rem;
+    }
+
+    .dr-attr-info strong {
+        font-size: 0.9rem;
+    }
+
+    .dr-attr-info span {
+        font-size: 0.8rem;
+    }
+}

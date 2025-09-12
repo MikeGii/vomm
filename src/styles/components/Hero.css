@@ -1,38 +1,105 @@
-/* src/styles/Hero.css */
-.hero {
+/* src/styles/components/Hero.css */
+
+/* ================================
+   BASE HERO - ORIGINAL DIMENSIONS
+   ================================ */
+.hero-section {
     width: 100%;
     position: relative;
     overflow: hidden;
     background-color: #0f0f0f;
 }
 
-.hero-image-container {
+/* ================================
+   ANIMATED PARTICLES
+   ================================ */
+.hero-section__particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.hero-section__particle {
+    position: absolute;
+    background: rgba(74, 144, 226, 0.4);
+    border-radius: 50%;
+    animation: hero-particle-float 6s ease-in-out infinite;
+}
+
+.hero-section__particle--1 { width: 3px; height: 3px; top: 15%; left: 10%; animation-delay: 0s; }
+.hero-section__particle--2 { width: 4px; height: 4px; top: 25%; left: 85%; animation-delay: -1s; }
+.hero-section__particle--3 { width: 2px; height: 2px; top: 45%; left: 25%; animation-delay: -2s; }
+.hero-section__particle--4 { width: 5px; height: 5px; top: 70%; left: 90%; animation-delay: -3s; }
+.hero-section__particle--5 { width: 3px; height: 3px; top: 35%; left: 60%; animation-delay: -4s; }
+.hero-section__particle--6 { width: 4px; height: 4px; top: 60%; left: 15%; animation-delay: -1.5s; }
+.hero-section__particle--7 { width: 2px; height: 2px; top: 80%; left: 45%; animation-delay: -2.5s; }
+.hero-section__particle--8 { width: 3px; height: 3px; top: 20%; left: 70%; animation-delay: -3.5s; }
+.hero-section__particle--9 { width: 4px; height: 4px; top: 55%; left: 5%; animation-delay: -0.5s; }
+.hero-section__particle--10 { width: 2px; height: 2px; top: 85%; left: 75%; animation-delay: -4.5s; }
+
+@keyframes hero-particle-float {
+    0%, 100% {
+        transform: translateY(0px) scale(1);
+        opacity: 0.3;
+    }
+    50% {
+        transform: translateY(-15px) scale(1.1);
+        opacity: 0.7;
+    }
+}
+
+/* ================================
+   IMAGE CONTAINER - ORIGINAL SIZE
+   ================================ */
+.hero-section__image-container {
     position: relative;
     width: 100%;
     max-height: 80vh;
     overflow: hidden;
 }
 
-.hero-image {
+.hero-section__image {
     width: 100%;
     height: auto;
     display: block;
     object-fit: cover;
-    animation: fadeIn 2s ease-in-out;
+    filter: brightness(0.9) contrast(1.1);
+    animation: hero-image-enhanced-fade-in 2s ease-in-out;
 }
 
-@keyframes fadeIn {
-    from {
+@keyframes hero-image-enhanced-fade-in {
+    0% {
         opacity: 0;
         transform: scale(1.05);
+        filter: brightness(0.5) contrast(1.1) blur(1px);
     }
-    to {
+    100% {
         opacity: 1;
         transform: scale(1);
+        filter: brightness(0.9) contrast(1.1) blur(0px);
     }
 }
 
-.hero-overlay {
+/* ================================
+   ENHANCED OVERLAY - KEEPS ORIGINAL POSITIONING
+   ================================ */
+.hero-section__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.hero-section__overlay-gradient {
     position: absolute;
     top: 0;
     left: 0;
@@ -44,103 +111,214 @@
             rgba(0, 0, 0, 0.5) 50%,
             rgba(0, 0, 0, 0.8) 100%
     );
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: fadeInOverlay 2.5s ease-in-out;
+    animation: hero-overlay-fade-in 2.5s ease-in-out;
 }
 
-@keyframes fadeInOverlay {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+.hero-section__overlay-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+            radial-gradient(circle at 30% 70%, rgba(74, 144, 226, 0.05) 0%, transparent 50%),
+            radial-gradient(circle at 70% 30%, rgba(74, 144, 226, 0.03) 0%, transparent 50%);
+    animation: hero-pattern-pulse 8s ease-in-out infinite;
 }
 
-.hero-content {
+@keyframes hero-overlay-fade-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@keyframes hero-pattern-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* ================================
+   CONTENT - ORIGINAL POSITIONING + ENHANCED ANIMATIONS
+   ================================ */
+.hero-section__content {
     text-align: center;
     padding: 2rem;
     max-width: 800px;
-    animation: slideUp 2.5s ease-out;
+    position: relative;
+    z-index: 3;
+    animation: hero-content-slide-up 2.5s ease-out;
 }
 
-@keyframes slideUp {
-    from {
+@keyframes hero-content-slide-up {
+    0% {
         transform: translateY(30px);
         opacity: 0;
     }
-    to {
+    100% {
         transform: translateY(0);
         opacity: 1;
     }
 }
 
-.hero-title {
+/* ================================
+   SIMPLE ENHANCED TITLE - NO TYPEWRITER
+   ================================ */
+.hero-section__title {
     font-size: 4rem;
     font-weight: bold;
     color: #ffffff;
     margin-bottom: 1rem;
     letter-spacing: 3px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    text-shadow:
+            2px 2px 4px rgba(0, 0, 0, 0.8),
+            0 0 20px rgba(255, 255, 255, 0.2);
+    animation: hero-title-glow 4s ease-in-out infinite alternate;
 }
 
-.hero-subtitle {
+@keyframes hero-title-glow {
+    0% {
+        text-shadow:
+                2px 2px 4px rgba(0, 0, 0, 0.8),
+                0 0 20px rgba(255, 255, 255, 0.2);
+    }
+    100% {
+        text-shadow:
+                2px 2px 4px rgba(0, 0, 0, 0.8),
+                0 0 30px rgba(255, 255, 255, 0.4),
+                0 0 40px rgba(74, 144, 226, 0.3);
+    }
+}
+
+/* ================================
+   ENHANCED SUBTITLE
+   ================================ */
+.hero-section__subtitle {
     font-size: 1.5rem;
     color: #e0e0e0;
     margin-bottom: 1.5rem;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    opacity: 0;
+    animation: hero-subtitle-fade-in 1s ease-out 0.5s forwards,
+    hero-subtitle-pulse 5s ease-in-out 2s infinite;
 }
 
-.hero-description {
+@keyframes hero-subtitle-fade-in {
+    0% {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes hero-subtitle-pulse {
+    0%, 100% {
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        transform: scale(1);
+    }
+    50% {
+        text-shadow:
+                1px 1px 2px rgba(0, 0, 0, 0.8),
+                0 0 15px rgba(224, 224, 224, 0.3);
+        transform: scale(1.01);
+    }
+}
+
+/* ================================
+   ENHANCED DESCRIPTION
+   ================================ */
+.hero-section__description {
     font-size: 1.1rem;
     color: #d0d0d0;
     line-height: 1.6;
     margin-bottom: 2rem;
+    opacity: 0;
+    animation: hero-description-fade-in 1s ease-out 1s forwards;
 }
 
-/* Mobile responsiveness */
+.hero-section__description p {
+    margin: 0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+@keyframes hero-description-fade-in {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ================================
+   MOBILE RESPONSIVENESS - ORIGINAL BREAKPOINTS
+   ================================ */
 @media (max-width: 768px) {
-    .hero-image-container {
+    .hero-section__image-container {
         max-height: 60vh;
     }
 
-    .hero-title {
+    .hero-section__title {
         font-size: 2.5rem;
     }
 
-    .hero-subtitle {
+    .hero-section__subtitle {
         font-size: 1.2rem;
     }
 
-    .hero-description {
+    .hero-section__description {
         font-size: 1rem;
     }
 
-    .hero-content {
+    .hero-section__content {
         padding: 1.5rem;
+    }
+
+    .hero-section__particle {
+        display: none;
     }
 }
 
 @media (max-width: 480px) {
-    .hero-image-container {
+    .hero-section__image-container {
         max-height: 50vh;
     }
 
-    .hero-title {
+    .hero-section__title {
         font-size: 2rem;
     }
 
-    .hero-subtitle {
+    .hero-section__subtitle {
         font-size: 1rem;
     }
 
-    .hero-description {
+    .hero-section__description {
         font-size: 0.9rem;
     }
 
-    .hero-content {
+    .hero-section__content {
         padding: 1rem;
+    }
+}
+
+/* ================================
+   ACCESSIBILITY
+   ================================ */
+@media (prefers-reduced-motion: reduce) {
+    .hero-section__title,
+    .hero-section__subtitle,
+    .hero-section__description,
+    .hero-section__image,
+    .hero-section__particle {
+        animation: none;
+    }
+
+    .hero-section__title,
+    .hero-section__subtitle,
+    .hero-section__description {
+        opacity: 1;
     }
 }

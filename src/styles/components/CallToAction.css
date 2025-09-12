@@ -1,86 +1,430 @@
-/* src/styles/CallToAction.css */
-.cta {
+/* src/styles/components/CallToAction.css */
+
+/* ================================
+   CTA SECTION BASE
+   ================================ */
+.cta-section {
     width: 100%;
-    padding: 4rem 0;
-    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+    padding: 6rem 0;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%);
     border-top: 1px solid #333;
+    position: relative;
+    overflow: hidden;
 }
 
-.cta-container {
+/* ================================
+   BACKGROUND DECORATIVE ELEMENTS
+   ================================ */
+.cta-section__background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.cta-section__bg-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+            radial-gradient(circle at 20% 80%, rgba(74, 144, 226, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(74, 144, 226, 0.08) 0%, transparent 50%);
+    animation: cta-bg-pulse 6s ease-in-out infinite alternate;
+}
+
+@keyframes cta-bg-pulse {
+    0% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.cta-section__bg-circles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.cta-section__bg-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(74, 144, 226, 0.05) 0%, transparent 60%);
+    animation: cta-bg-float 10s ease-in-out infinite;
+}
+
+.cta-section__bg-circle--1 {
+    width: 200px;
+    height: 200px;
+    top: 10%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.cta-section__bg-circle--2 {
+    width: 150px;
+    height: 150px;
+    top: 60%;
+    right: 15%;
+    animation-delay: -3s;
+}
+
+.cta-section__bg-circle--3 {
+    width: 100px;
+    height: 100px;
+    bottom: 20%;
+    left: 20%;
+    animation-delay: -6s;
+}
+
+@keyframes cta-bg-float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(15px, -10px) scale(1.1); }
+    66% { transform: translate(-10px, 15px) scale(0.9); }
+}
+
+.cta-section__bg-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 300px;
+    background: radial-gradient(ellipse, rgba(74, 144, 226, 0.08) 0%, transparent 70%);
+    animation: cta-bg-glow-pulse 8s ease-in-out infinite;
+}
+
+@keyframes cta-bg-glow-pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+}
+
+/* ================================
+   CONTAINER AND CONTENT
+   ================================ */
+.cta-section__container {
     max-width: 800px;
     margin: 0 auto;
     padding: 0 2rem;
     text-align: center;
+    position: relative;
+    z-index: 2;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.cta-title {
-    font-size: 2.5rem;
+.cta-section__container--visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.cta-section__content {
+    position: relative;
+}
+
+/* ================================
+   TITLE WITH ENHANCED EFFECTS
+   ================================ */
+.cta-section__title {
+    font-size: 2.8rem;
     color: #f0f0f0;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: cta-title-glow 4s ease-in-out infinite alternate;
 }
 
-.cta-description {
+.cta-section__title::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -10px;
+    right: -10px;
+    bottom: -5px;
+    background: linear-gradient(45deg, transparent, rgba(74, 144, 226, 0.1), transparent);
+    border-radius: 8px;
+    z-index: -1;
+    opacity: 0;
+    animation: cta-title-shine 3s ease-in-out infinite;
+}
+
+@keyframes cta-title-glow {
+    0% {
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    100% {
+        text-shadow:
+                0 2px 4px rgba(0, 0, 0, 0.3),
+                0 0 20px rgba(74, 144, 226, 0.3);
+    }
+}
+
+@keyframes cta-title-shine {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+}
+
+/* ================================
+   DESCRIPTION
+   ================================ */
+.cta-section__description {
     font-size: 1.2rem;
     color: #b0b0b0;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
     line-height: 1.6;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.cta-button {
-    padding: 1rem 3rem;
-    font-size: 1.2rem;
-    background-color: #4a90e2;
+/* ================================
+   ENHANCED BUTTON
+   ================================ */
+.cta-section__button-wrapper {
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+.cta-section__button {
+    position: relative;
+    padding: 1.2rem 3.5rem;
+    font-size: 1.3rem;
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
     color: white;
     border: none;
     border-radius: 50px;
     cursor: pointer;
-    transition: all 0.3s ease;
     font-weight: 600;
-    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+    box-shadow:
+            0 8px 25px rgba(74, 144, 226, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
-.cta-button:hover {
-    background-color: #357abd;
+.cta-section__button:hover {
+    background: linear-gradient(135deg, #357abd 0%, #2a5a94 100%);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow:
+            0 12px 35px rgba(74, 144, 226, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.cta-section__button:active {
+    transform: translateY(-2px) scale(1);
+    box-shadow:
+            0 6px 20px rgba(74, 144, 226, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* ================================
+   BUTTON DECORATIVE ELEMENTS
+   ================================ */
+.cta-section__button-text {
+    position: relative;
+    z-index: 2;
+}
+
+.cta-section__button-icon {
+    font-size: 1.1rem;
+    transition: transform 0.3s ease;
+}
+
+.cta-section__button:hover .cta-section__button-icon {
+    transform: scale(1.2);
+    animation: cta-button-icon-bounce 0.6s ease;
+}
+
+@keyframes cta-button-icon-bounce {
+    0%, 100% { transform: scale(1.2); }
+    50% { transform: scale(1.4); }
+}
+
+.cta-section__button-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.cta-section__button:hover .cta-section__button-glow {
+    opacity: 1;
+    animation: cta-button-glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes cta-button-glow-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.cta-section__button-shine {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.2),
+            transparent
+    );
+    transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cta-section__button:hover .cta-section__button-shine {
+    left: 100%;
+}
+
+/* ================================
+   FEATURES LIST
+   ================================ */
+.cta-section__features {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.cta-section__feature {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #888;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.cta-section__feature:hover {
+    color: #b0b0b0;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
 }
 
-/* Mobile responsiveness */
+.cta-section__feature-icon {
+    font-size: 1.2rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.cta-section__feature-text {
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ================================
+   MOBILE RESPONSIVENESS
+   ================================ */
 @media (max-width: 768px) {
-    .cta {
-        padding: 3rem 0;
+    .cta-section {
+        padding: 4rem 0;
     }
 
-    .cta-title {
-        font-size: 2rem;
+    .cta-section__title {
+        font-size: 2.2rem;
     }
 
-    .cta-description {
+    .cta-section__description {
         font-size: 1.1rem;
+        margin-bottom: 2.5rem;
     }
 
-    .cta-button {
-        padding: 0.9rem 2.5rem;
+    .cta-section__button {
+        padding: 1rem 2.5rem;
         font-size: 1.1rem;
+        gap: 0.5rem;
+    }
+
+    .cta-section__features {
+        gap: 1.5rem;
+    }
+
+    .cta-section__feature {
+        font-size: 0.85rem;
+    }
+
+    .cta-section__bg-circle {
+        display: none;
     }
 }
 
 @media (max-width: 480px) {
-    .cta-container {
+    .cta-section__container {
         padding: 0 1rem;
     }
 
-    .cta-title {
-        font-size: 1.7rem;
+    .cta-section__title {
+        font-size: 1.8rem;
     }
 
-    .cta-description {
+    .cta-section__description {
         font-size: 1rem;
+        margin-bottom: 2rem;
     }
 
-    .cta-button {
-        padding: 0.8rem 2rem;
+    .cta-section__button {
+        padding: 0.9rem 2rem;
         font-size: 1rem;
+        width: 100%;
+        max-width: 280px;
+    }
+
+    .cta-section__features {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .cta-section__bg-glow {
+        display: none;
+    }
+}
+
+/* ================================
+   ACCESSIBILITY
+   ================================ */
+@media (prefers-reduced-motion: reduce) {
+    .cta-section__container,
+    .cta-section__button,
+    .cta-section__bg-circle,
+    .cta-section__bg-pattern,
+    .cta-section__bg-glow,
+    .cta-section__title::before {
+        animation: none;
+        transition: none;
+    }
+
+    .cta-section__container {
+        opacity: 1;
+        transform: none;
+    }
+
+    .cta-section__button:hover {
+        transform: none;
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    .cta-section__title {
+        color: #2a2a2a;
+    }
+
+    .cta-section__description {
+        color: #555;
     }
 }

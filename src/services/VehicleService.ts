@@ -17,7 +17,6 @@ import {
     createDefaultUniversalTuning,
     PlayerCar,
     UNIVERSAL_TUNING_CONFIG,
-    UniversalTuningState,
     UniversalTuningCategory,
     checkTuningRequirements
 } from '../types/vehicles';
@@ -28,51 +27,6 @@ import {
     getVehicleEngineById,
     getVehicleModelById,
 } from './VehicleDatabaseService';
-
-async function ensureGarageSlots(
-    transaction: any,
-    userRef: any,
-    userData: any,
-    userId: string
-): Promise<GarageSlot[]> {
-    // Check if garage slots exist and are valid
-    const existingSlots = userData.estateData?.garageSlots;
-    if (existingSlots && Array.isArray(existingSlots) && existingSlots.length > 0) {
-        return existingSlots;
-    }
-
-    // Get estate data
-    const estateRef = doc(db, 'playerEstates', userId);
-    const estateDoc = await transaction.get(estateRef);
-
-    if (!estateDoc.exists()) {
-        return [];
-    }
-
-    const estateData = estateDoc.data();
-    const currentEstate = estateData.currentEstate;
-
-    // Check garage capacity
-    if (!currentEstate?.hasGarage || !currentEstate?.garageCapacity) {
-        return [];
-    }
-
-    // Create new empty garage slots
-    const newSlots: GarageSlot[] = [];
-    for (let i = 1; i <= currentEstate.garageCapacity; i++) {
-        newSlots.push({
-            slotId: i,
-            isEmpty: true
-        });
-    }
-
-    // Update user document with new slots
-    transaction.update(userRef, {
-        'estateData.garageSlots': newSlots
-    });
-
-    return newSlots;
-}
 
 // Create stock engine from database engine
 function createEngineFromDatabase(dbEngine: VehicleEngine) {

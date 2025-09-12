@@ -31,7 +31,7 @@ const VehicleTuning: React.FC<VehicleTuningProps> = ({
     const { showToast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
     const [updatingCategory, setUpdatingCategory] = useState<string | null>(null);
-    const [localTuning, setLocalTuning] = useState(car.universalTuning || createDefaultUniversalTuning());
+    const [localTuning] = useState(car.universalTuning || createDefaultUniversalTuning());
 
     // Use local tuning state for immediate updates
     const currentTuning = localTuning;

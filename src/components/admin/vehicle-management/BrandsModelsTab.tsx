@@ -13,8 +13,6 @@ import { useToast } from '../../../contexts/ToastContext';
 import { BrandModal } from './modals/BrandModal';
 import { ModelModal } from './modals/ModelModal';
 import '../../../styles/components/admin/vehicle-management/BrandsModelsTab.css';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { firestore } from '../../../config/firebase';
 
 interface ExtendedVehicleModel extends VehicleModel {
     defaultEngine?: VehicleEngine;
@@ -70,7 +68,6 @@ export const BrandsModelsTab: React.FC = () => {
     const [modelModalOpen, setModelModalOpen] = useState(false);
     const [editingBrand, setEditingBrand] = useState<VehicleBrand | undefined>();
     const [editingModel, setEditingModel] = useState<VehicleModel | undefined>();
-    const [isMigrating, setIsMigrating] = useState(false);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -331,47 +328,6 @@ export const BrandsModelsTab: React.FC = () => {
         cacheManager.clearByPattern('vehicle');
         cacheManager.clearByPattern('engine');
         loadData(true);
-    };
-
-    const handleMigration = async () => {
-        if (!window.confirm('Kas oled kindel, et soovid kõiki olemasolevaid autosid migreerida?')) {
-            return;
-        }
-
-        setIsMigrating(true);
-        try {
-            const modelsRef = collection(firestore, 'vehicleModels');
-            const snapshot = await getDocs(modelsRef);
-
-            let updated = 0;
-            let skipped = 0;
-
-            for (const docSnap of snapshot.docs) {
-                const data = docSnap.data();
-
-                if (!data.currency) {
-                    await updateDoc(doc(firestore, 'vehicleModels', docSnap.id), {
-                        currency: 'money'
-                    });
-                    console.log(`Updated: ${data.brandName} ${data.model}`);
-                    updated++;
-                } else {
-                    console.log(`Skipped: ${data.brandName} ${data.model}`);
-                    skipped++;
-                }
-            }
-
-            showToast(`Migratsioon lõpetatud! Uuendatud: ${updated}, vahele jäetud: ${skipped}`, 'success');
-
-            // Refresh data
-            loadData(true);
-
-        } catch (error: any) {
-            console.error('Migration error:', error);
-            showToast(`Migratsiooniviga: ${error.message}`, 'error');
-        } finally {
-            setIsMigrating(false);
-        }
     };
 
     return (

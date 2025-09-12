@@ -1,0 +1,313 @@
+/* src/styles/components/admin/estate-management/modals/EstateModal.css */
+.estate-modal {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.estate-modal__content {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+    max-height: 70vh;
+}
+
+/* Sections */
+.estate-modal__section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: #2a2a2a;
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.estate-modal__section:last-child {
+    margin-bottom: 0;
+}
+
+.estate-modal__section-title {
+    color: #ffd700;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+/* Form Fields */
+.estate-modal__field {
+    margin-bottom: 1.5rem;
+}
+
+.estate-modal__field:last-child {
+    margin-bottom: 0;
+}
+
+.estate-modal__label {
+    display: block;
+    color: #f0f0f0;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+/* Input Fields */
+.estate-modal__input,
+.estate-modal__textarea,
+.estate-modal__select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #555;
+    border-radius: 6px;
+    background: #1a1a1a;
+    color: #f0f0f0;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.estate-modal__input:focus,
+.estate-modal__textarea:focus,
+.estate-modal__select:focus {
+    outline: none;
+    border-color: #ffd700;
+    box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+}
+
+.estate-modal__input:disabled,
+.estate-modal__textarea:disabled,
+.estate-modal__select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #222;
+}
+
+.estate-modal__input--error,
+.estate-modal__textarea--error {
+    border-color: #dc3545;
+}
+
+.estate-modal__input--error:focus,
+.estate-modal__textarea--error:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+.estate-modal__textarea {
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.5;
+}
+
+.estate-modal__select {
+    cursor: pointer;
+}
+
+/* Checkbox Fields */
+.estate-modal__checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    padding: 0.75rem;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.estate-modal__checkbox-label:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 215, 0, 0.3);
+}
+
+.estate-modal__checkbox {
+    width: 20px;
+    height: 20px;
+    accent-color: #ffd700;
+    cursor: pointer;
+}
+
+.estate-modal__checkbox-text {
+    color: #f0f0f0;
+    font-weight: 500;
+    font-size: 0.95rem;
+    user-select: none;
+}
+
+/* Error Messages */
+.estate-modal__error {
+    display: block;
+    color: #dc3545;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+/* Help Text */
+.estate-modal__help-text {
+    display: block;
+    color: #999;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+/* Footer */
+.estate-modal__footer {
+    padding: 1.5rem;
+    border-top: 2px solid #444;
+    background: #252525;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.estate-modal__btn {
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    min-width: 120px;
+}
+
+.estate-modal__btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.estate-modal__btn--cancel {
+    background: linear-gradient(135deg, #6c757d, #5a6268);
+    color: white;
+}
+
+.estate-modal__btn--cancel:hover:not(:disabled) {
+    background: linear-gradient(135deg, #5a6268, #495057);
+    transform: translateY(-2px);
+}
+
+.estate-modal__btn--save {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.estate-modal__btn--save:hover:not(:disabled) {
+    background: linear-gradient(135deg, #218838, #1ea080);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .estate-modal__content {
+        padding: 1rem;
+        max-height: 60vh;
+    }
+
+    .estate-modal__section {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .estate-modal__section-title {
+        font-size: 1.1rem;
+    }
+
+    .estate-modal__footer {
+        padding: 1rem;
+        flex-direction: column-reverse;
+        gap: 0.75rem;
+    }
+
+    .estate-modal__btn {
+        width: 100%;
+        padding: 1rem 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .estate-modal__content {
+        padding: 0.75rem;
+    }
+
+    .estate-modal__section {
+        padding: 0.75rem;
+    }
+
+    .estate-modal__input,
+    .estate-modal__textarea,
+    .estate-modal__select {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+
+    .estate-modal__checkbox-label {
+        padding: 0.6rem;
+    }
+}
+
+.estate-modal__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.estate-modal__container {
+    background: #1a1a1a;
+    border-radius: 12px;
+    border: 2px solid #444;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    max-width: 800px;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.estate-modal__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 2px solid #444;
+    background: #252525;
+    border-radius: 12px 12px 0 0;
+}
+
+.estate-modal__title {
+    color: #ffd700;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.estate-modal__close {
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.estate-modal__close:hover:not(:disabled) {
+    color: #f0f0f0;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.estate-modal__close:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
