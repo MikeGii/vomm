@@ -11,6 +11,7 @@ import { PlayerStats } from '../types';
 import { ALL_SHOP_ITEMS } from '../data/shop';
 import { createTimestampedId } from '../utils/inventoryUtils';
 import { calculateStaticPrice } from "./ShopStockService";
+import { validatePurchaseQuantity, validateTotalCost } from '../utils/purchaseValidation';
 import { cacheManager } from "./CacheManager";
 
 /**
@@ -70,7 +71,7 @@ const shopItemToInventoryItem = (shopItem: ShopItem): InventoryItem => {
 };
 
 /**
- * Purchase item from shop - UPDATED FOR HYBRID SYSTEM
+ * Purchase item from shop - UPDATED FOR HYBRID SYSTEM WITH VALIDATION
  */
 export const purchaseItem = async (
     userId: string,
@@ -78,6 +79,16 @@ export const purchaseItem = async (
     quantity: number = 1
 ): Promise<PurchaseResult> => {
     try {
+        // STEP 1: Early validation BEFORE any database operations
+        const quantityValidation = validatePurchaseQuantity(quantity);
+        if (!quantityValidation.isValid) {
+            return {
+                success: false,
+                message: quantityValidation.error!,
+                failureReason: 'requirements_not_met' // Use existing valid reason
+            };
+        }
+
         // Get shop item definition first (outside transaction)
         const shopItem = getShopItemById(itemId);
         if (!shopItem) {
@@ -85,6 +96,20 @@ export const purchaseItem = async (
                 success: false,
                 message: 'Ese ei ole saadaval',
                 failureReason: 'out_of_stock'
+            };
+        }
+
+        // STEP 2: Validate total cost calculation early
+        const basePrice = shopItem.currency === 'pollid'
+            ? (shopItem.basePollidPrice || shopItem.pollidPrice || 0)
+            : shopItem.basePrice;
+
+        const totalCostValidation = validateTotalCost(basePrice, quantity);
+        if (!totalCostValidation.isValid) {
+            return {
+                success: false,
+                message: totalCostValidation.error!,
+                failureReason: 'requirements_not_met' // Use existing valid reason
             };
         }
 
@@ -112,7 +137,7 @@ export const purchaseItem = async (
 
             const playerStats = playerDoc.data() as PlayerStats;
 
-            // STOCK CHECK - only for player-craftable items
+            // STEP 3: Enhanced stock validation with better error messages
             let currentStock = 999999; // Default to unlimited for basic ingredients
 
             if (isPlayerCraftable) {
@@ -125,7 +150,7 @@ export const purchaseItem = async (
 
                 // Check if enough stock for player-craftable items
                 if (currentStock < quantity) {
-                    throw new Error(`Laos pole piisavalt! Saadaval: ${currentStock}`);
+                    throw new Error(`Laos pole piisavalt! Saadaval: ${currentStock}, soovid: ${quantity}`);
                 }
             }
 
@@ -142,10 +167,31 @@ export const purchaseItem = async (
                 currentBalance = playerStats.money || 0;
             }
 
-            // Check balance
+            // STEP 4: Double-check cost calculation inside transaction
+            const reCostValidation = validateTotalCost(basePrice, quantity);
+            if (!reCostValidation.isValid) {
+                throw new Error('Vigane hinna arvutus: ' + reCostValidation.error);
+            }
+
+            // Check balance with better error message
             if (currentBalance < totalCost) {
                 const currencyName = isPollidPurchase ? 'polle' : 'raha';
-                throw new Error(`Ebapiisav ${currencyName}. Vaja: ${totalCost}, Sul on: ${currentBalance}`);
+                throw new Error(`Ebapiisav ${currencyName}. Vaja: €${totalCost.toFixed(2)}, Sul on: €${currentBalance.toFixed(2)}`);
+            }
+
+            // STEP 5: Validate inventory update won't cause overflow
+            const currentInventory = playerStats.inventory || [];
+            const existingItemIndex = currentInventory.findIndex(
+                (invItem: InventoryItem) =>
+                    invItem.name === shopItem.name && !invItem.equipped
+            );
+
+            // Check for potential quantity overflow in inventory
+            if (existingItemIndex !== -1) {
+                const newQuantity = currentInventory[existingItemIndex].quantity + quantity;
+                if (newQuantity > 99999) { // Reasonable inventory limit
+                    throw new Error(`Liiga palju esemeid! Maksimum inventaris: 99999, oleks: ${newQuantity}`);
+                }
             }
 
             // UPDATE STOCK - only for player-craftable items
@@ -163,13 +209,7 @@ export const purchaseItem = async (
             }
 
             // Update player inventory
-            const currentInventory = playerStats.inventory || [];
             let updatedInventory = [...currentInventory];
-
-            const existingItemIndex = updatedInventory.findIndex(
-                (invItem: InventoryItem) =>
-                    invItem.name === shopItem.name && !invItem.equipped
-            );
 
             if (existingItemIndex !== -1) {
                 updatedInventory[existingItemIndex] = {
@@ -205,10 +245,10 @@ export const purchaseItem = async (
             }
             cacheManager.clearByPattern('shop_all_items_stock');
 
-            // Return success result
+            // Return success result with detailed info
             const result: PurchaseResult = {
                 success: true,
-                message: `Ostsid: ${shopItem.name}${quantity > 1 ? ` x${quantity}` : ''}`,
+                message: `Ostsid: ${shopItem.name}${quantity > 1 ? ` x${quantity}` : ''} (€${totalCost.toFixed(2)})`,
             };
 
             if (isPollidPurchase) {

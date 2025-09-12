@@ -83,6 +83,17 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
     const handlePurchaseMaterial = async (itemId: string, quantity: number) => {
         if (!currentUser || !playerStats) return;
 
+        // ADDED: Validate quantity before making purchase
+        if (quantity < 1) {
+            showToast('Kogus peab olema vähemalt 1', 'error');
+            return;
+        }
+
+        if (quantity > 9999) {
+            showToast('Maksimaalne kogus on 9999 tükki', 'error');
+            return;
+        }
+
         setPurchasingItems(prev => ({ ...prev, [itemId]: true }));
 
         try {
@@ -103,9 +114,12 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                     await onRefreshStats();
                 }
             } else {
+                // ENHANCED: Show more specific error messages
                 showToast(result.message || 'Ostmine ebaõnnestus', 'error');
             }
         } catch (error: any) {
+            // ENHANCED: Better error handling
+            console.error('Purchase error:', error);
             showToast(error.message || 'Viga ostmisel', 'error');
         } finally {
             setPurchasingItems(prev => ({ ...prev, [itemId]: false }));
@@ -119,7 +133,8 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
 
     const updatePurchaseQuantity = (itemId: string, quantity: number) => {
         const itemStock = getItemStockAmount(itemId);
-        const maxAllowed = itemStock > 0 ? Math.min(999, itemStock) : 999;
+        // UPDATED: Change max limit from 999 to 9999
+        const maxAllowed = itemStock > 0 ? Math.min(9999, itemStock) : 9999;
         setPurchaseQuantities(prev => ({
             ...prev,
             [itemId]: Math.max(1, Math.min(maxAllowed, quantity))
@@ -323,7 +338,7 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                                                             <button
                                                                 className="qty-btn-sm"
                                                                 onClick={() => updatePurchaseQuantity(item.id, purchaseQty + 1)}
-                                                                disabled={isPurchasing || (itemStock !== 999999 && purchaseQty >= Math.min(999, itemStock))}
+                                                                disabled={isPurchasing || (itemStock !== 999999 && purchaseQty >= Math.min(9999, itemStock))}
                                                             >
                                                                 +
                                                             </button>

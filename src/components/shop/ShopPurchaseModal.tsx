@@ -53,6 +53,12 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
 
     const handleQuantityChange = (newQuantity: number) => {
         if (newQuantity >= 1) {
+            // ADDED: Validate maximum quantity limit
+            if (newQuantity > 9999) {
+                setQuantityError('Maksimaalne kogus on 9999 tükki');
+                return;
+            }
+
             setQuantity(newQuantity);
             setQuantityInput(newQuantity.toString());
 
@@ -84,6 +90,11 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
 
         const numValue = parseInt(value);
         if (!isNaN(numValue) && numValue >= 1) {
+            // ADDED: Check for maximum limit before processing
+            if (numValue > 9999) {
+                setQuantityError('Maksimaalne kogus on 9999 tükki');
+                return;
+            }
             handleQuantityChange(numValue);
         } else if (numValue < 1) {
             setQuantityError('Kogus peab olema vähemalt 1');
@@ -110,9 +121,11 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
     // Determine max quantity for input validation
     const getMaxQuantity = () => {
         if (hasUnlimitedStock) {
-            return maxAffordable; // Only limited by player's balance
+            // UPDATED: Limit by both balance and 9999 maximum
+            return Math.min(maxAffordable, 9999);
         } else {
-            return Math.min(currentStock, maxAffordable); // Limited by stock and balance
+            // UPDATED: Limit by stock, balance, and 9999 maximum
+            return Math.min(currentStock, maxAffordable, 9999);
         }
     };
 
@@ -187,11 +200,11 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
                     <label className="quantity-label">Kogus:</label>
                     <div className="quantity-controls">
                         <button
-                            className="quantity-btn decrease"
+                            className="quantity-btn"
                             onClick={() => handleQuantityChange(quantity - 1)}
                             disabled={quantity <= 1 || isLoading}
                         >
-                            −
+                            -
                         </button>
                         <input
                             type="number"
@@ -199,14 +212,13 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
                             value={quantityInput}
                             onChange={(e) => handleInputChange(e.target.value)}
                             min="1"
-                            max={getMaxQuantity()}
-                            placeholder="1"
+                            max={getMaxQuantity()} // UPDATED: Uses new max calculation
                             disabled={isLoading}
                         />
                         <button
-                            className="quantity-btn increase"
+                            className="quantity-btn"
                             onClick={() => handleQuantityChange(quantity + 1)}
-                            disabled={isLoading}
+                            disabled={quantity >= getMaxQuantity() || isLoading} // UPDATED: Uses new max calculation
                         >
                             +
                         </button>
@@ -220,9 +232,13 @@ export const ShopPurchaseModal: React.FC<ShopPurchaseModalProps> = ({
                     ) : (
                         <div className="quantity-info">
                             {hasUnlimitedStock ? (
-                                <span className="unlimited-stock">Alati saadaval</span>
+                                <span className="unlimited-stock">
+                                    Piiramatu ladu • Saad osta: {Math.min(maxAffordable, 9999)} tk
+                                </span>
                             ) : (
-                                <span className="limited-stock">Laos: {currentStock} tükki</span>
+                                <span className="limited-stock">
+                                Laos: {currentStock} tk • Saad osta: {getMaxQuantity()} tk
+                            </span>
                             )}
                         </div>
                     )}
