@@ -151,8 +151,8 @@ export const ModelModal: React.FC<ModelModalProps> = ({
         if (formData.currency === 'pollid') {
             if (!formData.basePollidPrice || formData.basePollidPrice < 1) {
                 newErrors.basePollidPrice = 'Pollid hind peab olema vähemalt 1';
-            } else if (formData.basePollidPrice > 1000) {
-                newErrors.basePollidPrice = 'Pollid hind ei tohi olla üle 1000';
+            } else if (formData.basePollidPrice > 2000) {
+                newErrors.basePollidPrice = 'Pollid hind ei tohi olla üle 2000';
             }
         }
 
@@ -365,7 +365,7 @@ export const ModelModal: React.FC<ModelModalProps> = ({
                                 value={formData.basePollidPrice || ''}
                                 onChange={(e) => handleInputChange('basePollidPrice', parseInt(e.target.value) || undefined)}
                                 min={1}
-                                max={1000}
+                                max={2000}
                                 placeholder="nt. 50"
                             />
                             {errors.basePollidPrice && <div className="form-error">{errors.basePollidPrice}</div>}

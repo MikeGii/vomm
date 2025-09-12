@@ -9,6 +9,7 @@ import { UserManagement } from '../components/admin/user-management/UserManageme
 import { VehicleManagement } from '../components/admin/VehicleManagement';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
+import { UpdatesManagement } from '../components/admin/UpdatesManagement';
 import '../styles/pages/Admin.css';
 
 const AdminPage: React.FC = () => {
@@ -33,6 +34,7 @@ const AdminPage: React.FC = () => {
         { id: 'applications', label: 'Kandideerimised' },
         { id: 'users', label: 'Kasutajate haldus' },
         { id: 'vehicles', label: 'Sõidukid' },
+        { id: 'updates', label: 'Uuendused' },
     ];
 
     // Super admin näeb kõiki tabbe, teised ainult lubatuid
@@ -121,6 +123,7 @@ const AdminPage: React.FC = () => {
                         {activeTab === 'applications' && <AdminApplicationsTab />}
                         {activeTab === 'users' && <UserManagement />}
                         {activeTab === 'vehicles' && <VehicleManagement />}
+                        {activeTab === 'updates' && <UpdatesManagement />}
                     </>
                 )}
 

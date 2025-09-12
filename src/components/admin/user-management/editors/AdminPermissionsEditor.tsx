@@ -24,7 +24,8 @@ export const AdminPermissionsEditor: React.FC<AdminPermissionsEditorProps> = ({
         { id: 'tools', label: 'Admin tööriistad', description: 'Üldised admin tööriistad ja funktsioonid' },
         { id: 'applications', label: 'Kandideerimised', description: 'Töökohataotluste haldamine' },
         { id: 'users', label: 'Kasutajate haldus', description: 'Kasutajate andmete muutmine' },
-        { id: 'vehicles', label: 'Sõidukite haldus', description: 'Sõidukite andmebaasi haldamine' }
+        { id: 'vehicles', label: 'Sõidukite haldus', description: 'Sõidukite andmebaasi haldamine' },
+        { id: 'updates', label: 'Uuendused', description: 'Mängu uuenduste lisamine ja haldamine' }
     ];
 
     const hasAdminAccess = user.adminPermissions?.hasAdminAccess || false;
