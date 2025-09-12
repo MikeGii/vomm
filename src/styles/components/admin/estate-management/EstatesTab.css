@@ -1,0 +1,398 @@
+/* src/styles/components/admin/estate-management/EstatesTab.css */
+.estates-tab {
+    padding: 1rem;
+}
+
+.estates-tab__loading {
+    text-align: center;
+    padding: 2rem;
+    color: #999;
+    font-size: 1.1rem;
+}
+
+/* Header */
+.estates-tab__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #2a2a2a;
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.estates-tab__header-title h3 {
+    color: #ffd700;
+    font-size: 1.5rem;
+    margin: 0 0 0.25rem 0;
+}
+
+.estates-tab__header-title p {
+    color: #999;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.estates-tab__header-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+/* Buttons */
+.estates-tab__btn {
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.estates-tab__btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.estates-tab__btn--add {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.estates-tab__btn--add:hover:not(:disabled) {
+    background: linear-gradient(135deg, #218838, #1ea080);
+    transform: translateY(-2px);
+}
+
+.estates-tab__btn--refresh {
+    background: linear-gradient(135deg, #6c757d, #5a6268);
+    color: white;
+}
+
+.estates-tab__btn--refresh:hover:not(:disabled) {
+    background: linear-gradient(135deg, #5a6268, #495057);
+    transform: translateY(-2px);
+}
+
+.estates-tab__btn--edit {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    color: white;
+    justify-content: center;
+}
+
+.estates-tab__btn--edit:hover:not(:disabled) {
+    background: linear-gradient(135deg, #138496, #117a8b);
+    transform: translateY(-1px);
+}
+
+.estates-tab__btn--delete {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    justify-content: center;
+}
+
+.estates-tab__btn--delete:hover:not(:disabled) {
+    background: linear-gradient(135deg, #c82333, #bd2130);
+    transform: translateY(-1px);
+}
+
+/* Table */
+.estates-tab__table-container {
+    background: #2a2a2a;
+    border-radius: 8px;
+    border: 1px solid #444;
+    overflow: hidden;
+}
+
+.estates-tab__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.estates-tab__table th {
+    background: #1a1a1a;
+    color: #ffd700;
+    font-weight: 600;
+    padding: 1rem 0.75rem;
+    text-align: left;
+    border-bottom: 2px solid #444;
+    white-space: nowrap;
+}
+
+.estates-tab__table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #333;
+    color: #f0f0f0;
+    vertical-align: middle;
+}
+
+.estates-tab__table tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.estates-tab__row--inactive {
+    opacity: 0.6;
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.estates-tab__row--inactive:hover {
+    background: rgba(220, 53, 69, 0.15);
+}
+
+/* Status Toggle */
+.estates-tab__status-toggle {
+    width: 36px;
+    height: 28px;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+}
+
+.estates-tab__status-toggle--active {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.estates-tab__status-toggle--inactive {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+}
+
+.estates-tab__status-toggle:hover:not(:disabled) {
+    transform: scale(1.05);
+}
+
+.estates-tab__status-toggle:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Table Cells */
+.estates-tab__name-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.estates-tab__name {
+    font-weight: 600;
+    color: #f0f0f0;
+}
+
+.estates-tab__id {
+    font-size: 0.75rem;
+    color: #999;
+    font-family: monospace;
+}
+
+.estates-tab__price-cell {
+    font-weight: 600;
+    color: #28a745;
+    white-space: nowrap;
+}
+
+.estates-tab__feature-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.estates-tab__feature-badge--active {
+    background: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.estates-tab__feature-badge--inactive {
+    background: rgba(108, 117, 125, 0.2);
+    color: #6c757d;
+    border: 1px solid rgba(108, 117, 125, 0.3);
+}
+
+.estates-tab__kitchen-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    white-space: nowrap;
+}
+
+.estates-tab__date-cell {
+    font-size: 0.8rem;
+    color: #999;
+    white-space: nowrap;
+}
+
+.estates-tab__actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+/* Pagination */
+.estates-tab__pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #2a2a2a;
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.estates-tab__pagination-info {
+    color: #999;
+    font-size: 0.9rem;
+}
+
+.estates-tab__pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.estates-tab__page-btn {
+    min-width: 36px;
+    height: 36px;
+    border: 1px solid #555;
+    background: #333;
+    color: #f0f0f0;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.estates-tab__page-btn:hover:not(:disabled) {
+    background: #444;
+    border-color: #666;
+    transform: translateY(-1px);
+}
+
+.estates-tab__page-btn--active {
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    color: #000;
+    border-color: #ffd700;
+    font-weight: 600;
+}
+
+.estates-tab__page-btn:disabled {
+    background: #222;
+    color: #666;
+    border-color: #333;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* No Data State */
+.estates-tab__no-data {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: #2a2a2a;
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.estates-tab__no-data h3 {
+    color: #ffd700;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.estates-tab__no-data p {
+    color: #999;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .estates-tab {
+        padding: 0.5rem;
+    }
+
+    .estates-tab__header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    .estates-tab__header-actions {
+        justify-content: center;
+    }
+
+    .estates-tab__table-container {
+        overflow-x: auto;
+    }
+
+    .estates-tab__table {
+        min-width: 800px;
+        font-size: 0.8rem;
+    }
+
+    .estates-tab__table th,
+    .estates-tab__table td {
+        padding: 0.5rem 0.4rem;
+    }
+
+    /* Hide less important columns on mobile */
+    .estates-tab__table th:nth-child(7),
+    .estates-tab__table td:nth-child(7),
+    .estates-tab__table th:nth-child(8),
+    .estates-tab__table td:nth-child(8) {
+        display: none;
+    }
+
+    .estates-tab__pagination {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .estates-tab__header-title h3 {
+        font-size: 1.2rem;
+    }
+
+    .estates-tab__btn {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    /* Hide even more columns on very small screens */
+    .estates-tab__table th:nth-child(4),
+    .estates-tab__table td:nth-child(4),
+    .estates-tab__table th:nth-child(5),
+    .estates-tab__table td:nth-child(5),
+    .estates-tab__table th:nth-child(6),
+    .estates-tab__table td:nth-child(6) {
+        display: none;
+    }
+}

@@ -7,6 +7,7 @@ import { AdminTools } from '../components/admin/AdminTools';
 import { AdminApplicationsTab } from '../components/admin/AdminApplicationsTab';
 import { UserManagement } from '../components/admin/user-management/UserManagement';
 import { VehicleManagement } from '../components/admin/VehicleManagement';
+import { EstateManagement } from '../components/admin/EstateManagement';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { UpdatesManagement } from '../components/admin/UpdatesManagement';
@@ -20,7 +21,27 @@ const AdminPage: React.FC = () => {
 
     // Uuendatud admin õiguste kontroll
     const hasAdminAccess = playerStats?.adminPermissions?.hasAdminAccess || false;
-    const allowedTabs = playerStats?.adminPermissions?.allowedTabs || [];
+
+    const allowedTabs: string[] = (() => {
+        const tabs = playerStats?.adminPermissions?.allowedTabs;
+
+        // Debug: Remove after fixing
+        console.log('AdminPage - allowedTabs from DB:', tabs, typeof tabs, Array.isArray(tabs));
+
+        if (Array.isArray(tabs)) {
+            // Just filter for strings, don't worry about AdminTab type here
+            return tabs.filter(tab => typeof tab === 'string');
+        }
+
+        // Handle Firebase object format {0: "tools", 1: "estates"}
+        if (tabs && typeof tabs === 'object' && tabs !== null) {
+            const values = Object.values(tabs).filter(v => typeof v === 'string') as string[];
+            console.log('AdminPage - converted to array:', values);
+            return values;
+        }
+
+        return [];
+    })();
 
     // Super admin kontroll (backup)
     const isSuperAdmin = currentUser?.uid === 'WUucfDi2DAat9sgDY75mDZ8ct1k2';
@@ -34,6 +55,7 @@ const AdminPage: React.FC = () => {
         { id: 'applications', label: 'Kandideerimised' },
         { id: 'users', label: 'Kasutajate haldus' },
         { id: 'vehicles', label: 'Sõidukid' },
+        { id: 'estates', label: 'Kinnisvarad' },
         { id: 'updates', label: 'Uuendused' },
     ];
 
@@ -123,6 +145,7 @@ const AdminPage: React.FC = () => {
                         {activeTab === 'applications' && <AdminApplicationsTab />}
                         {activeTab === 'users' && <UserManagement />}
                         {activeTab === 'vehicles' && <VehicleManagement />}
+                        {activeTab === 'estates' && <EstateManagement />}
                         {activeTab === 'updates' && <UpdatesManagement />}
                     </>
                 )}

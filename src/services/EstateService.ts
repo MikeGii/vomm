@@ -1,11 +1,17 @@
-// src/services/EstateService.ts
+// src/services/EstateService.ts (CLEANED - Database only)
 import { doc, getDoc, setDoc, Timestamp, runTransaction } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
-import {PlayerEstate, EstateProperty, EstateTransaction, GarageSlot} from '../types/estate';
+import { PlayerEstate, EstateProperty, EstateTransaction, GarageSlot } from '../types/estate';
 import { InventoryItem } from '../types';
 import { getBaseIdFromInventoryId } from '../utils/inventoryUtils';
-import { AVAILABLE_ESTATES } from "../data/estates";
 import { getUserCars } from './VehicleService';
+
+// Import database service functions
+import { getEstateById } from './EstateDatabaseService';
+
+// ============================================
+// PLAYER ESTATE FUNCTIONS
+// ============================================
 
 export const getPlayerEstate = async (userId: string): Promise<PlayerEstate | null> => {
     try {
@@ -28,16 +34,14 @@ export const getPlayerEstate = async (userId: string): Promise<PlayerEstate | nu
 };
 
 export const ensurePlayerEstate = async (userId: string): Promise<PlayerEstate> => {
-    // Check if estate record already exists
     const existingEstate = await getPlayerEstate(userId);
     if (existingEstate) {
         return existingEstate;
     }
 
-    // Create new estate record (works for both new and existing players)
     const newEstate: PlayerEstate = {
         userId,
-        currentEstate: null, // No property initially
+        currentEstate: null,
         ownedDevices: {
             has3DPrinter: false,
             hasLaserCutter: false
@@ -70,7 +74,6 @@ const createEmptyGarageSlots = (capacity: number): GarageSlot[] => {
     return slots;
 };
 
-// Keep the old name as an alias for backward compatibility
 export const initializePlayerEstate = ensurePlayerEstate;
 
 export const calculateEstateTransaction = (
@@ -88,6 +91,153 @@ export const calculateEstateTransaction = (
     };
 };
 
+// ============================================
+// ESTATE PURCHASE FUNCTION - Database only
+// ============================================
+
+export const purchaseEstate = async (
+    userId: string,
+    newEstateId: string,
+): Promise<{ success: boolean; message: string; newBalance?: number }> => {
+    try {
+        // Get estate from database
+        const newEstate = await getEstateById(newEstateId);
+        if (!newEstate) {
+            return { success: false, message: 'Kinnisvara ei leitud' };
+        }
+
+        return await runTransaction(firestore, async (transaction) => {
+            const estateRef = doc(firestore, 'playerEstates', userId);
+            const playerRef = doc(firestore, 'playerStats', userId);
+            const userRef = doc(firestore, 'users', userId);
+
+            const estateDoc = await transaction.get(estateRef);
+            const playerDoc = await transaction.get(playerRef);
+            const userDoc = await transaction.get(userRef);
+
+            if (!playerDoc.exists()) {
+                throw new Error('Mängija andmed ei leitud');
+            }
+
+            const playerStats = playerDoc.data();
+            const userData = userDoc.exists() ? userDoc.data() : {};
+            const currentEstate = estateDoc.exists() ? estateDoc.data() : null;
+
+            const estateTransaction = calculateEstateTransaction(
+                newEstate,
+                currentEstate?.currentEstate || null
+            );
+
+            if (playerStats.money < estateTransaction.finalPrice) {
+                return {
+                    success: false,
+                    message: 'Sul pole piisavalt raha!'
+                };
+            }
+
+            // Garage capacity validation
+            if (newEstate.hasGarage && currentEstate?.currentEstate?.hasGarage) {
+                const currentCapacity = currentEstate.currentEstate.garageCapacity || 0;
+                const newCapacity = newEstate.garageCapacity || 0;
+
+                if (newCapacity < currentCapacity) {
+                    const userCars = await getUserCars(userId);
+                    if (userCars.length > newCapacity) {
+                        return {
+                            success: false,
+                            message: `Ei saa osta seda kinnisvara! Sul on ${userCars.length} autot, kuid uues garaažis on ainult ${newCapacity} kohta. Müü enne ${userCars.length - newCapacity} autot ära.`
+                        };
+                    }
+                }
+            }
+
+            if (currentEstate?.currentEstate?.hasGarage && !newEstate.hasGarage) {
+                const userCars = await getUserCars(userId);
+                if (userCars.length > 0) {
+                    return {
+                        success: false,
+                        message: `Ei saa osta seda kinnisvara! Sul on ${userCars.length} autot, kuid uuel kinnisvaral pole garaažis ruumi.`
+                    };
+                }
+            }
+
+            const newBalance = playerStats.money - estateTransaction.finalPrice;
+
+            transaction.update(playerRef, { money: newBalance });
+
+            // Handle garage slots
+            let garageSlots = userData.estateData?.garageSlots || [];
+
+            if (newEstate.hasGarage && newEstate.garageCapacity > 0) {
+                if (!currentEstate?.currentEstate?.hasGarage ||
+                    newEstate.garageCapacity !== (currentEstate?.currentEstate?.garageCapacity || 0)) {
+
+                    const existingCars = garageSlots.filter((slot: GarageSlot) => !slot.isEmpty);
+                    garageSlots = createEmptyGarageSlots(newEstate.garageCapacity);
+
+                    existingCars.forEach((carSlot: GarageSlot, index: number) => {
+                        if (index < garageSlots.length) {
+                            garageSlots[index] = {
+                                slotId: garageSlots[index].slotId,
+                                isEmpty: false,
+                                carId: carSlot.carId
+                            };
+                        }
+                    });
+                }
+            } else {
+                garageSlots = [];
+            }
+
+            transaction.update(userRef, {
+                'estateData.garageSlots': garageSlots
+            });
+
+            const estateData = {
+                userId,
+                currentEstate: newEstate,
+                ownedDevices: currentEstate?.ownedDevices || {
+                    has3DPrinter: false,
+                    hasLaserCutter: false
+                },
+                unequippedDevices: currentEstate?.unequippedDevices || {
+                    threeDPrinters: 0,
+                    laserCutters: 0
+                },
+                updatedAt: Timestamp.now()
+            };
+
+            if (estateDoc.exists()) {
+                transaction.update(estateRef, estateData);
+            } else {
+                transaction.set(estateRef, {
+                    ...estateData,
+                    createdAt: Timestamp.now()
+                });
+            }
+
+            const actionType = currentEstate?.currentEstate ?
+                (estateTransaction.finalPrice < 0 ? 'alla müüdud' : 'uuendatud') :
+                'ostetud';
+
+            return {
+                success: true,
+                message: `Kinnisvara edukalt ${actionType}!`,
+                newBalance
+            };
+        });
+    } catch (error) {
+        console.error('Error purchasing estate:', error);
+        return {
+            success: false,
+            message: error instanceof Error ? error.message : 'Tundmatu viga'
+        };
+    }
+};
+
+// ============================================
+// WORKSHOP FUNCTIONS
+// ============================================
 
 export const getDetailedWorkshopDevices = (inventory: InventoryItem[]): {
     threeDPrinters: InventoryItem[];
@@ -97,7 +247,7 @@ export const getDetailedWorkshopDevices = (inventory: InventoryItem[]): {
     const laserCutters: InventoryItem[] = [];
 
     inventory.forEach(item => {
-        if (item.equipped) return; // Skip equipped items
+        if (item.equipped) return;
 
         const baseId = getBaseIdFromInventoryId(item.id);
 
@@ -111,7 +261,6 @@ export const getDetailedWorkshopDevices = (inventory: InventoryItem[]): {
     return { threeDPrinters, laserCutters };
 };
 
-// Function to equip a workshop device
 export const equipWorkshopDevice = async (
     userId: string,
     deviceType: '3d_printer' | 'laser_cutter',
@@ -304,155 +453,5 @@ export const unequipWorkshopDevice = async (
     } catch (error) {
         console.error('Error unequipping workshop device:', error);
         throw error;
-    }
-};
-
-export const purchaseEstate = async (
-    userId: string,
-    newEstateId: string,
-): Promise<{ success: boolean; message: string; newBalance?: number }> => {
-    try {
-        const newEstate = AVAILABLE_ESTATES.find(e => e.id === newEstateId);
-        if (!newEstate) {
-            return { success: false, message: 'Kinnisvara ei leitud' };
-        }
-
-        return await runTransaction(firestore, async (transaction) => {
-            // Get current estate and player stats
-            const estateRef = doc(firestore, 'playerEstates', userId);
-            const playerRef = doc(firestore, 'playerStats', userId);
-            const userRef = doc(firestore, 'users', userId); // LISA SEE
-
-            const estateDoc = await transaction.get(estateRef);
-            const playerDoc = await transaction.get(playerRef);
-            const userDoc = await transaction.get(userRef); // LISA SEE
-
-            if (!playerDoc.exists()) {
-                throw new Error('Mängija andmed ei leitud');
-            }
-
-            const playerStats = playerDoc.data();
-            const userData = userDoc.exists() ? userDoc.data() : {}; // LISA SEE
-            const currentEstate = estateDoc.exists() ? estateDoc.data() : null;
-
-            // Calculate transaction
-            const estateTransaction = calculateEstateTransaction(
-                newEstate,
-                currentEstate?.currentEstate || null
-            );
-
-            // Check if player has enough money
-            if (playerStats.money < estateTransaction.finalPrice) {
-                return {
-                    success: false,
-                    message: 'Sul pole piisavalt raha!'
-                };
-            }
-
-            // NEW: Check garage capacity if downsizing
-            if (newEstate.hasGarage && currentEstate?.currentEstate?.hasGarage) {
-                const currentCapacity = currentEstate.currentEstate.garageCapacity || 0;
-                const newCapacity = newEstate.garageCapacity || 0;
-
-                if (newCapacity < currentCapacity) {
-                    // Player is downsizing garage - check if they have too many cars
-                    const userCars = await getUserCars(userId);
-
-                    if (userCars.length > newCapacity) {
-                        return {
-                            success: false,
-                            message: `Ei saa osta seda kinnisvara! Sul on ${userCars.length} autot, kuid uues garaažis on ainult ${newCapacity} kohta. Müü enne ${userCars.length - newCapacity} autot ära.`
-                        };
-                    }
-                }
-            }
-
-            // If moving from garage to no-garage property
-            if (currentEstate?.currentEstate?.hasGarage && !newEstate.hasGarage) {
-                const userCars = await getUserCars(userId);
-
-                if (userCars.length > 0) {
-                    return {
-                        success: false,
-                        message: `Ei saa osta seda kinnisvara! Sul on ${userCars.length} autot, kuid uuel kinnisvaral pole garaažis ruumi.`
-                    };
-                }
-            }
-
-            const newBalance = playerStats.money - estateTransaction.finalPrice;
-
-            // Update player money
-            transaction.update(playerRef, {
-                money: newBalance
-            });
-
-            // LISA SIIA GARAAŽI SLOTTIDE LOOGIKA
-            let garageSlots = userData.estateData?.garageSlots || [];
-
-            if (newEstate.hasGarage && newEstate.garageCapacity > 0) {
-                if (!currentEstate?.currentEstate?.hasGarage ||
-                    newEstate.garageCapacity !== (currentEstate?.currentEstate?.garageCapacity || 0)) {
-
-                    const existingCars = garageSlots.filter((slot: GarageSlot) => !slot.isEmpty);
-                    garageSlots = createEmptyGarageSlots(newEstate.garageCapacity);
-
-                    existingCars.forEach((carSlot: GarageSlot, index: number) => {
-                        if (index < garageSlots.length) {
-                            garageSlots[index] = {
-                                slotId: garageSlots[index].slotId,
-                                isEmpty: false,
-                                carId: carSlot.carId
-                            };
-                        }
-                    });
-                }
-            } else {
-                garageSlots = [];
-            }
-
-            transaction.update(userRef, {
-                'estateData.garageSlots': garageSlots
-            });
-
-            // Update or create estate record
-            const estateData = {
-                userId,
-                currentEstate: newEstate,
-                ownedDevices: currentEstate?.ownedDevices || {
-                    has3DPrinter: false,
-                    hasLaserCutter: false
-                },
-                unequippedDevices: currentEstate?.unequippedDevices || {
-                    threeDPrinters: 0,
-                    laserCutters: 0
-                },
-                updatedAt: Timestamp.now()
-            };
-
-            if (estateDoc.exists()) {
-                transaction.update(estateRef, estateData);
-            } else {
-                transaction.set(estateRef, {
-                    ...estateData,
-                    createdAt: Timestamp.now()
-                });
-            }
-
-            const actionType = currentEstate?.currentEstate ?
-                (estateTransaction.finalPrice < 0 ? 'alla müüdud' : 'uuendatud') :
-                'ostetud';
-
-            return {
-                success: true,
-                message: `Kinnisvara edukalt ${actionType}!`,
-                newBalance
-            };
-        });
-    } catch (error) {
-        console.error('Error purchasing estate:', error);
-        return {
-            success: false,
-            message: error instanceof Error ? error.message : 'Tundmatu viga'
-        };
     }
 };
