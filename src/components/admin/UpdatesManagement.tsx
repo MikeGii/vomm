@@ -1,5 +1,5 @@
 // src/components/admin/UpdatesManagement.tsx
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { RichTextEditor } from '../ui/RichTextEditor';
@@ -34,12 +34,7 @@ export const UpdatesManagement: React.FC = () => {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Load updates on component mount
-    useEffect(() => {
-        loadUpdates();
-    }, []);
-
-    const loadUpdates = async () => {
+    const loadUpdates = useCallback(async () => {
         try {
             setLoading(true);
             const fetchedUpdates = await getAllUpdatesForAdmin();
@@ -50,7 +45,12 @@ export const UpdatesManagement: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [showToast]);
+
+    // Load updates on component mount
+    useEffect(() => {
+        loadUpdates();
+    }, [loadUpdates]);
 
     const resetForm = () => {
         setFormData({ title: '', content: '', isNew: false });

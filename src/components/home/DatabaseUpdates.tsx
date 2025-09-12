@@ -1,5 +1,5 @@
 // src/components/home/DatabaseUpdates.tsx
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { DocumentSnapshot } from 'firebase/firestore';
 import { DatabaseUpdate } from '../../types/updates';
 import { getUpdatesForPublic } from '../../services/UpdatesService';
@@ -15,11 +15,7 @@ export const DatabaseUpdates: React.FC = () => {
 
     const updatesPerPage = 5;
 
-    useEffect(() => {
-        loadUpdates();
-    }, []);
-
-    const loadUpdates = async (page: number = 1, reset: boolean = true) => {
+    const loadUpdates = useCallback(async (page: number = 1, reset: boolean = true) => {
         try {
             setLoading(true);
             setError(null);
@@ -45,11 +41,10 @@ export const DatabaseUpdates: React.FC = () => {
             }
 
             // Calculate total pages (approximation since we don't know exact count)
-            // We'll show "Next" button if there are more results
             if (result.hasMore) {
-                setTotalPages(page + 1); // At least one more page
+                setTotalPages(page + 1);
             } else {
-                setTotalPages(page); // This is the last page
+                setTotalPages(page);
             }
 
         } catch (error) {
@@ -58,7 +53,11 @@ export const DatabaseUpdates: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [lastDocs, updatesPerPage]);
+
+    useEffect(() => {
+        loadUpdates();
+    }, [loadUpdates]);
 
     const handlePageChange = async (pageNumber: number) => {
         if (pageNumber === currentPage) return;

@@ -1,5 +1,5 @@
 // src/components/home/GameInfo.tsx
-import React, { useEffect, useRef, useState, createElement } from 'react';
+import React, { useEffect, useRef, useState, createElement, useCallback, useMemo } from 'react';
 import '../../styles/components/GameInfo.css';
 import { FaPeopleGroup } from "react-icons/fa6";
 import { PiBuildingApartmentFill } from "react-icons/pi";
@@ -10,13 +10,14 @@ export const GameInfo: React.FC = () => {
     const [counters, setCounters] = useState<{ [key: number]: number }>({});
     const sectionRef = useRef<HTMLElement>(null);
 
-    const stats = [
+    // Move stats to useMemo to make it stable
+    const stats = useMemo(() => [
         { number: '13', label: 'Erinevat jaoskonda', targetValue: 13 },
         { number: '50+', label: 'Koolitust arenguks', targetValue: 50 },
         { number: '20', label: 'Erinevat ametikohta', targetValue: 20 }
-    ];
+    ], []);
 
-    const getIcon = (index: number) => {
+    const getIcon = useCallback((index: number) => {
         switch (index) {
             case 0:
                 return createElement(PiBuildingApartmentFill as any);
@@ -27,7 +28,21 @@ export const GameInfo: React.FC = () => {
             default:
                 return null;
         }
-    };
+    }, []);
+
+    const animateCounter = useCallback((index: number, target: number) => {
+        let current = 0;
+        const increment = target / 60; // 60 frames for smooth animation
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                setCounters(prev => ({ ...prev, [index]: target }));
+                clearInterval(timer);
+            } else {
+                setCounters(prev => ({ ...prev, [index]: Math.floor(current) }));
+            }
+        }, 16); // ~60fps
+    }, []);
 
     // Intersection Observer for animations
     useEffect(() => {
@@ -53,21 +68,7 @@ export const GameInfo: React.FC = () => {
         }
 
         return () => observer.disconnect();
-    }, [isVisible]);
-
-    const animateCounter = (index: number, target: number) => {
-        let current = 0;
-        const increment = target / 60; // 60 frames for smooth animation
-        const timer = setInterval(() => {
-            current += increment;
-            if (current >= target) {
-                setCounters(prev => ({ ...prev, [index]: target }));
-                clearInterval(timer);
-            } else {
-                setCounters(prev => ({ ...prev, [index]: Math.floor(current) }));
-            }
-        }, 16); // ~60fps
-    };
+    }, [isVisible, stats, animateCounter]); // Now includes all dependencies
 
     const formatNumber = (index: number) => {
         if (index === 1) {
