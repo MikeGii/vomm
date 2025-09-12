@@ -141,31 +141,36 @@ export const getUpdatesForPublic = async (
     hasMore: boolean;
     lastDoc?: DocumentSnapshot;
 }> => {
-    let q = query(
-        collection(firestore, UPDATES_COLLECTION),
-        orderBy('createdAt', 'desc'),
-        limit(pageSize)
-    );
+    try {
+        let q = query(
+            collection(firestore, UPDATES_COLLECTION),
+            orderBy('createdAt', 'desc'),
+            limit(pageSize)
+        );
 
-    if (lastDoc) {
-        q = query(q, startAfter(lastDoc));
+        if (lastDoc) {
+            q = query(q, startAfter(lastDoc));
+        }
+
+        const querySnapshot = await getDocs(q);
+
+        const updates: DatabaseUpdate[] = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        } as DatabaseUpdate));
+
+        const hasMore = querySnapshot.docs.length === pageSize;
+        const newLastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+
+        return {
+            updates,
+            hasMore,
+            lastDoc: newLastDoc
+        };
+    } catch (error) {
+        console.error('Error in getUpdatesForPublic:', error);
+        throw error;
     }
-
-    const querySnapshot = await getDocs(q);
-
-    const updates: DatabaseUpdate[] = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-    } as DatabaseUpdate));
-
-    const hasMore = querySnapshot.docs.length === pageSize;
-    const newLastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
-
-    return {
-        updates,
-        hasMore,
-        lastDoc: newLastDoc
-    };
 };
 
 /**

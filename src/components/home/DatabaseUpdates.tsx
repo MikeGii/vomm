@@ -1,5 +1,5 @@
-// src/components/home/DatabaseUpdates.tsx
-import React, {useState, useEffect, useCallback} from 'react';
+// src/components/home/DatabaseUpdates.tsx - PARANDATUD VERSIOON
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DocumentSnapshot } from 'firebase/firestore';
 import { DatabaseUpdate } from '../../types/updates';
 import { getUpdatesForPublic } from '../../services/UpdatesService';
@@ -11,7 +11,9 @@ export const DatabaseUpdates: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
-    const [lastDocs, setLastDocs] = useState<{ [key: number]: DocumentSnapshot }>({});
+
+    // MUUTUS: kasutame useRef'i pagination jaoks
+    const lastDocsRef = useRef<{ [key: number]: DocumentSnapshot }>({});
 
     const updatesPerPage = 5;
 
@@ -22,8 +24,9 @@ export const DatabaseUpdates: React.FC = () => {
 
             let lastDoc: DocumentSnapshot | undefined;
 
-            if (page > 1 && lastDocs[page - 1]) {
-                lastDoc = lastDocs[page - 1];
+            // MUUTUS: kasutame ref'i mitte state'i
+            if (page > 1 && lastDocsRef.current[page - 1]) {
+                lastDoc = lastDocsRef.current[page - 1];
             }
 
             const result = await getUpdatesForPublic(updatesPerPage, lastDoc);
@@ -32,29 +35,30 @@ export const DatabaseUpdates: React.FC = () => {
                 setUpdates(result.updates);
             }
 
-            // Store the last document for this page
+            // MUUTUS: salvestame ref'i, mitte state'i
             if (result.lastDoc) {
-                setLastDocs(prev => ({
-                    ...prev,
-                    [page]: result.lastDoc!
-                }));
+                lastDocsRef.current = {
+                    ...lastDocsRef.current,
+                    [page]: result.lastDoc
+                };
             }
 
-            // Calculate total pages (approximation since we don't know exact count)
+            // Calculate total pages
             if (result.hasMore) {
                 setTotalPages(page + 1);
             } else {
                 setTotalPages(page);
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error loading updates:', error);
             setError('Viga uuenduste laadimisel');
         } finally {
             setLoading(false);
         }
-    }, [lastDocs, updatesPerPage]);
+    }, [updatesPerPage]); // Nüüd pole `lastDocs` dependency's
 
+    // MUUTUS: lisame loadUpdates dependency, aga see ei põhjusta loop'i
     useEffect(() => {
         loadUpdates();
     }, [loadUpdates]);
@@ -86,8 +90,6 @@ export const DatabaseUpdates: React.FC = () => {
         return dateObj.toLocaleDateString('et-EE');
     };
 
-    // REMOVED: stripHtmlTags function - we want to keep HTML formatting
-
     if (loading && currentPage === 1) {
         return (
             <section className="db-updates">
@@ -109,8 +111,8 @@ export const DatabaseUpdates: React.FC = () => {
                     <div className="db-updates__error">
                         <p>{error}</p>
                         <button
-                            onClick={() => loadUpdates(1)}
                             className="db-updates__retry-btn"
+                            onClick={() => loadUpdates()}
                         >
                             Proovi uuesti
                         </button>
@@ -120,7 +122,7 @@ export const DatabaseUpdates: React.FC = () => {
         );
     }
 
-    if (updates.length === 0) {
+    if (!loading && updates.length === 0) {
         return (
             <section className="db-updates">
                 <div className="db-updates__container">
@@ -137,53 +139,52 @@ export const DatabaseUpdates: React.FC = () => {
         <section className="db-updates">
             <div className="db-updates__container">
                 <h2 className="db-updates__title">Uuendused</h2>
+
                 <div className="db-updates__list">
-                    {updates.map((update) => (
-                        <div key={update.id} className="db-update-card">
-                            {update.isNew && <span className="db-update-card__badge">UUS</span>}
+                    {updates.map((update, index) => (
+                        <div key={update.id || index} className="db-update-card">
+                            {update.isNew && (
+                                <span className="db-update-card__badge">UUS</span>
+                            )}
                             <div className="db-update-card__content">
                                 <h3 className="db-update-card__title">{update.title}</h3>
-                                {/* CHANGED: Now using dangerouslySetInnerHTML to display rich text */}
                                 <div
                                     className="db-update-card__description"
                                     dangerouslySetInnerHTML={{ __html: update.content }}
                                 />
-                                <time className="db-update-card__date">
+                                <span className="db-update-card__date">
                                     {formatDate(update.createdAt)}
-                                </time>
+                                </span>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* Pagination */}
                 {totalPages > 1 && (
                     <div className="db-updates__pagination">
                         <button
                             className="db-updates__pagination-btn"
                             onClick={() => handlePageChange(currentPage - 1)}
-                            disabled={currentPage === 1 || loading}
+                            disabled={currentPage <= 1}
                         >
-                            ←
+                            ‹
                         </button>
-
                         <span className="db-updates__pagination-info">
-                            Lehekülg {currentPage} / {totalPages}+
+                            {currentPage} / {totalPages}
                         </span>
-
                         <button
                             className="db-updates__pagination-btn"
                             onClick={() => handlePageChange(currentPage + 1)}
-                            disabled={currentPage >= totalPages || loading}
+                            disabled={currentPage >= totalPages}
                         >
-                            →
+                            ›
                         </button>
                     </div>
                 )}
 
                 {loading && currentPage > 1 && (
                     <div className="db-updates__loading-pagination">
-                        <p>Laadin...</p>
+                        <p>Laadin järgmist lehte...</p>
                     </div>
                 )}
             </div>
