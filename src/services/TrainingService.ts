@@ -895,6 +895,7 @@ export const performTraining = async (
     }
 
     // NEW: Handle handicraft activities with workshop success rate system
+// NEW: Handle handicraft activities with workshop success rate system
     let craftingResult: {
         itemsProduced: boolean;
         isWorkshopActivity: boolean;
@@ -906,37 +907,117 @@ export const performTraining = async (
         if (activity && activity.requiredItems) {
             const isWorkshopActivity = !!(activity.rewards.printing || activity.rewards.lasercutting);
 
-            // Check if this is a workshop activity (printing or laser cutting)
-            if (isWorkshopActivity) {
-                // Use workshop crafting with success rate
-                const workshopResult = await performWorkshopCrafting(userId, activity, stats.inventory || []);
-                updates.inventory = workshopResult.updatedInventory;
-                craftingResult = {
-                    itemsProduced: workshopResult.itemsProduced,
-                    isWorkshopActivity: true,
-                    activityName: activity.name
-                };
+            // Deklareerime itemsProduced väljaspool if blokki
+            let itemsProduced = true;
 
-                // Log crafting outcome for debugging/monitoring
-                if (!workshopResult.itemsProduced) {
-                    console.log(`Workshop crafting failed for activity ${activityId} - materials consumed but no items produced`);
+            if (activity.producedItems) {
+                // Check if workshop activity with success rate
+                if (isWorkshopActivity) {
+                    const successRate = await getWorkshopSuccessRate(userId, activity.rewards);
+                    const roll = Math.random() * 100;
+                    itemsProduced = roll < successRate;
+
+                    console.log(`Workshop success check: ${roll.toFixed(1)} vs ${successRate}% = ${itemsProduced ? 'SUCCESS' : 'FAIL'}`);
                 }
-            } else {
-                // Non-workshop handicraft activities (sewing, medicine) - 100% success
-                if (activity.producedItems) {
-                    const updatedInventory = updateInventoryForCrafting(
-                        stats.inventory || [],
-                        activity.requiredItems,
-                        activity.producedItems
-                    );
+
+                if (itemsProduced) {
+                    // Update inventory with produced items (käsitöö ei kasuta köögiboonust)
+                    const updatedInventory = [...(stats.inventory || [])];
+
+                    // Remove required materials
+                    activity.requiredItems.forEach(required => {
+                        if (required.quantity <= 0) return;
+
+                        let remainingToRemove = Math.floor(required.quantity);
+
+                        for (let i = updatedInventory.length - 1; i >= 0 && remainingToRemove > 0; i--) {
+                            const item = updatedInventory[i];
+                            if (!item || item.quantity <= 0) continue;
+
+                            const baseId = getBaseIdFromInventoryId(item.id);
+
+                            if (baseId === required.id && item.category === 'crafting') {
+                                if (item.quantity <= remainingToRemove) {
+                                    remainingToRemove -= item.quantity;
+                                    updatedInventory.splice(i, 1);
+                                } else {
+                                    updatedInventory[i] = {
+                                        ...item,
+                                        quantity: Math.max(0, item.quantity - remainingToRemove)
+                                    };
+                                    remainingToRemove = 0;
+                                }
+                            }
+                        }
+                    });
+
+                    // Add produced items (ilma köögiboonuseta)
+                    activity.producedItems.forEach(produced => {
+                        if (produced.quantity <= 0) return;
+
+                        const finalQuantity = Math.max(1, Math.floor(produced.quantity));
+
+                        const existingIndex = updatedInventory.findIndex(item => {
+                            const baseId = getBaseIdFromInventoryId(item.id);
+                            return baseId === produced.id && !item.equipped && item.quantity > 0;
+                        });
+
+                        if (existingIndex >= 0) {
+                            updatedInventory[existingIndex] = {
+                                ...updatedInventory[existingIndex],
+                                quantity: updatedInventory[existingIndex].quantity + finalQuantity
+                            };
+                        } else {
+                            try {
+                                const newItem = createInventoryItemFromId(produced.id, finalQuantity);
+                                updatedInventory.push(newItem);
+                            } catch (error) {
+                                console.error(`Failed to create item ${produced.id}:`, error);
+                            }
+                        }
+                    });
+
                     updates.inventory = updatedInventory;
-                    craftingResult = {
-                        itemsProduced: true,
-                        isWorkshopActivity: false,
-                        activityName: activity.name
-                    };
+                } else {
+                    // Still remove materials even on failure
+                    const updatedInventory = [...(stats.inventory || [])];
+
+                    activity.requiredItems.forEach(required => {
+                        if (required.quantity <= 0) return;
+
+                        let remainingToRemove = Math.floor(required.quantity);
+
+                        for (let i = updatedInventory.length - 1; i >= 0 && remainingToRemove > 0; i--) {
+                            const item = updatedInventory[i];
+                            if (!item || item.quantity <= 0) continue;
+
+                            const baseId = getBaseIdFromInventoryId(item.id);
+
+                            if (baseId === required.id && item.category === 'crafting') {
+                                if (item.quantity <= remainingToRemove) {
+                                    remainingToRemove -= item.quantity;
+                                    updatedInventory.splice(i, 1);
+                                } else {
+                                    updatedInventory[i] = {
+                                        ...item,
+                                        quantity: Math.max(0, item.quantity - remainingToRemove)
+                                    };
+                                    remainingToRemove = 0;
+                                }
+                            }
+                        }
+                    });
+
+                    updates.inventory = updatedInventory;
                 }
             }
+
+            // Nüüd saame kasutada itemsProduced muutujat
+            craftingResult = {
+                itemsProduced: itemsProduced,
+                isWorkshopActivity: isWorkshopActivity,
+                activityName: activity.name
+            };
         }
     }
 
