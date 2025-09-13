@@ -294,7 +294,13 @@ const TrainingPage: React.FC = () => {
             const result = await performTraining(currentUser!.uid, currentTrainingState.selectedActivity, activity.rewards, trainingType);
             await refreshStats();
 
-// Enhanced feedback based on actual result
+            // Show kitchen bonus toast notification for food activities
+            if (activeTab === 'food' && result.kitchenBonusResult && result.kitchenBonusResult.bonusApplied) {
+                const { multiplier, activityName } = result.kitchenBonusResult;
+                showToast(`🍳 Köögiboonus! ${activityName}: ${multiplier}x tootmine õnnestus!`, 'success');
+            }
+
+            // Enhanced feedback based on actual result
             if (activeTab === 'handcraft' && result.craftingResult && (activity.rewards.printing || activity.rewards.lasercutting)) {
                 if (!result.craftingResult.itemsProduced) {
                     showToast('Käsitöö ebaõnnestus - materjalid kulutatud, kuid esemeid ei saadud.', 'warning');
@@ -370,13 +376,20 @@ const TrainingPage: React.FC = () => {
 
             // Perform 5 individual trainings in sequence
             const result = await performTraining5x(currentUser!.uid, currentTrainingState.selectedActivity, activity.rewards, trainingType);
-
             await refreshStats();
 
-            // Show enhanced feedback for handicraft activities
+            // Show enhanced feedback for different activity types
             if (activeTab === 'handcraft' && result.craftingSummary && result.craftingSummary.isWorkshopActivity) {
                 const { successful, failed, activityName } = result.craftingSummary;
                 showToast(`5x ${activityName}: ${successful} õnnestus, ${failed} ebaõnnestus`, 'success');
+            } else if (activeTab === 'food' && result.kitchenBonusResults && result.kitchenBonusResults.length > 0) {
+                // Köögiboonuse tulemuste kokkuvõte
+                const bonusCount = result.kitchenBonusResults.filter(r => r.bonusApplied).length;
+                if (bonusCount > 0) {
+                    showToast(`5x ${activity.name}: ${bonusCount} köögiboonust sai!`, 'success');
+                } else {
+                    showToast(`5x ${activity.name} lõpetatud!`, 'success');
+                }
             } else {
                 showToast(`5x ${activity.name} lõpetatud!`, 'success');
             }
@@ -740,6 +753,8 @@ const TrainingPage: React.FC = () => {
                                 { key: 'brewing', name: 'Joogi valmistamine', icon: '🥤' },
                                 { key: 'chemistry', name: 'Keemia valmistamine', icon: '🧪' }
                             ]}
+                            playerStats={playerStats}
+                            showKitchenBonus={true}
                         />
 
                         <TrainingMilestones currentLevel={playerStats.level} />

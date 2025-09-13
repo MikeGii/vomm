@@ -18,6 +18,11 @@ import { ALL_SHOP_ITEMS } from '../data/shop';
 import { InventoryItem } from '../types';
 import { getBaseIdFromInventoryId, createTimestampedId } from '../utils/inventoryUtils';
 import { updateProgress } from "./TaskService";
+import {
+    applyKitchenBonus,
+    KitchenBonusResult
+} from './KitchenBonusService';
+import {getPlayerEstate} from "./EstateService";
 
 // Calculate experience needed for next attribute level
 export const calculateExpForNextLevel = (currentLevel: number): number => {
@@ -164,19 +169,25 @@ const createInventoryItemFromId = (itemId: string, quantity: number): InventoryI
 };
 
 // Helper function to update inventory after crafting
-const updateInventoryForCrafting = (
+export const updateInventoryForCrafting = (
     inventory: InventoryItem[],
     requiredItems: { id: string; quantity: number }[],
-    producedItems: { id: string; quantity: number }[]
-): InventoryItem[] => {
+    producedItems: { id: string; quantity: number }[],
+    playerStats?: any, // Lisa köögiboonuse jaoks
+    activityName?: string // Lisa toast märguande jaoks
+): {
+    updatedInventory: InventoryItem[],
+    kitchenBonusResult?: KitchenBonusResult & { activityName?: string }
+} => {
     let updatedInventory = [...inventory];
+    let kitchenBonusResult: (KitchenBonusResult & { activityName?: string }) | undefined;
 
     // SECURITY: Validate inventory isn't null/undefined
     if (!Array.isArray(updatedInventory)) {
         updatedInventory = [];
     }
 
-    // Remove required materials by base ID
+    // Remove required materials by base ID (SAMA KUI ENNE)
     requiredItems.forEach(required => {
         // SECURITY: Validate quantities
         if (required.quantity <= 0) return;
@@ -204,14 +215,32 @@ const updateInventoryForCrafting = (
         }
     });
 
-    // Add produced items
+    // Add produced items WITH KITCHEN BONUS (UUS LOOGIKA)
     producedItems.forEach(produced => {
         // SECURITY: Validate produced items
         if (produced.quantity <= 0) return;
 
-        const safeQuantity = Math.max(1, Math.floor(produced.quantity));
+        let finalQuantity = Math.max(1, Math.floor(produced.quantity));
 
-        // Check if item already exists by base ID
+        // RAKENDA KÖÖGIBOONUST TOODETUD KOGUSELE
+        if (playerStats) {
+
+            const bonusResult = applyKitchenBonus(playerStats, finalQuantity);
+            finalQuantity = bonusResult.finalAmount;
+
+            // Salvesta boonuse tulemused toast märguande jaoks (ainult esimest korda)
+            if (bonusResult.bonusApplied && !kitchenBonusResult) {
+                kitchenBonusResult = {
+                    ...bonusResult,
+                    activityName: activityName || 'tundmatu tegevus'
+                };
+            } else if (!bonusResult.bonusApplied) {
+            }
+        } else {
+            console.log('❌ NO PLAYER STATS PROVIDED');
+        }
+
+        // Check if item already exists by base ID (SAMA KUI ENNE)
         const existingIndex = updatedInventory.findIndex(item => {
             const baseId = getBaseIdFromInventoryId(item.id);
             return baseId === produced.id && !item.equipped && item.quantity > 0;
@@ -221,12 +250,12 @@ const updateInventoryForCrafting = (
             // Stack with existing item
             updatedInventory[existingIndex] = {
                 ...updatedInventory[existingIndex],
-                quantity: updatedInventory[existingIndex].quantity + safeQuantity
+                quantity: updatedInventory[existingIndex].quantity + finalQuantity
             };
         } else {
             // Create new item
             try {
-                const newItem = createInventoryItemFromId(produced.id, safeQuantity);
+                const newItem = createInventoryItemFromId(produced.id, finalQuantity);
                 updatedInventory.push(newItem);
             } catch (error) {
                 console.error(`Failed to create item ${produced.id}:`, error);
@@ -235,7 +264,10 @@ const updateInventoryForCrafting = (
         }
     });
 
-    return updatedInventory;
+    return {
+        updatedInventory,
+        kitchenBonusResult
+    };
 };
 
 // NEW: Get workshop device success rate from estate
@@ -310,11 +342,12 @@ const performWorkshopCrafting = async (
     // Always consume materials first (regardless of success)
     let updatedInventory = [...inventory];
     if (activity.requiredItems && activity.requiredItems.length > 0) {
-        updatedInventory = updateInventoryForCrafting(
+        const result = updateInventoryForCrafting(
             updatedInventory,
             activity.requiredItems,
             [] // Don't add items yet, wait for success check
         );
+        updatedInventory = result.updatedInventory;
     }
 
     // Roll for crafting success with cryptographically secure random if available
@@ -329,11 +362,12 @@ const performWorkshopCrafting = async (
 
     // If successful, add produced items to inventory
     if (craftingSuccess && activity.producedItems && activity.producedItems.length > 0) {
-        updatedInventory = updateInventoryForCrafting(
+        const result = updateInventoryForCrafting(
             updatedInventory,
             [], // No materials to remove
             activity.producedItems // Add produced items
         );
+        updatedInventory = result.updatedInventory;
     }
 
     return {
@@ -591,7 +625,8 @@ export const performTraining = async (
         itemsProduced: boolean;
         isWorkshopActivity: boolean;
         activityName?: string;
-    }
+    };
+    kitchenBonusResult?: KitchenBonusResult & { activityName?: string };
 }> => {
     // SECURITY: Validate all inputs
     if (!userId || typeof userId !== 'string') {
@@ -612,6 +647,19 @@ export const performTraining = async (
     }
 
     const stats = statsDoc.data() as PlayerStats;
+
+    try {
+        const estate = await getPlayerEstate(userId);
+        stats.estate = estate;
+        console.log('✅ ESTATE LOADED IN TRAINING:', {
+            hasEstate: !!estate,
+            hasCurrentEstate: !!estate?.currentEstate,
+            kitchenSpace: estate?.currentEstate?.kitchenSpace
+        });
+    } catch (error) {
+        console.warn('Estate loading failed in performTraining:', error);
+        stats.estate = null;
+    }
 
     // Check training clicks
     if (trainingType === 'sports') {
@@ -818,16 +866,31 @@ export const performTraining = async (
         updates.reputation = currentReputation + reputationGained;
     }
 
-    // Handle inventory updates for kitchen/lab activities
     if (trainingType === 'kitchen-lab') {
         const activity = getKitchenLabActivityById(activityId);
-        if (activity && activity.requiredItems && activity.producedItems) {
-            const updatedInventory = updateInventoryForCrafting(
-                stats.inventory || [],
-                activity.requiredItems,
-                activity.producedItems
-            );
-            updates.inventory = updatedInventory;
+        if (activity && activity.requiredItems) {
+            if (activity.producedItems) {
+                const { updatedInventory, kitchenBonusResult } = updateInventoryForCrafting(
+                    stats.inventory || [],
+                    activity.requiredItems,
+                    activity.producedItems,
+                    stats,
+                    activity.name
+                );
+                updates.inventory = updatedInventory;
+
+                if (kitchenBonusResult) {
+                    updates.kitchenBonusResult = kitchenBonusResult;
+                }
+            } else {
+                const kitchenBonusResult = applyKitchenBonus(stats, 1);
+                if (kitchenBonusResult.bonusApplied) {
+                    updates.kitchenBonusResult = {
+                        ...kitchenBonusResult,
+                        activityName: activity.name
+                    };
+                }
+            }
         }
     }
 
@@ -923,7 +986,8 @@ export const performTraining = async (
 
     return {
         updatedStats: finalStats,
-        craftingResult
+        craftingResult,
+        kitchenBonusResult: updates.kitchenBonusResult
     };
 };
 
@@ -957,7 +1021,8 @@ export const performTraining5x = async (
         failed: number;
         activityName: string;
         isWorkshopActivity: boolean;
-    }
+    };
+    kitchenBonusResults?: (KitchenBonusResult & { activityName?: string })[];
 }> => {
 
     // Pre-check: ensure we have enough clicks and materials
@@ -1018,12 +1083,18 @@ export const performTraining5x = async (
         activityName?: string;
     }[] = [];
 
+    const kitchenBonusResults: (KitchenBonusResult & { activityName?: string })[] = [];
+
     for (let i = 0; i < 5; i++) {
         const result = await performTraining(userId, activityId, rewards, trainingType);
         currentStats = result.updatedStats;
 
         if (result.craftingResult) {
             craftingResults.push(result.craftingResult);
+        }
+
+        if (result.kitchenBonusResult) {
+            kitchenBonusResults.push(result.kitchenBonusResult);
         }
     }
 
@@ -1045,6 +1116,7 @@ export const performTraining5x = async (
     return {
         updatedStats: currentStats,
         craftingResults: craftingResults.length > 0 ? craftingResults : undefined,
-        craftingSummary
+        craftingSummary,
+        kitchenBonusResults: kitchenBonusResults.length > 0 ? kitchenBonusResults : undefined
     };
 };

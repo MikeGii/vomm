@@ -95,3 +95,65 @@
         padding: 0.75rem;
     }
 }
+
+/* Kitchen bonus styling */
+.kitchen-bonus-info {
+    background: linear-gradient(135deg, #2a4d3a 0%, #1a3d2a 100%);
+    border: 1px solid #4caf50;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.bonus-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.bonus-icon {
+    font-size: 1.2rem;
+}
+
+.bonus-title {
+    font-weight: 600;
+    color: #f0f0f0;
+    font-size: 1rem;
+}
+
+.bonus-status {
+    padding: 0.5rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.bonus-status.active {
+    background: rgba(76, 175, 80, 0.2);
+    color: #a5d6a7;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.bonus-status.inactive {
+    background: rgba(158, 158, 158, 0.2);
+    color: #bdbdbd;
+    border: 1px solid rgba(158, 158, 158, 0.3);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .kitchen-bonus-info {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .bonus-header {
+        margin-bottom: 0.4rem;
+    }
+
+    .bonus-status {
+        font-size: 0.85rem;
+        padding: 0.4rem;
+    }
+}

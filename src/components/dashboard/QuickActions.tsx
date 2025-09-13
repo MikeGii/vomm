@@ -42,7 +42,19 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ stats, onShowInstruc
             icon: '📖',
             label: 'Õpetus',
             disabled: false,
-            action: onShowInstructions
+            action: () => {
+                console.log('🔍 DEBUG: Instructions button clicked!');
+                console.log('🔍 DEBUG: onShowInstructions exists:', !!onShowInstructions);
+                console.log('🔍 DEBUG: onShowInstructions type:', typeof onShowInstructions);
+
+                if (onShowInstructions) {
+                    console.log('🔍 DEBUG: Calling onShowInstructions...');
+                    onShowInstructions();
+                    console.log('🔍 DEBUG: onShowInstructions called successfully!');
+                } else {
+                    console.error('🔍 DEBUG: onShowInstructions is not defined!');
+                }
+            }
         },
         {
             icon: '📚',

@@ -1,6 +1,7 @@
 // src/components/training/AttributesDisplay.tsx
 import React from 'react';
 import { PlayerAttributes } from '../../types';
+import { calculateKitchenBonus, getKitchenBonusDescription } from '../../services/KitchenBonusService';
 import '../../styles/components/training/AttributesDisplay.css';
 
 interface AttributeConfig {
@@ -13,16 +14,37 @@ interface AttributesDisplayProps {
     attributes: PlayerAttributes;
     title?: string;
     displayAttributes: AttributeConfig[];
+    playerStats?: any; // Lisa köögiboonuse jaoks
+    showKitchenBonus?: boolean; // Näita köögiboonust ainult food tab'is
 }
 
 export const AttributesDisplay: React.FC<AttributesDisplayProps> = ({
                                                                         attributes,
                                                                         title = 'Sinu omadused',
-                                                                        displayAttributes
+                                                                        displayAttributes,
+                                                                        playerStats,
+                                                                        showKitchenBonus = false
                                                                     }) => {
+    // Arvuta köögiboonus kui vaja
+    const kitchenBonus = showKitchenBonus && playerStats ? calculateKitchenBonus(playerStats) : null;
+
     return (
         <div className="attributes-container">
             <h3 className="attributes-title">{title}</h3>
+
+            {/* Köögiboonuse info */}
+            {showKitchenBonus && kitchenBonus && (
+                <div className="kitchen-bonus-info">
+                    <div className="bonus-header">
+                        <span className="bonus-icon">🏠</span>
+                        <span className="bonus-title">Kinnisvaraboonus</span>
+                    </div>
+                    <div className={`bonus-status ${kitchenBonus.hasKitchen ? 'active' : 'inactive'}`}>
+                        {getKitchenBonusDescription(kitchenBonus)}
+                    </div>
+                </div>
+            )}
+
             <div className="attributes-grid">
                 {displayAttributes.map(attr => {
                     const data = attributes[attr.key];

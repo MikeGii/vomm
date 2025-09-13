@@ -7,6 +7,7 @@ import { useAuth } from './AuthContext';
 import { initializePlayerStats } from '../services/PlayerService';
 import { checkRankUpdate } from '../utils/rankUtils';
 import { updateLastSeenIfNeeded } from '../services/LastSeenService';
+import { getPlayerEstate } from '../services/EstateService';
 
 interface PlayerStatsContextType {
     playerStats: PlayerStats | null;
@@ -40,14 +41,31 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
         if (!currentUser) return;
 
         try {
-            // Just fetch the current data without triggering updates
             const statsRef = doc(firestore, 'playerStats', currentUser.uid);
             const statsDoc = await getDoc(statsRef);
 
             if (statsDoc.exists()) {
                 const stats = statsDoc.data() as PlayerStats;
+
+                // Lisa estate laadimine ka siin
+                try {
+                    const estate = await getPlayerEstate(currentUser.uid);
+
+                    if (estate && estate.currentEstate) {
+
+                    } else if (estate) {
+                        console.log('🏠 ESTATE EXISTS BUT NO CURRENT ESTATE');
+                    } else {
+                        console.log('🏠 NO ESTATE DATA FOUND');
+                    }
+
+                    stats.estate = estate;
+                } catch (error) {
+                    console.warn('Estate loading failed, continuing without estate data:', error);
+                    stats.estate = null;
+                }
+
                 // Don't set state here if we have an active listener
-                // The listener will handle the update
                 if (!unsubscribeRef.current) {
                     setPlayerStats(stats);
                 }
@@ -102,6 +120,15 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
                     async (docSnapshot) => {
                         if (docSnapshot.exists()) {
                             const stats = docSnapshot.data() as PlayerStats;
+
+                            try {
+                                const estate = await getPlayerEstate(currentUser.uid);
+                                stats.estate = estate;
+                            } catch (error) {
+                                console.warn('Estate loading failed, continuing without estate data:', error);
+                                stats.estate = null;
+                            }
+
                             setPlayerStats(stats);
                             setError(null);
 
