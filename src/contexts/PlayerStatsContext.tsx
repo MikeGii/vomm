@@ -50,9 +50,18 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
                 // Lisa estate laadimine ka siin
                 try {
                     const estate = await getPlayerEstate(currentUser.uid);
+
+                    if (estate && estate.currentEstate) {
+
+                    } else if (estate) {
+                        console.log('🏠 ESTATE EXISTS BUT NO CURRENT ESTATE');
+                    } else {
+                        console.log('🏠 NO ESTATE DATA FOUND');
+                    }
+
                     stats.estate = estate;
                 } catch (error) {
-                    console.warn('Estate loading failed during refresh:', error);
+                    console.warn('Estate loading failed, continuing without estate data:', error);
                     stats.estate = null;
                 }
 

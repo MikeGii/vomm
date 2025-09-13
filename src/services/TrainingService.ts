@@ -22,6 +22,7 @@ import {
     applyKitchenBonus,
     KitchenBonusResult
 } from './KitchenBonusService';
+import {getPlayerEstate} from "./EstateService";
 
 // Calculate experience needed for next attribute level
 export const calculateExpForNextLevel = (currentLevel: number): number => {
@@ -223,6 +224,7 @@ export const updateInventoryForCrafting = (
 
         // RAKENDA KÖÖGIBOONUST TOODETUD KOGUSELE
         if (playerStats) {
+
             const bonusResult = applyKitchenBonus(playerStats, finalQuantity);
             finalQuantity = bonusResult.finalAmount;
 
@@ -232,7 +234,10 @@ export const updateInventoryForCrafting = (
                     ...bonusResult,
                     activityName: activityName || 'tundmatu tegevus'
                 };
+            } else if (!bonusResult.bonusApplied) {
             }
+        } else {
+            console.log('❌ NO PLAYER STATS PROVIDED');
         }
 
         // Check if item already exists by base ID (SAMA KUI ENNE)
@@ -643,6 +648,19 @@ export const performTraining = async (
 
     const stats = statsDoc.data() as PlayerStats;
 
+    try {
+        const estate = await getPlayerEstate(userId);
+        stats.estate = estate;
+        console.log('✅ ESTATE LOADED IN TRAINING:', {
+            hasEstate: !!estate,
+            hasCurrentEstate: !!estate?.currentEstate,
+            kitchenSpace: estate?.currentEstate?.kitchenSpace
+        });
+    } catch (error) {
+        console.warn('Estate loading failed in performTraining:', error);
+        stats.estate = null;
+    }
+
     // Check training clicks
     if (trainingType === 'sports') {
         const trainingData = await checkAndResetTrainingClicks(userId);
@@ -848,21 +866,30 @@ export const performTraining = async (
         updates.reputation = currentReputation + reputationGained;
     }
 
-    // Handle inventory updates for kitchen/lab activities
     if (trainingType === 'kitchen-lab') {
         const activity = getKitchenLabActivityById(activityId);
-        if (activity && activity.requiredItems && activity.producedItems) {
-            const { updatedInventory, kitchenBonusResult } = updateInventoryForCrafting(
-                stats.inventory || [],
-                activity.requiredItems,
-                activity.producedItems,
-                stats,
-                activity.name
-            );
-            updates.inventory = updatedInventory;
+        if (activity && activity.requiredItems) {
+            if (activity.producedItems) {
+                const { updatedInventory, kitchenBonusResult } = updateInventoryForCrafting(
+                    stats.inventory || [],
+                    activity.requiredItems,
+                    activity.producedItems,
+                    stats,
+                    activity.name
+                );
+                updates.inventory = updatedInventory;
 
-            if (kitchenBonusResult) {
-                updates.kitchenBonusResult = kitchenBonusResult;
+                if (kitchenBonusResult) {
+                    updates.kitchenBonusResult = kitchenBonusResult;
+                }
+            } else {
+                const kitchenBonusResult = applyKitchenBonus(stats, 1);
+                if (kitchenBonusResult.bonusApplied) {
+                    updates.kitchenBonusResult = {
+                        ...kitchenBonusResult,
+                        activityName: activity.name
+                    };
+                }
             }
         }
     }
