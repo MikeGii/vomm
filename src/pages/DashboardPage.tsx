@@ -1,5 +1,5 @@
 // src/pages/DashboardPage.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {collection, query, where, getDocs, deleteDoc, updateDoc, doc} from 'firebase/firestore';
 import { firestore } from '../config/firebase';
@@ -31,12 +31,22 @@ function DashboardPage() {
     const { currentUser, userData } = useAuth();
     const navigate = useNavigate();
     const { showToast } = useToast();
-    const { playerStats, loading, refreshStats } = usePlayerStats(); // CHANGED: Using context
+    const { playerStats, loading, refreshStats } = usePlayerStats();
     const [showPrefectureSelection, setShowPrefectureSelection] = useState(false);
     const [showDepartmentSelection, setShowDepartmentSelection] = useState(false);
     const [showInstructionsModal, setShowInstructionsModal] = useState(false);
     const [initializationDone, setInitializationDone] = useState(false);
     const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
+
+    // Use useCallback to prevent function recreation on every render
+    const handleShowInstructions = useCallback(() => {
+        setShowInstructionsModal(true);
+    }, []);
+
+    // Use useCallback for close handler
+    const handleCloseInstructions = useCallback(() => {
+        setShowInstructionsModal(false);
+    }, []);
 
     // ONE-TIME INITIALIZATION (runs once when component mounts)
     useEffect(() => {
@@ -119,7 +129,7 @@ function DashboardPage() {
         initializeDashboard();
     }, [currentUser, initializationDone, showToast, navigate, refreshStats, playerStats]);
 
-// REACT TO STATS CHANGES (runs when playerStats updates)
+    // REACT TO STATS CHANGES (runs when playerStats updates)
     useEffect(() => {
         if (!playerStats || loading || !currentUser?.uid) return;
 
@@ -215,7 +225,6 @@ function DashboardPage() {
 
     return (
         <div className="page">
-            {/* RESTORED: Health Recovery Manager */}
             <HealthRecoveryManager />
             <AuthenticatedHeader />
             <main className={`dashboard-container ${playerStats?.isVip ? 'vip-dashboard' : ''}`}>
@@ -235,8 +244,9 @@ function DashboardPage() {
 
                         <QuickActions
                             stats={playerStats}
-                            onShowInstructions={() => setShowInstructionsModal(true)}
+                            onShowInstructions={handleShowInstructions}
                         />
+
                         <PlayerAbilities
                             stats={playerStats}
                         />
@@ -246,7 +256,6 @@ function DashboardPage() {
                             currentUserIsVip={playerStats?.isVip === true}
                         />
 
-                        {/* RESTORED: Prefecture Selection Modal - for both abipolitseinik and graduated officers */}
                         {showPrefectureSelection && currentUser && (
                             <PrefectureSelectionModal
                                 isOpen={showPrefectureSelection}
@@ -255,7 +264,6 @@ function DashboardPage() {
                             />
                         )}
 
-                        {/* NEW: Department Selection Modal - ONLY for graduated officers (after lopueksam) */}
                         {showDepartmentSelection && currentUser && playerStats && (
                             <DepartmentSelectionModal
                                 isOpen={showDepartmentSelection}
@@ -270,11 +278,10 @@ function DashboardPage() {
                 {showInstructionsModal && (
                     <InstructionsModal
                         isOpen={showInstructionsModal}
-                        onClose={() => setShowInstructionsModal(false)}
+                        onClose={handleCloseInstructions}
                     />
                 )}
 
-                {/* Health Modal - Rendered at dashboard level */}
                 {isHealthModalOpen && playerStats && (
                     <HealthModal
                         isOpen={isHealthModalOpen}
