@@ -5,6 +5,7 @@ import {Timestamp} from "firebase/firestore";
 import { InventoryItem} from "./inventory";
 import { CharacterEquipment } from './equipment';
 import {AdminPermissions} from "./admin";
+import {PlayerEstate} from "./estate";
 
 export interface User {
     uid: string;
@@ -154,6 +155,7 @@ export interface PlayerStats {
     lastSeen?: Timestamp;
     adminPermissions?: AdminPermissions;
     activeCarId?: string;
+    estate?: PlayerEstate | null;
 }
 
 // Course definition
