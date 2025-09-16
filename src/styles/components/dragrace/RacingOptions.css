@@ -1,0 +1,139 @@
+/* src/styles/components/dragrace/RacingOptions.css */
+.dr-racing-options {
+    background: rgba(42, 42, 42, 0.6);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.dr-racing-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.dr-racing-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #f0f0f0;
+    margin: 0 0 0.5rem 0;
+}
+
+.dr-racing-header p {
+    font-size: 1.1rem;
+    color: #bbb;
+    margin: 0;
+}
+
+.dr-tracks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.dr-track-option {
+    background: rgba(26, 26, 26, 0.8);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.dr-track-option:hover {
+    border-color: #4a90e2;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(74, 144, 226, 0.2);
+}
+
+.dr-track-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.dr-track-icon {
+    font-size: 2.5rem;
+    animation: dr-track-pulse 2s ease-in-out infinite;
+}
+
+.dr-track-header h3 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #f0f0f0;
+    margin: 0;
+}
+
+.dr-track-description {
+    color: #bbb;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.dr-track-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.dr-race-button {
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    color: white;
+    border: none;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: auto;
+}
+
+.dr-race-button:hover:not(.dr-disabled) {
+    background: linear-gradient(135deg, #f7931e, #e8851c);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 53, 0.3);
+}
+
+.dr-race-button.dr-disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.dr-race-warning {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    background: rgba(255, 107, 107, 0.1);
+    border-radius: 6px;
+    border-left: 3px solid #ff6b6b;
+    color: #ff6b6b;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+@keyframes dr-track-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .dr-tracks-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .dr-track-option {
+        padding: 1.25rem;
+    }
+
+    .dr-track-header h3 {
+        font-size: 1.2rem;
+    }
+}

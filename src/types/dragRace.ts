@@ -83,3 +83,107 @@ export const FUEL_CONSTANTS = {
     RESET_INTERVAL_HOURS: 1,
     MILEAGE_PER_ATTEMPT: 1.6
 };
+
+
+
+// Racing system types
+export type DragRaceDistance = '0.5' | '1.0';
+
+export interface DragRaceTrack {
+    id: string;
+    name: string;
+    distance: DragRaceDistance;
+    description: string;
+    icon: string;
+}
+
+export interface DragRaceTime {
+    userId: string;
+    trackId: string;
+    distance: DragRaceDistance;
+    time: number; // in seconds (e.g., 12.456)
+    carId: string;
+    carBrand: string;
+    carModel: string;
+    completedAt: Date;
+    playerName: string;
+    // Car stats at time of race (for historical accuracy)
+    carStats: {
+        power: number;
+        acceleration: number;
+        handling: number;
+        weight: number;
+    };
+    // Player skills at time of race
+    playerSkills: {
+        handling: number;
+        reactionTime: number;
+        gearShifting: number;
+    };
+}
+
+export interface DragRaceResult {
+    time: number;
+    breakdown: PhysicsBreakdown;
+    isPersonalBest: boolean;
+    previousBest?: number;
+    rankPosition?: number;
+    rankImprovement?: number;
+}
+
+export interface LeaderboardEntry {
+    rank: number;
+    userId: string;
+    playerName: string;
+    time: number;
+    carBrand: string;
+    carModel: string;
+    completedAt: Date;
+    isCurrentPlayer?: boolean;
+}
+
+export interface LeaderboardData {
+    trackId: string;
+    distance: DragRaceDistance;
+    entries: LeaderboardEntry[];
+    totalPlayers: number;
+    currentPage: number;
+    totalPages: number;
+    playerRank?: number; // Current user's rank if not in top 15
+    lastUpdated: Date;
+}
+
+// Race tracks configuration
+export const DRAG_RACE_TRACKS: DragRaceTrack[] = [
+    {
+        id: 'half_mile',
+        name: '1/2 miili drag',
+        distance: '0.5',
+        description: 'Kiire kiirendus ja täpne reaktsioon',
+        icon: '🏁'
+    },
+    {
+        id: 'one_mile',
+        name: '1 miili drag',
+        distance: '1.0',
+        description: 'Pikk distants testib auto võimsust ja kestlikkust',
+        icon: '🏆'
+    }
+];
+
+// Racing constants
+export const RACING_CONSTANTS = {
+    CAR_PERFORMANCE_WEIGHT: 0.7,      // 70%
+    DRIVING_SKILLS_WEIGHT: 0.2,       // 20%
+    LUCK_WEIGHT: 0.1,                 // 10%
+    LUCK_VARIANCE: 0.15,              // ±15% luck factor
+    WEIGHT_PENALTY_FACTOR: 0.0001,    // How much weight affects time
+    LEADERBOARD_PAGE_SIZE: 15,
+    CACHE_DURATION_MINUTES: 30
+};
+
+export interface PhysicsBreakdown {
+    carPerformance: number;
+    drivingSkills: number;
+    luck: number;
+}

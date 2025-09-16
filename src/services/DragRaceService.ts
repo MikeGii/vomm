@@ -15,10 +15,14 @@ import {
     TrainingResult,
     TRAINING_OPTIONS,
     FUEL_CONSTANTS,
-    FuelPurchaseOption
+    FuelPurchaseOption, DRAG_RACE_TRACKS, DragRaceResult
 } from '../types/dragRace';
 import { PlayerStats, AttributeData } from '../types';
 import { initializeAttributes } from './TrainingService';
+import {calculateCarStats} from "../utils/vehicleCalculations";
+import {VehicleModel} from "../types/vehicleDatabase";
+import {PlayerCar} from "../types/vehicles";
+import {DragRacePhysics} from "../utils/dragRacePhysics";
 
 export class DragRaceService {
 
@@ -365,4 +369,160 @@ export class DragRaceService {
             actualQuantity
         };
     }
+
+    /**
+     * Perform a drag race (consumes fuel like training)
+     */
+    static async performDragRace(
+        userId: string,
+        trackId: string,
+        playerStats: PlayerStats,
+        activeCar: { car: PlayerCar; model: VehicleModel }
+    ): Promise<{
+        result: DragRaceResult;
+        remainingFuel: number;
+    }> {
+        // Check fuel
+        const fuelSystem = await this.checkAndResetFuel(userId);
+        if (fuelSystem.currentFuel <= 0) {
+            throw new Error('Kütus on otsas!');
+        }
+
+        // Find track
+        const track = DRAG_RACE_TRACKS.find(t => t.id === trackId);
+        if (!track) {
+            throw new Error('Rada ei leitud');
+        }
+
+        // Calculate car stats
+        const carModel = {
+            id: activeCar.model.id,
+            brand: activeCar.model.brandName,
+            model: activeCar.model.model,
+            mass: activeCar.model.mass,
+            compatibleEngines: activeCar.model.compatibleEngineIds,
+            defaultEngine: activeCar.model.defaultEngineId,
+            basePrice: activeCar.model.basePrice,
+            currency: activeCar.model.currency
+        };
+        const carStats = calculateCarStats(activeCar.car, carModel);
+
+        // Calculate race time using physics
+        const raceConditions = {
+            distance: track.distance,
+            playerStats,
+            carStats
+        };
+
+        const { time, breakdown } = DragRacePhysics.calculateRaceTime(raceConditions);
+
+        // Check for personal best
+        const existingTime = await this.getPlayerTime(userId, trackId);
+        const isPersonalBest = !existingTime || time < existingTime.time;
+
+        // Save time if personal best
+        if (isPersonalBest) {
+            await this.savePlayerTime(userId, trackId, time, activeCar, playerStats);
+        }
+
+        // Deduct fuel and update mileage (same as training)
+        await this.deductFuelAndUpdateMileage(userId, activeCar.car.id);
+
+        return {
+            result: {
+                time,
+                breakdown,
+                isPersonalBest,
+                previousBest: existingTime?.time
+            },
+            remainingFuel: fuelSystem.currentFuel - 1
+        };
+    }
+
+    /**
+     * Get player's best time for a track
+     */
+    static async getPlayerTime(userId: string, trackId: string): Promise<any> {
+        const timeRef = doc(firestore, 'dragRaceTimes', `${userId}_${trackId}`);
+        const timeDoc = await getDoc(timeRef);
+
+        if (!timeDoc.exists()) {
+            return null;
+        }
+
+        const data = timeDoc.data();
+        return {
+            ...data,
+            completedAt: data.completedAt.toDate()
+        };
+    }
+
+    /**
+     * Save player's race time
+     */
+    static async savePlayerTime(
+        userId: string,
+        trackId: string,
+        time: number,
+        activeCar: { car: PlayerCar; model: VehicleModel },
+        playerStats: PlayerStats
+    ): Promise<void> {
+        const timeRef = doc(firestore, 'dragRaceTimes', `${userId}_${trackId}`);
+
+        const carModel = {
+            id: activeCar.model.id,
+            brand: activeCar.model.brandName,
+            model: activeCar.model.model,
+            mass: activeCar.model.mass,
+            compatibleEngines: activeCar.model.compatibleEngineIds,
+            defaultEngine: activeCar.model.defaultEngineId,
+            basePrice: activeCar.model.basePrice,
+            currency: activeCar.model.currency
+        };
+        const carStats = calculateCarStats(activeCar.car, carModel);
+
+        await setDoc(timeRef, {
+            userId,
+            trackId,
+            time,
+            carId: activeCar.car.id,
+            carBrand: activeCar.model.brandName,
+            carModel: activeCar.model.model,
+            playerName: playerStats.username,
+            completedAt: Timestamp.now(),
+            carStats: {
+                power: carStats.power,
+                acceleration: carStats.acceleration,
+                handling: carStats.grip,
+                weight: carStats.mass
+            },
+            playerSkills: {
+                handling: playerStats.attributes?.handling?.level || 1,
+                reactionTime: playerStats.attributes?.reactionTime?.level || 1,
+                gearShifting: playerStats.attributes?.gearShifting?.level || 1
+            }
+        });
+    }
+
+    /**
+     * Deduct fuel and update car mileage (shared with training)
+     */
+    static async deductFuelAndUpdateMileage(userId: string, carId: string): Promise<void> {
+        const batch = writeBatch(firestore);
+
+        // Update fuel
+        const fuelRef = doc(firestore, 'dragRaceFuel', userId);
+        batch.update(fuelRef, {
+            currentFuel: increment(-1)
+        });
+
+        // Update car mileage
+        const carRef = doc(firestore, 'cars', carId);
+        batch.update(carRef, {
+            mileage: increment(FUEL_CONSTANTS.MILEAGE_PER_ATTEMPT)
+        });
+
+        await batch.commit();
+    }
 }
+
