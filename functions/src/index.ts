@@ -4,7 +4,6 @@ import {logger} from "firebase-functions";
 
 // Initialize Firebase Admin
 admin.initializeApp();
-const db = admin.firestore();
 
 const CRIME_COLLECTION = "departmentCrimeStats";
 const DAILY_CRIME_INCREASE = 8; // 8% per day
@@ -15,10 +14,10 @@ const MAX_CRIME_LEVEL = 100;
  */
 const increaseDailyCrime = async (): Promise<void> => {
     try {
-        const crimeCollection = db.collection(CRIME_COLLECTION);
+        const crimeCollection = admin.firestore().collection(CRIME_COLLECTION);
         const querySnapshot = await crimeCollection.get();
 
-        const batch = db.batch();
+        const batch = admin.firestore().batch();
         const now = admin.firestore.Timestamp.now();
 
         querySnapshot.docs.forEach((docSnap) => {
@@ -46,10 +45,10 @@ const increaseDailyCrime = async (): Promise<void> => {
  */
 const monthlyResetCrime = async (): Promise<void> => {
     try {
-        const crimeCollection = db.collection(CRIME_COLLECTION);
+        const crimeCollection = admin.firestore().collection(CRIME_COLLECTION);
         const querySnapshot = await crimeCollection.get();
 
-        const batch = db.batch();
+        const batch = admin.firestore().batch();
         const now = admin.firestore.Timestamp.now();
 
         querySnapshot.docs.forEach((docSnap) => {
@@ -102,62 +101,94 @@ export const monthlyCrimeReset = onSchedule(
     }
 );
 
-/**
- * Chat sõnumite puhastamine - kustutab üle 48h vanad sõnumid
- */
 const cleanOldChatMessages = async (): Promise<void> => {
     try {
-        const cutoffTime = admin.firestore.Timestamp.fromDate(
-            new Date(Date.now() - 48 * 60 * 60 * 1000) // 48 tundi tagasi
-        );
+        const now = Date.now();
+        const fortyEightHoursAgo = now - (48 * 60 * 60 * 1000);
 
-        // Leia kõik prefecture chat kogumikud
-        const prefectureChatsSnapshot = await db.collection('prefectureChat').get();
+        logger.info(`Current time: ${new Date(now).toISOString()}`);
+        logger.info(`Cutoff time: ${new Date(fortyEightHoursAgo).toISOString()}`);
+
+        const firestore = admin.firestore();
+
+        // Direct approach: check known prefecture names from your ChatService
+        const knownPrefectures = ['Ida prefektuur', 'Lääne prefektuur', 'Põhja prefektuur'];
 
         let totalDeleted = 0;
-        let batch = db.batch();
+        let totalChecked = 0;
+        let batch = firestore.batch();
         let batchCount = 0;
 
-        for (const prefectureDoc of prefectureChatsSnapshot.docs) {
-            const prefectureName = prefectureDoc.id;
+        for (const prefecture of knownPrefectures) {
+            try {
+                logger.info(`Processing prefecture: ${prefecture}`);
 
-            // Leia vanad sõnumid selles prefecture's
-            const oldMessagesQuery = db
-                .collection('prefectureChat')
-                .doc(prefectureName)
-                .collection('messages')
-                .where('timestamp', '<', cutoffTime);
+                // Direct access to messages subcollection
+                const messagesRef = firestore
+                    .collection('prefectureChat')
+                    .doc(prefecture)
+                    .collection('messages');
 
-            const oldMessagesSnapshot = await oldMessagesQuery.get();
+                // Get all messages (older first for deletion)
+                const messagesQuery = messagesRef
+                    .orderBy('timestamp', 'asc')
+                    .limit(1000);
 
-            for (const messageDoc of oldMessagesSnapshot.docs) {
-                batch.delete(messageDoc.ref);
-                batchCount++;
-                totalDeleted++;
+                const messagesSnapshot = await messagesQuery.get();
+                totalChecked += messagesSnapshot.size;
 
-                // Firebase batch limit on 500 - commit ja alusta uut batch-i
-                if (batchCount >= 450) {
-                    await batch.commit();
-                    logger.info(`Committed batch with ${batchCount} deletions`);
-                    batch = db.batch(); // Loo uus batch
-                    batchCount = 0;
+                logger.info(`Prefecture ${prefecture}: found ${messagesSnapshot.size} messages`);
+
+                let deletedFromThisPrefecture = 0;
+
+                for (const messageDoc of messagesSnapshot.docs) {
+                    const messageData = messageDoc.data();
+
+                    if (messageData.timestamp) {
+                        let messageTimeMs;
+
+                        if (messageData.timestamp.toMillis) {
+                            messageTimeMs = messageData.timestamp.toMillis();
+                        } else if (messageData.timestamp.toDate) {
+                            messageTimeMs = messageData.timestamp.toDate().getTime();
+                        } else if (messageData.timestamp._seconds) {
+                            messageTimeMs = messageData.timestamp._seconds * 1000;
+                        } else {
+                            messageTimeMs = new Date(messageData.timestamp).getTime();
+                        }
+
+                        if (messageTimeMs < fortyEightHoursAgo) {
+                            batch.delete(messageDoc.ref);
+                            batchCount++;
+                            deletedFromThisPrefecture++;
+                            totalDeleted++;
+
+                            if (batchCount >= 450) {
+                                await batch.commit();
+                                logger.info(`Committed batch with ${batchCount} deletions`);
+                                batch = firestore.batch();
+                                batchCount = 0;
+                            }
+                        }
+                    }
                 }
-            }
 
-            logger.info(`Found ${oldMessagesSnapshot.size} old messages in ${prefectureName}`);
+                logger.info(`Prefecture ${prefecture}: deleted ${deletedFromThisPrefecture} old messages`);
+
+            } catch (prefectureError) {
+                logger.error(`Error processing ${prefecture}:`, prefectureError);
+            }
         }
 
-        // Commit viimane batch kui midagi on järel
         if (batchCount > 0) {
             await batch.commit();
             logger.info(`Committed final batch with ${batchCount} deletions`);
         }
 
-        logger.info(`Successfully deleted ${totalDeleted} old chat messages across all prefectures`);
+        logger.info(`Cleanup completed: deleted ${totalDeleted} old messages (checked ${totalChecked} total)`);
 
     } catch (error) {
         logger.error("Error cleaning old chat messages:", error);
-        throw error;
     }
 };
 
