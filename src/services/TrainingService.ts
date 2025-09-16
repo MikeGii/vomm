@@ -325,6 +325,7 @@ export const getWorkshopSuccessRate = async (
 };
 
 // NEW: Perform workshop crafting with success rate
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const performWorkshopCrafting = async (
     userId: string,
     activity: TrainingActivity,

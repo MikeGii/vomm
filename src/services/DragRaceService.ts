@@ -23,6 +23,7 @@ import {calculateCarStats} from "../utils/vehicleCalculations";
 import {VehicleModel} from "../types/vehicleDatabase";
 import {PlayerCar} from "../types/vehicles";
 import {DragRacePhysics} from "../utils/dragRacePhysics";
+import {DragRaceLeaderboardService} from "./DragRaceLeaderboardService";
 
 export class DragRaceService {
 
@@ -423,6 +424,8 @@ export class DragRaceService {
         // Save time if personal best
         if (isPersonalBest) {
             await this.savePlayerTime(userId, trackId, time, activeCar, playerStats);
+            // Clear leaderboard cache when new record is set
+            DragRaceLeaderboardService.clearTrackCache(trackId);
         }
 
         // Deduct fuel and update mileage (same as training)

@@ -1,0 +1,309 @@
+/* src/styles/components/dragrace/Leaderboard.css */
+.dr-leaderboard {
+    background: rgba(42, 42, 42, 0.6);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+/* Track Selector */
+.dr-track-selector {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #444;
+}
+
+.dr-track-selector h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #f0f0f0;
+    margin: 0 0 1.5rem 0;
+}
+
+.dr-track-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.dr-track-btn {
+    padding: 0.75rem 1.5rem;
+    background: rgba(26, 26, 26, 0.8);
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #bbb;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dr-track-btn:hover {
+    border-color: #4a90e2;
+    color: #f0f0f0;
+    background: rgba(74, 144, 226, 0.1);
+}
+
+.dr-track-btn.active {
+    border-color: #4a90e2;
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: white;
+    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+}
+
+/* Loading */
+.dr-loading {
+    text-align: center;
+    padding: 3rem;
+    color: #888;
+    font-size: 1.1rem;
+}
+
+/* Leaderboard Content */
+.dr-leaderboard-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.dr-leaderboard-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(26, 26, 26, 0.6);
+    border-radius: 8px;
+    color: #888;
+    font-size: 0.9rem;
+}
+
+/* Leaderboard Table */
+.dr-leaderboard-table {
+    background: rgba(26, 26, 26, 0.8);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #444;
+}
+
+.dr-table-header {
+    display: grid;
+    grid-template-columns: 80px 1fr 1fr 100px 120px;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: #333;
+    color: #f0f0f0;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dr-table-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 1fr 100px 120px;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #444;
+    transition: all 0.3s ease;
+    align-items: center;
+}
+
+.dr-table-row:hover {
+    background: rgba(74, 144, 226, 0.05);
+}
+
+.dr-table-row:last-child {
+    border-bottom: none;
+}
+
+/* Current Player Highlight */
+.dr-table-row.current-player {
+    background: rgba(76, 175, 80, 0.1);
+    border-left: 3px solid #4CAF50;
+}
+
+.dr-table-row.current-player:hover {
+    background: rgba(76, 175, 80, 0.15);
+}
+
+/* Top 3 Rankings */
+.dr-table-row.rank-1 {
+    background: rgba(255, 215, 0, 0.1);
+    border-left: 3px solid #FFD700;
+}
+
+.dr-table-row.rank-2 {
+    background: rgba(192, 192, 192, 0.1);
+    border-left: 3px solid #C0C0C0;
+}
+
+.dr-table-row.rank-3 {
+    background: rgba(205, 127, 50, 0.1);
+    border-left: 3px solid #CD7F32;
+}
+
+/* Table Cell Styles */
+.dr-rank {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #4a90e2;
+}
+
+.dr-medal {
+    font-size: 1.5rem;
+    animation: dr-medal-shine 2s ease-in-out infinite;
+}
+
+.dr-player {
+    font-weight: 600;
+    color: #f0f0f0;
+}
+
+.dr-car {
+    color: #bbb;
+    font-size: 0.9rem;
+}
+
+.dr-time {
+    font-weight: 700;
+    color: #4CAF50;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+.dr-date {
+    color: #888;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+/* Player Rank (when not in top 15) */
+.dr-player-rank {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 8px;
+    border-left: 3px solid #4CAF50;
+    color: #4CAF50;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* Pagination */
+.dr-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    padding: 1rem;
+}
+
+.dr-pagination button {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dr-pagination button:hover:not(:disabled) {
+    background: linear-gradient(135deg, #357abd, #2868a8);
+    transform: translateY(-1px);
+}
+
+.dr-pagination button:disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.dr-pagination span {
+    color: #bbb;
+    font-weight: 600;
+}
+
+/* Empty State */
+.dr-empty-leaderboard {
+    text-align: center;
+    padding: 3rem;
+    color: #888;
+}
+
+.dr-empty-leaderboard h3 {
+    font-size: 1.5rem;
+    color: #f0f0f0;
+    margin: 0 0 1rem 0;
+}
+
+.dr-empty-leaderboard p {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* Animations */
+@keyframes dr-medal-shine {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.1) rotate(5deg); }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .dr-leaderboard {
+        padding: 1.5rem;
+    }
+
+    .dr-track-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .dr-track-btn {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .dr-table-header,
+    .dr-table-row {
+        grid-template-columns: 60px 1fr 80px 100px;
+        font-size: 0.85rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .dr-car {
+        display: none; /* Hide car column on mobile */
+    }
+
+    .dr-leaderboard-info {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    .dr-pagination {
+        gap: 1rem;
+    }
+
+    .dr-pagination button {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dr-table-header,
+    .dr-table-row {
+        grid-template-columns: 50px 1fr 80px;
+        gap: 0.5rem;
+    }
+
+    .dr-date {
+        display: none; /* Hide date column on very small screens */
+    }
+}

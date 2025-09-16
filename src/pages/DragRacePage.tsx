@@ -21,6 +21,7 @@ import { RacingOptions } from '../components/dragrace/RacingOptions';
 import { RaceResultModal } from '../components/dragrace/RaceResultModal';
 import { DragRaceResult } from '../types/dragRace';
 import '../styles/pages/DragRace.css';
+import {Leaderboard} from "../components/dragrace/Leaderboard";
 
 const DragRacePage: React.FC = () => {
     const navigate = useNavigate();
@@ -326,11 +327,7 @@ const DragRacePage: React.FC = () => {
 
             case 'leaderboard':
                 return (
-                    <div className="dr-coming-soon">
-                        <h2>🏆 Edetabel</h2>
-                        <p>Edetabel tuleb peagi!</p>
-                        <p>Siia tuleb parimate aegade nimekiri 1/2 miili ja 1 miili jaoks.</p>
-                    </div>
+                    <Leaderboard currentUserId={currentUser?.uid} />
                 );
 
             default:

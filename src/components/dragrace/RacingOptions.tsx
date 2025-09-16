@@ -1,5 +1,5 @@
 // src/components/dragrace/RacingOptions.tsx
-import React, { useState } from 'react';
+import React from 'react';
 import { DRAG_RACE_TRACKS } from '../../types/dragRace';
 import { FuelSystem } from '../../types/dragRace';
 import { PlayerStats } from '../../types';
