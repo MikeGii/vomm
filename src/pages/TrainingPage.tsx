@@ -1,6 +1,6 @@
 // src/pages/TrainingPage.tsx - CORRECTED VERSION
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import {updateDoc, doc} from 'firebase/firestore';
+import {updateDoc, doc} from '../services/TrackedFirestore';
 import { firestore } from '../config/firebase';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { AttributesDisplay } from '../components/training/AttributesDisplay';
@@ -23,6 +23,7 @@ import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { useEstate } from '../contexts/EstateContext';
 import { useNavigate } from 'react-router-dom';
 import {PlayerAttributes, PlayerStats, TrainingActivity} from '../types';
+import { usePageTracking } from '../hooks/usePageTracking';
 import { InventoryItem } from '../types';
 import {
     checkAndResetTrainingClicks,
@@ -49,6 +50,7 @@ const getVipAwareMaxClicks = (playerStats: PlayerStats | null): number => {
 };
 
 const TrainingPage: React.FC = () => {
+    usePageTracking('TrainingPage');
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     const { showToast } = useToast();

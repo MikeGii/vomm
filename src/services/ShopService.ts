@@ -1,9 +1,9 @@
 // src/services/ShopService.ts - UPDATED FOR HYBRID SYSTEM
 import {
     doc,
-    Timestamp,
     runTransaction
-} from 'firebase/firestore';
+} from './TrackedFirestore';
+import { Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { ShopItem, PurchaseResult } from '../types/shop';
 import { InventoryItem } from '../types';
@@ -116,7 +116,7 @@ export const purchaseItem = async (
         const isPlayerCraftable = isPlayerCraftableItem(shopItem);
 
         // Use atomic transaction to prevent race conditions
-        return await runTransaction(firestore, async (transaction) => {
+        return await runTransaction(async (transaction: any) => {
             // Get references
             const playerRef = doc(firestore, 'playerStats', userId);
             let stockRef = null;
