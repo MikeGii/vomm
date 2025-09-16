@@ -1,6 +1,7 @@
 // src/components/dragrace/FuelDisplay.tsx
 import React from 'react';
 import { FuelSystem } from '../../types/dragRace';
+import '../../styles/components/dragrace/FuelDisplay.css'
 
 interface FuelDisplayProps {
     fuelSystem: FuelSystem | null;

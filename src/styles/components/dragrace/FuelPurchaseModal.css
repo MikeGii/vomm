@@ -1,0 +1,248 @@
+/* src/styles/components/dragrace/FuelPurchaseModal.css */
+.dr-fuel-purchase-info {
+    margin-bottom: 1.5rem;
+}
+
+.dr-purchase-description {
+    color: #bbb;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.dr-current-currency {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.dr-currency-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(42, 42, 42, 0.6);
+    border-radius: 6px;
+    border: 1px solid #444;
+}
+
+.dr-currency-icon {
+    font-size: 1.2rem;
+}
+
+.dr-currency-amount {
+    font-weight: 600;
+    color: #4CAF50;
+}
+
+.dr-purchase-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.dr-purchase-option {
+    background: rgba(42, 42, 42, 0.4);
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.dr-purchase-option:not(.dr-disabled):hover {
+    border-color: #4a90e2;
+    background: rgba(74, 144, 226, 0.1);
+}
+
+.dr-purchase-option.dr-disabled {
+    opacity: 0.6;
+    border-color: #333;
+}
+
+.dr-option-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.dr-option-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f0f0f0;
+    margin: 0;
+}
+
+.dr-option-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.dr-option-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.dr-price-amount {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #4CAF50;
+}
+
+.dr-price-unit {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.dr-option-limit,
+.dr-option-note {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.dr-option-unavailable {
+    font-size: 0.85rem;
+    color: #ff6b6b;
+    font-style: italic;
+}
+
+.dr-purchase-button {
+    width: 100%;
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dr-purchase-button:hover {
+    background: linear-gradient(135deg, #357abd, #2868a8);
+    transform: translateY(-1px);
+}
+
+.dr-purchase-button.dr-disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.dr-purchase-button.dr-disabled:hover {
+    transform: none;
+}
+
+.dr-fuel-reset-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: rgba(255, 193, 7, 0.1);
+    border-radius: 6px;
+    border-left: 3px solid #ffc107;
+    font-size: 0.85rem;
+    color: #ffc107;
+}
+
+.dr-reset-icon {
+    font-size: 1rem;
+}
+
+.dr-quantity-section {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: rgba(42, 42, 42, 0.4);
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.dr-quantity-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f0f0f0;
+    margin: 0 0 1rem 0;
+    text-align: center;
+}
+
+.dr-quantity-selector {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+}
+
+.dr-quantity-button {
+    width: 50px;
+    height: 50px;
+    border: 2px solid #666;
+    background: rgba(26, 26, 26, 0.8);
+    color: #f0f0f0;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dr-quantity-button:hover {
+    border-color: #4a90e2;
+    background: rgba(74, 144, 226, 0.1);
+    transform: translateY(-1px);
+}
+
+.dr-quantity-button.dr-selected {
+    border-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+.dr-quantity-info {
+    text-align: center;
+    color: #bbb;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.dr-quantity-info strong {
+    color: #4CAF50;
+}
+
+.dr-option-warning {
+    font-size: 0.85rem;
+    color: #ffc107;
+    font-style: italic;
+    background: rgba(255, 193, 7, 0.1);
+    padding: 0.5rem;
+    border-radius: 4px;
+    border-left: 3px solid #ffc107;
+    margin-top: 0.5rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .dr-current-currency {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .dr-quantity-button {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+    }
+
+    .dr-quantity-selector {
+        gap: 0.4rem;
+    }
+}

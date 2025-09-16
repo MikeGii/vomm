@@ -4,6 +4,7 @@ import { PlayerCar } from '../../types/vehicles';
 import { VehicleModel } from '../../types/vehicleDatabase';
 import { ActiveCarService } from '../../services/ActiveCarService';
 import { calculateCarStats } from '../../utils/vehicleCalculations';
+import '../../styles/components/dragrace/CarSelectionModal.css'
 
 interface CarSelectionModalProps {
     isOpen: boolean;

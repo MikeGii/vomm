@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { FuelPurchaseOption, FUEL_CONSTANTS } from '../../types/dragRace';
 import { PlayerStats } from '../../types';
 import { formatMoney, formatPollid } from '../../utils/currencyUtils';
+import '../../styles/components/dragrace/FuelPurchaseModal.css'
 
 interface FuelPurchaseModalProps {
     isOpen: boolean;

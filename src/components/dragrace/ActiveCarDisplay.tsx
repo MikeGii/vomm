@@ -3,6 +3,7 @@ import React from 'react';
 import { PlayerCar } from '../../types/vehicles';
 import { VehicleModel } from '../../types/vehicleDatabase';
 import { calculateCarStats } from '../../utils/vehicleCalculations';
+import '../../styles/components/dragrace/ActiveCarDisplay.css'
 
 interface ActiveCarDisplayProps {
     activeCar: { car: PlayerCar; model: VehicleModel } | null;
