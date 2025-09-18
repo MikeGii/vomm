@@ -1,6 +1,6 @@
 // src/components/dragrace/FuelDisplay.tsx
 import React from 'react';
-import { FuelSystem, FUEL_CONSTANTS } from '../../types/dragRace';
+import { FuelSystem } from '../../types/dragRace';
 import { usePlayerStats } from '../../contexts/PlayerStatsContext';
 import '../../styles/components/dragrace/FuelDisplay.css'
 
