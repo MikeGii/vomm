@@ -55,7 +55,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
         setError(null);
 
         try {
-            const data = await getLeaderboard(200, forceRefresh);
+            const data = await getLeaderboard(300, forceRefresh);
             setAllEntries(data);
         } catch (err) {
             console.error('Error loading leaderboard:', err);

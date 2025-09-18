@@ -8,6 +8,7 @@ import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { CasinoCounter } from '../components/casino/CasinoCounter';
 import { CasinoLeaderboard } from '../components/casino/CasinoLeaderboard';
 import { SlotMachine } from '../components/casino/SlotMachine';
+import { Blackjack } from '../components/casino/Blackjack';
 import {
     getRemainingCasinoPlays,
     playSlotMachine,
@@ -16,13 +17,16 @@ import {
 } from '../services/CasinoService';
 import '../styles/pages/Casino.css';
 
+type CasinoGame = 'slots' | 'blackjack';
+
 const CasinoPage: React.FC = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     const { showToast } = useToast();
-    const { playerStats, loading } = usePlayerStats(); // No need for refreshStats!
+    const { playerStats, loading } = usePlayerStats();
     const [isPlaying, setIsPlaying] = useState(false);
     const [shouldRefreshLeaderboard, setShouldRefreshLeaderboard] = useState(false);
+    const [selectedGame, setSelectedGame] = useState<CasinoGame>('slots');
 
     // Track if we've checked reset this hour
     const lastResetCheck = useRef<string>('');
@@ -134,12 +138,32 @@ const CasinoPage: React.FC = () => {
                     )}
 
                     <h1 className="casino-title">🎰 Kasiino</h1>
+
+                    {/* Game selector tabs */}
+                    <div className="casino-game-selector">
+                        <button
+                            className={`casino-game-tab ${selectedGame === 'slots' ? 'active' : ''}`}
+                            onClick={() => setSelectedGame('slots')}
+                        >
+                            🎰 Slotiautomaadid
+                        </button>
+                        <button
+                            className={`casino-game-tab ${selectedGame === 'blackjack' ? 'active' : ''}`}
+                            onClick={() => setSelectedGame('blackjack')}
+                        >
+                            🃏 Blackjack (21)
+                        </button>
+                    </div>
+
                     <div className="casino-content">
                         <p className="casino-description">
-                            Tere tulemast kasiino! Proovi õnne slotiautomaadi mänguga.
+                            {selectedGame === 'slots'
+                                ? 'Tere tulemast kasiino! Proovi õnne slotiautomaadi mänguga.'
+                                : 'Mängi Blackjacki ja võida pollisid! Jõua 21-le lähemale kui diiler.'}
                         </p>
 
-                        {currentUser && (
+                        {/* Show leaderboard only for slots */}
+                        {selectedGame === 'slots' && currentUser && (
                             <CasinoLeaderboard
                                 currentUserId={currentUser.uid}
                                 onRefresh={handleLeaderboardRefresh}
@@ -147,14 +171,21 @@ const CasinoPage: React.FC = () => {
                             />
                         )}
 
+                        {/* Game components */}
                         {playerStats && (
-                            <SlotMachine
-                                onPlay={handleSlotPlay}
-                                playerMoney={playerStats.money}
-                                playerStats={playerStats}
-                                isPlaying={isPlaying}
-                                canPlay={canPlay}
-                            />
+                            <div className="casino-active-game">
+                                {selectedGame === 'slots' ? (
+                                    <SlotMachine
+                                        onPlay={handleSlotPlay}
+                                        playerMoney={playerStats.money}
+                                        playerStats={playerStats}
+                                        isPlaying={isPlaying}
+                                        canPlay={canPlay}
+                                    />
+                                ) : (
+                                    <Blackjack />
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>

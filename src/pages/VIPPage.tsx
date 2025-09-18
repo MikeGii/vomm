@@ -108,15 +108,15 @@ const VIPPage: React.FC = () => {
                                     <div className="rewards-list">
                                         <div className="reward-item gold">
                                             <span className="position">1. koht</span>
-                                            <span className="amount">100 polli</span>
+                                            <span className="amount">500 polli</span>
                                         </div>
                                         <div className="reward-item silver">
                                             <span className="position">2. koht</span>
-                                            <span className="amount">50 polli</span>
+                                            <span className="amount">300 polli</span>
                                         </div>
                                         <div className="reward-item bronze">
                                             <span className="position">3. koht</span>
-                                            <span className="amount">25 polli</span>
+                                            <span className="amount">150 polli</span>
                                         </div>
                                     </div>
                                     <div className="fairness-notice">

@@ -20,8 +20,4 @@ export interface CasinoLeaderboardEntry {
     position: number;
 }
 
-export interface MonthlyReward {
-    position: number;
-    reward: number;
-    label: string;
-}
+export type CasinoGameType = 'slots' | 'blackjack';

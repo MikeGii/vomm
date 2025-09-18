@@ -19,7 +19,7 @@ const EXCLUDED_USERNAMES = ['Lääne13'];
  * @param forceRefresh - Force bypass cache and fetch fresh data
  */
 export const getLeaderboard = async (
-    limitCount: number = 200,
+    limitCount: number = 300,
     forceRefresh: boolean = false
 ): Promise<LeaderboardEntry[]> => {
     const cacheKey = `leaderboard_${limitCount}`;
@@ -43,7 +43,7 @@ export const getLeaderboard = async (
             where('completedCourses', 'array-contains', 'basic_police_training_abipolitseinik'),
             orderBy('level', 'desc'),       // Highest level first
             orderBy('reputation', 'desc'),   // Then by reputation
-            limit(limitCount)                 // THEN limit to top 200
+            limit(limitCount)
         );
 
         // Step 3: Execute query
