@@ -46,9 +46,8 @@ export class DragRacePhysics {
         const luckFactor = this.calculateLuck();
         const finalTime = skillsAdjustedTime * (1 + luckFactor);
 
-        // 8. Ensure realistic minimums
-        const minTime = distance === '0.5' ? 10.0 : 18.0;
-        const raceTime = Math.max(finalTime, minTime);
+        const safetyMinTime = distance === '0.5' ? 5.0 : 8.0;
+        const raceTime = Math.max(finalTime, safetyMinTime);
 
         return {
             time: Math.round(raceTime * 1000) / 1000,

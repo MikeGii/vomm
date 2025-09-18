@@ -68,9 +68,20 @@ export class DragRaceService {
     }
 
     // Get or create fuel system for user
-    static async getFuelSystem(userId: string): Promise<FuelSystem> {
+    static async getFuelSystem(userId: string, playerStats: PlayerStats): Promise<FuelSystem> {
+        // Validate inputs
+        if (!userId || !playerStats) {
+            throw new Error('Missing required parameters for fuel system');
+        }
+
         const fuelRef = doc(firestore, 'dragRaceFuel', userId);
         const fuelDoc = await getDoc(fuelRef);
+
+        // Use passed playerStats for VIP check
+        const isVip = playerStats.isVip || false;
+
+        // Determine max fuel based on VIP status
+        const maxFuel = isVip ? FUEL_CONSTANTS.MAX_FREE_FUEL_VIP : FUEL_CONSTANTS.MAX_FREE_FUEL;
 
         if (!fuelDoc.exists()) {
             // Create new fuel system
@@ -78,8 +89,8 @@ export class DragRaceService {
             const nextReset = this.getNextHourlyReset(now);
 
             const newFuelSystem: FuelSystem = {
-                currentFuel: FUEL_CONSTANTS.MAX_FREE_FUEL,
-                maxFreeFuel: FUEL_CONSTANTS.MAX_FREE_FUEL,
+                currentFuel: maxFuel,
+                maxFreeFuel: maxFuel,
                 lastFuelReset: now,
                 paidAttemptsUsed: 0,
                 maxPaidAttempts: FUEL_CONSTANTS.MAX_PAID_ATTEMPTS,
@@ -96,42 +107,56 @@ export class DragRaceService {
         }
 
         const data = fuelDoc.data();
+
+        // Check if VIP status changed and update max fuel
+        const currentMaxFuel = data.maxFreeFuel || FUEL_CONSTANTS.MAX_FREE_FUEL;
+        if (currentMaxFuel !== maxFuel) {
+            await updateDoc(fuelRef, {
+                maxFreeFuel: maxFuel,
+                currentFuel: data.currentFuel === currentMaxFuel ? maxFuel : data.currentFuel
+            });
+        }
+
         return {
             currentFuel: data.currentFuel,
-            maxFreeFuel: data.maxFreeFuel,
+            maxFreeFuel: maxFuel,
             lastFuelReset: data.lastFuelReset.toDate(),
-            paidAttemptsUsed: data.paidAttemptsUsed,
-            maxPaidAttempts: data.maxPaidAttempts,
+            paidAttemptsUsed: data.paidAttemptsUsed || 0,
+            maxPaidAttempts: data.maxPaidAttempts || FUEL_CONSTANTS.MAX_PAID_ATTEMPTS,
             nextResetTime: data.nextResetTime.toDate()
         };
     }
 
     // Check and reset fuel if needed
-    static async checkAndResetFuel(userId: string): Promise<FuelSystem> {
-        const fuelSystem = await this.getFuelSystem(userId);
+    static async checkAndResetFuel(userId: string, playerStats: PlayerStats): Promise<FuelSystem> {
+        const fuelSystem = await this.getFuelSystem(userId, playerStats);
         const now = new Date();
 
+        // Check if we need to reset
         if (now >= fuelSystem.nextResetTime) {
-            // Reset fuel
+            // Use passed playerStats instead of fetching
+            const isVip = playerStats.isVip || false;
+            const maxFuel = isVip ? FUEL_CONSTANTS.MAX_FREE_FUEL_VIP : FUEL_CONSTANTS.MAX_FREE_FUEL;
+
             const nextReset = this.getNextHourlyReset(now);
-
-            const updatedFuelSystem: FuelSystem = {
-                ...fuelSystem,
-                currentFuel: FUEL_CONSTANTS.MAX_FREE_FUEL,
-                lastFuelReset: now,
-                paidAttemptsUsed: 0,
-                nextResetTime: nextReset
-            };
-
             const fuelRef = doc(firestore, 'dragRaceFuel', userId);
+
             await updateDoc(fuelRef, {
-                currentFuel: FUEL_CONSTANTS.MAX_FREE_FUEL,
+                currentFuel: maxFuel,
+                maxFreeFuel: maxFuel,
                 lastFuelReset: Timestamp.fromDate(now),
-                paidAttemptsUsed: 0,
-                nextResetTime: Timestamp.fromDate(nextReset)
+                nextResetTime: Timestamp.fromDate(nextReset),
+                paidAttemptsUsed: 0
             });
 
-            return updatedFuelSystem;
+            return {
+                ...fuelSystem,
+                currentFuel: maxFuel,
+                maxFreeFuel: maxFuel,
+                lastFuelReset: now,
+                nextResetTime: nextReset,
+                paidAttemptsUsed: 0
+            };
         }
 
         return fuelSystem;
@@ -167,45 +192,63 @@ export class DragRaceService {
         trainingType: TrainingType,
         playerStats: PlayerStats
     ): Promise<TrainingResult> {
-        // Initialize drag race attributes if needed
-        await this.initializeDragRaceAttributes(userId);
-
-        // Refetch player stats to get initialized attributes
-        const statsRef = doc(firestore, 'playerStats', userId);
-        const updatedStatsDoc = await getDoc(statsRef);
-
-        if (!updatedStatsDoc.exists()) {
+        // Validate playerStats exists
+        if (!playerStats) {
             throw new Error('Player stats not found');
         }
 
-        const updatedPlayerStats = updatedStatsDoc.data() as PlayerStats;
+        // Initialize drag race attributes if needed
+        await this.initializeDragRaceAttributes(userId);
 
-        // Check fuel availability
-        const fuelSystem = await this.checkAndResetFuel(userId);
+        // Check fuel availability using passed playerStats
+        const fuelSystem = await this.checkAndResetFuel(userId, playerStats);
 
         if (fuelSystem.currentFuel <= 0) {
             throw new Error('Kütus on otsas! Osta lisaks või oota järgmist tundi.');
         }
 
-        // Check if player has active car
-        if (!updatedPlayerStats.activeCarId) {
+        // Check if player has active car using passed playerStats
+        if (!playerStats.activeCarId) {
             throw new Error('Määra esmalt aktiivne auto!');
         }
 
-        // Calculate XP gain using updated stats
-        const xpGained = this.calculateTrainingXP(trainingType, updatedPlayerStats);
+        // Initialize attributes if they don't exist
+        if (!playerStats.attributes) {
+            throw new Error('Atribuudid pole initsialiseeritud');
+        }
 
-        // Get current attribute data - now guaranteed to exist
+        // Calculate XP gain using passed playerStats
+        const xpGained = this.calculateTrainingXP(trainingType, playerStats);
+
+        // Get current attribute data from passed playerStats
         const trainingOption = TRAINING_OPTIONS.find(option => option.id === trainingType);
-        if (!trainingOption || !updatedPlayerStats.attributes) {
+        if (!trainingOption) {
             throw new Error('Vigane treeningu tüüp');
         }
 
-        const currentAttributeData = updatedPlayerStats.attributes[trainingType] as AttributeData;
+        // Get or create attribute data
+        let currentAttributeData = playerStats.attributes[trainingType] as AttributeData;
 
-        // Ensure the attribute exists
         if (!currentAttributeData) {
-            throw new Error(`Drag race atribuut ${trainingType} ei ole inicializeeritud`);
+            // If attribute doesn't exist, we need to fetch the latest state
+            // This only happens on first training of this type
+            const statsRef = doc(firestore, 'playerStats', userId);
+            const statsDoc = await getDoc(statsRef);
+
+            if (statsDoc.exists()) {
+                const latestStats = statsDoc.data() as PlayerStats;
+                currentAttributeData = latestStats.attributes?.[trainingType] || {
+                    level: 1,
+                    experience: 0,
+                    experienceForNextLevel: 100
+                };
+            } else {
+                currentAttributeData = {
+                    level: 1,
+                    experience: 0,
+                    experienceForNextLevel: 100
+                };
+            }
         }
 
         // Calculate multiple level-ups properly
@@ -250,8 +293,8 @@ export class DragRaceService {
             currentFuel: increment(-1)
         });
 
-        // Update car mileage
-        const carRef = doc(firestore, 'cars', updatedPlayerStats.activeCarId);
+        // Update car mileage using activeCarId from passed playerStats
+        const carRef = doc(firestore, 'cars', playerStats.activeCarId);
         batch.update(carRef, {
             mileage: increment(FUEL_CONSTANTS.MILEAGE_PER_ATTEMPT)
         });
@@ -282,7 +325,8 @@ export class DragRaceService {
 
     // Get available fuel purchase options
     static async getFuelPurchaseOptions(userId: string, playerStats: PlayerStats): Promise<FuelPurchaseOption[]> {
-        const fuelSystem = await this.checkAndResetFuel(userId);
+        // Pass playerStats to checkAndResetFuel
+        const fuelSystem = await this.checkAndResetFuel(userId, playerStats);
 
         const options: FuelPurchaseOption[] = [];
 
@@ -313,7 +357,8 @@ export class DragRaceService {
         quantity: number,
         playerStats: PlayerStats
     ): Promise<{ success: boolean; newFuelCount: number; totalCost: number; actualQuantity: number }> {
-        const fuelSystem = await this.checkAndResetFuel(userId);
+        // Pass playerStats to checkAndResetFuel
+        const fuelSystem = await this.checkAndResetFuel(userId, playerStats);
         const options = await this.getFuelPurchaseOptions(userId, playerStats);
         const option = options.find(opt => opt.type === purchaseType);
 
@@ -330,7 +375,7 @@ export class DragRaceService {
 
         const totalCost = option.cost * actualQuantity;
 
-        // Check if player can afford it
+        // Check if player can afford it using passed playerStats
         const playerCurrency = purchaseType === 'money' ? playerStats.money : (playerStats.pollid || 0);
         if (playerCurrency < totalCost) {
             throw new Error(`Pole piisavalt ${purchaseType === 'money' ? 'raha' : 'pollid'}`);
@@ -383,8 +428,8 @@ export class DragRaceService {
         result: DragRaceResult;
         remainingFuel: number;
     }> {
-        // Check fuel
-        const fuelSystem = await this.checkAndResetFuel(userId);
+        // Pass playerStats to checkAndResetFuel
+        const fuelSystem = await this.checkAndResetFuel(userId, playerStats);
         if (fuelSystem.currentFuel <= 0) {
             throw new Error('Kütus on otsas!');
         }
@@ -428,7 +473,7 @@ export class DragRaceService {
             DragRaceLeaderboardService.clearTrackCache(trackId);
         }
 
-        // Deduct fuel and update mileage (same as training)
+        // Deduct fuel and update mileage
         await this.deductFuelAndUpdateMileage(userId, activeCar.car.id);
 
         return {

@@ -77,6 +77,7 @@ export const TRAINING_OPTIONS: TrainingOption[] = [
 // Fuel system constants
 export const FUEL_CONSTANTS = {
     MAX_FREE_FUEL: 5,
+    MAX_FREE_FUEL_VIP: 10,
     MAX_PAID_ATTEMPTS: 25,
     MONEY_COST_PER_ATTEMPT: 1000,
     POLLID_COST_PER_ATTEMPT: 10,

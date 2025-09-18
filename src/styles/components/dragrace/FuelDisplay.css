@@ -109,3 +109,49 @@
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.1); }
 }
+
+/* VIP Fuel Styles */
+.dr-fuel-display.vip-fuel {
+    border-color: #ffd700;
+    background: linear-gradient(135deg, rgba(42, 42, 42, 0.9), rgba(156, 39, 176, 0.1));
+}
+
+.dr-fuel-display.vip-fuel::before {
+    background: linear-gradient(90deg, #7e7535, #ffd700, #938008);
+}
+
+.vip-badge {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.2rem 0.4rem;
+    background: linear-gradient(135deg, #59522d, #ffd700);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 4px;
+    vertical-align: middle;
+    animation: vip-pulse 2s ease-in-out infinite;
+}
+
+.vip-bonus {
+    color: #ffd700;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+@keyframes vip-pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.9;
+        transform: scale(1.05);
+    }
+}
+
+/* Enhanced VIP hover effect */
+.dr-fuel-display.vip-fuel:hover {
+    border-color: #ffd700;
+    box-shadow: 0 8px 25px rgb(129, 107, 3);
+}

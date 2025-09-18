@@ -10,15 +10,21 @@ interface RaceResultModalProps {
     trackName: string;
     onClose: () => void;
     onRaceAgain: () => void;
+    carAcceleration?: number; // Add car's 0-100 time
 }
 
 export const RaceResultModal: React.FC<RaceResultModalProps> = ({
-                                                                    isOpen, result, trackName, onClose, onRaceAgain
+                                                                    isOpen, result, trackName, onClose, onRaceAgain, carAcceleration
                                                                 }) => {
     if (!isOpen || !result) return null;
 
     const formatTime = (time: number) => `${time.toFixed(3)}s`;
-    const formatBreakdown = (value: number) => `${value >= 0 ? '+' : ''}${value.toFixed(3)}s`;
+
+    // Calculate percentage impacts
+    const calculatePercentageImpact = (value: number, total: number) => {
+        const percentage = Math.abs((value / total) * 100);
+        return percentage.toFixed(1);
+    };
 
     return (
         <div className="dr-modal-overlay">
@@ -34,19 +40,19 @@ export const RaceResultModal: React.FC<RaceResultModalProps> = ({
                 <div className="dr-modal-content">
                     <div className="dr-result-main">
                         <div className="dr-final-time">
-                            <span className="dr-time-label">Lõplik aeg</span>
+                            <span className="dr-time-label">Lõplik aeg - {trackName}</span>
                             <span className="dr-time-value">{formatTime(result.time)}</span>
                         </div>
 
                         {result.isPersonalBest && (
                             <div className="dr-personal-best">
-                                🎉 Uus isiklik rekord!
+                                🏆 Uus isiklik rekord!
                             </div>
                         )}
 
                         {result.previousBest && !result.isPersonalBest && (
                             <div className="dr-previous-best">
-                                Eelmine parim: {formatTime(result.previousBest)}
+                                Sinu parim: {formatTime(result.previousBest)}
                                 <span className="dr-time-diff">
                                     ({DragRacePhysics.getTimeDifference(result.time, result.previousBest)})
                                 </span>
@@ -55,30 +61,41 @@ export const RaceResultModal: React.FC<RaceResultModalProps> = ({
                     </div>
 
                     <div className="dr-breakdown">
-                        <h3>Tulemuse koostis</h3>
+                        <h3>Tulemust mõjutavad tegurid</h3>
                         <div className="dr-breakdown-grid">
-                            <div className="dr-breakdown-item dr-base">
-                                <span className="dr-breakdown-label">Baasaeg ({trackName})</span>
-                            </div>
-
-                            <div className="dr-breakdown-item dr-car">
-                                <span className="dr-breakdown-label">Auto mõju (70%)</span>
-                                <span className="dr-breakdown-value">{formatBreakdown(-result.breakdown.carPerformance)}</span>
-                            </div>
+                            {carAcceleration && (
+                                <div className="dr-breakdown-item dr-car-stat">
+                                    <span className="dr-breakdown-label">🚗 Auto 0-100 km/h</span>
+                                    <span className="dr-breakdown-value">{carAcceleration.toFixed(1)}s</span>
+                                </div>
+                            )}
 
                             <div className="dr-breakdown-item dr-skills">
-                                <span className="dr-breakdown-label">Sõiduoskused (20%)</span>
-                                <span className="dr-breakdown-value">{formatBreakdown(-result.breakdown.drivingSkills)}</span>
+                                <span className="dr-breakdown-label">
+                                    🎯 Sõiduoskuste mõju
+                                </span>
+                                <span className="dr-breakdown-value">
+                                    {result.breakdown.drivingSkills > 0 ? '+' : ''}{calculatePercentageImpact(result.breakdown.drivingSkills, result.time)}%
+                                </span>
                             </div>
 
                             <div className="dr-breakdown-item dr-luck">
-                                <span className="dr-breakdown-label">Õnn/juhus (10%)</span>
-                                <span className="dr-breakdown-value">{formatBreakdown(-result.breakdown.luck)}</span>
+                                <span className="dr-breakdown-label">
+                                    🎲 Õnne faktor
+                                </span>
+                                <span className="dr-breakdown-value">
+                                    {result.breakdown.luck > 0 ? '+' : ''}{calculatePercentageImpact(result.breakdown.luck, result.time)}%
+                                </span>
                             </div>
                         </div>
 
-                        <div className="dr-breakdown-explanation">
-                            <p>Väiksem aeg = parem tulemus. Positiivsed väärtused aeglustavad, negatiivsed kiirendavad.</p>
+                        <div className="dr-breakdown-tips">
+                            <h4>💡 Nõuanded paremate tulemuste saamiseks:</h4>
+                            <ul>
+                                <li>Treeni oskusi (käsitsemine, reaktsioon, käiguvahetus) parema aja nimel</li>
+                                <li>Tuuni oma autot maksimaalse võimsuse saamiseks</li>
+                                <li>Mida kiirem 0-100 aeg, seda parem drag racing tulemus</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -86,9 +103,6 @@ export const RaceResultModal: React.FC<RaceResultModalProps> = ({
                 <div className="dr-modal-footer">
                     <button className="dr-modal-button dr-secondary" onClick={onClose}>
                         Sulge
-                    </button>
-                    <button className="dr-modal-button dr-primary" onClick={onRaceAgain}>
-                        Sõida uuesti
                     </button>
                 </div>
             </div>

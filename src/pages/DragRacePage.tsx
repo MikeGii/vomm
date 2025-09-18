@@ -22,6 +22,7 @@ import { RaceResultModal } from '../components/dragrace/RaceResultModal';
 import { DragRaceResult } from '../types/dragRace';
 import '../styles/pages/DragRace.css';
 import {Leaderboard} from "../components/dragrace/Leaderboard";
+import {calculateAcceleration} from "../utils/vehicleCalculations";
 
 const DragRacePage: React.FC = () => {
     const navigate = useNavigate();
@@ -61,8 +62,8 @@ const DragRacePage: React.FC = () => {
         try {
             await DragRaceService.initializeDragRaceAttributes(currentUser.uid);
 
-            // Load fuel system
-            const fuel = await DragRaceService.checkAndResetFuel(currentUser.uid);
+            // Pass playerStats to the fuel system check
+            const fuel = await DragRaceService.checkAndResetFuel(currentUser.uid, playerStats);
             setFuelSystem(fuel);
 
             // Load active car if set
@@ -395,13 +396,17 @@ const DragRacePage: React.FC = () => {
             )}
 
             {/* Race Result Modal */}
-            {showRaceResult && raceResult && (
+            {showRaceResult && raceResult && activeCar && (
                 <RaceResultModal
                     isOpen={showRaceResult}
                     result={raceResult}
                     trackName={selectedTrackName}
                     onClose={() => setShowRaceResult(false)}
                     onRaceAgain={handleRaceAgain}
+                    carAcceleration={calculateAcceleration(
+                        activeCar.car.engine.basePower,
+                        activeCar.model.mass
+                    )}
                 />
             )}
         </div>
