@@ -189,16 +189,20 @@ export const ModelModal: React.FC<ModelModalProps> = ({
         setIsSaving(true);
 
         try {
-            const cleanData = {
+            const cleanData: any = {
                 brandId: formData.brandId,
                 model: formData.model.trim(),
                 mass: formData.mass,
                 basePrice: formData.basePrice,
-                basePollidPrice: formData.basePollidPrice,
                 currency: formData.currency,
                 defaultEngineId: formData.defaultEngineId,
                 compatibleEngineIds: formData.compatibleEngineIds
             };
+
+            // Only include basePollidPrice if currency is 'pollid'
+            if (formData.currency === 'pollid') {
+                cleanData.basePollidPrice = formData.basePollidPrice;
+            }
 
             if (isEditing && model) {
                 await updateVehicleModel(model.id, cleanData);

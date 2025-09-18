@@ -702,6 +702,14 @@ const TrainingPage: React.FC = () => {
                             lastResetTime={playerStats.trainingData?.lastResetTime}
                         />
 
+                        {/* Static notification - always visible */}
+                        <div className="training-auto-warning">
+                            <span className="warning-icon-training">⚠️</span>
+                            <span className="warning-text-training">
+                            Aktiivse treeningu ajal ärge lahkuge lehelt kuni klikid on tehtud!
+                        </span>
+                        </div>
+
                         <AttributesDisplay
                             attributes={playerStats.attributes || initializeAttributes()}
                             displayAttributes={[
@@ -746,6 +754,14 @@ const TrainingPage: React.FC = () => {
                             label="Köök & Labor klikke jäänud"
                             lastResetTime={playerStats.kitchenLabTrainingData?.lastResetTime}
                         />
+
+                        {/* Static notification - always visible */}
+                        <div className="training-auto-warning">
+                            <span className="warning-icon-training">⚠️</span>
+                            <span className="warning-text-training">
+                            Aktiivse treeningu ajal ärge lahkuge lehelt kuni klikid on tehtud!
+                        </span>
+                        </div>
 
                         <AttributesDisplay
                             attributes={playerStats.attributes || initializeAttributes()}
@@ -797,6 +813,14 @@ const TrainingPage: React.FC = () => {
                             label="Käsitöö klikke jäänud"
                             lastResetTime={playerStats.handicraftTrainingData?.lastResetTime}
                         />
+
+                        {/* Static notification - always visible */}
+                        <div className="training-auto-warning">
+                            <span className="warning-icon-training">⚠️</span>
+                            <span className="warning-text-training">
+                            Aktiivse treeningu ajal ärge lahkuge lehelt kuni klikid on tehtud!
+                        </span>
+                        </div>
 
                         <WorkshopStatus />
 
