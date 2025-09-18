@@ -1,5 +1,5 @@
 // src/pages/ProfilePage.tsx
-import React from 'react';
+import React, {useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { ProfileAttributes } from '../components/profile/ProfileAttributes';
@@ -10,9 +10,11 @@ import { initializeAttributes } from '../services/TrainingService';
 import { ProfileInventory } from "../components/profile/ProfileInventory";
 import { CharacterEquipment } from '../components/profile/CharacterEquipment';
 import { equipItem, unequipItem } from '../services/EquipmentService';
+import { usePageTracking } from '../hooks/usePageTracking';
 import '../styles/pages/Profile.css';
 
 const ProfilePage: React.FC = () => {
+    usePageTracking('ProfilePage');
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     const { playerStats, loading } = usePlayerStats();
