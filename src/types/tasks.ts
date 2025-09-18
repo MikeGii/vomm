@@ -7,8 +7,10 @@ export interface TaskRewards {
     reputation: number;
 }
 
-export interface CombinedTaskProgress {
-    coursesCompleted: number;
+// Simplified - only production progress now
+export interface TaskProgress {
+    itemsProduced: number;
+    itemsSold: number;
     hoursWorked: number;
     attributeLevelsGained: number;
 }
@@ -16,13 +18,14 @@ export interface CombinedTaskProgress {
 export interface Task {
     id: string;
     title: string;
-    description: string;
+    itemType: 'juice' | 'porrige' | 'cloth' | 'bandage';
     requirements: {
-        courses: number;
+        itemsToProduce: number;
+        itemsToSell: number;
         workHours: number;
         attributeLevels: number;
     };
-    progress: CombinedTaskProgress;
+    progress: TaskProgress;
     rewards: TaskRewards;
     completed: boolean;
 }

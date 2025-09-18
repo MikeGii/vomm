@@ -293,7 +293,13 @@ const TrainingPage: React.FC = () => {
             const trainingType = activeTab === 'sports' ? 'sports' :
                 activeTab === 'food' ? 'kitchen-lab' : 'handicraft';
 
-            const result = await performTraining(currentUser!.uid, currentTrainingState.selectedActivity, activity.rewards, trainingType);
+            const result = await performTraining(
+                currentUser!.uid,
+                currentTrainingState.selectedActivity,
+                activity.rewards,
+                trainingType,
+                playerEstate
+            );
             await refreshStats();
 
             // Show kitchen bonus toast notification for food activities
@@ -377,7 +383,13 @@ const TrainingPage: React.FC = () => {
                 activeTab === 'food' ? 'kitchen-lab' : 'handicraft';
 
             // Perform 5 individual trainings in sequence
-            const result = await performTraining5x(currentUser!.uid, currentTrainingState.selectedActivity, activity.rewards, trainingType);
+            const result = await performTraining5x(
+                currentUser!.uid,
+                currentTrainingState.selectedActivity,
+                activity.rewards,
+                trainingType,
+                playerEstate
+            );
             await refreshStats();
 
             // Show enhanced feedback for different activity types
@@ -464,7 +476,13 @@ const TrainingPage: React.FC = () => {
 
             // Perform custom amount of trainings
             for (let i = 0; i < amount; i++) {
-                await performTraining(currentUser!.uid, currentTrainingState.selectedActivity, activity.rewards, trainingType);
+                await performTraining(
+                    currentUser!.uid,
+                    currentTrainingState.selectedActivity,
+                    activity.rewards,
+                    trainingType,
+                    playerEstate
+                );
             }
 
             await refreshStats();

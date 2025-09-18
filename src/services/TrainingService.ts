@@ -1,5 +1,5 @@
 // src/services/TrainingService.ts
-import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, Timestamp, writeBatch } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import {
     PlayerStats,
@@ -7,10 +7,10 @@ import {
     AttributeData,
     TrainingData,
     KitchenLabTrainingData,
-    HandicraftTrainingData, TrainingActivity
+    HandicraftTrainingData,
 } from '../types';
-import {calculateLevelFromExp, calculatePlayerHealth} from "./PlayerService";
-import { getTrainingBonusForAttribute} from "../data/abilities";
+import { calculateLevelFromExp, calculatePlayerHealth } from "./PlayerService";
+import { getTrainingBonusForAttribute } from "../data/abilities";
 import { getKitchenLabActivityById } from '../data/kitchenLabActivities';
 import { getHandicraftActivityById } from '../data/handicraftActivities';
 import { CRAFTING_INGREDIENTS } from '../data/shop/craftingIngredients';
@@ -22,7 +22,6 @@ import {
     applyKitchenBonus,
     KitchenBonusResult
 } from './KitchenBonusService';
-import {getPlayerEstate} from "./EstateService";
 
 // Calculate experience needed for next attribute level
 export const calculateExpForNextLevel = (currentLevel: number): number => {
@@ -92,18 +91,16 @@ const hasRequiredMaterials = (
     const missing: { id: string; needed: number; has: number }[] = [];
 
     for (const required of requiredItems) {
-        // SECURITY: Validate input to prevent negative quantities
         if (required.quantity < 0) {
             throw new Error('Invalid required quantity');
         }
 
-        // Sum quantities of all items with matching base ID
         const totalQuantity = inventory
             .filter(item => {
                 const baseId = getBaseIdFromInventoryId(item.id);
                 return baseId === required.id && item.category === 'crafting' && item.quantity > 0;
             })
-            .reduce((sum, item) => sum + Math.max(0, item.quantity), 0); // Ensure no negative quantities
+            .reduce((sum, item) => sum + Math.max(0, item.quantity), 0);
 
         if (totalQuantity < required.quantity) {
             missing.push({
@@ -122,15 +119,12 @@ const hasRequiredMaterials = (
 
 // Helper function to create proper InventoryItem from shop data
 const createInventoryItemFromId = (itemId: string, quantity: number): InventoryItem => {
-    // SECURITY: Validate inputs
     if (!itemId || quantity <= 0) {
         throw new Error('Invalid item creation parameters');
     }
 
-    // First check CRAFTING_INGREDIENTS
     let shopItem = CRAFTING_INGREDIENTS.find(item => item.id === itemId);
 
-    // If not found, check ALL_SHOP_ITEMS (for equipment)
     if (!shopItem) {
         shopItem = ALL_SHOP_ITEMS.find(item => item.id === itemId);
     }
@@ -145,13 +139,12 @@ const createInventoryItemFromId = (itemId: string, quantity: number): InventoryI
         description: shopItem.description,
         category: shopItem.category === 'protection' ? 'equipment' :
             shopItem.category === 'workshop' ? 'equipment' : 'crafting',
-        quantity: Math.max(1, Math.floor(quantity)), // Ensure positive integer
+        quantity: Math.max(1, Math.floor(quantity)),
         shopPrice: shopItem.basePrice,
         source: 'training',
         obtainedAt: new Date()
     };
 
-    // Copy equipment properties
     if (shopItem.equipmentSlot) {
         inventoryItem.equipmentSlot = shopItem.equipmentSlot;
     }
@@ -173,8 +166,8 @@ export const updateInventoryForCrafting = (
     inventory: InventoryItem[],
     requiredItems: { id: string; quantity: number }[],
     producedItems: { id: string; quantity: number }[],
-    playerStats?: any, // Lisa köögiboonuse jaoks
-    activityName?: string // Lisa toast märguande jaoks
+    playerStats?: any,
+    activityName?: string
 ): {
     updatedInventory: InventoryItem[],
     kitchenBonusResult?: KitchenBonusResult & { activityName?: string }
@@ -182,21 +175,19 @@ export const updateInventoryForCrafting = (
     let updatedInventory = [...inventory];
     let kitchenBonusResult: (KitchenBonusResult & { activityName?: string }) | undefined;
 
-    // SECURITY: Validate inventory isn't null/undefined
     if (!Array.isArray(updatedInventory)) {
         updatedInventory = [];
     }
 
-    // Remove required materials by base ID (SAMA KUI ENNE)
+    // Remove required materials
     requiredItems.forEach(required => {
-        // SECURITY: Validate quantities
         if (required.quantity <= 0) return;
 
-        let remainingToRemove = Math.floor(required.quantity); // Ensure integer
+        let remainingToRemove = Math.floor(required.quantity);
 
         for (let i = updatedInventory.length - 1; i >= 0 && remainingToRemove > 0; i--) {
             const item = updatedInventory[i];
-            if (!item || item.quantity <= 0) continue; // Skip invalid items
+            if (!item || item.quantity <= 0) continue;
 
             const baseId = getBaseIdFromInventoryId(item.id);
 
@@ -215,51 +206,40 @@ export const updateInventoryForCrafting = (
         }
     });
 
-    // Add produced items WITH KITCHEN BONUS (UUS LOOGIKA)
+    // Add produced items with kitchen bonus
     producedItems.forEach(produced => {
-        // SECURITY: Validate produced items
         if (produced.quantity <= 0) return;
 
         let finalQuantity = Math.max(1, Math.floor(produced.quantity));
 
-        // RAKENDA KÖÖGIBOONUST TOODETUD KOGUSELE
         if (playerStats) {
-
             const bonusResult = applyKitchenBonus(playerStats, finalQuantity);
             finalQuantity = bonusResult.finalAmount;
 
-            // Salvesta boonuse tulemused toast märguande jaoks (ainult esimest korda)
             if (bonusResult.bonusApplied && !kitchenBonusResult) {
                 kitchenBonusResult = {
                     ...bonusResult,
                     activityName: activityName || 'tundmatu tegevus'
                 };
-            } else if (!bonusResult.bonusApplied) {
             }
-        } else {
-            console.log('❌ NO PLAYER STATS PROVIDED');
         }
 
-        // Check if item already exists by base ID (SAMA KUI ENNE)
         const existingIndex = updatedInventory.findIndex(item => {
             const baseId = getBaseIdFromInventoryId(item.id);
             return baseId === produced.id && !item.equipped && item.quantity > 0;
         });
 
         if (existingIndex >= 0) {
-            // Stack with existing item
             updatedInventory[existingIndex] = {
                 ...updatedInventory[existingIndex],
                 quantity: updatedInventory[existingIndex].quantity + finalQuantity
             };
         } else {
-            // Create new item
             try {
                 const newItem = createInventoryItemFromId(produced.id, finalQuantity);
                 updatedInventory.push(newItem);
             } catch (error) {
                 console.error(`Failed to create item ${produced.id}:`, error);
-                // Continue without adding the item rather than failing completely
             }
         }
     });
@@ -270,118 +250,51 @@ export const updateInventoryForCrafting = (
     };
 };
 
-// NEW: Get workshop device success rate from estate
+// Get workshop device success rate from estate
 export const getWorkshopSuccessRate = async (
     userId: string,
     activityRewards: { printing?: number; lasercutting?: number }
 ): Promise<number> => {
     try {
-        // SECURITY: Validate user ID
-        if (!userId || typeof userId !== 'string') {
-            return 100;
+        if (!userId) {
+            throw new Error('Invalid user ID');
         }
 
-        // Import estate service to get player estate
         const { getPlayerEstate } = await import('./EstateService');
         const playerEstate = await getPlayerEstate(userId);
 
-        if (!playerEstate) return 100; // Default success for non-workshop activities
+        if (!playerEstate) return 100;
 
-        // Check if activity requires 3D printing
         if (activityRewards.printing && playerEstate.equippedDeviceDetails?.printer) {
             const device = playerEstate.equippedDeviceDetails.printer;
-
-            // Use new workshopStats system only
             if (device.workshopStats?.successRate !== undefined) {
                 const rate = device.workshopStats.successRate;
                 return Math.max(0, Math.min(100, Math.floor(rate)));
             }
-
-            // No fallback - if no workshopStats, return default low success rate
             console.warn('3D printer device missing workshopStats, using default 50% success rate');
             return 50;
         }
 
-        // Check if activity requires laser cutting
         if (activityRewards.lasercutting && playerEstate.equippedDeviceDetails?.laserCutter) {
             const device = playerEstate.equippedDeviceDetails.laserCutter;
-
-            // Use new workshopStats system only
             if (device.workshopStats?.successRate !== undefined) {
                 const rate = device.workshopStats.successRate;
                 return Math.max(0, Math.min(100, Math.floor(rate)));
             }
-
-            // No fallback - if no workshopStats, return default low success rate
             console.warn('Laser cutter device missing workshopStats, using default 50% success rate');
             return 50;
         }
 
-        return 100; // Default for non-workshop activities or when no equipment
+        return 100;
     } catch (error) {
         console.error('Error getting workshop success rate:', error);
-        return 100; // Default to 100% success on error
+        return 100;
     }
-};
-
-// NEW: Perform workshop crafting with success rate
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const performWorkshopCrafting = async (
-    userId: string,
-    activity: TrainingActivity,
-    inventory: InventoryItem[]
-): Promise<{ success: boolean; itemsProduced: boolean; updatedInventory: InventoryItem[] }> => {
-
-    // SECURITY: Validate inputs
-    if (!userId || !activity || !Array.isArray(inventory)) {
-        throw new Error('Invalid workshop crafting parameters');
-    }
-
-    // Get success rate for this workshop activity
-    const successRate = await getWorkshopSuccessRate(userId, activity.rewards);
-
-    // Always consume materials first (regardless of success)
-    let updatedInventory = [...inventory];
-    if (activity.requiredItems && activity.requiredItems.length > 0) {
-        const result = updateInventoryForCrafting(
-            updatedInventory,
-            activity.requiredItems,
-            [] // Don't add items yet, wait for success check
-        );
-        updatedInventory = result.updatedInventory;
-    }
-
-    // Roll for crafting success with cryptographically secure random if available
-    const roll = (typeof crypto !== 'undefined' && crypto.getRandomValues)
-        ? crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1) * 100
-        : Math.random() * 100;
-
-    const craftingSuccess = roll < successRate;
-
-    // DEBUG: Log the roll and success rate for testing
-    console.log(`Workshop crafting: roll=${roll.toFixed(2)}, successRate=${successRate}, success=${craftingSuccess}`);
-
-    // If successful, add produced items to inventory
-    if (craftingSuccess && activity.producedItems && activity.producedItems.length > 0) {
-        const result = updateInventoryForCrafting(
-            updatedInventory,
-            [], // No materials to remove
-            activity.producedItems // Add produced items
-        );
-        updatedInventory = result.updatedInventory;
-    }
-
-    return {
-        success: true, // Training always succeeds (gives XP)
-        itemsProduced: craftingSuccess,
-        updatedInventory
-    };
 };
 
 // Check if training clicks should reset (every full hour)
 export const checkAndResetTrainingClicks = async (userId: string): Promise<TrainingData> => {
-    // SECURITY: Validate user ID
-    if (!userId || typeof userId !== 'string') {
+    if (!userId) {
         throw new Error('Invalid user ID');
     }
 
@@ -395,7 +308,6 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
     const stats = statsDoc.data() as PlayerStats;
     let trainingData = stats.trainingData || initializeTrainingData();
 
-    // COMPREHENSIVE SAFETY CHECK: Clean all undefined values
     trainingData = {
         remainingClicks: Math.max(0, Math.floor(trainingData.remainingClicks ?? 50)),
         lastResetTime: trainingData.lastResetTime || Timestamp.now(),
@@ -403,15 +315,13 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
         isWorking: trainingData.isWorking ?? false
     };
 
-    // VIP LOGIC: Determine max clicks based on VIP status and work status
     let maxClicks: number;
     if (stats.isVip) {
-        // VIP benefits: 100 clicks when not working, 30 when working
         maxClicks = stats.activeWork ? 30 : 100;
     } else {
-        // Regular players: 50 clicks when not working, 10 when working
         maxClicks = stats.activeWork ? 10 : 50;
     }
+
     const now = new Date();
     const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
 
@@ -440,7 +350,6 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
             isWorking: !!stats.activeWork
         };
 
-        // GUARANTEED SAFE UPDATE: Explicitly construct clean object
         const safeUpdateData = {
             trainingData: {
                 remainingClicks: Number(trainingData.remainingClicks) || maxClicks,
@@ -457,8 +366,7 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
 };
 
 export const checkAndResetKitchenLabTrainingClicks = async (userId: string): Promise<KitchenLabTrainingData> => {
-    // SECURITY: Validate user ID
-    if (!userId || typeof userId !== 'string') {
+    if (!userId) {
         throw new Error('Invalid user ID');
     }
 
@@ -472,14 +380,12 @@ export const checkAndResetKitchenLabTrainingClicks = async (userId: string): Pro
     const stats = statsDoc.data() as PlayerStats;
     let kitchenLabTrainingData = stats.kitchenLabTrainingData || initializeKitchenLabTrainingData();
 
-    // COMPREHENSIVE SAFETY CHECK: Clean all undefined values
     kitchenLabTrainingData = {
         remainingClicks: Math.max(0, Math.floor(kitchenLabTrainingData.remainingClicks ?? 50)),
         lastResetTime: kitchenLabTrainingData.lastResetTime || Timestamp.now(),
         totalTrainingsDone: Math.max(0, Math.floor(kitchenLabTrainingData.totalTrainingsDone ?? 0))
     };
 
-    // VIP LOGIC: Determine max clicks based on VIP status and work status
     let maxClicks: number;
     if (stats.isVip) {
         maxClicks = stats.activeWork ? 30 : 100;
@@ -529,8 +435,7 @@ export const checkAndResetKitchenLabTrainingClicks = async (userId: string): Pro
 };
 
 export const checkAndResetHandicraftTrainingClicks = async (userId: string): Promise<HandicraftTrainingData> => {
-    // SECURITY: Validate user ID
-    if (!userId || typeof userId !== 'string') {
+    if (!userId) {
         throw new Error('Invalid user ID');
     }
 
@@ -544,14 +449,12 @@ export const checkAndResetHandicraftTrainingClicks = async (userId: string): Pro
     const stats = statsDoc.data() as PlayerStats;
     let handicraftTrainingData = stats.handicraftTrainingData || initializeHandicraftTrainingData();
 
-    // COMPREHENSIVE SAFETY CHECK: Clean all undefined values
     handicraftTrainingData = {
         remainingClicks: Math.max(0, Math.floor(handicraftTrainingData.remainingClicks ?? 50)),
         lastResetTime: handicraftTrainingData.lastResetTime || Timestamp.now(),
         totalTrainingsDone: Math.max(0, Math.floor(handicraftTrainingData.totalTrainingsDone ?? 0))
     };
 
-    // VIP LOGIC: Determine max clicks based on VIP status and work status
     let maxClicks: number;
     if (stats.isVip) {
         maxClicks = stats.activeWork ? 30 : 100;
@@ -619,7 +522,8 @@ export const performTraining = async (
         lasercutting?: number;
         playerExp: number;
     },
-    trainingType: 'sports' | 'kitchen-lab' | 'handicraft' = 'sports'
+    trainingType: 'sports' | 'kitchen-lab' | 'handicraft' = 'sports',
+    estateData?: any
 ): Promise<{
     updatedStats: PlayerStats;
     craftingResult?: {
@@ -629,14 +533,13 @@ export const performTraining = async (
     };
     kitchenBonusResult?: KitchenBonusResult & { activityName?: string };
 }> => {
-    // SECURITY: Validate all inputs
-    if (!userId || typeof userId !== 'string') {
+    if (!userId) {
         throw new Error('Invalid user ID');
     }
-    if (!activityId || typeof activityId !== 'string') {
+    if (!activityId) {
         throw new Error('Invalid activity ID');
     }
-    if (!rewards || typeof rewards.playerExp !== 'number' || rewards.playerExp < 0) {
+    if (!rewards || !rewards.playerExp || rewards.playerExp < 0) {
         throw new Error('Invalid rewards data');
     }
 
@@ -648,19 +551,6 @@ export const performTraining = async (
     }
 
     const stats = statsDoc.data() as PlayerStats;
-
-    try {
-        const estate = await getPlayerEstate(userId);
-        stats.estate = estate;
-        console.log('✅ ESTATE LOADED IN TRAINING:', {
-            hasEstate: !!estate,
-            hasCurrentEstate: !!estate?.currentEstate,
-            kitchenSpace: estate?.currentEstate?.kitchenSpace
-        });
-    } catch (error) {
-        console.warn('Estate loading failed in performTraining:', error);
-        stats.estate = null;
-    }
 
     // Check training clicks
     if (trainingType === 'sports') {
@@ -674,7 +564,6 @@ export const performTraining = async (
             throw new Error('Treeningkordi pole enam järel! Oota järgmist täistundi.');
         }
 
-        // Check materials for kitchen/lab activities
         const activity = getKitchenLabActivityById(activityId);
         if (activity && activity.requiredItems) {
             const materialCheck = hasRequiredMaterials(stats.inventory || [], activity.requiredItems);
@@ -695,7 +584,6 @@ export const performTraining = async (
             throw new Error('Käsitöö treeningkordi pole enam järel! Oota järgmist täistundi.');
         }
 
-        // Check materials for handicraft activities
         const activity = getHandicraftActivityById(activityId);
         if (activity && activity.requiredItems) {
             const materialCheck = hasRequiredMaterials(stats.inventory || [], activity.requiredItems);
@@ -712,12 +600,9 @@ export const performTraining = async (
         }
     }
 
-    // Initialize attributes if they don't exist
     const attributes = stats.attributes || initializeAttributes();
 
-    // Update attributes based on rewards
     const updateAttribute = (attr: AttributeData, expGained: number): { updatedAttribute: AttributeData, levelsGained: number } => {
-        // SECURITY: Validate experience gain
         const safeExpGained = Math.max(0, Math.floor(expGained));
 
         let newExp = attr.experience + safeExpGained;
@@ -725,7 +610,7 @@ export const performTraining = async (
         let expForNext = attr.experienceForNextLevel;
         let levelsGained = 0;
 
-        while (newExp >= expForNext && levelsGained < 10) { // SECURITY: Prevent infinite loops
+        while (newExp >= expForNext && levelsGained < 10) {
             newExp -= expForNext;
             newLevel++;
             levelsGained++;
@@ -745,16 +630,14 @@ export const performTraining = async (
     let totalAttributeLevelsGained = 0;
 
     const applyBonusToReward = (baseReward: number, attribute: 'strength' | 'agility' | 'dexterity' | 'intelligence' | 'endurance'): number => {
-        // SECURITY: Validate base reward
         if (baseReward <= 0) return 0;
 
         const bonus = getTrainingBonusForAttribute(stats.completedCourses || [], attribute);
-        // SECURITY: Cap bonus to prevent excessive multipliers
-        const cappedBonus = Math.max(0, Math.min(10, bonus)); // Max 10x multiplier
+        const cappedBonus = Math.max(0, Math.min(10, bonus));
         return Math.floor(baseReward * (1 + cappedBonus));
     };
 
-    // Process all attribute rewards with validation
+    // Process all attribute rewards
     if (rewards.strength && rewards.strength > 0) {
         const bonusedReward = applyBonusToReward(rewards.strength, 'strength');
         const result = updateAttribute(attributes.strength, bonusedReward);
@@ -846,7 +729,7 @@ export const performTraining = async (
         }
     }
 
-    // Update player experience and level with validation
+    // Update player experience and level
     const safePlayerExp = Math.max(0, Math.floor(rewards.playerExp));
     const newPlayerExp = (stats.experience || 0) + safePlayerExp;
     const newPlayerLevel = calculateLevelFromExp(newPlayerExp);
@@ -860,25 +743,46 @@ export const performTraining = async (
         ...healthUpdates
     };
 
-    // Handle reputation gains with cap
+    // Handle reputation gains
     if (totalAttributeLevelsGained > 0) {
-        const reputationGained = Math.min(100, totalAttributeLevelsGained * 2); // Cap at 100 per training
+        const reputationGained = Math.min(100, totalAttributeLevelsGained * 2);
         const currentReputation = Math.max(0, stats.reputation || 0);
         updates.reputation = currentReputation + reputationGained;
     }
+
+    // Track items produced for task progress
+    const itemsProducedForTasks: { [key: string]: number } = {};
 
     if (trainingType === 'kitchen-lab') {
         const activity = getKitchenLabActivityById(activityId);
         if (activity && activity.requiredItems) {
             if (activity.producedItems) {
+
+                // Pass estate with stats for kitchen bonus
+                const statsWithEstate = estateData
+                    ? { ...stats, estate: estateData }
+                    : stats;
+
                 const { updatedInventory, kitchenBonusResult } = updateInventoryForCrafting(
                     stats.inventory || [],
                     activity.requiredItems,
                     activity.producedItems,
-                    stats,
+                    statsWithEstate,
                     activity.name
                 );
                 updates.inventory = updatedInventory;
+
+                // Track production for task progress
+                for (const produced of activity.producedItems) {
+                    if (['juice', 'porrige'].includes(produced.id)) {
+                        // Calculate the actual quantity with bonus
+                        let finalQuantity = produced.quantity;
+                        if (kitchenBonusResult?.bonusApplied && kitchenBonusResult.multiplier) {
+                            finalQuantity = produced.quantity * kitchenBonusResult.multiplier;
+                        }
+                        itemsProducedForTasks[produced.id] = finalQuantity;
+                    }
+                }
 
                 if (kitchenBonusResult) {
                     updates.kitchenBonusResult = kitchenBonusResult;
@@ -895,8 +799,7 @@ export const performTraining = async (
         }
     }
 
-    // NEW: Handle handicraft activities with workshop success rate system
-// NEW: Handle handicraft activities with workshop success rate system
+    // Handle handicraft activities
     let craftingResult: {
         itemsProduced: boolean;
         isWorkshopActivity: boolean;
@@ -908,11 +811,9 @@ export const performTraining = async (
         if (activity && activity.requiredItems) {
             const isWorkshopActivity = !!(activity.rewards.printing || activity.rewards.lasercutting);
 
-            // Deklareerime itemsProduced väljaspool if blokki
             let itemsProduced = true;
 
             if (activity.producedItems) {
-                // Check if workshop activity with success rate
                 if (isWorkshopActivity) {
                     const successRate = await getWorkshopSuccessRate(userId, activity.rewards);
                     const roll = Math.random() * 100;
@@ -922,7 +823,6 @@ export const performTraining = async (
                 }
 
                 if (itemsProduced) {
-                    // Update inventory with produced items (käsitöö ei kasuta köögiboonust)
                     const updatedInventory = [...(stats.inventory || [])];
 
                     // Remove required materials
@@ -952,11 +852,16 @@ export const performTraining = async (
                         }
                     });
 
-                    // Add produced items (ilma köögiboonuseta)
+                    // Add produced items
                     activity.producedItems.forEach(produced => {
                         if (produced.quantity <= 0) return;
 
                         const finalQuantity = Math.max(1, Math.floor(produced.quantity));
+
+                        // Track production for tasks
+                        if (['cloth', 'bandage'].includes(produced.id)) {
+                            itemsProducedForTasks[produced.id] = finalQuantity;
+                        }
 
                         const existingIndex = updatedInventory.findIndex(item => {
                             const baseId = getBaseIdFromInventoryId(item.id);
@@ -1013,7 +918,6 @@ export const performTraining = async (
                 }
             }
 
-            // Nüüd saame kasutada itemsProduced muutujat
             craftingResult = {
                 itemsProduced: itemsProduced,
                 isWorkshopActivity: isWorkshopActivity,
@@ -1022,41 +926,49 @@ export const performTraining = async (
         }
     }
 
-    // Update training data with SAFE OBJECT CONSTRUCTION
+    // Update training data
     if (trainingType === 'sports') {
         const trainingData = await checkAndResetTrainingClicks(userId);
-        const updatedTrainingData: TrainingData = {
+        updates.trainingData = {
             remainingClicks: Math.max(0, Number(trainingData.remainingClicks - 1) || 0),
             lastResetTime: trainingData.lastResetTime,
             totalTrainingsDone: Math.max(0, Number(trainingData.totalTrainingsDone + 1) || 1),
             isWorking: Boolean(stats.activeWork)
         };
-        updates.trainingData = updatedTrainingData;
     } else if (trainingType === 'kitchen-lab') {
         const kitchenLabData = await checkAndResetKitchenLabTrainingClicks(userId);
-        const updatedKitchenLabData: KitchenLabTrainingData = {
+        updates.kitchenLabTrainingData = {
             remainingClicks: Math.max(0, Number(kitchenLabData.remainingClicks - 1) || 0),
             lastResetTime: kitchenLabData.lastResetTime,
             totalTrainingsDone: Math.max(0, Number(kitchenLabData.totalTrainingsDone + 1) || 1)
         };
-        updates.kitchenLabTrainingData = updatedKitchenLabData;
     } else if (trainingType === 'handicraft') {
         const handicraftData = await checkAndResetHandicraftTrainingClicks(userId);
-        const updatedHandicraftData: HandicraftTrainingData = {
+        updates.handicraftTrainingData = {
             remainingClicks: Math.max(0, Number(handicraftData.remainingClicks - 1) || 0),
             lastResetTime: handicraftData.lastResetTime,
             totalTrainingsDone: Math.max(0, Number(handicraftData.totalTrainingsDone + 1) || 1)
         };
-        updates.handicraftTrainingData = updatedHandicraftData;
     }
 
-    // Save to database
-    await updateDoc(statsRef, updates);
+    // Use batch for database update
+    const batch = writeBatch(firestore);
+    batch.update(statsRef, updates);
+    await batch.commit();
 
     // Update task progress after successful training
     try {
-        await updateProgress(userId, 'training', totalAttributeLevelsGained);
-        console.log(`Task progress updated: ${totalAttributeLevelsGained} attribute levels gained`);
+        // Update attribute training progress
+        if (totalAttributeLevelsGained > 0) {
+            await updateProgress(userId, 'training', totalAttributeLevelsGained);
+            console.log(`Task progress: ${totalAttributeLevelsGained} attribute levels gained`);
+        }
+
+        // Update production progress
+        for (const [itemType, quantity] of Object.entries(itemsProducedForTasks)) {
+            await updateProgress(userId, 'production', quantity, itemType);
+            console.log(`Task progress: Produced ${quantity} ${itemType}`);
+        }
     } catch (error) {
         console.error('Task progress update failed, but training completed successfully:', error);
     }
@@ -1085,11 +997,13 @@ export const getTimeUntilReset = (): string => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
+// Optimized bulk training function
 export const performTraining5x = async (
     userId: string,
     activityId: string,
     rewards: any,
-    trainingType: 'sports' | 'kitchen-lab' | 'handicraft' = 'sports'
+    trainingType: 'sports' | 'kitchen-lab' | 'handicraft' = 'sports',
+    estateData?: any
 ): Promise<{
     updatedStats: PlayerStats;
     craftingResults?: {
@@ -1106,7 +1020,6 @@ export const performTraining5x = async (
     };
     kitchenBonusResults?: (KitchenBonusResult & { activityName?: string })[];
 }> => {
-
     // Pre-check: ensure we have enough clicks and materials
     const statsRef = doc(firestore, 'playerStats', userId);
     const statsDoc = await getDoc(statsRef);
@@ -1168,7 +1081,7 @@ export const performTraining5x = async (
     const kitchenBonusResults: (KitchenBonusResult & { activityName?: string })[] = [];
 
     for (let i = 0; i < 5; i++) {
-        const result = await performTraining(userId, activityId, rewards, trainingType);
+        const result = await performTraining(userId, activityId, rewards, trainingType, estateData);
         currentStats = result.updatedStats;
 
         if (result.craftingResult) {
