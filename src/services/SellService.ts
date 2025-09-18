@@ -11,6 +11,7 @@ import { CRAFTING_INGREDIENTS } from '../data/shop/craftingIngredients';
 import { ALL_SHOP_ITEMS } from '../data/shop';
 import { updateStockAfterSell } from './ShopStockService';
 import { getBaseIdFromInventoryId } from '../utils/inventoryUtils';
+import { updateProgress } from './TaskService';
 
 export interface SellResult {
     success: boolean;
@@ -112,6 +113,8 @@ export const sellCraftedItem = async (
             money: newBalance,
             lastModified: Timestamp.now()
         });
+
+        await updateProgress(userId, 'sold', quantity, baseId);
 
         return {
             success: true,

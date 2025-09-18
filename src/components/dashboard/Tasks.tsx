@@ -2,7 +2,7 @@
 import React, {useState, useEffect, useCallback} from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePlayerStats } from '../../contexts/PlayerStatsContext';
-import { getPlayerTasks, claimRewards } from '../../services/TaskService';
+import { getPlayerTasks, claimRewards, getItemDisplayName } from '../../services/TaskService';
 import { PlayerTasks, Task } from '../../types';
 import '../../styles/components/Tasks.css';
 
@@ -93,6 +93,9 @@ interface TaskCardProps {
 const TaskCard: React.FC<TaskCardProps> = ({ task, type, onClaim, claiming, isVip }) => {
     const isComplete = task.completed;
 
+    // Get the item display name
+    const itemName = getItemDisplayName(task.itemType);
+
     // Helper function to get item emoji
     const getItemEmoji = (itemType: string): string => {
         const emojis: { [key: string]: string } = {
@@ -110,14 +113,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, type, onClaim, claiming, isVi
     // Build progress items array - now always the same structure
     const progressItems = [
         {
-            label: 'Tooda',
+            label: `Tooda - ${itemName}`,
             icon: itemEmoji,
             current: task.progress.itemsProduced,
             total: task.requirements.itemsToProduce,
             percentage: Math.min(100, (task.progress.itemsProduced / task.requirements.itemsToProduce) * 100)
         },
         {
-            label: 'Müü',
+            label: `Müü - ${itemName}`,
             icon: '💰',
             current: task.progress.itemsSold,
             total: task.requirements.itemsToSell,

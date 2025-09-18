@@ -19,7 +19,7 @@ const getRandomProductionItem = (): 'juice' | 'porrige' | 'cloth' | 'bandage' =>
 };
 
 // Helper to get item display name
-const getItemDisplayName = (itemType: string): string => {
+export const getItemDisplayName = (itemType: string): string => {
     const names: { [key: string]: string } = {
         'juice': 'Mahl',
         'porrige': 'Puder',
@@ -38,7 +38,6 @@ const createDailyTask = (level: number): Task => {
     const baseReputationReward = Math.floor(5 * levelMultiplier);
 
     const itemType = getRandomProductionItem();
-    const itemName = getItemDisplayName(itemType);
 
     return {
         id: `daily_${Date.now()}`,

@@ -329,7 +329,8 @@ const TrainingPage: React.FC = () => {
         refreshStats,
         showToast,
         validateTrainingState,
-        setActiveTrainingState
+        setActiveTrainingState,
+        playerEstate
     ]);
 
     const handleTrain5x = useCallback(async () => {
@@ -422,7 +423,8 @@ const TrainingPage: React.FC = () => {
         refreshStats,
         showToast,
         validateTrainingState,
-        setActiveTrainingState
+        setActiveTrainingState,
+        playerEstate
     ]);
 
     const handleTrainCustom = useCallback(async (amount: number) => {
@@ -502,7 +504,8 @@ const TrainingPage: React.FC = () => {
         refreshStats,
         showToast,
         validateTrainingState,
-        setActiveTrainingState
+        setActiveTrainingState,
+        playerEstate
     ]);
 
     // Handle selling crafted items
