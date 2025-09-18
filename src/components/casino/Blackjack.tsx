@@ -1,6 +1,6 @@
-// src/components/casino/Blackjack.tsx
+// src/components/casino/Blackjack.tsx (updated with proper deck management)
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePlayerStats } from '../../contexts/PlayerStatsContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -11,7 +11,8 @@ import {
     playerDoubleDown,
     canPlayBlackjack,
     calculateHandValue,
-    completeBlackjackGame
+    completeBlackjackGame,
+    createDeck
 } from '../../services/BlackjackService';
 import { Card, BlackjackGameState } from '../../types/blackjack.types';
 import '../../styles/components/casino/Blackjack.css';
@@ -22,9 +23,11 @@ export const Blackjack: React.FC = () => {
     const { showToast } = useToast();
 
     const [gameState, setGameState] = useState<BlackjackGameState | null>(null);
-    const [deck, setDeck] = useState<Card[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
     const [showDealerCards, setShowDealerCards] = useState(false);
+
+    // Use ref to persist deck throughout the game
+    const deckRef = useRef<Card[]>([]);
 
     // Check if player can play
     const [canPlay, setCanPlay] = useState(true);
@@ -55,17 +58,20 @@ export const Blackjack: React.FC = () => {
 
         setIsProcessing(true);
         try {
-            const { gameState: newGame, updatedStats } = await startBlackjackGame(
+            // Create fresh deck for this game
+            const newDeck = createDeck();
+
+            const { gameState: newGame, deck: gameDeck } = await startBlackjackGame(
                 currentUser.uid,
-                playerStats
+                playerStats,
+                newDeck
             );
+
+            // Store the deck for this game session
+            deckRef.current = gameDeck;
 
             setGameState(newGame);
             setShowDealerCards(newGame.gameStatus === 'finished');
-
-            // Create a fresh deck for this game
-            const newDeck: Card[] = []; // This would be the same deck from service
-            setDeck(newDeck);
 
             if (newGame.result === 'blackjack') {
                 showToast(`🎉 Blackjack! Võitsid ${newGame.winAmount} pollid!`, 'success');
@@ -83,9 +89,9 @@ export const Blackjack: React.FC = () => {
 
     // Handle Hit
     const handleHit = () => {
-        if (!gameState || gameState.gameStatus !== 'playerTurn') return;
+        if (!gameState || gameState.gameStatus !== 'playerTurn' || !deckRef.current.length) return;
 
-        const updatedGame = playerHit(gameState, deck);
+        const updatedGame = playerHit(gameState, deckRef.current);
         setGameState(updatedGame);
 
         if (updatedGame.gameStatus === 'finished') {
@@ -99,10 +105,10 @@ export const Blackjack: React.FC = () => {
 
     // Handle Stand
     const handleStand = () => {
-        if (!gameState || gameState.gameStatus !== 'playerTurn') return;
+        if (!gameState || gameState.gameStatus !== 'playerTurn' || !deckRef.current.length) return;
 
         setShowDealerCards(true);
-        const updatedGame = playerStand(gameState);
+        const updatedGame = playerStand(gameState, deckRef.current);
         setGameState(updatedGame);
 
         // Show result
@@ -119,7 +125,7 @@ export const Blackjack: React.FC = () => {
 
     // Handle Double Down
     const handleDoubleDown = async () => {
-        if (!gameState || !currentUser || !playerStats) return;
+        if (!gameState || !currentUser || !playerStats || !deckRef.current.length) return;
         if (gameState.gameStatus !== 'playerTurn' || gameState.playerHand.length !== 2) return;
 
         setIsProcessing(true);
@@ -128,7 +134,7 @@ export const Blackjack: React.FC = () => {
                 currentUser.uid,
                 playerStats,
                 gameState,
-                deck
+                deckRef.current
             );
 
             setShowDealerCards(true);
@@ -164,7 +170,7 @@ export const Blackjack: React.FC = () => {
     const handleNewGame = () => {
         setGameState(null);
         setShowDealerCards(false);
-        setDeck([]);
+        deckRef.current = [];
     };
 
     if (loading) {

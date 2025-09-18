@@ -12,9 +12,9 @@ const WIN_MULTIPLIER = 2;
 const BLACKJACK_MULTIPLIER = 3;
 
 /**
- * Create a standard 52-card deck
+ * Create a standard 52-card deck - EXPORT THIS
  */
-const createDeck = (): Card[] => {
+export const createDeck = (): Card[] => {
     const suits: Card['suit'][] = ['hearts', 'diamonds', 'clubs', 'spades'];
     const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
     const deck: Card[] = [];
@@ -107,10 +107,12 @@ export const canPlayBlackjack = (stats: PlayerStats): { canPlay: boolean; reason
  */
 export const startBlackjackGame = async (
     userId: string,
-    stats: PlayerStats
+    stats: PlayerStats,
+    deck: Card[]
 ): Promise<{
     gameState: BlackjackGameState;
     updatedStats: PlayerStats;
+    deck: Card[]; // Return the deck after dealing
 }> => {
     // Validate player can play
     const { canPlay, reason } = canPlayBlackjack(stats);
@@ -121,12 +123,10 @@ export const startBlackjackGame = async (
     // Get current pollid (handle optional)
     const currentPollid = stats.pollid || 0;
 
-    // Create and shuffle deck
-    const deck = createDeck();
-
-    // Deal initial cards
-    const playerHand = [deck.pop()!, deck.pop()!];
-    const dealerHand = [deck.pop()!, deck.pop()!]; // Second card is hidden initially
+    // Deal initial cards from provided deck
+    const gameDeck = [...deck]; // Copy deck
+    const playerHand = [gameDeck.pop()!, gameDeck.pop()!];
+    const dealerHand = [gameDeck.pop()!, gameDeck.pop()!];
 
     // Calculate scores
     const playerScore = calculateHandValue(playerHand);
@@ -194,7 +194,8 @@ export const startBlackjackGame = async (
                 lastPlayTime: now,
                 hourlyReset: now
             }
-        }
+        },
+        deck: gameDeck
     };
 };
 
@@ -228,13 +229,13 @@ export const playerHit = (
         };
     }
 
-    // Check if 21 (auto-stand)
+    // Check if 21 (auto-stand) - FIX: Pass deck parameter
     if (newScore === 21) {
         return playerStand({
             ...gameState,
             playerHand: newHand,
             playerScore: newScore
-        });
+        }, deck);
     }
 
     return {
@@ -247,7 +248,7 @@ export const playerHit = (
 /**
  * Player stands (dealer's turn)
  */
-export const playerStand = (gameState: BlackjackGameState): BlackjackGameState => {
+export const playerStand = (gameState: BlackjackGameState, deck: Card[]): BlackjackGameState => {
     if (gameState.gameStatus !== 'playerTurn') {
         throw new Error('Mäng ei ole mängija käigul!');
     }
@@ -258,10 +259,10 @@ export const playerStand = (gameState: BlackjackGameState): BlackjackGameState =
     // Dealer must hit on 16 and below, stand on 17 and above
     let dealerHand = [...gameState.dealerHand];
     let currentDealerScore = dealerScore;
-    const deck = createDeck(); // In real implementation, pass the same deck
+    const gameDeck = [...deck]; // Use provided deck
 
     while (currentDealerScore < 17) {
-        const newCard = deck.pop();
+        const newCard = gameDeck.pop();
         if (!newCard) break;
 
         dealerHand.push(newCard);
@@ -353,8 +354,8 @@ export const playerDoubleDown = async (
             winAmount: 0
         };
     } else {
-        // Proceed with dealer's turn
-        finalGameState = playerStand(finalGameState);
+        // Proceed with dealer's turn - FIX: Pass deck parameter
+        finalGameState = playerStand(finalGameState, deck); // ADD DECK PARAMETER HERE
         // Adjust winnings for doubled bet
         if (finalGameState.result === 'win') {
             finalGameState.winAmount = doubleBet * WIN_MULTIPLIER;
