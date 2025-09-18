@@ -2,6 +2,7 @@
 import { firestore } from '../config/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { PlayerStats } from '../types';
+import { recordCasinoWin } from './CasinoLeaderboardService';
 
 export interface CasinoData {
     playsUsed: number;
@@ -37,29 +38,75 @@ export const canPlayerGamble = (playerStats: PlayerStats): { canGamble: boolean;
 
 // Get remaining casino plays for current hour
 export const getRemainingCasinoPlays = (stats: PlayerStats): number => {
+    // If no casino data exists at all, player has never played
     if (!stats.casinoData) {
+        console.log('No casino data found - returning MAX_PLAYS');
         return MAX_PLAYS_PER_HOUR;
     }
 
-    const currentHour = new Date().getHours();
-    const lastPlayHour = new Date(stats.casinoData.lastPlayTime).getHours();
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentDate = now.toDateString();
 
-    // Reset if it's a new hour
-    if (currentHour !== lastPlayHour) {
+    // Get last play time
+    const lastPlayTime = new Date(stats.casinoData.lastPlayTime);
+    const lastPlayHour = lastPlayTime.getHours();
+    const lastPlayDate = lastPlayTime.toDateString();
+
+    console.log('Casino play check:', {
+        currentHour,
+        lastPlayHour,
+        currentDate,
+        lastPlayDate,
+        playsUsed: stats.casinoData.playsUsed
+    });
+
+    // Reset if it's a new hour OR a different day
+    if (currentHour !== lastPlayHour || currentDate !== lastPlayDate) {
+        console.log('New hour or day detected - returning MAX_PLAYS');
         return MAX_PLAYS_PER_HOUR;
     }
 
-    return Math.max(0, MAX_PLAYS_PER_HOUR - stats.casinoData.playsUsed);
+    const remaining = Math.max(0, MAX_PLAYS_PER_HOUR - (stats.casinoData.playsUsed || 0));
+    console.log('Remaining plays:', remaining);
+    return remaining;
 };
+
 export const checkAndResetCasinoData = async (userId: string, stats: PlayerStats): Promise<boolean> => {
-    if (!stats.casinoData) return false;
-
-    const currentHour = new Date().getHours();
-    const lastPlayHour = new Date(stats.casinoData.lastPlayTime).getHours();
-
-    // Reset if it's a new hour
-    if (currentHour !== lastPlayHour) {
+    // If no casino data, initialize it
+    if (!stats.casinoData) {
         try {
+            console.log('Initializing casino data for first time player');
+            const statsRef = doc(firestore, 'playerStats', userId);
+            const resetCasinoData: CasinoData = {
+                playsUsed: 0,
+                lastPlayTime: Date.now(),
+                hourlyReset: Date.now()
+            };
+
+            await updateDoc(statsRef, {
+                casinoData: resetCasinoData
+            });
+
+            return true; // Indicates initialization happened
+        } catch (error) {
+            console.error('Error initializing casino data:', error);
+            return false;
+        }
+    }
+
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentDate = now.toDateString();
+
+    const lastPlayTime = new Date(stats.casinoData.lastPlayTime);
+    const lastPlayHour = lastPlayTime.getHours();
+    const lastPlayDate = lastPlayTime.toDateString();
+
+    // Reset if it's a new hour OR a different day
+    if (currentHour !== lastPlayHour || currentDate !== lastPlayDate) {
+        try {
+            console.log('Resetting casino data - new hour or day');
             const statsRef = doc(firestore, 'playerStats', userId);
             const resetCasinoData: CasinoData = {
                 playsUsed: 0,
@@ -193,6 +240,21 @@ export const playSlotMachine = async (userId: string, stats: PlayerStats, betAmo
     };
 
     await updateDoc(statsRef, updates);
+
+    // Record win to leaderboard if player won
+    if (gameResult.isWin && gameResult.winAmount > 0) {
+        // Fire and forget - don't await to keep game fast
+        recordCasinoWin(
+            userId,
+            stats.username || 'Tundmatu',
+            betAmount,
+            gameResult.winAmount,
+            gameResult.multiplier
+        ).catch(error => {
+            console.error('Failed to record casino win:', error);
+            // Don't break the game if leaderboard fails
+        });
+    }
 
     return {
         updatedStats: {
