@@ -1,5 +1,5 @@
 // src/pages/ProfilePage.tsx
-import React, {useEffect} from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { ProfileAttributes } from '../components/profile/ProfileAttributes';

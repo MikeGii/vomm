@@ -1,5 +1,5 @@
 // src/components/admin/tools/DatabaseMetrics.tsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { collection, getDocs, query, orderBy, limit, where, Timestamp } from 'firebase/firestore';
 import { firestore } from '../../../config/firebase';
 
@@ -33,62 +33,16 @@ interface AggregatedStats {
 }
 
 export const DatabaseMetrics: React.FC = () => {
-    const [metrics, setMetrics] = useState<PageMetricData[]>([]);
+    // Eemaldasime 'metrics' state kuna seda ei kasutata
     const [aggregatedStats, setAggregatedStats] = useState<AggregatedStats[]>([]);
     const [loading, setLoading] = useState(false);
     const [documentLimit, setDocumentLimit] = useState<number>(10000);
     const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('24h');
-    const [totalDocuments, setTotalDocuments] = useState(0);
+    // Eemaldasime 'totalDocuments' state kuna seda ei kasutata
     const [actualDocumentsLoaded, setActualDocumentsLoaded] = useState(0);
 
-    const loadMetrics = async () => {
-        setLoading(true);
-        try {
-            // Arvuta ajafilter
-            const now = Timestamp.now();
-            const hoursAgo = timeRange === '24h' ? 24 : timeRange === '7d' ? 168 : 720;
-            const startTime = Timestamp.fromMillis(now.toMillis() - (hoursAgo * 60 * 60 * 1000));
-
-            // Lae pageMetrics kollektsioonist andmed koos ajafiltriga
-            const metricsRef = collection(firestore, 'pageMetrics');
-
-            // Esimene päring - leia dokumendid ajavahemikus
-            const metricsQuery = query(
-                metricsRef,
-                where('timeWindow.end', '>=', startTime),
-                orderBy('timeWindow.end', 'desc'),
-                limit(documentLimit) // Nüüd kuni 10000 dokumenti
-            );
-
-            console.log(`📊 Laadin kuni ${documentLimit} dokumenti viimase ${hoursAgo} tunni kohta...`);
-
-            const snapshot = await getDocs(metricsQuery);
-            const rawMetrics: PageMetricData[] = [];
-
-            snapshot.forEach(doc => {
-                const data = doc.data() as PageMetricData;
-                rawMetrics.push(data);
-            });
-
-            setMetrics(rawMetrics);
-            setTotalDocuments(snapshot.size);
-            setActualDocumentsLoaded(snapshot.size);
-
-            console.log(`✅ Laaditud ${snapshot.size} dokumenti`);
-
-            // Agregeeri andmed lehe kaupa (optimeeritud versioon)
-            const aggregated = processMetrics(rawMetrics, hoursAgo);
-            setAggregatedStats(aggregated);
-
-        } catch (error) {
-            console.error('Viga metriku laadimisel:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     // Optimeeritud andmete töötlemine
-    const processMetrics = (rawMetrics: PageMetricData[], hoursInRange: number): AggregatedStats[] => {
+    const processMetrics = useCallback((rawMetrics: PageMetricData[], hoursInRange: number): AggregatedStats[] => {
         const pageStats = new Map<string, {
             totalReads: number;
             totalWrites: number;
@@ -175,11 +129,57 @@ export const DatabaseMetrics: React.FC = () => {
         }).sort((a, b) => b.totalRequests - a.totalRequests);
 
         return aggregated;
-    };
+    }, []); // processMetrics ei sõltu muutujatest
+
+    // loadMetrics wrapped in useCallback to prevent recreation
+    const loadMetrics = useCallback(async () => {
+        setLoading(true);
+        try {
+            // Arvuta ajafilter
+            const now = Timestamp.now();
+            const hoursAgo = timeRange === '24h' ? 24 : timeRange === '7d' ? 168 : 720;
+            const startTime = Timestamp.fromMillis(now.toMillis() - (hoursAgo * 60 * 60 * 1000));
+
+            // Lae pageMetrics kollektsioonist andmed koos ajafiltriga
+            const metricsRef = collection(firestore, 'pageMetrics');
+
+            // Esimene päring - leia dokumendid ajavahemikus
+            const metricsQuery = query(
+                metricsRef,
+                where('timeWindow.end', '>=', startTime),
+                orderBy('timeWindow.end', 'desc'),
+                limit(documentLimit) // Nüüd kuni 10000 dokumenti
+            );
+
+            console.log(`📊 Laadin kuni ${documentLimit} dokumenti viimase ${hoursAgo} tunni kohta...`);
+
+            const snapshot = await getDocs(metricsQuery);
+            const rawMetrics: PageMetricData[] = [];
+
+            snapshot.forEach(doc => {
+                const data = doc.data() as PageMetricData;
+                rawMetrics.push(data);
+            });
+
+            // Salvestame ainult dokumendite arvu, mitte ise dokumente
+            setActualDocumentsLoaded(snapshot.size);
+
+            console.log(`✅ Laaditud ${snapshot.size} dokumenti`);
+
+            // Agregeeri andmed lehe kaupa (optimeeritud versioon)
+            const aggregated = processMetrics(rawMetrics, hoursAgo);
+            setAggregatedStats(aggregated);
+
+        } catch (error) {
+            console.error('Viga metriku laadimisel:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [timeRange, documentLimit, processMetrics]); // Lisa kõik sõltuvused
 
     useEffect(() => {
         loadMetrics();
-    }, [timeRange, documentLimit]);
+    }, [loadMetrics]); // Nüüd loadMetrics on dependencies
 
     // Memoize problematic pages
     const problematicPages = useMemo(() => {
