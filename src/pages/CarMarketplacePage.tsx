@@ -7,10 +7,12 @@ import { TabNavigation } from '../components/ui/TabNavigation';
 import NewCarsTab from '../components/carMarketplace/NewCarsTab';
 import UsedCarsTab from '../components/carMarketplace/UsedCarsTab';
 import '../styles/pages/CarMarketplace.css';
+import {usePageTracking} from "../hooks/usePageTracking";
 
 const CarMarketplacePage: React.FC = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('used');
+    usePageTracking('CarMarketplacePage', activeTab);
 
     const tabs = [
         { id: 'used', label: 'Kasutatud autod' },

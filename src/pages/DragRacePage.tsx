@@ -1,9 +1,10 @@
-// src/pages/DragRacePage.tsx - COMPLETE FIXED VERSION
+// src/pages/DragRacePage.tsx - UPDATED WITH TABS SYSTEM
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { useToast } from '../contexts/ToastContext';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
+import { TabNavigation } from '../components/ui/TabNavigation';
 import { FuelDisplay } from '../components/dragrace/FuelDisplay';
 import { ActiveCarDisplay } from '../components/dragrace/ActiveCarDisplay';
 import { TrainingOptions } from '../components/dragrace/TrainingOptions';
@@ -12,17 +13,25 @@ import { FuelPurchaseModal } from '../components/dragrace/FuelPurchaseModal';
 import { DragRaceService } from '../services/DragRaceService';
 import { DragRaceInstructions } from '../components/dragrace/DragRaceInstructions';
 import { ActiveCarService } from '../services/ActiveCarService';
-import { FuelSystem, TrainingType, FuelPurchaseOption } from '../types/dragRace';
+import {FuelSystem, TrainingType, FuelPurchaseOption, DRAG_RACE_TRACKS} from '../types/dragRace';
 import { PlayerCar } from '../types/vehicles';
 import { useNavigate } from 'react-router-dom';
 import { VehicleModel } from '../types/vehicleDatabase';
+import { RacingOptions } from '../components/dragrace/RacingOptions';
+import { RaceResultModal } from '../components/dragrace/RaceResultModal';
+import { DragRaceResult } from '../types/dragRace';
 import '../styles/pages/DragRace.css';
+import {Leaderboard} from "../components/dragrace/Leaderboard";
+import {calculateAcceleration} from "../utils/vehicleCalculations";
 
 const DragRacePage: React.FC = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     const { playerStats, loading: statsLoading } = usePlayerStats();
     const { showToast } = useToast();
+
+    // Tab state
+    const [activeTab, setActiveTab] = useState<'training' | 'racing' | 'leaderboard'>('training');
 
     // State management
     const [fuelSystem, setFuelSystem] = useState<FuelSystem | null>(null);
@@ -34,16 +43,27 @@ const DragRacePage: React.FC = () => {
     const [showFuelPurchase, setShowFuelPurchase] = useState(false);
     const [fuelPurchaseOptions, setFuelPurchaseOptions] = useState<FuelPurchaseOption[]>([]);
 
+    const [raceResult, setRaceResult] = useState<DragRaceResult | null>(null);
+    const [showRaceResult, setShowRaceResult] = useState(false);
+    const [isRacing, setIsRacing] = useState(false);
+    const [selectedTrackName, setSelectedTrackName] = useState<string>('');
+
+    // Tabs configuration
+    const dragRaceTabs = [
+        { id: 'training', label: '🏃‍♂️ Treening' },
+        { id: 'racing', label: '🏁 Võidusõidud' },
+        { id: 'leaderboard', label: '🏆 Edetabel' }
+    ];
+
     // Load drag race data
     const loadDragRaceData = useCallback(async () => {
         if (!currentUser || !playerStats) return;
 
         try {
-
             await DragRaceService.initializeDragRaceAttributes(currentUser.uid);
 
-            // Load fuel system
-            const fuel = await DragRaceService.checkAndResetFuel(currentUser.uid);
+            // Pass playerStats to the fuel system check
+            const fuel = await DragRaceService.checkAndResetFuel(currentUser.uid, playerStats);
             setFuelSystem(fuel);
 
             // Load active car if set
@@ -58,7 +78,6 @@ const DragRacePage: React.FC = () => {
         } catch (error) {
             console.error('Error loading drag race data:', error);
             showToast('Viga andmete laadimisel', 'error');
-        } finally {
         }
     }, [currentUser, playerStats, showToast]);
 
@@ -68,7 +87,7 @@ const DragRacePage: React.FC = () => {
         loadDragRaceData();
     }, [currentUser, playerStats, statsLoading, loadDragRaceData]);
 
-    // FIXED: Clean training handler - no local state management
+    // Training handler
     const handleTraining = async (trainingType: TrainingType) => {
         if (!currentUser || !playerStats || !fuelSystem) return;
 
@@ -89,20 +108,17 @@ const DragRacePage: React.FC = () => {
         try {
             setIsTraining(true);
 
-            // Call service - PlayerStatsContext will automatically update via onSnapshot
             const result = await DragRaceService.performTraining(
                 currentUser.uid,
                 trainingType,
                 playerStats
             );
 
-            // Only update fuel system locally for immediate UI feedback
             setFuelSystem(prev => prev ? {
                 ...prev,
                 currentFuel: result.remainingFuel
             } : null);
 
-            // Show success message
             if (result.levelUp) {
                 if (result.levelsGained && result.levelsGained > 1) {
                     showToast(`🎉 ${result.levelsGained} taset tõusis! Uus tase: ${result.newLevel} (+${result.experienceGained} XP)`, 'success');
@@ -121,18 +137,78 @@ const DragRacePage: React.FC = () => {
         }
     };
 
-    // FIXED: Clean car selection handler
+    // Race handler
+    const handleRace = async (trackId: string) => {
+        if (!currentUser || !playerStats || !fuelSystem || !activeCar) return;
+
+        // Check if has active car
+        if (!playerStats.activeCarId) {
+            showToast('Määra esmalt aktiivne auto!', 'error');
+            setShowCarSelection(true);
+            return;
+        }
+
+        // Check fuel
+        if (fuelSystem.currentFuel <= 0) {
+            showToast('Kütus on otsas! Osta lisaks või oota järgmist tundi.', 'error');
+            setShowFuelPurchase(true);
+            return;
+        }
+
+        try {
+            setIsRacing(true);
+
+            // Find track name for result modal
+            const track = DRAG_RACE_TRACKS.find(t => t.id === trackId);
+            setSelectedTrackName(track?.name || 'Tundmatu rada');
+
+            const result = await DragRaceService.performDragRace(
+                currentUser.uid,
+                trackId,
+                playerStats,
+                activeCar
+            );
+
+            // Update fuel system locally for immediate UI feedback
+            setFuelSystem(prev => prev ? {
+                ...prev,
+                currentFuel: result.remainingFuel
+            } : null);
+
+            // Show race result modal
+            setRaceResult(result.result);
+            setShowRaceResult(true);
+
+            // Show success toast
+            if (result.result.isPersonalBest) {
+                showToast(`🏆 Uus rekord! Aeg: ${result.result.time.toFixed(3)}s`, 'success');
+            } else {
+                showToast(`🏁 Sõit lõpetatud! Aeg: ${result.result.time.toFixed(3)}s`, 'success');
+            }
+
+        } catch (error: any) {
+            console.error('Race error:', error);
+            showToast(error.message || 'Viga võidusõidu sooritamisel', 'error');
+        } finally {
+            setIsRacing(false);
+        }
+    };
+
+    // Race again handler
+    const handleRaceAgain = () => {
+        setShowRaceResult(false);
+        setRaceResult(null);
+        // User can immediately start another race
+    };
+
+    // Car selection handler
     const handleCarSelection = async (carId: string) => {
         if (!currentUser) return;
 
         try {
-            // Set active car - PlayerStatsContext will update automatically
             await ActiveCarService.setActiveCar(currentUser.uid, carId);
-
-            // Reload active car data for immediate UI update
             const activeCarData = await ActiveCarService.getActiveCar(currentUser.uid, carId);
             setActiveCar(activeCarData);
-
             setShowCarSelection(false);
             showToast('Aktiivne auto määratud!', 'success');
 
@@ -142,7 +218,7 @@ const DragRacePage: React.FC = () => {
         }
     };
 
-    // FIXED: Clean fuel purchase setup
+    // Fuel purchase setup
     const handleFuelPurchase = async () => {
         if (!currentUser || !playerStats) return;
 
@@ -156,12 +232,11 @@ const DragRacePage: React.FC = () => {
         }
     };
 
-    // FIXED: Clean fuel purchase handler
+    // Fuel purchase handler
     const handleFuelPurchaseConfirm = async (purchaseType: 'money' | 'pollid', quantity: number) => {
         if (!currentUser || !playerStats) return;
 
         try {
-            // Purchase fuel - PlayerStatsContext will update currency automatically
             const result = await DragRaceService.purchaseFuel(
                 currentUser.uid,
                 purchaseType,
@@ -170,7 +245,6 @@ const DragRacePage: React.FC = () => {
             );
 
             if (result.success) {
-                // Update fuel state immediately for UI feedback
                 setFuelSystem(prev => prev ? {
                     ...prev,
                     currentFuel: result.newFuelCount,
@@ -195,7 +269,74 @@ const DragRacePage: React.FC = () => {
         }
     };
 
-    // Error state - check playerStats from context
+    // Render tab content based on active tab
+    const renderTabContent = () => {
+        // Add null check here
+        if (!playerStats) return null;
+
+        switch (activeTab) {
+            case 'training':
+                return (
+                    <>
+                        {/* Fuel and Active Car Info */}
+                        <div className="dr-info-section">
+                            <FuelDisplay
+                                fuelSystem={fuelSystem}
+                                onPurchaseFuel={handleFuelPurchase}
+                            />
+                            <ActiveCarDisplay
+                                activeCar={activeCar}
+                                onSelectCar={() => setShowCarSelection(true)}
+                            />
+                        </div>
+
+                        {/* Training Options - now playerStats is guaranteed to not be null */}
+                        <TrainingOptions
+                            playerStats={playerStats}
+                            fuelSystem={fuelSystem}
+                            isTraining={isTraining}
+                            onTraining={handleTraining}
+                        />
+                    </>
+                );
+
+            case 'racing':
+                return (
+                    <>
+                        {/* Fuel and Active Car Info (shared with training) */}
+                        <div className="dr-info-section">
+                            <FuelDisplay
+                                fuelSystem={fuelSystem}
+                                onPurchaseFuel={handleFuelPurchase}
+                            />
+                            <ActiveCarDisplay
+                                activeCar={activeCar}
+                                onSelectCar={() => setShowCarSelection(true)}
+                            />
+                        </div>
+
+                        {/* Racing Options */}
+                        <RacingOptions
+                            playerStats={playerStats}
+                            fuelSystem={fuelSystem}
+                            activeCar={activeCar}
+                            isRacing={isRacing}
+                            onRace={handleRace}
+                        />
+                    </>
+                );
+
+            case 'leaderboard':
+                return (
+                    <Leaderboard currentUserId={currentUser?.uid} />
+                );
+
+            default:
+                return null;
+        }
+    };
+
+    // Error state
     if (!playerStats) {
         return (
             <div className="page-container">
@@ -211,7 +352,7 @@ const DragRacePage: React.FC = () => {
         <div className="page-container">
             <AuthenticatedHeader />
 
-                <div className="dr-content">
+            <div className="dr-content">
                 <button
                     className="back-to-dashboard"
                     onClick={() => navigate('/dashboard')}
@@ -219,37 +360,22 @@ const DragRacePage: React.FC = () => {
                     ← Tagasi töölauale
                 </button>
 
-                <div className="dr-content">
-                    <DragRaceInstructions />
+                <DragRaceInstructions />
 
-                <div className="dr-content">
-                    <div className="dr-main">
-                        {/* Fuel and Active Car Info */}
-                        <div className="dr-info-section">
-                            <FuelDisplay
-                                fuelSystem={fuelSystem}
-                                onPurchaseFuel={handleFuelPurchase}
-                            />
+                {/* Tab Navigation */}
+                <TabNavigation
+                    tabs={dragRaceTabs}
+                    activeTab={activeTab}
+                    onTabChange={(tabId) => setActiveTab(tabId as 'training' | 'racing' | 'leaderboard')}
+                />
 
-                            <ActiveCarDisplay
-                                activeCar={activeCar}
-                                onSelectCar={() => setShowCarSelection(true)}
-                            />
-                        </div>
-
-                        {/* Training Options - Use context playerStats directly */}
-                        <TrainingOptions
-                            playerStats={playerStats}
-                            fuelSystem={fuelSystem}
-                            isTraining={isTraining}
-                            onTraining={handleTraining}
-                        />
-                    </div>
+                {/* Tab Content */}
+                <div className="dr-main">
+                    {renderTabContent()}
                 </div>
             </div>
-                </div>
 
-            {/* Car Selection Modal */}
+            {/* Modals */}
             {showCarSelection && (
                 <CarSelectionModal
                     isOpen={showCarSelection}
@@ -259,8 +385,7 @@ const DragRacePage: React.FC = () => {
                 />
             )}
 
-            {/* Fuel Purchase Modal */}
-            {showFuelPurchase && (
+            {showFuelPurchase && playerStats && (
                 <FuelPurchaseModal
                     isOpen={showFuelPurchase}
                     onClose={() => setShowFuelPurchase(false)}
@@ -269,7 +394,22 @@ const DragRacePage: React.FC = () => {
                     playerStats={playerStats}
                 />
             )}
-            </div>
+
+            {/* Race Result Modal */}
+            {showRaceResult && raceResult && activeCar && (
+                <RaceResultModal
+                    isOpen={showRaceResult}
+                    result={raceResult}
+                    trackName={selectedTrackName}
+                    onClose={() => setShowRaceResult(false)}
+                    onRaceAgain={handleRaceAgain}
+                    carAcceleration={calculateAcceleration(
+                        activeCar.car.engine.basePower,
+                        activeCar.model.mass
+                    )}
+                />
+            )}
+        </div>
     );
 };
 

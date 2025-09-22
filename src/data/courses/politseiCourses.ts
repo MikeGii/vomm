@@ -969,6 +969,40 @@ export const POLITSEI_COURSES: Course[] = [
         }
     },
     {
+        id: 'anatomic_advanced_course',
+        name: 'Anatoomia täiendkursus',
+        description: 'Kursus, kus õpid tundma täiendavalt inimese anatoomiat, mis käsitleb ka endas kehavigastusi ja nende tekke põhjuseid.',
+        duration: 25200,
+        requirements: {
+            level: 85,
+            completedCourses: ['anatomic_basic_course'],
+            totalWorkedHours: 220,
+            attributes: {
+                intelligence: 180,
+            }
+        },
+        rewards: {
+            experience: 17500,
+            reputation: 1200,
+            money: 12000,
+        },
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Milline on rigor mortis’e (krambilaadsed lihasjäikused) kujunemise õige järjestus ja ajaraam pärast surma?',
+            answers: [
+                'Algab väikestes lihastes (nägu, kael) 2–4 tunni jooksul, levib kogu kehasse 12 tunni jooksul ja taandub 24–48 tunni möödudes',
+                'Algab suurtes lihasgruppides (jalad, selg) kohe pärast surma ja püsib kuni 72 tundi',
+                'Kogu keha jäikus tekib samaaegselt umbes 1 tunni jooksul ja kaob alles nädal hiljem',
+            ],
+            correctAnswerIndex: 0,
+            rewards: {
+                experience: 5000,
+                money: 2000,
+                reputation: 900,
+            }
+        }
+    },
+    {
         id: 'personal_systems_course',
         name: 'Personalitöö ja tööaja arvestamise algkursus',
         description: 'Algkursus tundmaks personalitöö põhimõtteid ja tööaja arvestamist ja töötajate graafiku koostamist',
@@ -1009,7 +1043,10 @@ export const POLITSEI_COURSES: Course[] = [
         requirements: {
             level: 85,
             completedCourses: ['police_group_leader_course_advanced', 'personal_systems_course'],
-            totalWorkedHours: 200
+            totalWorkedHours: 200,
+            attributes: {
+                intelligence: 200,
+            }
         },
         rewards: {
             experience: 30000,
@@ -1029,6 +1066,83 @@ export const POLITSEI_COURSES: Course[] = [
                 experience: 3000,
                 money: 2000,
                 reputation: 400,
+            }
+        }
+    },
+    {
+        id: 'advanced_leader_course_01',
+        name: 'Keskastme juhtide täiendkoolituse 1. päev',
+        description: 'Täiendkoolitus, kuidas juhtida ja hallata struktuuriüksust efektiivselt 1. päev',
+        duration: 43200,
+        requirements: {
+            level: 100,
+            completedCourses: ['advanced_leader_course'],
+            totalWorkedHours: 400,
+            attributes: {
+                intelligence: 350,
+                dexterity: 300
+            }
+        },
+        rewards: {
+            experience: 60000,
+            reputation: 5000,
+            money: 35000,
+        },
+        category: 'politsei'
+    },
+    {
+        id: 'advanced_leader_course_02',
+        name: 'Keskastme juhtide täiendkoolituse 2. päev',
+        description: 'Täiendkoolitus, kuidas juhtida ja hallata struktuuriüksust efektiivselt 2. päev',
+        duration: 43200,
+        requirements: {
+            level: 105,
+            completedCourses: ['advanced_leader_course_01'],
+            totalWorkedHours: 450,
+            attributes: {
+                intelligence: 370,
+                dexterity: 310
+            }
+        },
+        rewards: {
+            experience: 80000,
+            reputation: 5500,
+            money: 37500,
+        },
+        category: 'politsei'
+    },
+    {
+        id: 'personal_systems_course_advanced',
+        name: 'Personali manageerimise täiendkursus',
+        description: 'Täiendkursus, kuidas manageerida suuremat personali ning kuidas efektiivselt jagada tööaega ja koormust ilma töö kvaliteedis' +
+            ' kaotamata',
+        duration: 28800,
+        requirements: {
+            level: 105,
+            completedCourses: ['personal_systems_course', 'advanced_leader_course'],
+            totalWorkedHours: 450,
+            attributes: {
+                intelligence: 400
+            }
+        },
+        rewards: {
+            experience: 70000,
+            reputation: 5000,
+            money: 35000,
+        },
+        category: 'politsei',
+        completionQuestion: {
+            question: 'Milline alljärgnevatest on Eesti tööõiguses kehtiv põhimõte töötajate töökoormuse jaotamisel?',
+            answers: [
+                'Tööandja peab igale töötajale tagama vähemalt 10-tunnise tööpäeva',
+                'Tööandja ei tohi ületada töötaja kokkulepitud tööaega, välja arvatud seaduses sätestatud juhtudel',
+                'Tööandja võib ühepoolselt pikendada töötaja töölepingut ilma kokkuleppeta',
+            ],
+            correctAnswerIndex: 1,
+            rewards: {
+                experience: 5000,
+                money: 3500,
+                reputation: 2500,
             }
         }
     },

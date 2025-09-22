@@ -3,6 +3,7 @@ import React from 'react';
 import { PlayerStats } from '../../types';
 import { FuelSystem, TrainingType, TRAINING_OPTIONS } from '../../types/dragRace';
 import { DragRaceService } from '../../services/DragRaceService';
+import '../../styles/components/dragrace/TrainingOptions.css'
 
 interface TrainingOptionsProps {
     playerStats: PlayerStats;

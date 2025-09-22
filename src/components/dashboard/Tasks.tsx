@@ -2,7 +2,7 @@
 import React, {useState, useEffect, useCallback} from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePlayerStats } from '../../contexts/PlayerStatsContext';
-import { getPlayerTasks, claimRewards } from '../../services/TaskService';
+import { getPlayerTasks, claimRewards, getItemDisplayName } from '../../services/TaskService';
 import { PlayerTasks, Task } from '../../types';
 import '../../styles/components/Tasks.css';
 
@@ -26,9 +26,8 @@ export const Tasks: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [currentUser]); // Only recreate if currentUser changes
+    }, [currentUser]);
 
-    // Now include loadTasks in the dependency array
     useEffect(() => {
         loadTasks();
     }, [loadTasks]);
@@ -94,10 +93,54 @@ interface TaskCardProps {
 const TaskCard: React.FC<TaskCardProps> = ({ task, type, onClaim, claiming, isVip }) => {
     const isComplete = task.completed;
 
-    // Calculate individual progress percentages using existing structure
-    const courseProgress = Math.min(100, (task.progress.coursesCompleted / task.requirements.courses) * 100);
-    const workProgress = Math.min(100, (task.progress.hoursWorked / task.requirements.workHours) * 100);
-    const trainingProgress = Math.min(100, (task.progress.attributeLevelsGained / task.requirements.attributeLevels) * 100);
+    // Get the item display name
+    const itemName = getItemDisplayName(task.itemType);
+
+    // Helper function to get item emoji
+    const getItemEmoji = (itemType: string): string => {
+        const emojis: { [key: string]: string } = {
+            'juice': '🥤',
+            'porrige': '🥣',
+            'cloth': '🧵',
+            'bandage': '🩹'
+        };
+        return emojis[itemType] || '📦';
+    };
+
+    // Get item emoji for this task
+    const itemEmoji = getItemEmoji(task.itemType);
+
+    // Build progress items array - now always the same structure
+    const progressItems = [
+        {
+            label: `Tooda - ${itemName}`,
+            icon: itemEmoji,
+            current: task.progress.itemsProduced,
+            total: task.requirements.itemsToProduce,
+            percentage: Math.min(100, (task.progress.itemsProduced / task.requirements.itemsToProduce) * 100)
+        },
+        {
+            label: `Müü - ${itemName}`,
+            icon: '💰',
+            current: task.progress.itemsSold,
+            total: task.requirements.itemsToSell,
+            percentage: Math.min(100, (task.progress.itemsSold / task.requirements.itemsToSell) * 100)
+        },
+        {
+            label: 'Tööaeg',
+            icon: '💼',
+            current: task.progress.hoursWorked,
+            total: task.requirements.workHours,
+            percentage: Math.min(100, (task.progress.hoursWorked / task.requirements.workHours) * 100)
+        },
+        {
+            label: 'Atribuudid',
+            icon: '💪',
+            current: task.progress.attributeLevelsGained,
+            total: task.requirements.attributeLevels,
+            percentage: Math.min(100, (task.progress.attributeLevelsGained / task.requirements.attributeLevels) * 100)
+        }
+    ];
 
     return (
         <div className={`task-card ${type} ${isComplete ? 'completed' : ''} ${isVip ? 'vip-enhanced' : ''}`}>
@@ -115,45 +158,22 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, type, onClaim, claiming, isVi
 
             <div className="task-content">
                 <h3 className="task-title">{task.title}</h3>
-                <p className="task-description">{task.description}</p>
             </div>
 
             <div className="task-progress-container">
-                <div className="progress-item">
-                    <div className="progress-label">
-                        <span className="progress-text">📚 Kursused</span>
-                        <span className="progress-numbers">
-                            {task.progress.coursesCompleted}/{task.requirements.courses}
-                        </span>
+                {progressItems.map((item, index) => (
+                    <div key={index} className="progress-item">
+                        <div className="progress-label">
+                            <span className="progress-text">{item.icon} {item.label}</span>
+                            <span className="progress-numbers">
+                                {item.current}/{item.total}{item.label === 'Tööaeg' ? 'h' : ''}
+                            </span>
+                        </div>
+                        <div className="progress-bar">
+                            <div className="progress-fill" style={{ width: `${item.percentage}%` }} />
+                        </div>
                     </div>
-                    <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: `${courseProgress}%` }} />
-                    </div>
-                </div>
-
-                <div className="progress-item">
-                    <div className="progress-label">
-                        <span className="progress-text">💼 Tööaeg</span>
-                        <span className="progress-numbers">
-                            {task.progress.hoursWorked}h/{task.requirements.workHours}h
-                        </span>
-                    </div>
-                    <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: `${workProgress}%` }} />
-                    </div>
-                </div>
-
-                <div className="progress-item">
-                    <div className="progress-label">
-                        <span className="progress-text">💪 Atribuudid</span>
-                        <span className="progress-numbers">
-                            {task.progress.attributeLevelsGained}/{task.requirements.attributeLevels}
-                        </span>
-                    </div>
-                    <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: `${trainingProgress}%` }} />
-                    </div>
-                </div>
+                ))}
             </div>
 
             <div className="task-footer">

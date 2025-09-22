@@ -1,0 +1,325 @@
+/* src/styles/components/casino/Blackjack.css */
+
+.blackjack-container {
+    background-color: #1a1a1a;
+    border: 2px solid #ffd700;
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.blackjack-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #333;
+}
+
+.blackjack-header h3 {
+    color: #ffd700;
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.blackjack-pollid-display {
+    color: #4caf50;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* Blocked state */
+.blackjack-blocked {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: #2a1a1a;
+    border: 2px solid #aa4444;
+    border-radius: 8px;
+}
+
+.blackjack-blocked-message {
+    text-align: center;
+    color: #ff6666;
+}
+
+.blackjack-blocked-message h4 {
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.blackjack-blocked-message p {
+    margin: 0.5rem 0;
+    color: #ccc;
+}
+
+/* Start screen */
+.blackjack-start {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.blackjack-game-info {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid #ffd700;
+    border-radius: 8px;
+}
+
+.blackjack-game-info p {
+    margin: 0.5rem 0;
+    color: #f0f0f0;
+}
+
+.blackjack-game-info strong {
+    color: #ffd700;
+}
+
+.blackjack-start-button {
+    background: linear-gradient(135deg, #4caf50, #45a049);
+    border: none;
+    border-radius: 8px;
+    padding: 1rem 3rem;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.blackjack-start-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
+}
+
+.blackjack-start-button:disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Game area */
+.blackjack-game {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.blackjack-dealer-section,
+.blackjack-player-section {
+    background: rgba(42, 42, 42, 0.5);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.blackjack-dealer-section h4,
+.blackjack-player-section h4 {
+    color: #ffd700;
+    margin: 0 0 1rem 0;
+    font-size: 1.2rem;
+}
+
+.blackjack-card-hand {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+    min-height: 80px;
+}
+
+.blackjack-playing-card {
+    width: 60px;
+    height: 80px;
+    background: white;
+    border: 2px solid #333;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease;
+}
+
+.blackjack-playing-card:hover {
+    transform: translateY(-5px);
+}
+
+.blackjack-score {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #f0f0f0;
+    font-weight: bold;
+}
+
+/* Game controls */
+.blackjack-game-controls {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.blackjack-control-button {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+    min-width: 100px;
+}
+
+.blackjack-control-button.blackjack-hit {
+    background: linear-gradient(135deg, #2196f3, #1976d2);
+}
+
+.blackjack-control-button.blackjack-stand {
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+}
+
+.blackjack-control-button.blackjack-double {
+    background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+}
+
+.blackjack-control-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.blackjack-control-button:disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Game result */
+.blackjack-game-result {
+    text-align: center;
+    padding: 2rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.blackjack-game-result.win {
+    background: rgba(76, 175, 80, 0.2);
+    border: 2px solid #4caf50;
+}
+
+.blackjack-game-result.lose {
+    background: rgba(244, 67, 54, 0.2);
+    border: 2px solid #f44336;
+}
+
+.blackjack-game-result.push {
+    background: rgba(255, 152, 0, 0.2);
+    border: 2px solid #ff9800;
+}
+
+.blackjack-game-result.blackjack {
+    background: rgba(233, 30, 99, 0.2);
+    border: 2px solid #e91e63;
+}
+
+.blackjack-game-result h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.8rem;
+}
+
+.blackjack-game-result p {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.1rem;
+    color: #f0f0f0;
+}
+
+.blackjack-new-game-button {
+    background: linear-gradient(135deg, #4caf50, #45a049);
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem 2rem;
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.blackjack-new-game-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Loading state */
+.blackjack-loading {
+    text-align: center;
+    padding: 3rem;
+    color: #ffd700;
+    font-size: 1.2rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .blackjack-container {
+        padding: 1.5rem;
+        margin: 1rem 0;
+    }
+
+    .blackjack-header {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    .blackjack-card-hand {
+        gap: 0.25rem;
+    }
+
+    .blackjack-playing-card {
+        width: 50px;
+        height: 70px;
+        font-size: 1.2rem;
+    }
+
+    .blackjack-game-controls {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .blackjack-control-button {
+        width: 100%;
+        padding: 1rem;
+    }
+
+    .blackjack-game-result h3 {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .blackjack-container {
+        padding: 1rem;
+    }
+
+    .blackjack-header h3 {
+        font-size: 1.2rem;
+    }
+
+    .blackjack-playing-card {
+        width: 45px;
+        height: 65px;
+        font-size: 1rem;
+    }
+
+    .blackjack-start-button {
+        padding: 0.8rem 2rem;
+        font-size: 1rem;
+    }
+}

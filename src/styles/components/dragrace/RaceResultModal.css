@@ -1,0 +1,157 @@
+/* src/styles/components/dragrace/RaceResultModal.css */
+.dr-result-modal {
+    max-width: 500px;
+}
+
+.dr-result-main {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #444;
+}
+
+.dr-final-time {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.dr-time-label {
+    font-size: 1rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.dr-time-value {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #4a90e2;
+    text-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
+}
+
+.dr-personal-best {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    animation: dr-celebrate 0.6s ease-out;
+}
+
+.dr-previous-best {
+    color: #bbb;
+    font-size: 0.95rem;
+}
+
+.dr-time-diff {
+    color: #ff6b6b;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
+.dr-breakdown {
+    background: rgba(26, 26, 26, 0.6);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.dr-breakdown h3 {
+    font-size: 1.2rem;
+    color: #f0f0f0;
+    margin: 0 0 1rem 0;
+    text-align: center;
+}
+
+.dr-breakdown-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.dr-breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.dr-breakdown-item.dr-base {
+    background: rgba(74, 144, 226, 0.1);
+    border-left: 3px solid #4a90e2;
+}
+
+.dr-breakdown-item.dr-car {
+    background: rgba(255, 107, 53, 0.1);
+    border-left: 3px solid #ff6b35;
+}
+
+.dr-breakdown-item.dr-skills {
+    background: rgba(76, 175, 80, 0.1);
+    border-left: 3px solid #4CAF50;
+}
+
+.dr-breakdown-item.dr-luck {
+    background: rgba(156, 39, 176, 0.1);
+    border-left: 3px solid #9c27b0;
+}
+
+.dr-breakdown-label {
+    font-size: 0.9rem;
+    color: #bbb;
+}
+
+.dr-breakdown-value {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #f0f0f0;
+}
+
+.dr-breakdown-explanation {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #666;
+    font-style: italic;
+    margin-top: 1rem;
+}
+
+.dr-breakdown-explanation p {
+    margin: 0;
+    line-height: 1.4;
+}
+
+@keyframes dr-celebrate {
+    0% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+    .dr-time-value {
+        font-size: 2.5rem;
+    }
+
+    .dr-breakdown-item {
+        padding: 0.5rem;
+    }
+
+    .dr-breakdown-label,
+    .dr-breakdown-value {
+        font-size: 0.85rem;
+    }
+}

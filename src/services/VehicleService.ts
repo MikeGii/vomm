@@ -27,6 +27,7 @@ import {
     getVehicleEngineById,
     getVehicleModelById,
 } from './VehicleDatabaseService';
+import {calculateTotalGarageSlots} from "../utils/garageUtils";
 
 // Create stock engine from database engine
 function createEngineFromDatabase(dbEngine: VehicleEngine) {
@@ -78,12 +79,12 @@ export async function purchaseNewCar(
             const estateData = estateDoc.data();
             const currentEstate = estateData.currentEstate;
 
-            // Check garage capacity
+            // Check garage capacity using total slots (estate + extra purchased)
             if (!currentEstate?.hasGarage || !currentEstate?.garageCapacity) {
                 throw new Error('Sul pole garaaži! Osta kõigepealt garaažiga kinnisvara.');
             }
 
-            // FIXED: Count actual cars instead of using garage slots
+            // Count actual cars
             const carsQuery = query(
                 collection(db, 'cars'),
                 where('ownerId', '==', userId)
@@ -91,8 +92,21 @@ export async function purchaseNewCar(
             const carsSnapshot = await getDocs(carsQuery);
             const currentCarCount = carsSnapshot.size;
 
-            if (currentCarCount >= currentEstate.garageCapacity) {
-                throw new Error('Garaažis pole ruumi');
+            // Calculate total garage slots (estate + extra purchased)
+            const totalGarageSlots = calculateTotalGarageSlots({
+                userId,
+                currentEstate,
+                extraGarageSlots: estateData.extraGarageSlots || 0,
+                ownedDevices: estateData.ownedDevices || { has3DPrinter: false, hasLaserCutter: false },
+                unequippedDevices: estateData.unequippedDevices || { threeDPrinters: 0, laserCutters: 0 },
+                createdAt: new Date(),
+                updatedAt: new Date()
+            });
+
+            if (currentCarCount >= totalGarageSlots) {
+                const estateSlots = currentEstate.garageCapacity;
+                const extraSlots = estateData.extraGarageSlots || 0;
+                throw new Error(`Garaaž on täis! Sul on ${totalGarageSlots} kohta (${estateSlots} kinnisvara + ${extraSlots} extra). Müü mõni auto või osta lisa garaaži kohti.`);
             }
 
             // Get the default engine from database
@@ -181,6 +195,36 @@ export async function purchaseUsedCar(
                 throw new Error('Pole piisavalt raha');
             }
 
+            // Check buyer's garage capacity including extra slots
+            const buyerEstateRef = doc(db, 'playerEstates', buyerId);
+            const buyerEstateDoc = await transaction.get(buyerEstateRef);
+
+            if (!buyerEstateDoc.exists()) {
+                throw new Error('Ostja kinnisvara andmed ei leitud');
+            }
+
+            const buyerEstateData = buyerEstateDoc.data();
+            const totalSlots = calculateTotalGarageSlots({
+                userId: buyerId,
+                currentEstate: buyerEstateData.currentEstate,
+                extraGarageSlots: buyerEstateData.extraGarageSlots || 0,
+                ownedDevices: buyerEstateData.ownedDevices || { has3DPrinter: false, hasLaserCutter: false },
+                unequippedDevices: buyerEstateData.unequippedDevices || { threeDPrinters: 0, laserCutters: 0 },
+                createdAt: new Date(),
+                updatedAt: new Date()
+            });
+
+            // Count buyer's current cars to validate against total capacity
+            const buyerCarsQuery = query(collection(db, 'cars'), where('ownerId', '==', buyerId));
+            const buyerCarsSnapshot = await getDocs(buyerCarsQuery);
+
+            if (buyerCarsSnapshot.size >= totalSlots) {
+                const estateSlots = buyerEstateData.currentEstate?.garageCapacity || 0;
+                const extraSlots = buyerEstateData.extraGarageSlots || 0;
+                throw new Error(`Garaažis pole ruumi! Sul on ${totalSlots} kohta (${estateSlots} + ${extraSlots} extra).`);
+            }
+
+            // Keep the existing garage slot system for compatibility
             const buyerGarageSlots: GarageSlot[] = buyerData.estateData?.garageSlots || [];
             const emptySlotIndex = buyerGarageSlots.findIndex((slot: GarageSlot) => slot.isEmpty);
 

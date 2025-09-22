@@ -25,7 +25,7 @@ export const InstructionsModal: React.FC<InstructionsModalProps> = ({ isOpen, on
             document.removeEventListener('keydown', handleEscKey);
             document.body.style.overflow = 'unset';
         };
-    }, [isOpen]);
+    }, [isOpen, onClose]);
 
     // Don't render if not open
     if (!isOpen) return null;

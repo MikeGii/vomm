@@ -1,6 +1,6 @@
 // src/pages/TrainingPage.tsx - CORRECTED VERSION
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import {updateDoc, doc} from 'firebase/firestore';
+import {updateDoc, doc} from '../services/TrackedFirestore';
 import { firestore } from '../config/firebase';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { AttributesDisplay } from '../components/training/AttributesDisplay';
@@ -23,6 +23,7 @@ import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { useEstate } from '../contexts/EstateContext';
 import { useNavigate } from 'react-router-dom';
 import {PlayerAttributes, PlayerStats, TrainingActivity} from '../types';
+import { usePageTracking } from '../hooks/usePageTracking';
 import { InventoryItem } from '../types';
 import {
     checkAndResetTrainingClicks,
@@ -49,6 +50,7 @@ const getVipAwareMaxClicks = (playerStats: PlayerStats | null): number => {
 };
 
 const TrainingPage: React.FC = () => {
+    usePageTracking('TrainingPage');
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     const { showToast } = useToast();
@@ -291,7 +293,13 @@ const TrainingPage: React.FC = () => {
             const trainingType = activeTab === 'sports' ? 'sports' :
                 activeTab === 'food' ? 'kitchen-lab' : 'handicraft';
 
-            const result = await performTraining(currentUser!.uid, currentTrainingState.selectedActivity, activity.rewards, trainingType);
+            const result = await performTraining(
+                currentUser!.uid,
+                currentTrainingState.selectedActivity,
+                activity.rewards,
+                trainingType,
+                playerEstate
+            );
             await refreshStats();
 
             // Show kitchen bonus toast notification for food activities
@@ -321,7 +329,8 @@ const TrainingPage: React.FC = () => {
         refreshStats,
         showToast,
         validateTrainingState,
-        setActiveTrainingState
+        setActiveTrainingState,
+        playerEstate
     ]);
 
     const handleTrain5x = useCallback(async () => {
@@ -375,7 +384,13 @@ const TrainingPage: React.FC = () => {
                 activeTab === 'food' ? 'kitchen-lab' : 'handicraft';
 
             // Perform 5 individual trainings in sequence
-            const result = await performTraining5x(currentUser!.uid, currentTrainingState.selectedActivity, activity.rewards, trainingType);
+            const result = await performTraining5x(
+                currentUser!.uid,
+                currentTrainingState.selectedActivity,
+                activity.rewards,
+                trainingType,
+                playerEstate
+            );
             await refreshStats();
 
             // Show enhanced feedback for different activity types
@@ -408,7 +423,8 @@ const TrainingPage: React.FC = () => {
         refreshStats,
         showToast,
         validateTrainingState,
-        setActiveTrainingState
+        setActiveTrainingState,
+        playerEstate
     ]);
 
     const handleTrainCustom = useCallback(async (amount: number) => {
@@ -462,7 +478,13 @@ const TrainingPage: React.FC = () => {
 
             // Perform custom amount of trainings
             for (let i = 0; i < amount; i++) {
-                await performTraining(currentUser!.uid, currentTrainingState.selectedActivity, activity.rewards, trainingType);
+                await performTraining(
+                    currentUser!.uid,
+                    currentTrainingState.selectedActivity,
+                    activity.rewards,
+                    trainingType,
+                    playerEstate
+                );
             }
 
             await refreshStats();
@@ -482,7 +504,8 @@ const TrainingPage: React.FC = () => {
         refreshStats,
         showToast,
         validateTrainingState,
-        setActiveTrainingState
+        setActiveTrainingState,
+        playerEstate
     ]);
 
     // Handle selling crafted items
@@ -700,6 +723,14 @@ const TrainingPage: React.FC = () => {
                             lastResetTime={playerStats.trainingData?.lastResetTime}
                         />
 
+                        {/* Static notification - always visible */}
+                        <div className="training-auto-warning">
+                            <span className="warning-icon-training">⚠️</span>
+                            <span className="warning-text-training">
+                            Aktiivse treeningu ajal ärge lahkuge lehelt kuni klikid on tehtud!
+                        </span>
+                        </div>
+
                         <AttributesDisplay
                             attributes={playerStats.attributes || initializeAttributes()}
                             displayAttributes={[
@@ -744,6 +775,14 @@ const TrainingPage: React.FC = () => {
                             label="Köök & Labor klikke jäänud"
                             lastResetTime={playerStats.kitchenLabTrainingData?.lastResetTime}
                         />
+
+                        {/* Static notification - always visible */}
+                        <div className="training-auto-warning">
+                            <span className="warning-icon-training">⚠️</span>
+                            <span className="warning-text-training">
+                            Aktiivse treeningu ajal ärge lahkuge lehelt kuni klikid on tehtud!
+                        </span>
+                        </div>
 
                         <AttributesDisplay
                             attributes={playerStats.attributes || initializeAttributes()}
@@ -795,6 +834,14 @@ const TrainingPage: React.FC = () => {
                             label="Käsitöö klikke jäänud"
                             lastResetTime={playerStats.handicraftTrainingData?.lastResetTime}
                         />
+
+                        {/* Static notification - always visible */}
+                        <div className="training-auto-warning">
+                            <span className="warning-icon-training">⚠️</span>
+                            <span className="warning-text-training">
+                            Aktiivse treeningu ajal ärge lahkuge lehelt kuni klikid on tehtud!
+                        </span>
+                        </div>
 
                         <WorkshopStatus />
 

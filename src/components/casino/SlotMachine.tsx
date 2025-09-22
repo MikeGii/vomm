@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { SlotResult, canPlayerGamble } from '../../services/CasinoService';
 import { PlayerStats } from '../../types';
+import { formatMoney } from '../../utils/currencyUtils';
 import '../../styles/components/casino/SlotMachine.css';
 
 interface SlotMachineProps {
@@ -51,7 +52,7 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
         }
     };
 
-    const quickBetAmounts = [5, 10, 25, 50, 100];
+    const quickBetAmounts = [50, 100, 250, 500, 1000, 10000, 50000];
 
 // Calculate probabilities - MUCH MORE PLAYER FRIENDLY
     const totalSymbols = 7;
@@ -75,7 +76,7 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
         <div className="slot-machine">
             <div className="slot-machine-header">
                 <h3>🎰 Slotiautomaadi mäng</h3>
-                <div className="player-money">Sinu raha: {playerMoney}€</div>
+                <div className="player-money">Sinu raha: {formatMoney(playerMoney)}</div>
             </div>
 
             {!canGamble && (
@@ -113,12 +114,12 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
                     <div className={`result-display ${lastResult.isWin ? 'win' : 'lose'}`}>
                         {lastResult.isWin ? (
                             <div className="win-message">
-                                🎉 Võitsid {lastResult.winAmount}€!
+                                🎉 Võitsid {formatMoney(lastResult.winAmount)}!
                                 <small>(x{lastResult.multiplier})</small>
                             </div>
                         ) : (
                             <div className="lose-message">
-                                😞 Kaotasid {betAmount}€
+                                😞 Kaotasid {formatMoney(betAmount)}
                             </div>
                         )}
                     </div>
@@ -148,7 +149,7 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
                             onClick={() => setBetAmount(amount)}
                             disabled={spinning || isPlaying || amount > playerMoney}
                         >
-                            {amount}€
+                            {formatMoney(amount)}
                         </button>
                     ))}
                 </div>
@@ -158,7 +159,7 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
                     onClick={handlePlay}
                     disabled={!canPlay || spinning || isPlaying || betAmount > playerMoney}
                 >
-                    {spinning ? 'Mängin...' : `Mängi ${betAmount}€ eest`}
+                    {spinning ? 'Mängin...' : `Mängi ${formatMoney(betAmount)} eest`}
                 </button>
             </div>
 

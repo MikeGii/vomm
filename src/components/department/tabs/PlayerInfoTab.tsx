@@ -83,7 +83,7 @@ export const PlayerInfoTab: React.FC<PlayerInfoTabProps> = ({ playerStats }) => 
                             <div className="detail-item">
                                 <span className="detail-label">Töötunnid:</span>
                                 <span className="detail-value">
-                                    {playerStats.totalWorkedHours || 0} tundi
+                                    {Math.floor(playerStats.totalWorkedHours || 0)} tundi
                                 </span>
                             </div>
                             <div className="detail-item">

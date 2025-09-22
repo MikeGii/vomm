@@ -12,25 +12,46 @@ const calculateRewardMultiplier = (level: number, reputation: number, isVip: boo
     return 1 + levelBonus + reputationBonus + vipBonus;
 };
 
+// Helper to generate random production item
+const getRandomProductionItem = (): 'juice' | 'porrige' | 'cloth' | 'bandage' => {
+    const items: ('juice' | 'porrige' | 'cloth' | 'bandage')[] = ['juice', 'porrige', 'cloth', 'bandage'];
+    return items[Math.floor(Math.random() * items.length)];
+};
+
+// Helper to get item display name
+export const getItemDisplayName = (itemType: string): string => {
+    const names: { [key: string]: string } = {
+        'juice': 'Mahl',
+        'porrige': 'Puder',
+        'cloth': 'Riie',
+        'bandage': 'Side'
+    };
+    return names[itemType] || itemType;
+};
+
+// Create daily task - SIMPLIFIED
 const createDailyTask = (level: number): Task => {
-    // 20% increase per level
     const levelMultiplier = 1 + (level * 0.20);
 
     const baseExpReward = Math.floor(100 * levelMultiplier);
     const baseMoneyReward = Math.floor(100 * levelMultiplier);
     const baseReputationReward = Math.floor(5 * levelMultiplier);
 
+    const itemType = getRandomProductionItem();
+
     return {
         id: `daily_${Date.now()}`,
         title: 'Päevane väljakutse',
-        description: 'Lõpeta 1 kursus, tööta 6 tundi ja tõsta atribuute 10 taseme võrra',
+        itemType: itemType,
         requirements: {
-            courses: 1,
+            itemsToProduce: 300,
+            itemsToSell: 150,
             workHours: 6,
             attributeLevels: 10
         },
         progress: {
-            coursesCompleted: 0,
+            itemsProduced: 0,
+            itemsSold: 0,
             hoursWorked: 0,
             attributeLevelsGained: 0
         },
@@ -43,25 +64,31 @@ const createDailyTask = (level: number): Task => {
     };
 };
 
-const createWeeklyTask = (level: number): Task => {
-    // 20% increase per level
+// Create weekly task - Uses same item type as current daily task
+const createWeeklyTask = (level: number, dailyItemType?: string): Task => {
     const levelMultiplier = 1 + (level * 0.20);
 
     const baseExpReward = Math.floor(1000 * levelMultiplier);
     const baseMoneyReward = Math.floor(1000 * levelMultiplier);
     const baseReputationReward = Math.floor(50 * levelMultiplier);
 
+    // Use daily task's item type or generate random if not provided
+    const itemType = (dailyItemType as 'juice' | 'porrige' | 'cloth' | 'bandage') || getRandomProductionItem();
+    // Removed itemName variable since it was unused in weekly task
+
     return {
         id: `weekly_${Date.now()}`,
-        title: 'Nädala suur väljakutse',
-        description: 'Lõpeta 5 kursust, tööta 48 tundi ja tõsta atribuute 50 taseme võrra',
+        title: 'Nädala väljakutse',
+        itemType: itemType, // This will be updated daily to match daily task
         requirements: {
-            courses: 5,
+            itemsToProduce: 1500,
+            itemsToSell: 750,
             workHours: 48,
             attributeLevels: 50
         },
         progress: {
-            coursesCompleted: 0,
+            itemsProduced: 0,
+            itemsSold: 0,
             hoursWorked: 0,
             attributeLevelsGained: 0
         },
@@ -74,6 +101,7 @@ const createWeeklyTask = (level: number): Task => {
     };
 };
 
+// Main function to get/create tasks
 export const getPlayerTasks = async (userId: string): Promise<PlayerTasks | null> => {
     const statsDoc = await getDoc(doc(firestore, 'playerStats', userId));
     if (!statsDoc.exists()) return null;
@@ -94,23 +122,33 @@ export const getPlayerTasks = async (userId: string): Promise<PlayerTasks | null
 
         const lastDaily = tasks.lastDailyReset.toDate();
         if (lastDaily < today) {
+            // Create new daily task
             tasks.daily = createDailyTask(stats.level);
             tasks.lastDailyReset = now;
             tasks.streak = lastDaily.toDateString() === new Date(today.getTime() - 86400000).toDateString()
                 ? tasks.streak + 1 : 0;
+
+            // Update weekly task's item type to match the new daily task
+            if (tasks.weekly) {
+                tasks.weekly.itemType = tasks.daily.itemType;
+            }
         }
 
         const weekStart = new Date(today);
         weekStart.setDate(today.getDate() - today.getDay());
         if (tasks.lastWeeklyReset.toDate() < weekStart) {
-            tasks.weekly = createWeeklyTask(stats.level);
+            // Create new weekly task with current daily item type
+            const dailyItemType = tasks.daily?.itemType;
+            tasks.weekly = createWeeklyTask(stats.level, dailyItemType);
             tasks.lastWeeklyReset = now;
         }
     } else {
+        // First time creating tasks
+        const dailyTask = createDailyTask(stats.level);
         tasks = {
             userId,
-            daily: createDailyTask(stats.level),
-            weekly: createWeeklyTask(stats.level),
+            daily: dailyTask,
+            weekly: createWeeklyTask(stats.level, dailyTask.itemType),
             lastDailyReset: now,
             lastWeeklyReset: now,
             streak: 0
@@ -121,7 +159,13 @@ export const getPlayerTasks = async (userId: string): Promise<PlayerTasks | null
     return tasks;
 };
 
-export const updateProgress = async (userId: string, type: 'work' | 'course' | 'training', value: number): Promise<void> => {
+// Simplified update progress function
+export const updateProgress = async (
+    userId: string,
+    type: 'work' | 'training' | 'production' | 'sold',
+    value: number,
+    itemType?: string // Optional item type for production/sold
+): Promise<void> => {
     const tasksRef = doc(firestore, 'playerTasks', userId);
     const tasksDoc = await getDoc(tasksRef);
     if (!tasksDoc.exists()) return;
@@ -131,46 +175,56 @@ export const updateProgress = async (userId: string, type: 'work' | 'course' | '
 
     // Update daily task
     if (tasks.daily && !tasks.daily.completed) {
-        const newProgress = { ...tasks.daily.progress };
+        const progress = tasks.daily.progress;
+        const requirements = tasks.daily.requirements;
 
-        if (type === 'course') {
-            newProgress.coursesCompleted = Math.min(tasks.daily.requirements.courses, newProgress.coursesCompleted + value);
+        // For production and sold, check if item type matches
+        if (type === 'production' && itemType === tasks.daily.itemType) {
+            progress.itemsProduced = Math.min(requirements.itemsToProduce, progress.itemsProduced + value);
+            updated = true;
+        } else if (type === 'sold' && itemType === tasks.daily.itemType) {
+            progress.itemsSold = Math.min(requirements.itemsToSell, progress.itemsSold + value);
+            updated = true;
         } else if (type === 'work') {
-            newProgress.hoursWorked = Math.min(tasks.daily.requirements.workHours, newProgress.hoursWorked + value);
+            progress.hoursWorked = Math.min(requirements.workHours, progress.hoursWorked + value);
+            updated = true;
         } else if (type === 'training') {
-            newProgress.attributeLevelsGained = Math.min(tasks.daily.requirements.attributeLevels, newProgress.attributeLevelsGained + value);
+            progress.attributeLevelsGained = Math.min(requirements.attributeLevels, progress.attributeLevelsGained + value);
+            updated = true;
         }
 
         // Check if all requirements are met
-        const allComplete = newProgress.coursesCompleted >= tasks.daily.requirements.courses &&
-            newProgress.hoursWorked >= tasks.daily.requirements.workHours &&
-            newProgress.attributeLevelsGained >= tasks.daily.requirements.attributeLevels;
-
-        tasks.daily.progress = newProgress;
-        tasks.daily.completed = allComplete;
-        updated = true;
+        tasks.daily.completed = progress.itemsProduced >= requirements.itemsToProduce &&
+            progress.itemsSold >= requirements.itemsToSell &&
+            progress.hoursWorked >= requirements.workHours &&
+            progress.attributeLevelsGained >= requirements.attributeLevels;
     }
 
-    // Update weekly task (same logic)
-    if (tasks.weekly && !tasks.weekly.completed) {
-        const newProgress = { ...tasks.weekly.progress };
+    // Update weekly task - only if daily task item matches
+    if (tasks.weekly && !tasks.weekly.completed && tasks.daily) {
+        const progress = tasks.weekly.progress;
+        const requirements = tasks.weekly.requirements;
 
-        if (type === 'course') {
-            newProgress.coursesCompleted = Math.min(tasks.weekly.requirements.courses, newProgress.coursesCompleted + value);
+        // Weekly progress only counts if it's the same item as daily task
+        if (type === 'production' && itemType === tasks.daily.itemType) {
+            progress.itemsProduced = Math.min(requirements.itemsToProduce, progress.itemsProduced + value);
+            updated = true;
+        } else if (type === 'sold' && itemType === tasks.daily.itemType) {
+            progress.itemsSold = Math.min(requirements.itemsToSell, progress.itemsSold + value);
+            updated = true;
         } else if (type === 'work') {
-            newProgress.hoursWorked = Math.min(tasks.weekly.requirements.workHours, newProgress.hoursWorked + value);
+            progress.hoursWorked = Math.min(requirements.workHours, progress.hoursWorked + value);
+            updated = true;
         } else if (type === 'training') {
-            newProgress.attributeLevelsGained = Math.min(tasks.weekly.requirements.attributeLevels, newProgress.attributeLevelsGained + value);
+            progress.attributeLevelsGained = Math.min(requirements.attributeLevels, progress.attributeLevelsGained + value);
+            updated = true;
         }
 
         // Check if all requirements are met
-        const allComplete = newProgress.coursesCompleted >= tasks.weekly.requirements.courses &&
-            newProgress.hoursWorked >= tasks.weekly.requirements.workHours &&
-            newProgress.attributeLevelsGained >= tasks.weekly.requirements.attributeLevels;
-
-        tasks.weekly.progress = newProgress;
-        tasks.weekly.completed = allComplete;
-        updated = true;
+        tasks.weekly.completed = progress.itemsProduced >= requirements.itemsToProduce &&
+            progress.itemsSold >= requirements.itemsToSell &&
+            progress.hoursWorked >= requirements.workHours &&
+            progress.attributeLevelsGained >= requirements.attributeLevels;
     }
 
     if (updated) {
@@ -181,6 +235,7 @@ export const updateProgress = async (userId: string, type: 'work' | 'course' | '
     }
 };
 
+// Claim rewards remains the same
 export const claimRewards = async (userId: string, taskType: 'daily' | 'weekly'): Promise<{
     success: boolean;
     message: string;
@@ -216,7 +271,6 @@ export const claimRewards = async (userId: string, taskType: 'daily' | 'weekly')
         reputation: stats.reputation + rewards.reputation
     });
 
-    // Fix Error 2: Use individual field updates instead of object spread
     await updateDoc(tasksRef, {
         [taskType]: null
     });

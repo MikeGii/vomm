@@ -21,6 +21,7 @@ export interface EstateProperty {
 export interface PlayerEstate {
     userId: string;
     currentEstate: EstateProperty | null;
+    extraGarageSlots?: number;
     ownedDevices: {
         has3DPrinter: boolean;
         hasLaserCutter: boolean;

@@ -213,3 +213,81 @@
         font-size: 1rem;
     }
 }
+
+/* Game selector tabs */
+.casino-game-selector {
+    display: flex;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    background: #1a1a1a;
+    padding: 0.5rem;
+    border-radius: 12px;
+    border: 1px solid #333;
+}
+
+.casino-game-tab {
+    flex: 1;
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #888;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.casino-game-tab:hover {
+    background: rgba(255, 215, 0, 0.05);
+    color: #f0f0f0;
+}
+
+.casino-game-tab.active {
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    color: white;
+    border-color: #ff9800;
+    box-shadow: 0 4px 6px rgba(255, 152, 0, 0.3);
+}
+
+/* Active game container */
+.casino-active-game {
+    min-height: 400px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile responsiveness for game selector */
+@media (max-width: 768px) {
+    .casino-game-selector {
+        flex-direction: column;
+        padding: 0.25rem;
+    }
+
+    .casino-game-tab {
+        width: 100%;
+        padding: 0.8rem;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .casino-game-selector {
+        gap: 0.5rem;
+    }
+
+    .casino-game-tab {
+        padding: 0.7rem;
+        font-size: 0.95rem;
+    }
+}
