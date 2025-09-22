@@ -9,6 +9,78 @@ import { getUserCars } from './VehicleService';
 // Import database service functions
 import { getEstateById } from './EstateDatabaseService';
 
+import { GARAGE_SLOT_CONSTANTS } from '../utils/garageUtils';
+
+// Add this function at the end of the file, before the export statements
+export const purchaseExtraGarageSlot = async (userId: string): Promise<{ success: boolean; message: string }> => {
+    try {
+        return await runTransaction(firestore, async (transaction) => {
+            // Get player stats for pollid balance
+            const playerRef = doc(firestore, 'playerStats', userId);
+            const playerDoc = await transaction.get(playerRef);
+
+            if (!playerDoc.exists()) {
+                return { success: false, message: 'Mängija andmeid ei leitud!' };
+            }
+
+            const playerStats = playerDoc.data();
+            const currentPollid = playerStats.pollid || 0;
+
+            // Check if player has enough pollid
+            if (currentPollid < GARAGE_SLOT_CONSTANTS.COST_PER_SLOT) {
+                return {
+                    success: false,
+                    message: `Sul pole piisavalt pollide! Vaja ${GARAGE_SLOT_CONSTANTS.COST_PER_SLOT}, sul on ${currentPollid}.`
+                };
+            }
+
+            // Get player estate
+            const estateRef = doc(firestore, 'playerEstates', userId);
+            const estateDoc = await transaction.get(estateRef);
+
+            if (!estateDoc.exists()) {
+                return { success: false, message: 'Sul pole kinnisvara!' };
+            }
+
+            const estateData = estateDoc.data();
+
+            // Check if player has estate with garage
+            if (!estateData.currentEstate?.hasGarage) {
+                return { success: false, message: 'Sul peab olema garaaž, et osta lisakohti!' };
+            }
+
+            const currentExtraSlots = estateData.extraGarageSlots || 0;
+
+            // Check maximum limit
+            if (currentExtraSlots >= GARAGE_SLOT_CONSTANTS.MAX_EXTRA_SLOTS) {
+                return {
+                    success: false,
+                    message: `Oled juba ostnud maksimaalse arvu lisakohti (${GARAGE_SLOT_CONSTANTS.MAX_EXTRA_SLOTS})!`
+                };
+            }
+
+            // Deduct pollid
+            transaction.update(playerRef, {
+                pollid: currentPollid - GARAGE_SLOT_CONSTANTS.COST_PER_SLOT
+            });
+
+            // Add extra garage slot
+            transaction.update(estateRef, {
+                extraGarageSlots: currentExtraSlots + 1,
+                updatedAt: Timestamp.now()
+            });
+
+            return {
+                success: true,
+                message: `Ostsid edukalt 1 lisa garaaž koha! Sul on nüüd ${currentExtraSlots + 1} lisakohta.`
+            };
+        });
+    } catch (error) {
+        console.error('Error purchasing extra garage slot:', error);
+        return { success: false, message: 'Viga garaaž koha ostmisel. Proovi uuesti!' };
+    }
+};
+
 // ============================================
 // PLAYER ESTATE FUNCTIONS
 // ============================================

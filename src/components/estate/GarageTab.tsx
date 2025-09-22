@@ -18,6 +18,8 @@ import {PlayerCar, UniversalTuningCategory,} from '../../types/vehicles';
 import { VehicleModel } from '../../types/vehicleDatabase';
 import { cacheManager } from '../../services/CacheManager';
 import { VehicleTuning } from './VehicleTuning';
+import { calculateTotalGarageSlots, canBuyExtraGarageSlots, GARAGE_SLOT_CONSTANTS } from '../../utils/garageUtils';
+import { purchaseExtraGarageSlot } from '../../services/EstateService';
 import '../../styles/components/estate/GarageTab.css';
 
 // Cache duration for car models
@@ -37,6 +39,7 @@ export const GarageTab: React.FC = () => {
     const [salePrice, setSalePrice] = useState<string>('');
     const [isListing, setIsListing] = useState(false);
     const [tuningCarId, setTuningCarId] = useState<string | null>(null);
+    const [isPurchasingSlot, setIsPurchasingSlot] = useState(false);
 
     // Check if player has garage access
     const hasGarageAccess = playerEstate?.currentEstate?.hasGarage &&
@@ -93,6 +96,28 @@ export const GarageTab: React.FC = () => {
     useEffect(() => {
         loadUserCars();
     }, [loadUserCars]);
+
+    const handlePurchaseGarageSlot = async () => {
+        if (!currentUser || isPurchasingSlot) return;
+
+        setIsPurchasingSlot(true);
+        try {
+            const result = await purchaseExtraGarageSlot(currentUser.uid);
+
+            if (result.success) {
+                showToast(result.message, 'success');
+                // Refresh estate data to show updated slots
+                // The estate context should automatically update through Firebase listener
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error purchasing garage slot:', error);
+            showToast('Viga garaaž koha ostmisel!', 'error');
+        } finally {
+            setIsPurchasingSlot(false);
+        }
+    };
 
     // Handle tuning update
     const handleTuningUpdate = async (carId: string, category: UniversalTuningCategory, newLevel: number) => {
@@ -167,7 +192,9 @@ export const GarageTab: React.FC = () => {
         );
     }
 
-    const garageCapacity = playerEstate?.currentEstate?.garageCapacity || 0;
+    const garageCapacity = calculateTotalGarageSlots(playerEstate);
+    const estateGarageSlots = playerEstate?.currentEstate?.garageCapacity || 0;
+    const extraGarageSlots = playerEstate?.extraGarageSlots || 0;
     const usedSlots = userCars.length;
     const freeSlots = garageCapacity - usedSlots;
 
@@ -323,6 +350,65 @@ export const GarageTab: React.FC = () => {
                         </div>
                     )}
                 </div>
+
+                {/* Extra Garage Slots Section */}
+                {canBuyExtraGarageSlots(playerEstate) && (
+                    <div className="garage-estate-extra-slots-section">
+                        <h3 className="garage-estate-section-title">🛒 Lisa garaaži kohad</h3>
+
+                        <div className="garage-estate-slots-info">
+                            <div className="garage-estate-slots-breakdown">
+                                <div className="garage-estate-slots-item">
+                                    <span className="garage-estate-slots-label">Kinnisvara kohad:</span>
+                                    <span className="garage-estate-slots-value">{estateGarageSlots}</span>
+                                </div>
+                                <div className="garage-estate-slots-item">
+                                    <span className="garage-estate-slots-label">Ostetud kohad:</span>
+                                    <span className="garage-estate-slots-value">{extraGarageSlots}</span>
+                                </div>
+                                <div className="garage-estate-slots-item garage-estate-slots-total">
+                                    <span className="garage-estate-slots-label">Kokku:</span>
+                                    <span className="garage-estate-slots-value">{garageCapacity}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="garage-estate-purchase-section">
+                            <div className="garage-estate-purchase-info">
+                                <div className="garage-estate-purchase-price">
+                                    <span className="garage-estate-price-label">Hind:</span>
+                                    <span className="garage-estate-price-value">{GARAGE_SLOT_CONSTANTS.COST_PER_SLOT} pollid</span>
+                                </div>
+                                <div className="garage-estate-purchase-balance">
+                                    <span className="garage-estate-balance-label">Sinu pollid:</span>
+                                    <span className="garage-estate-balance-value">{playerStats?.pollid || 0}</span>
+                                </div>
+                            </div>
+
+                            <button
+                                className="garage-estate-btn-purchase-slot"
+                                onClick={handlePurchaseGarageSlot}
+                                disabled={
+                                    isPurchasingSlot ||
+                                    (playerStats?.pollid || 0) < GARAGE_SLOT_CONSTANTS.COST_PER_SLOT ||
+                                    extraGarageSlots >= GARAGE_SLOT_CONSTANTS.MAX_EXTRA_SLOTS
+                                }
+                            >
+                                {isPurchasingSlot ? 'Ostmine...' :
+                                    extraGarageSlots >= GARAGE_SLOT_CONSTANTS.MAX_EXTRA_SLOTS ? 'Maksimum saavutatud' :
+                                        (playerStats?.pollid || 0) < GARAGE_SLOT_CONSTANTS.COST_PER_SLOT ? 'Pole piisavalt pollide' :
+                                            'Osta lisa garaaž koht'}
+                            </button>
+
+                            {extraGarageSlots >= GARAGE_SLOT_CONSTANTS.MAX_EXTRA_SLOTS && (
+                                <p className="garage-estate-max-notice">
+                                    Oled ostnud maksimaalse arvu lisakohti ({GARAGE_SLOT_CONSTANTS.MAX_EXTRA_SLOTS})
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
+
             </div>
 
             {/* Tuning Modal */}

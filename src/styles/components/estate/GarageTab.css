@@ -378,6 +378,140 @@
     transform: translateY(-1px);
 }
 
+/* Extra Garage Slots Section */
+.garage-estate-extra-slots-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid #333;
+}
+
+/* Slots Info */
+.garage-estate-slots-info {
+    margin-bottom: 2rem;
+}
+
+.garage-estate-slots-breakdown {
+    background: #0f0f0f;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.garage-estate-slots-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #333;
+}
+
+.garage-estate-slots-item:last-child {
+    border-bottom: none;
+}
+
+.garage-estate-slots-item.garage-estate-slots-total {
+    border-top: 2px solid #4a90e2;
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    font-weight: 600;
+}
+
+.garage-estate-slots-label {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.garage-estate-slots-value {
+    color: #f0f0f0;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.garage-estate-slots-total .garage-estate-slots-label,
+.garage-estate-slots-total .garage-estate-slots-value {
+    color: #4a90e2;
+    font-size: 1.1rem;
+}
+
+/* Purchase Section */
+.garage-estate-purchase-section {
+    background: #0f0f0f;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.garage-estate-purchase-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 2rem;
+}
+
+.garage-estate-purchase-price,
+.garage-estate-purchase-balance {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.garage-estate-price-label,
+.garage-estate-balance-label {
+    color: #888;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.garage-estate-price-value {
+    color: #ffd700;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.garage-estate-balance-value {
+    color: #f0f0f0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.garage-estate-btn-purchase-slot {
+    width: 100%;
+    padding: 0.875rem;
+    background: #ffd700;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.garage-estate-btn-purchase-slot:hover:not(:disabled) {
+    background: #ffed4e;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.garage-estate-btn-purchase-slot:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #666;
+    color: #999;
+}
+
+.garage-estate-max-notice {
+    color: #888;
+    font-size: 0.85rem;
+    text-align: center;
+    margin-top: 1rem;
+    font-style: italic;
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
     .garage-estate-tab {
@@ -420,6 +554,30 @@
     .garage-estate-no-access {
         padding: 2rem 1rem;
     }
+
+    /* Add these new mobile styles for extra slots */
+    .garage-estate-extra-slots-section {
+        margin-top: 2rem;
+    }
+
+    .garage-estate-slots-breakdown,
+    .garage-estate-purchase-section {
+        padding: 1rem;
+    }
+
+    .garage-estate-purchase-info {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .garage-estate-purchase-price,
+    .garage-estate-purchase-balance {
+        text-align: center;
+        padding: 0.75rem;
+        background: #1a1a1a;
+        border-radius: 6px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -451,5 +609,20 @@
 
     .garage-estate-add-vehicle-icon {
         font-size: 2.5rem;
+    }
+
+    /* Add these new mobile styles for extra slots */
+    .garage-estate-slots-item {
+        padding: 0.5rem 0;
+    }
+
+    .garage-estate-slots-label,
+    .garage-estate-slots-value {
+        font-size: 0.85rem;
+    }
+
+    .garage-estate-btn-purchase-slot {
+        font-size: 0.85rem;
+        padding: 0.75rem;
     }
 }
