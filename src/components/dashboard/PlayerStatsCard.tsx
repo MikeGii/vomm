@@ -198,7 +198,7 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({
                     <span className="stat-icon">⏱️</span>
                     <div className="stat-content">
                         <span className="stat-label">Töötunnid</span>
-                        <span className="stat-value">{stats.totalWorkedHours || 0}h</span>
+                        <span className="stat-value">{Math.floor(stats.totalWorkedHours || 0)}h</span>
                     </div>
                 </div>
 

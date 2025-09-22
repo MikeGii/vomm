@@ -283,7 +283,7 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
                     </div>
                     <div className="pp-profile-stat-item">
                         <span className="pp-profile-stat-label">Töötunnid</span>
-                        <span className="pp-profile-stat-value">{playerData.totalWorkedHours || 0}h</span>
+                        <span className="pp-profile-stat-value">{Math.floor(playerData.totalWorkedHours || 0)}h</span>
                     </div>
                 </div>
 

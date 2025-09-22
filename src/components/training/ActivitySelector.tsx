@@ -46,7 +46,8 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
     const playerLevel = playerStats?.level || 1;
     const { canUse3DPrinter, canUseLaserCutter } = useEstate();
 
-    const [customAmount, setCustomAmount] = useState<number>(1);
+    const [customAmount, setCustomAmount] = useState<string>('');
+    // eslint-disable-next-line
     const [customAmountError, setCustomAmountError] = useState<string>('');
 
     const [purchasingItems, setPurchasingItems] = useState<Record<string, boolean>>({});
@@ -494,20 +495,20 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
     };
 
     const handleCustomAmountChange = (value: string) => {
-        const amount = parseInt(value) || 1;
-        setCustomAmount(amount);
-
-        if (playerStats?.isVip) {
-            const validation = validateCustomAmount(amount);
-            setCustomAmountError(validation.error);
-        }
+        // Allow empty string and any number input
+        setCustomAmount(value);
+        // Clear any existing errors when user types
+        setCustomAmountError('');
     };
 
     const canTrainCustom = (): { canTrain: boolean; reason?: string } => {
         if (!selectedActivityData) return { canTrain: false, reason: 'Vali tegevus' };
 
-        if (customAmount < 1) return { canTrain: false, reason: 'Vähemalt 1 treening' };
-        if (customAmount > remainingClicks) {
+        // Parse customAmount to number at the beginning
+        const amount = parseInt(customAmount) || 0;
+
+        if (customAmount === '' || amount < 1) return { canTrain: false, reason: 'Sisesta treeningute arv' };
+        if (amount > remainingClicks) {
             return { canTrain: false, reason: `Pole piisavalt klikke (${remainingClicks})` };
         }
 
@@ -516,10 +517,10 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
             return { canTrain: false, reason: 'Nõuded pole täidetud' };
         }
 
-        // Check materials for kitchen/lab and handicraft (need customAmount x materials)
+        // Check materials for kitchen/lab and handicraft (need amount x materials)
         if ((trainingType === 'kitchen-lab' || trainingType === 'handicraft') && selectedActivityData.requiredItems) {
             for (const required of selectedActivityData.requiredItems) {
-                const neededCustom = required.quantity * customAmount;
+                const neededCustom = required.quantity * amount;  // Now using 'amount' which is a number
 
                 const currentQuantity = playerStats?.inventory
                     ? playerStats.inventory
@@ -729,24 +730,45 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                                             max="999"
                                             value={customAmount}
                                             onChange={(e) => handleCustomAmountChange(e.target.value)}
-                                            className={`vip-amount-input ${customAmountError ? 'error' : ''}`}
+                                            className="vip-amount-input"
                                             disabled={!playerStats?.isVip || isTraining}
-                                            placeholder={playerStats?.isVip ? "1-999" : "VIP"}
+                                            placeholder={playerStats?.isVip ? "Sisesta" : "VIP"}
                                         />
                                         <div className="input-suffix">x</div>
                                     </div>
-                                    {playerStats?.isVip && customAmountError && (
-                                        <div className="input-error">{customAmountError}</div>
-                                    )}
+                                    {/* Error will be shown as toast on button click */}
                                 </div>
 
                                 <button
                                     className={`vip-train-button ${
                                         !playerStats?.isVip ? 'vip-locked' :
-                                            !canTrainCustom().canTrain || isTraining ? 'disabled' : ''
+                                            (!selectedActivityData || isTraining || remainingClicks === 0) ? 'disabled' : ''
                                     }`}
-                                    onClick={() => playerStats?.isVip && canTrainCustom().canTrain ? onTrainCustom?.(customAmount) : undefined}
-                                    disabled={!playerStats?.isVip || !canTrainCustom().canTrain || isTraining}
+                                    onClick={() => {
+                                        if (!playerStats?.isVip) return;
+
+                                        // Parse the amount
+                                        const amount = parseInt(customAmount) || 0;
+
+                                        // Check if empty or invalid
+                                        if (customAmount === '' || amount < 1) {
+                                            showToast('Sisesta treeningute arv', 'error');
+                                            return;
+                                        }
+
+                                        // Validate when button is clicked
+                                        const validation = validateCustomAmount(amount);
+                                        if (!validation.isValid) {
+                                            setCustomAmountError(validation.error);
+                                            showToast(validation.error, 'error');
+                                            return;
+                                        }
+
+                                        // Clear error and proceed with training
+                                        setCustomAmountError('');
+                                        onTrainCustom?.(amount);
+                                    }}
+                                    disabled={!playerStats?.isVip || !selectedActivityData || isTraining || remainingClicks === 0}
                                     title={
                                         !playerStats?.isVip ? 'VIP funktsioon - Vali suvaline arv treeninguid' :
                                             !canTrainCustom().canTrain ? canTrainCustom().reason :
