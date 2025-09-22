@@ -214,10 +214,15 @@ export const purchaseEstate = async (
 
                 if (newCapacity < currentCapacity) {
                     const userCars = await getUserCars(userId);
-                    if (userCars.length > newCapacity) {
+                    const currentExtraSlots = currentEstate.extraGarageSlots || 0;
+
+                    // Calculate new total capacity: new estate capacity + existing extra slots
+                    const newTotalCapacity = newCapacity + currentExtraSlots;
+
+                    if (userCars.length > newTotalCapacity) {
                         return {
                             success: false,
-                            message: `Ei saa osta seda kinnisvara! Sul on ${userCars.length} autot, kuid uues garaažis on ainult ${newCapacity} kohta. Müü enne ${userCars.length - newCapacity} autot ära.`
+                            message: `Ei saa osta seda kinnisvara! Sul on ${userCars.length} autot, kuid uus kinnisvara mahutab kokku ${newTotalCapacity} autot (${newCapacity} kinnisvara + ${currentExtraSlots} extra). Müü enne ${userCars.length - newTotalCapacity} autot ära.`
                         };
                     }
                 }

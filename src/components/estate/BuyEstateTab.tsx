@@ -10,6 +10,7 @@ import { getUserCars } from '../../services/VehicleService';
 import { PlayerCar } from '../../types/vehicles';
 import { EstateProperty } from '../../types/estate';
 import '../../styles/components/estate/BuyEstateTab.css';
+import {calculateTotalGarageSlots} from "../../utils/garageUtils";
 
 export const BuyEstateTab: React.FC = () => {
     const { currentUser } = useAuth();
@@ -79,14 +80,19 @@ export const BuyEstateTab: React.FC = () => {
         }
 
         if (currentEstate?.hasGarage && estate.hasGarage) {
-            const currentCapacity = currentEstate.garageCapacity || 0;
-            const newCapacity = estate.garageCapacity || 0;
+            // Calculate current total capacity (estate + extra slots)
+            const currentTotalCapacity = calculateTotalGarageSlots(playerEstate);
+            const newEstateCapacity = estate.garageCapacity || 0;
+            const currentExtraSlots = playerEstate?.extraGarageSlots || 0;
 
-            if (newCapacity < currentCapacity && userCarCount > newCapacity) {
-                const carsToSell = userCarCount - newCapacity;
+            // New total capacity would be: new estate capacity + current extra slots
+            const newTotalCapacity = newEstateCapacity + currentExtraSlots;
+
+            if (newTotalCapacity < currentTotalCapacity && userCarCount > newTotalCapacity) {
+                const carsToSell = userCarCount - newTotalCapacity;
                 return {
                     type: 'downsize' as const,
-                    message: `⚠️ Sul on ${userCarCount} autot, kuid uues garaažis on ainult ${newCapacity} kohta! Müü ${carsToSell} autot ära.`
+                    message: `⚠️ Sul on ${userCarCount} autot, kuid uus kinnisvara mahutab kokku ainult ${newTotalCapacity} autot (${newEstateCapacity} kinnisvara + ${currentExtraSlots} extra)! Müü ${carsToSell} autot ära.`
                 };
             }
         }
