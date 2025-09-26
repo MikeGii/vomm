@@ -258,6 +258,20 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         }
     },
     {
+        id: 'luxurious_dinner',
+        name: 'Rikkalik õhtusöök',
+        description: 'Rikkalik õhtusöök valmistatud eksootilistest komponentidest',
+        category: 'crafting',
+        price: 6500,
+        currency: 'money',
+        basePrice: 6500,
+        maxStock: 0,
+        consumableEffect: {
+            type: 'heal',
+            value: 150
+        }
+    },
+    {
         id: 'super_booster',
         name: 'Supervõimendaja',
         description: 'Ülim energiajook treeninguteks',
@@ -286,6 +300,20 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         }
     },
     {
+        id: 'training_drink',
+        name: 'Treening booster',
+        description: 'Erakordne jook, mis taastab erakordselt kiiresti lihased ja annab energiat',
+        category: 'crafting',
+        price: 6800,
+        currency: 'money',
+        basePrice: 6800,
+        maxStock: 0,
+        consumableEffect: {
+            type: 'trainingClicks',
+            value: 20
+        }
+    },
+    {
         id: 'brain_accelerator',
         name: 'Ajukiirendaja',
         description: 'Kiirendab õppimist ja kursuste läbimist 10% võrra',
@@ -311,6 +339,20 @@ export const CRAFTING_INGREDIENTS: ShopItem[] = [
         consumableEffect: {
             type: 'workTimeReduction',
             value: 10
+        }
+    },
+    {
+        id: 'extreme_work_efficiency_serum',
+        name: 'Kange töökuse seerum',
+        description: 'Eriti kange keemiline lahus töökiirenduse ja fookuse parandamiseks',
+        category: 'crafting',
+        price: 12500,
+        currency: 'money',
+        basePrice: 12500,
+        maxStock: 0,
+        consumableEffect: {
+            type: 'workTimeReduction',
+            value: 15
         }
     },
 
