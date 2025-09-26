@@ -280,4 +280,114 @@ export class DepartmentUnitService {
         return { workXpBonus, salaryBonus };
     }
 
+    /**
+     * Handle any position change - automatically cleans up old leadership roles
+     * This should be called WHENEVER a player's position changes
+     */
+    static async handlePositionChange(
+        userId: string,
+        newPosition: string,
+        newDepartmentUnit: string,
+        department: string,
+        username?: string
+    ): Promise<void> {
+        // First, clean up any existing leadership roles across ALL units
+        const units = ['patrol', 'investigation', 'emergency', 'k9', 'cyber', 'crimes'];
+
+        for (const unitId of units) {
+            try {
+                const docId = `${department}_${unitId}`;
+                const docRef = doc(firestore, COLLECTION_NAME, docId);
+                const docSnap = await getDoc(docRef);
+
+                if (!docSnap.exists()) continue;
+
+                const unitData = docSnap.data() as DepartmentUnitData;
+                let needsUpdate = false;
+                const updates: any = {};
+
+                // Check and clear unit leader if it's this user
+                if (unitData.unitLeader?.userId === userId) {
+                    updates.unitLeader = {
+                        username: null,
+                        userId: null,
+                        appointedAt: null
+                    };
+                    needsUpdate = true;
+                    console.log(`Clearing ${username || userId} from unit leader of ${unitId}`);
+                }
+
+                // Check and remove from group leaders if present
+                const filteredGroupLeaders = unitData.groupLeaders.filter(
+                    leader => leader.userId !== userId
+                );
+
+                if (filteredGroupLeaders.length !== unitData.groupLeaders.length) {
+                    updates.groupLeaders = filteredGroupLeaders;
+                    needsUpdate = true;
+                    console.log(`Removing ${username || userId} from group leaders of ${unitId}`);
+                }
+
+                // Apply updates if needed
+                if (needsUpdate) {
+                    updates.lastUpdated = Timestamp.now();
+                    await updateDoc(docRef, updates);
+                }
+            } catch (error) {
+                console.error(`Error cleaning leadership in ${unitId}:`, error);
+                // Continue with other units even if one fails
+            }
+        }
+
+        // Now update the player's position in playerStats
+        const playerRef = doc(firestore, 'playerStats', userId);
+        await updateDoc(playerRef, {
+            policePosition: newPosition,
+            departmentUnit: newDepartmentUnit
+        });
+    }
+
+    /**
+     * Simplified method for voluntary demotion or switching to lower positions
+     */
+    static async demoteToStandardWorker(
+        userId: string,
+        department: string,
+        departmentUnit: string,
+        username?: string
+    ): Promise<void> {
+        // Determine the base worker position for the unit
+        const basePosition = this.getBasePositionForUnit(departmentUnit);
+
+        // Use the main handler to clean everything up
+        await this.handlePositionChange(
+            userId,
+            basePosition,
+            departmentUnit,
+            department,
+            username
+        );
+
+        // Also add demotion tracking
+        const playerRef = doc(firestore, 'playerStats', userId);
+        await updateDoc(playerRef, {
+            demotedAt: Timestamp.now(),
+            demotionReason: 'Vabatahtlik/Käsitsi maha võetud'
+        });
+    }
+
+    /**
+     * Helper to get base position for a unit
+     */
+    private static getBasePositionForUnit(unitId: string): string {
+        switch(unitId) {
+            case 'patrol': return 'patrullpolitseinik';
+            case 'investigation': return 'uurija';
+            case 'emergency': return 'kiirreageerija';
+            case 'k9': return 'koerajuht';
+            case 'cyber': return 'küberkriminalist';
+            case 'crimes': return 'jälitaja';
+            default: return 'patrullpolitseinik';
+        }
+    }
 }

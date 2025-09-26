@@ -88,26 +88,21 @@ export const demoteInactiveLeader = async (
     department: string,
     departmentUnit: string
 ): Promise<void> => {
-    const statsRef = doc(firestore, 'playerStats', userId);
-
-    // Determine the base worker position for the unit
+    // Get the base worker position for the unit
     const basePosition = getBasePositionForUnit(departmentUnit);
 
-    // Remove from leadership in DepartmentUnitService
-    if (currentPosition.startsWith('grupijuht_')) {
-        await DepartmentUnitService.removeGroupLeader(department, departmentUnit, userId);
-    } else if (currentPosition.startsWith('talituse_juht_')) {
-        await DepartmentUnitService.updateUnitLeader(department, departmentUnit, {
-            username: null,
-            userId: null,
-            appointedAt: null
-        });
-    }
+    // Use DepartmentUnitService to handle the position change and cleanup
+    await DepartmentUnitService.handlePositionChange(
+        userId,
+        basePosition,
+        departmentUnit,
+        department
+    );
 
-    // Update player stats with demotion
+    // Add demotion tracking
+    const statsRef = doc(firestore, 'playerStats', userId);
     await updateDoc(statsRef, {
-        policePosition: basePosition,
-        previousPosition: currentPosition, // Store for record keeping
+        previousPosition: currentPosition,
         demotedAt: Timestamp.now(),
         demotionReason: 'Mitteaktiivsus (14+ päeva)'
     });
