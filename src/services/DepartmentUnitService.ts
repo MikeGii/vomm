@@ -12,25 +12,19 @@ import {
     arrayUnion,
     Timestamp,
     runTransaction,
-    WriteBatch,
-    writeBatch
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import {
     DepartmentUnitData,
-    DepartmentUnitWallet,
-    DepartmentUnitUpgrade,
     WalletTransaction,
     UnitLeader,
     GroupLeader,
     DonationData,
-    UpgradePurchaseData,
     UpgradeType,
     calculateUpgradeCost,
     getUpgradeInfo,
     UPGRADE_CONFIGS
 } from '../types/departmentUnit';
-import { PlayerStats } from '../types';
 
 const COLLECTION_NAME = 'departmentUnits';
 const MAX_RECENT_TRANSACTIONS = 50;
@@ -212,6 +206,21 @@ export class DepartmentUnitService {
 
             const unit = docSnap.data() as DepartmentUnitData;
 
+            // Get and update the player's money
+            const playerRef = doc(firestore, 'playerStats', donation.donorId);
+            const playerDoc = await transaction.get(playerRef);
+
+            if (!playerDoc.exists()) {
+                throw new Error('Mängija andmed puuduvad');
+            }
+
+            const playerData = playerDoc.data();
+            const currentMoney = playerData.money || 0;
+
+            if (currentMoney < donation.amount) {
+                throw new Error('Ebapiisav saldo');
+            }
+
             // Create transaction record
             const walletTransaction: WalletTransaction = {
                 type: 'donation',
@@ -235,6 +244,11 @@ export class DepartmentUnitService {
                 'wallet.lastUpdated': Timestamp.now(),
                 'wallet.recentTransactions': recentTransactions,
                 lastUpdated: Timestamp.now()
+            });
+
+            // DEDUCT money from player
+            transaction.update(playerRef, {
+                money: increment(-donation.amount)
             });
         });
     }
@@ -346,92 +360,6 @@ export class DepartmentUnitService {
             : 0;
 
         return { workXpBonus, salaryBonus };
-    }
-
-    /**
-     * Initialize all department units from existing data
-     * This is for migration - creates units based on current players
-     */
-    static async initializeAllUnits(): Promise<void> {
-        console.log('Starting department units initialization...');
-
-        // Get all graduated players
-        const playersQuery = query(
-            collection(firestore, 'playerStats'),
-            where('completedCourses', 'array-contains', 'lopueksam')
-        );
-
-        const playersSnapshot = await getDocs(playersQuery);
-        const departmentUnitsMap = new Map<string, Set<string>>();
-
-        // Collect unique department-unit combinations
-        playersSnapshot.forEach((doc) => {
-            const player = doc.data() as PlayerStats;
-            if (player.department && player.departmentUnit) {
-                const key = player.department;
-                if (!departmentUnitsMap.has(key)) {
-                    departmentUnitsMap.set(key, new Set());
-                }
-                departmentUnitsMap.get(key)!.add(player.departmentUnit);
-            }
-        });
-
-        // Create units
-        const batch = writeBatch(firestore);
-        let count = 0;
-
-        for (const [department, units] of departmentUnitsMap) {
-            for (const unitId of units) {
-                const docId = `${department}_${unitId}`;
-                const docRef = doc(firestore, COLLECTION_NAME, docId);
-
-                // Check if already exists
-                const existing = await getDoc(docRef);
-                if (!existing.exists()) {
-                    // Get unit name from data
-                    const unitName = this.getUnitName(unitId);
-
-                    const newUnit: DepartmentUnitData = {
-                        id: docId,
-                        department,
-                        unitId,
-                        unitName,
-                        unitLeader: {
-                            username: null,
-                            userId: null,
-                            appointedAt: null
-                        },
-                        groupLeaders: [],
-                        maxGroupLeaders: 4,
-                        maxUnitLeaders: 1,
-                        wallet: {
-                            balance: 0,
-                            totalDeposited: 0,
-                            totalSpent: 0,
-                            lastUpdated: Timestamp.now(),
-                            upgrades: UPGRADE_CONFIGS.map(config => ({
-                                type: config.type,
-                                level: 0,
-                                baseCost: config.baseCost
-                            })),
-                            recentTransactions: []
-                        },
-                        createdAt: Timestamp.now(),
-                        lastUpdated: Timestamp.now()
-                    };
-
-                    batch.set(docRef, newUnit);
-                    count++;
-                }
-            }
-        }
-
-        if (count > 0) {
-            await batch.commit();
-            console.log(`Initialized ${count} department units`);
-        } else {
-            console.log('All department units already initialized');
-        }
     }
 
     /**

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { PlayerStats } from '../../types';
 import { CrimeImpactIndicator } from './CrimeImpactIndicator';
 import { calculateSalaryForOfficer, calculateWorkRewards, getDefaultWorkActivityForPosition } from '../../data/workActivities';
+import { DepartmentUnitService } from '../../services/DepartmentUnitService'; // ADD THIS
 import '../../styles/components/patrol/WorkActivitySelector.css';
 
 interface WorkActivitySelectorProps {
@@ -34,11 +35,36 @@ export const WorkActivitySelector: React.FC<WorkActivitySelectorProps> = ({
         money: 0
     });
 
+    // ADD: State for department bonuses
+    const [departmentBonuses, setDepartmentBonuses] = useState<{ workXpBonus: number; salaryBonus: number }>({
+        workXpBonus: 0,
+        salaryBonus: 0
+    });
+
     // Get the default work activity for player's position
     const workActivity = getDefaultWorkActivityForPosition(policePosition ?? null);
 
     // Check if player is a police officer (has rank)
     const isPoliceOfficer = playerRank !== null;
+
+    // ADD: Fetch department bonuses
+    useEffect(() => {
+        const fetchBonuses = async () => {
+            if (playerStats.department && playerStats.departmentUnit) {
+                try {
+                    const bonuses = await DepartmentUnitService.getUnitBonuses(
+                        playerStats.department,
+                        playerStats.departmentUnit
+                    );
+                    setDepartmentBonuses(bonuses);
+                } catch (error) {
+                    console.error('Error fetching department bonuses:', error);
+                }
+            }
+        };
+
+        fetchBonuses();
+    }, [playerStats.department, playerStats.departmentUnit]);
 
     // Calculate rewards when hours or activity changes
     useEffect(() => {
@@ -135,6 +161,26 @@ export const WorkActivitySelector: React.FC<WorkActivitySelectorProps> = ({
                             <span className="reward-value">+{expectedRewards.money}€</span>
                         </div>
                     )}
+
+                    {/* ADD: Department Bonuses Display */}
+                    {(departmentBonuses.workXpBonus > 0 || departmentBonuses.salaryBonus > 0) && (
+                        <div className="department-bonuses">
+                            <h5>🏢 Üksuse boonused:</h5>
+                            {departmentBonuses.workXpBonus > 0 && (
+                                <div className="bonus-item">
+                                    <span className="bonus-icon">📈</span>
+                                    <span className="bonus-text">+{departmentBonuses.workXpBonus}% XP boonus</span>
+                                </div>
+                            )}
+                            {departmentBonuses.salaryBonus > 0 && isPoliceOfficer && (
+                                <div className="bonus-item">
+                                    <span className="bonus-icon">💰</span>
+                                    <span className="bonus-text">+{departmentBonuses.salaryBonus}% palgaboonus</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {isPoliceOfficer && (
                         <div className="salary-info">
                             <p className="salary-rate">
