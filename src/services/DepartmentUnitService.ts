@@ -1,13 +1,8 @@
 // src/services/DepartmentUnitService.ts
 import {
-    collection,
     doc,
     getDoc,
-    setDoc,
     updateDoc,
-    query,
-    where,
-    getDocs,
     increment,
     arrayUnion,
     Timestamp,
@@ -23,70 +18,12 @@ import {
     UpgradeType,
     calculateUpgradeCost,
     getUpgradeInfo,
-    UPGRADE_CONFIGS
 } from '../types/departmentUnit';
 
 const COLLECTION_NAME = 'departmentUnits';
 const MAX_RECENT_TRANSACTIONS = 50;
 
 export class DepartmentUnitService {
-
-    /**
-     * Get or create department unit document
-     */
-    static async getOrCreateUnit(
-        department: string,
-        unitId: string,
-        unitName: string
-    ): Promise<DepartmentUnitData> {
-        const docId = `${department}_${unitId}`;
-        const docRef = doc(firestore, COLLECTION_NAME, docId);
-
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-            return { id: docId, ...docSnap.data() } as DepartmentUnitData;
-        }
-
-        // Create new unit with default values
-        const newUnit: DepartmentUnitData = {
-            id: docId,
-            department,
-            unitId,
-            unitName,
-
-            // Leadership
-            unitLeader: {
-                username: null,
-                userId: null,
-                appointedAt: null
-            },
-            groupLeaders: [],
-            maxGroupLeaders: 4,
-            maxUnitLeaders: 1,
-
-            // Initialize wallet with all upgrades at level 0
-            wallet: {
-                balance: 0,
-                totalDeposited: 0,
-                totalSpent: 0,
-                lastUpdated: Timestamp.now(),
-                upgrades: UPGRADE_CONFIGS.map(config => ({
-                    type: config.type,
-                    level: 0,
-                    baseCost: config.baseCost
-                })),
-                recentTransactions: []
-            },
-
-            // Metadata
-            createdAt: Timestamp.now(),
-            lastUpdated: Timestamp.now()
-        };
-
-        await setDoc(docRef, newUnit);
-        return newUnit;
-    }
 
     /**
      * Get department unit by ID
@@ -99,25 +36,6 @@ export class DepartmentUnitService {
         if (!docSnap.exists()) return null;
 
         return { id: docId, ...docSnap.data() } as DepartmentUnitData;
-    }
-
-    /**
-     * Get all units for a department
-     */
-    static async getDepartmentUnits(department: string): Promise<DepartmentUnitData[]> {
-        const q = query(
-            collection(firestore, COLLECTION_NAME),
-            where('department', '==', department)
-        );
-
-        const querySnapshot = await getDocs(q);
-        const units: DepartmentUnitData[] = [];
-
-        querySnapshot.forEach((doc) => {
-            units.push({ id: doc.id, ...doc.data() } as DepartmentUnitData);
-        });
-
-        return units;
     }
 
     /**
@@ -362,60 +280,4 @@ export class DepartmentUnitService {
         return { workXpBonus, salaryBonus };
     }
 
-    /**
-     * Helper to get unit name
-     */
-    private static getUnitName(unitId: string): string {
-        const unitNames: Record<string, string> = {
-            'patrol': 'Patrullitalitus',
-            'procedural_service': 'Menetlustalitus',
-            'emergency_response': 'Kiirreageerimisüksus',
-            'k9_unit': 'K9 Üksus',
-            'cyber_crime': 'Küberkuritegevus',
-            'crime_unit': 'Kuritegude Talitus'
-        };
-        return unitNames[unitId] || unitId;
-    }
-
-    // Add to DepartmentUnitService.ts
-    static async handlePositionChange(
-        userId: string,
-        username: string,
-        oldPosition: string | null,
-        newPosition: string | null,
-        oldDepartment: string | null,
-        newDepartment: string | null,
-        oldUnit: string | null,
-        newUnit: string | null
-    ): Promise<void> {
-        // Remove from old position
-        if (oldPosition && oldDepartment && oldUnit) {
-            if (oldPosition.startsWith('grupijuht_')) {
-                await this.removeGroupLeader(oldDepartment, oldUnit, userId);
-            } else if (oldPosition.startsWith('talituse_juht_')) {
-                await this.updateUnitLeader(oldDepartment, oldUnit, {
-                    username: null,
-                    userId: null,
-                    appointedAt: null
-                });
-            }
-        }
-
-        // Add to new position
-        if (newPosition && newDepartment && newUnit) {
-            if (newPosition.startsWith('grupijuht_')) {
-                await this.addGroupLeader(newDepartment, newUnit, {
-                    username,
-                    userId,
-                    appointedAt: Timestamp.now()
-                });
-            } else if (newPosition.startsWith('talituse_juht_')) {
-                await this.updateUnitLeader(newDepartment, newUnit, {
-                    username,
-                    userId,
-                    appointedAt: Timestamp.now()
-                });
-            }
-        }
-    }
 }
