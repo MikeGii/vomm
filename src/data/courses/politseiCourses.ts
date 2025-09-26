@@ -1188,6 +1188,65 @@ export const POLITSEI_COURSES: Course[] = [
         category: 'politsei'
     },
 
+    // Emergency response department unit leader exam
+    {
+        id: 'emergency_department_unit_leader_exam',
+        name: 'Juhieksam kiirreageerimise üksuse tööspetsiifikas',
+        description: 'Eksam kindlustamaks talituse juhi tasandil efektiivseks töökorralduseks ja ülesannete delegeerimiseks allüksustele',
+        duration: 18000,
+        requirements: {
+            level: 100,
+            completedCourses: ['advanced_leader_course_02'],
+            totalWorkedHours: 275
+        },
+        rewards: {
+            experience: 45000,
+            reputation: 6500,
+            money: 13000,
+        },
+        category: 'politsei'
+    },
+
+    // K9 unit department unit leader exam
+    {
+        id: 'k9_department_unit_leader_exam',
+        name: 'Juhieksam koerteüksuse tööspetsiifikas',
+        description: 'Eksam kindlustamaks talituse juhi tasandil efektiivseks töökorralduseks ja ülesannete delegeerimiseks allüksustele',
+        duration: 18000,
+        requirements: {
+            level: 95,
+            completedCourses: ['advanced_leader_course_02'],
+            totalWorkedHours: 275
+        },
+        rewards: {
+            experience: 30000,
+            reputation: 4500,
+            money: 9000,
+        },
+        category: 'politsei'
+    },
+
+    // Cyber Crime unit department unit leader exam
+    {
+        id: 'cyber_crime_department_unit_leader_exam',
+        name: 'Juhieksam küberkuritegevuse talituse tööspetsiifikas',
+        description: 'Eksam kindlustamaks talituse juhi tasandil efektiivseks töökorralduseks ja ülesannete delegeerimiseks allüksustele',
+        duration: 18000,
+        requirements: {
+            level: 100,
+            completedCourses: ['advanced_leader_course_02'],
+            totalWorkedHours: 275
+        },
+        rewards: {
+            experience: 45000,
+            reputation: 6500,
+            money: 13000,
+        },
+        category: 'politsei'
+    },
+
+    // Police department leader preparation courses
+
     {
         id: 'expert_leader_course_01',
         name: 'Jaoskonna tasandil juhtimise koolitus 1. tsemester',
@@ -1241,7 +1300,9 @@ export const POLITSEI_COURSES: Course[] = [
         duration: 28800,
         requirements: {
             level: 155,
-            completedCourses: ['expert_leader_course_02', 'patrol_department_unit_leader_exam', 'procedural_department_unit_leader_exam'],
+            completedCourses: ['expert_leader_course_02', 'patrol_department_unit_leader_exam',
+                'procedural_department_unit_leader_exam', 'emergency_department_unit_leader_exam',
+                'k9_department_unit_leader_exam', 'cyber_crime_department_unit_leader_exam'],
             totalWorkedHours: 1350,
             attributes: {
                 intelligence: 875,
