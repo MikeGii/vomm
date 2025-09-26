@@ -123,16 +123,16 @@ const getHourlyRateByRankAndPosition = (rank: string, playerStats: PlayerStats):
 
         // Leadership ranks
         case 'politseileitnant':
-            return 340; // Only group leaders should have this rank based on our logic
+            return 4000; // Only group leaders should have this rank based on our logic
 
         case 'politseikapten':
-            return isUnitLeaderPosition ? 480 : 440; // Unit: 480€, Group: 440€
+            return isUnitLeaderPosition ? 550 : 480; // Unit: 480€, Group: 440€
 
         case 'politseimajor':
-            return 600; // Unit leader only
+            return 750; // Unit leader only
 
         case 'politseikolonelleitnant':
-            return 740; // Unit leader only
+            return 900; // Unit leader only
 
         default:
             return 0;
