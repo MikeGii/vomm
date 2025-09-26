@@ -7,6 +7,7 @@ import { getPositionDepartmentUnit } from '../../utils/playerStatus';
 import { useToast } from '../../contexts/ToastContext';
 import '../../styles/components/admin/AdminApplicationsTab.css';
 import { DepartmentUnitService } from '../../services/DepartmentUnitService';
+import { InactiveLeaderNotifications } from './InactiveLeaderNotifications';
 import { Timestamp } from 'firebase/firestore';
 import {PlayerStats} from "../../types";
 
@@ -384,6 +385,8 @@ export const AdminApplicationsTab: React.FC = () => {
                     </button>
                 </div>
             </div>
+
+            <InactiveLeaderNotifications />
 
             {applications.length === 0 ? (
                 <div className="no-applications">
