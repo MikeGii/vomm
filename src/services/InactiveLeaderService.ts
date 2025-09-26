@@ -114,11 +114,11 @@ export const demoteInactiveLeader = async (
 const getBasePositionForUnit = (unitId: string): string => {
     switch(unitId) {
         case 'patrol': return 'patrullpolitseinik';
-        case 'investigation': return 'uurija';
-        case 'emergency': return 'kiirreageerija';
-        case 'k9': return 'koerajuht';
-        case 'cyber': return 'küberkriminalist';
-        case 'crimes': return 'jälitaja';
+        case 'procedural_service': return 'uurija';
+        case 'emergency_response': return 'kiirreageerija';
+        case 'k9_unit': return 'koerajuht';
+        case 'cyber_crime': return 'küberkriminalist';
+        case 'crime_unit': return 'jälitaja';
         default: return 'patrullpolitseinik';
     }
 };

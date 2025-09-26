@@ -292,7 +292,8 @@ export class DepartmentUnitService {
         username?: string
     ): Promise<void> {
         // First, clean up any existing leadership roles across ALL units
-        const units = ['patrol', 'investigation', 'emergency', 'k9', 'cyber', 'crimes'];
+        // Using CORRECT unit IDs from policePositions.ts
+        const units = ['patrol', 'procedural_service', 'emergency_response', 'k9_unit', 'cyber_crime', 'crime_unit'];
 
         for (const unitId of units) {
             try {
@@ -382,11 +383,11 @@ export class DepartmentUnitService {
     private static getBasePositionForUnit(unitId: string): string {
         switch(unitId) {
             case 'patrol': return 'patrullpolitseinik';
-            case 'investigation': return 'uurija';
-            case 'emergency': return 'kiirreageerija';
-            case 'k9': return 'koerajuht';
-            case 'cyber': return 'küberkriminalist';
-            case 'crimes': return 'jälitaja';
+            case 'procedural_service': return 'uurija';
+            case 'emergency_response': return 'kiirreageerija';
+            case 'k9_unit': return 'koerajuht';
+            case 'cyber_crime': return 'küberkriminalist';
+            case 'crime_unit': return 'jälitaja';
             default: return 'patrullpolitseinik';
         }
     }

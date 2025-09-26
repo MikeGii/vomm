@@ -126,19 +126,30 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
 
     // Add this helper function to extract unit ID from position ID
     const getUnitIdFromPositionId = (positionId: string): string => {
-        // For leadership positions like 'grupijuht_patrol', extract 'patrol'
-        if (positionId.startsWith('grupijuht_') || positionId.startsWith('talituse_juht_')) {
-            return positionId.split('_')[2] || positionId.split('_')[1];
-        }
+        // For group leader positions
+        if (positionId === 'grupijuht_patrol') return 'patrol';
+        if (positionId === 'grupijuht_investigation') return 'procedural_service';
+        if (positionId === 'grupijuht_emergency') return 'emergency_response';
+        if (positionId === 'grupijuht_k9') return 'k9_unit';
+        if (positionId === 'grupijuht_cyber') return 'cyber_crime';
+        if (positionId === 'grupijuht_crimes') return 'crime_unit';
 
-        // For standard positions, determine unit based on position type
+        // For unit leader positions
+        if (positionId === 'talituse_juht_patrol') return 'patrol';
+        if (positionId === 'talituse_juht_investigation') return 'procedural_service';
+        if (positionId === 'talituse_juht_emergency') return 'emergency_response';
+        if (positionId === 'talituse_juht_k9') return 'k9_unit';
+        if (positionId === 'talituse_juht_cyber') return 'cyber_crime';
+        if (positionId === 'talituse_juht_crimes') return 'crime_unit';
+
+        // For standard worker positions
         switch(positionId) {
             case 'patrullpolitseinik': return 'patrol';
-            case 'uurija': return 'investigation';
-            case 'kiirreageerija': return 'emergency';
-            case 'koerajuht': return 'k9';
-            case 'küberkriminalist': return 'cyber';
-            case 'jälitaja': return 'crimes';
+            case 'uurija': return 'procedural_service';
+            case 'kiirreageerija': return 'emergency_response';
+            case 'koerajuht': return 'k9_unit';
+            case 'küberkriminalist': return 'cyber_crime';
+            case 'jälitaja': return 'crime_unit';
             default: return 'patrol';
         }
     };
