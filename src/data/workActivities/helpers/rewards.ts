@@ -2,14 +2,15 @@
 import { WorkActivity, WorkRewards } from '../types';
 import { isUnitLeader} from "../../../utils/playerStatus";
 import { PlayerStats} from "../../../types";
+import { DepartmentUnitService } from '../../../services/DepartmentUnitService';
 
 // Calculate total exp and money for work duration with player bonuses
-export const calculateWorkRewards = (
+export const calculateWorkRewards = async (  // CHANGED TO ASYNC
     activity: WorkActivity,
     hours: number,
     playerRank?: string | null,
     playerStats?: PlayerStats
-): WorkRewards => {
+): Promise<WorkRewards> => {  // CHANGED TO PROMISE
     let baseExp = 0;
 
     // Calculate base experience from work activity (existing logic)
@@ -19,10 +20,35 @@ export const calculateWorkRewards = (
     }
 
     // Apply player level and attribute bonuses
-    const finalExp = applyPlayerBonuses(baseExp, playerStats);
+    let finalExp = applyPlayerBonuses(baseExp, playerStats);
 
-    // Calculate money for police officers (using rank and position for salary)
-    const money = playerRank && playerStats ? calculateSalaryForOfficer(playerRank, hours, playerStats) : 0;
+    // Calculate base money for police officers
+    let money = playerRank && playerStats ? calculateSalaryForOfficer(playerRank, hours, playerStats) : 0;
+
+    // NEW: Apply department unit bonuses if player is in a unit
+    if (playerStats?.department && playerStats?.departmentUnit) {
+        try {
+            const unitBonuses = await DepartmentUnitService.getUnitBonuses(
+                playerStats.department,
+                playerStats.departmentUnit
+            );
+
+            // Apply work XP bonus
+            if (unitBonuses.workXpBonus > 0) {
+                const xpMultiplier = 1 + (unitBonuses.workXpBonus / 100);
+                finalExp = Math.floor(finalExp * xpMultiplier);
+            }
+
+            // Apply salary bonus
+            if (unitBonuses.salaryBonus > 0) {
+                const salaryMultiplier = 1 + (unitBonuses.salaryBonus / 100);
+                money = Math.floor(money * salaryMultiplier);
+            }
+        } catch (error) {
+            console.error('Error applying department unit bonuses:', error);
+            // Continue with base values if bonus fetch fails
+        }
+    }
 
     return {
         experience: finalExp,
