@@ -1,0 +1,442 @@
+/* src/styles/components/department/DepartmentManagement.css */
+
+.dept-mgmt-container {
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.dept-mgmt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #444;
+}
+
+.dept-mgmt-header h3 {
+    color: #f0f0f0;
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.dept-mgmt-wallet-balance {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #1a1a1a;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    border: 1px solid #4a90e2;
+}
+
+.dept-mgmt-balance-label {
+    color: #999;
+    font-size: 0.9rem;
+}
+
+.dept-mgmt-balance-amount {
+    color: #4a90e2;
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+/* Donation Section */
+.dept-mgmt-donation-section {
+    background-color: #1f1f1f;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.dept-mgmt-donation-section h4 {
+    color: #f0f0f0;
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+}
+
+.dept-mgmt-donation-form {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.dept-mgmt-donation-input {
+    flex: 1;
+    padding: 0.75rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #f0f0f0;
+    font-size: 1rem;
+}
+
+.dept-mgmt-donation-input:focus {
+    outline: none;
+    border-color: #4a90e2;
+}
+
+.dept-mgmt-donate-btn {
+    padding: 0.75rem 2rem;
+    background: linear-gradient(45deg, #4a90e2, #357abd);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dept-mgmt-donate-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+}
+
+.dept-mgmt-donate-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.dept-mgmt-player-balance {
+    color: #999;
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+/* Upgrades Section */
+.dept-mgmt-upgrades-section {
+    margin-bottom: 1.5rem;
+}
+
+.dept-mgmt-upgrades-section h4 {
+    color: #f0f0f0;
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+}
+
+.dept-mgmt-upgrade-card {
+    background-color: #1f1f1f;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.dept-mgmt-upgrade-card:hover {
+    border-color: #4a90e2;
+    box-shadow: 0 2px 10px rgba(74, 144, 226, 0.1);
+}
+
+.dept-mgmt-upgrade-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.dept-mgmt-upgrade-header h5 {
+    color: #4a90e2;
+    margin: 0;
+    font-size: 1.05rem;
+}
+
+.dept-mgmt-upgrade-level {
+    background-color: #2a2a2a;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    color: #f0f0f0;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.dept-mgmt-upgrade-description {
+    color: #b0b0b0;
+    margin: 0 0 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.dept-mgmt-current-bonus {
+    background-color: rgba(74, 144, 226, 0.1);
+    border-left: 3px solid #4a90e2;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 1rem;
+    color: #f0f0f0;
+}
+
+.dept-mgmt-next-level {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background-color: #2a2a2a;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.dept-mgmt-upgrade-cost {
+    color: #ffa500;
+    font-weight: 600;
+}
+
+.dept-mgmt-purchase-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: linear-gradient(45deg, #28a745, #20c997);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dept-mgmt-purchase-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.dept-mgmt-purchase-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: linear-gradient(45deg, #6c757d, #5a6268);
+}
+
+.dept-mgmt-max-level {
+    text-align: center;
+    color: #28a745;
+    font-weight: 600;
+    padding: 0.75rem;
+    background-color: rgba(40, 167, 69, 0.1);
+    border-radius: 6px;
+}
+
+/* Transactions Section */
+.dept-mgmt-transactions-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #444;
+}
+
+.dept-mgmt-toggle-transactions {
+    background: none;
+    border: none;
+    color: #4a90e2;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.5rem 0;
+    transition: color 0.3s ease;
+}
+
+.dept-mgmt-toggle-transactions:hover {
+    color: #357abd;
+}
+
+.dept-mgmt-transactions-list {
+    margin-top: 1rem;
+    background-color: #1f1f1f;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.dept-mgmt-transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid #333;
+}
+
+.dept-mgmt-transaction-item:last-child {
+    border-bottom: none;
+}
+
+.dept-mgmt-tx-type {
+    font-size: 1.2rem;
+    margin-right: 0.75rem;
+}
+
+.dept-mgmt-tx-description {
+    flex: 1;
+    color: #b0b0b0;
+    font-size: 0.9rem;
+}
+
+.dept-mgmt-tx-amount {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.dept-mgmt-tx-amount.donation {
+    color: #28a745;
+}
+
+.dept-mgmt-tx-amount.upgrade_purchase {
+    color: #dc3545;
+}
+
+.dept-mgmt-loading {
+    text-align: center;
+    padding: 2rem;
+    color: #999;
+}
+
+css/* Top Contributors Section */
+.dept-mgmt-contributors-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #444;
+}
+
+.dept-mgmt-toggle-contributors {
+    background: linear-gradient(45deg, #ffd700, #ffed4e);
+    border: none;
+    color: #1a1a1a;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    width: 100%;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.dept-mgmt-toggle-contributors:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.dept-mgmt-contributors-table-wrapper {
+    margin-top: 1rem;
+    background-color: #1f1f1f;
+    border-radius: 8px;
+    padding: 1rem;
+    animation: deptMgmtSlideDown 0.3s ease-out;
+}
+
+@keyframes deptMgmtSlideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 500px;
+    }
+}
+
+.dept-mgmt-contributors-data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dept-mgmt-contributors-data-table thead {
+    border-bottom: 2px solid #444;
+}
+
+.dept-mgmt-contributors-data-table th {
+    padding: 0.75rem;
+    text-align: left;
+    color: #999;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+.dept-mgmt-contributors-data-table tbody tr {
+    border-bottom: 1px solid #333;
+    transition: background-color 0.2s ease;
+}
+
+.dept-mgmt-contributors-data-table tbody tr:hover {
+    background-color: rgba(74, 144, 226, 0.1);
+}
+
+.dept-mgmt-contributors-data-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.dept-mgmt-contributors-data-table td {
+    padding: 0.75rem;
+    color: #f0f0f0;
+}
+
+/* Column specific styles */
+.dept-mgmt-contrib-rank-col {
+    width: 50px;
+    text-align: center;
+    font-weight: 700;
+}
+
+.dept-mgmt-contrib-name-col {
+    font-weight: 500;
+}
+
+.dept-mgmt-contrib-amount-col {
+    font-weight: 700;
+    color: #4a90e2;
+}
+
+.dept-mgmt-contrib-count-col {
+    width: 100px;
+    text-align: center;
+    color: #999;
+}
+
+/* Top 3 special styling */
+.dept-mgmt-contributors-data-table tbody tr.dept-mgmt-contrib-top-1 {
+    background-color: rgba(255, 215, 0, 0.05);
+}
+
+.dept-mgmt-contributors-data-table tbody tr.dept-mgmt-contrib-top-1 td {
+    color: #ffd700;
+}
+
+.dept-mgmt-contributors-data-table tbody tr.dept-mgmt-contrib-top-2 {
+    background-color: rgba(192, 192, 192, 0.05);
+}
+
+.dept-mgmt-contributors-data-table tbody tr.dept-mgmt-contrib-top-2 td {
+    color: #c0c0c0;
+}
+
+.dept-mgmt-contributors-data-table tbody tr.dept-mgmt-contrib-top-3 {
+    background-color: rgba(205, 127, 50, 0.05);
+}
+
+.dept-mgmt-contributors-data-table tbody tr.dept-mgmt-contrib-top-3 td {
+    color: #cd7f32;
+}
+
+.dept-mgmt-no-contributors-msg {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    font-style: italic;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .dept-mgmt-contributors-data-table {
+        font-size: 0.9rem;
+    }
+
+    .dept-mgmt-contributors-data-table th,
+    .dept-mgmt-contributors-data-table td {
+        padding: 0.5rem;
+    }
+
+    .dept-mgmt-contrib-count-col {
+        width: 80px;
+    }
+}

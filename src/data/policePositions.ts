@@ -271,8 +271,8 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Talituse juht',
         departmentUnit: 'patrol',
         requirements: {
-            minimumLevel: 85,
-            completedCourses: ['advanced_leader_course', 'basic_computer_course'],
+            minimumLevel: 95,
+            completedCourses: ['basic_computer_course', 'patrol_department_unit_leader_exam'],
             minimumWorkedHours: 300,
             minimumReputation: 8000,
             attributes: {
@@ -289,8 +289,8 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Talituse juht',
         departmentUnit: 'procedural_service',
         requirements: {
-            minimumLevel: 90,
-            completedCourses: ['advanced_leader_course', 'anatomic_basic_course', 'basic_computer_course', 'narcotic_psyhotropic_substances'],
+            minimumLevel: 95,
+            completedCourses: ['procedural_department_unit_leader_exam', 'anatomic_basic_course', 'basic_computer_course', 'narcotic_psyhotropic_substances'],
             minimumWorkedHours: 300,
             minimumReputation: 9000,
             attributes: {
@@ -307,8 +307,8 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Talituse juht',
         departmentUnit: 'emergency_response',
         requirements: {
-            minimumLevel: 95,
-            completedCourses: ['advanced_leader_course', 'anatomic_basic_course', 'basic_computer_course'],
+            minimumLevel: 100,
+            completedCourses: ['emergency_department_unit_leader_exam', 'anatomic_basic_course', 'basic_computer_course'],
             minimumWorkedHours: 300,
             minimumReputation: 9000,
             attributes: {
@@ -325,8 +325,8 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Talituse juht',
         departmentUnit: 'k9_unit',
         requirements: {
-            minimumLevel: 90,
-            completedCourses: ['advanced_leader_course', 'anatomic_basic_course', 'basic_computer_course', 'dog_master_course_02', 'narcotic_psyhotropic_substances'],
+            minimumLevel: 95,
+            completedCourses: ['k9_department_unit_leader_exam', 'anatomic_basic_course', 'basic_computer_course', 'dog_master_course_02', 'narcotic_psyhotropic_substances'],
             minimumWorkedHours: 300,
             minimumReputation: 10000,
             attributes: {
@@ -343,8 +343,8 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Talituse juht',
         departmentUnit: 'cyber_crime',
         requirements: {
-            minimumLevel: 95,
-            completedCourses: ['advanced_leader_course', 'cyber_crime_course_02', 'advanced_computer_skills_02'],
+            minimumLevel: 100,
+            completedCourses: ['cyber_crime_department_unit_leader_exam', 'cyber_crime_course_02', 'advanced_computer_skills_02'],
             minimumWorkedHours: 300,
             minimumReputation: 10000,
             attributes: {
@@ -361,8 +361,8 @@ export const POLICE_POSITIONS: PolicePosition[] = [
         name: 'Talituse juht',
         departmentUnit: 'crime_unit',
         requirements: {
-            minimumLevel: 95,
-            completedCourses: ['advanced_leader_course', 'anatomic_basic_course', 'basic_computer_course', 'detective_course_advanced_02', 'narcotic_psyhotropic_substances'],
+            minimumLevel: 100,
+            completedCourses: ['advanced_leader_course_02', 'anatomic_basic_course', 'basic_computer_course', 'detective_course_advanced_02', 'narcotic_psyhotropic_substances'],
             minimumWorkedHours: 300,
             minimumReputation: 10000,
             attributes: {

@@ -78,6 +78,20 @@ export const DepartmentInstructions: React.FC = () => {
                     </div>
 
                     <div className="instruction-section">
+                        <h3>💰 Talituse Arendamine</h3>
+                        <p>
+                            <strong>Talituse rahakott ja boonussüsteem:</strong> Iga talitus omab ühist rahakotti ja arendussüsteemi.
+                            Kõik talituse liikmed – eesliini töötajad, grupijuhid ja talituse juhid – saavad annetada oma isiklikku
+                            raha talituse ühisesse rahakotti.<br/>
+                            <strong>Uuenduste ostmine:</strong> Talituse juht saab kasutada kogutud vahendeid erinevate uuenduste
+                            soetamiseks, mis annavad boonuseid kõigile selle talituse liikmetele. Praegu on saadaval töö kogemuse
+                            boonus (kuni +100% XP) ja palgaboonus (kuni +100% palk).<br/>
+                            <strong>Ühised eelised:</strong> Kõik ostetud boonused kehtivad automaatselt kõigile talituse liikmetele,
+                            sõltumata nende ametikohast. See motiveerib meeskonnatööd ja ühist panustamist talituse arengusse.
+                        </p>
+                    </div>
+
+                    <div className="instruction-section">
                         <h3>🏆 Edetabel</h3>
                         <p>
                             Näitab erinevate üksuste ja prefektuuride parimaid tulemusi maine järgi.

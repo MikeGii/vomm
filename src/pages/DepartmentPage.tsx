@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { DepartmentHierarchy } from '../components/department/DepartmentHierarchy';
 import { DepartmentCrimeInfo } from '../components/department/DepartmentCrimeInfo';
+import { DepartmentManagement } from '../components/department/DepartmentManagement';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { DepartmentTabs } from '../components/department/DepartmentTabs';
 import { DepartmentLeaderboard } from '../components/department/DepartmentLeaderboard';
 import '../styles/pages/Department.css';
-import {isPoliceOfficer} from "../utils/playerStatus";
+import { isPoliceOfficer, canDonateToUnitWallet } from "../utils/playerStatus";
 import {DepartmentInstructions} from "../components/department/DepartmentInstructions";
 import { usePageTracking } from '../hooks/usePageTracking';
 
@@ -41,6 +42,9 @@ const DepartmentPage: React.FC = () => {
 
     // Check if player has graduated (completed lopueksam)
     const hasGraduated = isPoliceOfficer(playerStats);
+
+    // Check if player can see department management
+    const showDepartmentManagement = canDonateToUnitWallet(playerStats);
 
     if (!hasGraduated) {
         return (
@@ -96,6 +100,14 @@ const DepartmentPage: React.FC = () => {
                     currentPlayerStats={playerStats}
                     onPlayerStatsUpdate={refreshStats}
                 />
+
+                {/* DEPARTMENT MANAGEMENT */}
+                {showDepartmentManagement && (
+                    <DepartmentManagement
+                        playerStats={playerStats}
+                        onMoneyUpdate={refreshStats}
+                    />
+                )}
 
                 <DepartmentLeaderboard />
             </main>

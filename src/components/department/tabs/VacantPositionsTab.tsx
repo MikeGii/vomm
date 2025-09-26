@@ -6,6 +6,7 @@ import { PositionApplicationService } from '../../../services/PositionApplicatio
 import { PositionCard } from './vacantPositions/PositionCard';
 import { PositionModal } from './vacantPositions/PositionModal';
 import { useAuth } from '../../../contexts/AuthContext';
+import { DepartmentUnitService } from '../../../services/DepartmentUnitService';
 import { useToast } from '../../../contexts/ToastContext';
 import '../../../styles/components/department/tabs/VacantPositionsTab.css';
 
@@ -75,6 +76,7 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
 
         try {
             if (actionType === 'apply') {
+                // Applications for leadership positions - stays the same
                 const { canApply, message } = await applicationService.canSubmitApplication(
                     playerStats.username,
                     positionId
@@ -88,7 +90,20 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
                 await applicationService.submitApplication(playerStats, currentUser.uid, positionId);
                 showToast(`Avaldus edukalt esitatud positsioonile: ${position.positionName}`, 'success');
             } else {
-                await applicationService.switchUnit(currentUser.uid, positionId, position.unitName);
+                // UPDATED: Use DepartmentUnitService for position switches
+                // This will automatically clean up any old leadership roles
+
+                // Get the unit ID from position
+                const targetUnitId = getUnitIdFromPositionId(positionId);
+
+                await DepartmentUnitService.handlePositionChange(
+                    currentUser.uid,
+                    positionId,
+                    targetUnitId,
+                    playerStats.department || '',
+                    playerStats.username
+                );
+
                 showToast(`Edukalt üle viidud üksusesse: ${position.unitName}`, 'success');
             }
 
@@ -106,6 +121,36 @@ export const VacantPositionsTab: React.FC<VacantPositionsTabProps> = ({
             );
         } finally {
             setProcessing(null);
+        }
+    };
+
+    // Add this helper function to extract unit ID from position ID
+    const getUnitIdFromPositionId = (positionId: string): string => {
+        // For group leader positions
+        if (positionId === 'grupijuht_patrol') return 'patrol';
+        if (positionId === 'grupijuht_investigation') return 'procedural_service';
+        if (positionId === 'grupijuht_emergency') return 'emergency_response';
+        if (positionId === 'grupijuht_k9') return 'k9_unit';
+        if (positionId === 'grupijuht_cyber') return 'cyber_crime';
+        if (positionId === 'grupijuht_crimes') return 'crime_unit';
+
+        // For unit leader positions
+        if (positionId === 'talituse_juht_patrol') return 'patrol';
+        if (positionId === 'talituse_juht_investigation') return 'procedural_service';
+        if (positionId === 'talituse_juht_emergency') return 'emergency_response';
+        if (positionId === 'talituse_juht_k9') return 'k9_unit';
+        if (positionId === 'talituse_juht_cyber') return 'cyber_crime';
+        if (positionId === 'talituse_juht_crimes') return 'crime_unit';
+
+        // For standard worker positions
+        switch(positionId) {
+            case 'patrullpolitseinik': return 'patrol';
+            case 'uurija': return 'procedural_service';
+            case 'kiirreageerija': return 'emergency_response';
+            case 'koerajuht': return 'k9_unit';
+            case 'küberkriminalist': return 'cyber_crime';
+            case 'jälitaja': return 'crime_unit';
+            default: return 'patrol';
         }
     };
 

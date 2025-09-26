@@ -33,8 +33,8 @@ export const getItemDisplayName = (itemType: string): string => {
 const createDailyTask = (level: number): Task => {
     const levelMultiplier = 1 + (level * 0.20);
 
-    const baseExpReward = Math.floor(100 * levelMultiplier);
-    const baseMoneyReward = Math.floor(100 * levelMultiplier);
+    const baseExpReward = Math.floor(250 * levelMultiplier);
+    const baseMoneyReward = Math.floor(250 * levelMultiplier);
     const baseReputationReward = Math.floor(5 * levelMultiplier);
 
     const itemType = getRandomProductionItem();
@@ -68,9 +68,9 @@ const createDailyTask = (level: number): Task => {
 const createWeeklyTask = (level: number, dailyItemType?: string): Task => {
     const levelMultiplier = 1 + (level * 0.20);
 
-    const baseExpReward = Math.floor(1000 * levelMultiplier);
-    const baseMoneyReward = Math.floor(1000 * levelMultiplier);
-    const baseReputationReward = Math.floor(50 * levelMultiplier);
+    const baseExpReward = Math.floor(4000 * levelMultiplier);
+    const baseMoneyReward = Math.floor(4000 * levelMultiplier);
+    const baseReputationReward = Math.floor(100 * levelMultiplier);
 
     // Use daily task's item type or generate random if not provided
     const itemType = (dailyItemType as 'juice' | 'porrige' | 'cloth' | 'bandage') || getRandomProductionItem();

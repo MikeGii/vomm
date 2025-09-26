@@ -20,7 +20,7 @@ import { PlayerStats, ActiveWork, WorkHistoryEntry } from '../types';
 import { getWorkActivityById, calculateWorkRewards } from '../data/workActivities';
 import { calculateLevelFromExp } from "./PlayerService";
 import { triggerWorkEvent } from "./EventService";
-import {updateCrimeLevelAfterWork} from "./CrimeService";
+import { updateCrimeLevelAfterWork } from "./CrimeService";
 import { updateProgress } from "./TaskService";
 
 // Start work
@@ -59,8 +59,8 @@ export const startWork = async (
         throw new Error('Töötegevus ei ole saadaval');
     }
 
-    // Calculate expected rewards (both experience and money)
-    const expectedRewards = calculateWorkRewards(workActivity, hours, stats.rank, stats);
+    // UPDATED: Calculate expected rewards with department bonuses (await added)
+    const expectedRewards = await calculateWorkRewards(workActivity, hours, stats.rank, stats);
 
     // Create work session
     const now = Timestamp.now();
@@ -175,8 +175,8 @@ export const completeWork = async (userId: string): Promise<{
                 return { success: false, message: 'Work activity not found' };
             }
 
-            // Calculate actual rewards based on current player rank
-            const actualRewards = calculateWorkRewards(workActivity, stats.activeWork.totalHours, stats.rank, stats);
+            // UPDATED: Calculate actual rewards with department bonuses (await added)
+            const actualRewards = await calculateWorkRewards(workActivity, stats.activeWork.totalHours, stats.rank, stats);
 
             // Calculate new stats
             const newExp = stats.experience + actualRewards.experience;
@@ -400,8 +400,8 @@ export const cancelWork = async (userId: string): Promise<{
             const hoursWorked = Math.max(0.1, timeWorked / (1000 * 3600));
             const minutesWorked = timeWorked / (1000 * 60);
 
-            // Calculate rewards for time actually worked
-            const workedRewards = calculateWorkRewards(workActivity, hoursWorked, stats.rank, stats);
+            // UPDATED: Calculate rewards with department bonuses (await added)
+            const workedRewards = await calculateWorkRewards(workActivity, hoursWorked, stats.rank, stats);
 
             // Apply 50% penalty
             const penalizedRewards = {
