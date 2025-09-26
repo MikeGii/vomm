@@ -1146,4 +1146,115 @@ export const POLITSEI_COURSES: Course[] = [
             }
         }
     },
+
+
+    // Final exams to the specific department unit leader position
+
+    // Patrol department unit leader exam
+    {
+        id: 'patrol_department_unit_leader_exam',
+        name: 'Juhieksam avaliku korra kaitse ja esmareageerijate tööspetsiifikas',
+        description: 'Eksam kindlustamaks talituse juhi tasandil efektiivseks töökorralduseks ja ülesannete delegeerimiseks allüksustele',
+        duration: 18000,
+        requirements: {
+            level: 95,
+            completedCourses: ['advanced_leader_course_01'],
+            totalWorkedHours: 250
+        },
+        rewards: {
+            experience: 30000,
+            reputation: 4500,
+            money: 9000,
+        },
+        category: 'politsei'
+    },
+
+    // Procedural department unit leader exam
+    {
+        id: 'procedural_department_unit_leader_exam',
+        name: 'Juhieksam menetluslikus tööspetsiifikas ja süüteomenetluslikus õigusteaduses',
+        description: 'Eksam kindlustamaks talituse juhi tasandil efektiivseks töökorralduseks ja ülesannete delegeerimiseks allüksustele',
+        duration: 18000,
+        requirements: {
+            level: 95,
+            completedCourses: ['advanced_leader_course_02'],
+            totalWorkedHours: 250
+        },
+        rewards: {
+            experience: 30000,
+            reputation: 4500,
+            money: 9000,
+        },
+        category: 'politsei'
+    },
+
+    {
+        id: 'expert_leader_course_01',
+        name: 'Jaoskonna tasandil juhtimise koolitus 1. tsemester',
+        description: 'Koolitus suurte struktuuriüksuste juhtimiseks ja koostöö teiste struktuuridega esimene täiendõppe tsemester',
+        duration: 86400,
+        requirements: {
+            level: 145,
+            completedCourses: ['advanced_leader_course_02'],
+            totalWorkedHours: 1250,
+            attributes: {
+                intelligence: 750,
+                dexterity: 675,
+                endurance: 650,
+                agility: 600
+            }
+        },
+        rewards: {
+            experience: 450000,
+            reputation: 25000,
+            money: 150000,
+        },
+        category: 'politsei'
+    },
+    {
+        id: 'expert_leader_course_02',
+        name: 'Jaoskonna tasandil juhtimise koolitus 2. tsemester',
+        description: 'Koolitus suurte struktuuriüksuste juhtimiseks ja koostöö teiste struktuuridega teine täiendõppe tsemester',
+        duration: 86400,
+        requirements: {
+            level: 150,
+            completedCourses: ['expert_leader_course_01'],
+            totalWorkedHours: 1350,
+            attributes: {
+                intelligence: 850,
+                dexterity: 725,
+                endurance: 700,
+                agility: 650
+            }
+        },
+        rewards: {
+            experience: 850000,
+            reputation: 35000,
+            money: 175000,
+        },
+        category: 'politsei'
+    },
+    {
+        id: 'expert_leader_course_03',
+        name: 'Talituse erialane spetsiifika koolitus kõrgematele juhtidele',
+        description: 'Kursus jaoskonna juhi positsioonile eelduseks, et kõikide allüksuste tööspetsiifika oleks tuttav',
+        duration: 28800,
+        requirements: {
+            level: 155,
+            completedCourses: ['expert_leader_course_02', 'patrol_department_unit_leader_exam', 'procedural_department_unit_leader_exam'],
+            totalWorkedHours: 1350,
+            attributes: {
+                intelligence: 875,
+                dexterity: 775,
+                endurance: 750,
+                agility: 675
+            }
+        },
+        rewards: {
+            experience: 1150000,
+            reputation: 45000,
+            money: 225000,
+        },
+        category: 'politsei'
+    },
 ];
