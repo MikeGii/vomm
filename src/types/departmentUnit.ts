@@ -102,12 +102,16 @@ export const UPGRADE_CONFIGS: UpgradeInfo[] = [
         name: 'Töö XP boonus',
         description: 'Suurendab kõigi üksuse liikmete töö XP teenimist',
         baseCost: 450000,
-        maxLevel: 4,
+        maxLevel: 8,
         levels: [
             { level: 1, cost: 450000, bonus: 5, bonusType: '%' },
-            { level: 2, cost: 1800000, bonus: 10, bonusType: '%' },
-            { level: 3, cost: 7200000, bonus: 15, bonusType: '%' },
-            { level: 4, cost: 28800000, bonus: 20, bonusType: '%' }
+            { level: 2, cost: 1350000, bonus: 10, bonusType: '%' },
+            { level: 3, cost: 4050000, bonus: 20, bonusType: '%' },
+            { level: 4, cost: 12150000, bonus: 30, bonusType: '%' },
+            { level: 5, cost: 36450000, bonus: 40, bonusType: '%' },
+            { level: 6, cost: 109350000, bonus: 50, bonusType: '%' },
+            { level: 7, cost: 328050000, bonus: 60, bonusType: '%' },
+            { level: 8, cost: 984150000, bonus: 75, bonusType: '%' }
         ]
     },
     {
@@ -115,12 +119,16 @@ export const UPGRADE_CONFIGS: UpgradeInfo[] = [
         name: 'Piirkonna palgaboonus',
         description: 'Suurendab kõigi üksuse liikmete töötasu',
         baseCost: 750000,
-        maxLevel: 4,
+        maxLevel: 8,
         levels: [
             { level: 1, cost: 750000, bonus: 5, bonusType: '%' },
-            { level: 2, cost: 3000000, bonus: 10, bonusType: '%' },
-            { level: 3, cost: 12000000, bonus: 15, bonusType: '%' },
-            { level: 4, cost: 48000000, bonus: 20, bonusType: '%' }
+            { level: 2, cost: 2250000, bonus: 10, bonusType: '%' },
+            { level: 3, cost: 6750000, bonus: 20, bonusType: '%' },
+            { level: 4, cost: 20250000, bonus: 30, bonusType: '%' },
+            { level: 5, cost: 60750000, bonus: 40, bonusType: '%' },
+            { level: 6, cost: 182250000, bonus: 50, bonusType: '%' },
+            { level: 7, cost: 546750000, bonus: 60, bonusType: '%' },
+            { level: 8, cost: 1640250000, bonus: 75, bonusType: '%' }
         ]
     }
 ];
@@ -128,7 +136,7 @@ export const UPGRADE_CONFIGS: UpgradeInfo[] = [
 // Helper function to calculate upgrade cost
 export const calculateUpgradeCost = (baseCost: number, level: number): number => {
     if (level === 1) return baseCost;
-    return baseCost * Math.pow(4, level - 1);
+    return baseCost * Math.pow(3, level - 1);
 };
 
 // Helper function to get upgrade info
