@@ -5,12 +5,9 @@ import { getUnitById } from '../data/departmentUnits';
 import { getCourseById } from '../data/courses';
 import {
     getPositionDepartmentUnit,
-    canUnitAcceptMoreGroupLeaders,
-    getGroupLeaderCountInUnit,
-    hasUnitLeader,
-    getCurrentUnitLeader,
     isGroupLeader
 } from './playerStatus';
+import { DepartmentUnitService } from '../services/DepartmentUnitService';
 
 export interface PositionInfo {
     positionId: string;
@@ -66,7 +63,7 @@ export class PositionProcessor {
 
     private async processPosition(position: any, unit: any): Promise<PositionInfo | null> {
         const isGroupLeaderPosition = position.id.startsWith('grupijuht_');
-        const isUnitLeaderPosition = position.id.startsWith('talituse_juht_');;
+        const isUnitLeaderPosition = position.id.startsWith('talituse_juht_');
 
         const baseInfo = this.createBasePositionInfo(position, unit, isGroupLeaderPosition, isUnitLeaderPosition);
 
@@ -99,18 +96,15 @@ export class PositionProcessor {
     private async processUnitLeaderPosition(baseInfo: PositionInfo, position: any): Promise<PositionInfo> {
         this.processRequirements(baseInfo, position.requirements);
 
-        const hasLeader = await hasUnitLeader(
-            position.departmentUnit || '',
-            this.playerStats.department || ''
+        // UPDATED: Use DepartmentUnitService instead of old functions
+        const departmentUnit = await DepartmentUnitService.getUnit(
+            this.playerStats.department || '',
+            position.departmentUnit || ''
         );
 
-        if (hasLeader) {
-            const currentLeader = await getCurrentUnitLeader(
-                position.departmentUnit || '',
-                this.playerStats.department || ''
-            );
+        if (departmentUnit && departmentUnit.unitLeader.userId) {
             baseInfo.availabilityStatus = 'Koht hõivatud';
-            baseInfo.missingRequirements.push(`Üksuses on juba talituse juht: ${currentLeader || 'Keegi'}`);
+            baseInfo.missingRequirements.push(`Üksuses on juba talituse juht: ${departmentUnit.unitLeader.username || 'Keegi'}`);
             return baseInfo;
         } else {
             baseInfo.availabilityStatus = 'Koht saadaval';
@@ -133,16 +127,25 @@ export class PositionProcessor {
     private async processGroupLeaderPosition(baseInfo: PositionInfo, position: any): Promise<PositionInfo> {
         this.processRequirements(baseInfo, position.requirements);
 
-        if (this.currentUnit === position.departmentUnit) {
-            const canAcceptMore = await canUnitAcceptMoreGroupLeaders(
-                position.departmentUnit || '',
-                this.playerStats.department || ''
-            );
-            const currentCount = await getGroupLeaderCountInUnit(
-                position.departmentUnit || '',
-                this.playerStats.department || ''
-            );
+        // UPDATED: Use DepartmentUnitService instead of old functions
+        const departmentUnit = await DepartmentUnitService.getUnit(
+            this.playerStats.department || '',
+            position.departmentUnit || ''
+        );
 
+        if (!departmentUnit) {
+            // Unit doesn't exist yet (shouldn't happen after migration)
+            baseInfo.availabilityStatus = 'Koht saadaval';
+            if (this.currentUnit === position.departmentUnit && baseInfo.missingRequirements.length === 0) {
+                baseInfo.canApply = true;
+            }
+            return baseInfo;
+        }
+
+        const currentCount = departmentUnit.groupLeaders.length;
+        const canAcceptMore = currentCount < departmentUnit.maxGroupLeaders;
+
+        if (this.currentUnit === position.departmentUnit) {
             if (canAcceptMore) {
                 baseInfo.availabilityStatus = 'Koht saadaval';
                 const isStandardWorker = !this.playerStats.policePosition?.startsWith('grupijuht_') &&
@@ -154,13 +157,9 @@ export class PositionProcessor {
                 }
             } else {
                 baseInfo.availabilityStatus = 'Kohad täis';
-                baseInfo.missingRequirements.push(`Üksuses on juba maksimum arv grupijuhte (${currentCount}/4)`);
+                baseInfo.missingRequirements.push(`Üksuses on juba maksimum arv grupijuhte (${currentCount}/${departmentUnit.maxGroupLeaders})`);
             }
         } else {
-            const canAcceptMore = await canUnitAcceptMoreGroupLeaders(
-                position.departmentUnit || '',
-                this.playerStats.department || ''
-            );
             baseInfo.availabilityStatus = canAcceptMore ? 'Koht saadaval' : 'Kohad täis';
             const unit = getUnitById(position.departmentUnit || '');
             baseInfo.missingRequirements.push(`Pead töötama ${unit?.name} üksuses`);

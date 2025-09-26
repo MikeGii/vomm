@@ -448,4 +448,46 @@ export class DepartmentUnitService {
         };
         return unitNames[unitId] || unitId;
     }
+
+    // Add to DepartmentUnitService.ts
+    static async handlePositionChange(
+        userId: string,
+        username: string,
+        oldPosition: string | null,
+        newPosition: string | null,
+        oldDepartment: string | null,
+        newDepartment: string | null,
+        oldUnit: string | null,
+        newUnit: string | null
+    ): Promise<void> {
+        // Remove from old position
+        if (oldPosition && oldDepartment && oldUnit) {
+            if (oldPosition.startsWith('grupijuht_')) {
+                await this.removeGroupLeader(oldDepartment, oldUnit, userId);
+            } else if (oldPosition.startsWith('talituse_juht_')) {
+                await this.updateUnitLeader(oldDepartment, oldUnit, {
+                    username: null,
+                    userId: null,
+                    appointedAt: null
+                });
+            }
+        }
+
+        // Add to new position
+        if (newPosition && newDepartment && newUnit) {
+            if (newPosition.startsWith('grupijuht_')) {
+                await this.addGroupLeader(newDepartment, newUnit, {
+                    username,
+                    userId,
+                    appointedAt: Timestamp.now()
+                });
+            } else if (newPosition.startsWith('talituse_juht_')) {
+                await this.updateUnitLeader(newDepartment, newUnit, {
+                    username,
+                    userId,
+                    appointedAt: Timestamp.now()
+                });
+            }
+        }
+    }
 }

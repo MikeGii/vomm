@@ -1,8 +1,8 @@
 // src/components/patrol/WorkActivitySelector.tsx
-import React from 'react';
-import {PlayerStats} from '../../types';
+import React, { useState, useEffect } from 'react';
+import { PlayerStats } from '../../types';
 import { CrimeImpactIndicator } from './CrimeImpactIndicator';
-import {calculateSalaryForOfficer, calculateWorkRewards, getDefaultWorkActivityForPosition} from '../../data/workActivities';
+import { calculateSalaryForOfficer, calculateWorkRewards, getDefaultWorkActivityForPosition } from '../../data/workActivities';
 import '../../styles/components/patrol/WorkActivitySelector.css';
 
 interface WorkActivitySelectorProps {
@@ -28,14 +28,41 @@ export const WorkActivitySelector: React.FC<WorkActivitySelectorProps> = ({
                                                                               playerStats,
                                                                               policePosition
                                                                           }) => {
+    // State for async rewards calculation
+    const [expectedRewards, setExpectedRewards] = useState<{ experience: number; money: number }>({
+        experience: 0,
+        money: 0
+    });
+
     // Get the default work activity for player's position
     const workActivity = getDefaultWorkActivityForPosition(policePosition ?? null);
-    const expectedRewards = workActivity
-        ? calculateWorkRewards(workActivity, selectedHours, playerRank, playerStats)
-        : { experience: 0, money: 0 };
 
     // Check if player is a police officer (has rank)
     const isPoliceOfficer = playerRank !== null;
+
+    // Calculate rewards when hours or activity changes
+    useEffect(() => {
+        const calculateRewards = async () => {
+            if (workActivity) {
+                try {
+                    const rewards = await calculateWorkRewards(
+                        workActivity,
+                        selectedHours,
+                        playerRank,
+                        playerStats
+                    );
+                    setExpectedRewards(rewards);
+                } catch (error) {
+                    console.error('Error calculating rewards:', error);
+                    setExpectedRewards({ experience: 0, money: 0 });
+                }
+            } else {
+                setExpectedRewards({ experience: 0, money: 0 });
+            }
+        };
+
+        calculateRewards();
+    }, [workActivity, selectedHours, playerRank, playerStats]);
 
     // If no work activity available for position
     if (!workActivity) {

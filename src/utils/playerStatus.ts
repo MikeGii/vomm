@@ -1,11 +1,8 @@
 // src/utils/playerStatus.ts
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { firestore } from '../config/firebase';
 import { PlayerStats } from '../types';
 import { getPositionName } from '../data/policePositions';
 
 export const getPlayerDisplayStatus = (playerStats: PlayerStats): string => {
-    // Handle undefined by converting to null
     const position = playerStats.policePosition ?? null;
     return getPositionName(position);
 };
@@ -25,7 +22,6 @@ export const isPoliceOfficer = (playerStats: PlayerStats): boolean => {
         'grupijuht_k9',
         'grupijuht_cyber',
         'grupijuht_crimes',
-        // NEW: Add the unit leader positions
         'talituse_juht_patrol',
         'talituse_juht_investigation',
         'talituse_juht_emergency',
@@ -43,7 +39,6 @@ export const isAbipolitseinik = (playerStats: PlayerStats): boolean => {
     return playerStats.policePosition === 'abipolitseinik';
 };
 
-// Check if player is a group leader
 export const isGroupLeader = (playerStats: PlayerStats): boolean => {
     const position = playerStats.policePosition;
     return [
@@ -56,7 +51,6 @@ export const isGroupLeader = (playerStats: PlayerStats): boolean => {
     ].includes(position || '');
 };
 
-// NEW: Check if player is a unit leader (talituse juht)
 export const isUnitLeader = (playerStats: PlayerStats): boolean => {
     const position = playerStats.policePosition;
     return [
@@ -69,7 +63,6 @@ export const isUnitLeader = (playerStats: PlayerStats): boolean => {
     ].includes(position || '');
 };
 
-// Check if player is a standard unit worker (not group leader or unit leader)
 export const isUnitWorker = (playerStats: PlayerStats): boolean => {
     const position = playerStats.policePosition;
     return [
@@ -82,7 +75,6 @@ export const isUnitWorker = (playerStats: PlayerStats): boolean => {
     ].includes(position || '');
 };
 
-// Get the department unit based on position
 export const getPositionDepartmentUnit = (policePosition: string | null | undefined): string | null => {
     if (!policePosition) return null;
 
@@ -94,7 +86,6 @@ export const getPositionDepartmentUnit = (policePosition: string | null | undefi
         'koerajuht': 'k9_unit',
         'küberkriminalist': 'cyber_crime',
         'jälitaja': 'crime_unit',
-
         // Group leaders
         'grupijuht_patrol': 'patrol',
         'grupijuht_investigation': 'procedural_service',
@@ -102,8 +93,7 @@ export const getPositionDepartmentUnit = (policePosition: string | null | undefi
         'grupijuht_k9': 'k9_unit',
         'grupijuht_cyber': 'cyber_crime',
         'grupijuht_crimes': 'crime_unit',
-
-        // NEW: Unit leaders
+        // Unit leaders
         'talituse_juht_patrol': 'patrol',
         'talituse_juht_investigation': 'procedural_service',
         'talituse_juht_emergency': 'emergency_response',
@@ -115,7 +105,6 @@ export const getPositionDepartmentUnit = (policePosition: string | null | undefi
     return unitMap[policePosition] || null;
 };
 
-// Get corresponding group leader position for current position
 export const getGroupLeaderPositionForUnit = (unitId: string): string | null => {
     const leaderMap: Record<string, string> = {
         'patrol': 'grupijuht_patrol',
@@ -129,7 +118,6 @@ export const getGroupLeaderPositionForUnit = (unitId: string): string | null => 
     return leaderMap[unitId] || null;
 };
 
-// NEW: Get corresponding unit leader position for unit
 export const getUnitLeaderPositionForUnit = (unitId: string): string | null => {
     const unitLeaderMap: Record<string, string> = {
         'patrol': 'talituse_juht_patrol',
@@ -143,101 +131,12 @@ export const getUnitLeaderPositionForUnit = (unitId: string): string | null => {
     return unitLeaderMap[unitId] || null;
 };
 
-/**
- * Counts current group leaders in a specific department unit within a specific department
- * @param unitId - The department unit ID (e.g., 'patrol', 'procedural_service')
- * @param department - The department name (e.g., 'Ida-Harju', 'Lääne-Harju')
- * @returns Promise<number> - Number of current group leaders in that unit in that department
- */
-export const getGroupLeaderCountInUnit = async (unitId: string, department: string): Promise<number> => {
-    const groupLeaderPositions = [
-        'grupijuht_patrol',
-        'grupijuht_investigation',
-        'grupijuht_emergency',
-        'grupijuht_k9',
-        'grupijuht_cyber',
-        'grupijuht_crimes'
-    ];
-
-    try {
-        const playersQuery = query(
-            collection(firestore, 'playerStats'),
-            where('policePosition', 'in', groupLeaderPositions),
-            where('departmentUnit', '==', unitId),
-            where('department', '==', department)
-        );
-
-        const querySnapshot = await getDocs(playersQuery);
-        return querySnapshot.size;
-    } catch (error) {
-        console.error('Error counting group leaders:', error);
-        return 0;
-    }
+// NEW: Helper to check if player can donate to department unit wallet
+export const canDonateToUnitWallet = (playerStats: PlayerStats): boolean => {
+    return isUnitWorker(playerStats) || isGroupLeader(playerStats) || isUnitLeader(playerStats);
 };
 
-/**
- * Checks if unit can accept more group leaders (max 4 per unit per department)
- * @param unitId - The department unit ID
- * @param department - The department name
- * @returns Promise<boolean> - True if unit has space for more group leaders
- */
-export const canUnitAcceptMoreGroupLeaders = async (unitId: string, department: string): Promise<boolean> => {
-    const currentCount = await getGroupLeaderCountInUnit(unitId, department);
-    return currentCount < 4;
-};
-
-/**
- * NEW: Checks if unit already has a unit leader (talituse juht)
- * @param unitId - The department unit ID
- * @param department - The department name
- * @returns Promise<boolean> - True if unit already has a unit leader
- */
-export const hasUnitLeader = async (unitId: string, department: string): Promise<boolean> => {
-    const unitLeaderPosition = getUnitLeaderPositionForUnit(unitId);
-    if (!unitLeaderPosition) return false;
-
-    try {
-        const playersQuery = query(
-            collection(firestore, 'playerStats'),
-            where('policePosition', '==', unitLeaderPosition),
-            where('departmentUnit', '==', unitId),
-            where('department', '==', department)
-        );
-
-        const querySnapshot = await getDocs(playersQuery);
-        return querySnapshot.size > 0;
-    } catch (error) {
-        console.error('Error checking unit leader:', error);
-        return false;
-    }
-};
-
-/**
- * NEW: Gets the current unit leader for a specific unit
- * @param unitId - The department unit ID
- * @param department - The department name
- * @returns Promise<string | null> - Username of current unit leader, or null if none
- */
-export const getCurrentUnitLeader = async (unitId: string, department: string): Promise<string | null> => {
-    const unitLeaderPosition = getUnitLeaderPositionForUnit(unitId);
-    if (!unitLeaderPosition) return null;
-
-    try {
-        const playersQuery = query(
-            collection(firestore, 'playerStats'),
-            where('policePosition', '==', unitLeaderPosition),
-            where('departmentUnit', '==', unitId),
-            where('department', '==', department)
-        );
-
-        const querySnapshot = await getDocs(playersQuery);
-        if (querySnapshot.size > 0) {
-            const doc = querySnapshot.docs[0];
-            return doc.data().username || null;
-        }
-        return null;
-    } catch (error) {
-        console.error('Error getting current unit leader:', error);
-        return null;
-    }
+// NEW: Helper to check if player can manage department unit wallet
+export const canManageUnitWallet = (playerStats: PlayerStats): boolean => {
+    return isUnitLeader(playerStats);
 };

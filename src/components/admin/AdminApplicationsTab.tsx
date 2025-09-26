@@ -1,14 +1,14 @@
 // src/components/admin/AdminApplicationsTab.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { collection, query, where, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import {collection, query, where, getDocs, doc, updateDoc, deleteDoc, getDoc} from 'firebase/firestore';
 import { firestore } from '../../config/firebase';
 import { getPositionById } from '../../data/policePositions';
-import {
-    getPositionDepartmentUnit,
-    hasUnitLeader, getCurrentUnitLeader
-} from '../../utils/playerStatus';
+import { getPositionDepartmentUnit } from '../../utils/playerStatus';
 import { useToast } from '../../contexts/ToastContext';
 import '../../styles/components/admin/AdminApplicationsTab.css';
+import { DepartmentUnitService } from '../../services/DepartmentUnitService';
+import { Timestamp } from 'firebase/firestore';
+import {PlayerStats} from "../../types";
 
 interface ApplicationVote {
     voterId: string;
@@ -156,24 +156,104 @@ export const AdminApplicationsTab: React.FC = () => {
         try {
             if (actionType === 'approve') {
                 const targetUnit = getPositionDepartmentUnit(selectedApplication.positionId);
+                const department = selectedApplication.department;
 
-                // Check if this is a unit leader position
-                if (selectedApplication.positionId.startsWith('talituse_juht_')) {
-                    const hasLeader = await hasUnitLeader(
-                        targetUnit || '',
-                        selectedApplication.department
-                    );
-                    if (hasLeader) {
-                        const currentLeader = await getCurrentUnitLeader(
-                            targetUnit || '',
-                            selectedApplication.department
+                // Get applicant's current position data
+                const applicantRef = doc(firestore, 'playerStats', selectedApplication.applicantUserId);
+                const applicantDoc = await getDoc(applicantRef);
+                const applicantData = applicantDoc.data() as PlayerStats;
+
+                // STEP 1: Remove from OLD position if they were a leader
+                if (applicantData.policePosition && applicantData.department && applicantData.departmentUnit) {
+                    // Check if leaving a leadership position
+                    if (applicantData.policePosition.startsWith('grupijuht_')) {
+                        await DepartmentUnitService.removeGroupLeader(
+                            applicantData.department,
+                            applicantData.departmentUnit,
+                            selectedApplication.applicantUserId
                         );
-                        showToast(`Viga: Üksuses on juba talituse juht: ${currentLeader || 'Keegi'}`, 'error');
+                        console.log(`Removed group leader from old unit: ${applicantData.departmentUnit}`);
+                    } else if (applicantData.policePosition.startsWith('talituse_juht_')) {
+                        await DepartmentUnitService.updateUnitLeader(
+                            applicantData.department,
+                            applicantData.departmentUnit,
+                            {
+                                username: null,
+                                userId: null,
+                                appointedAt: null
+                            }
+                        );
+                        console.log(`Removed unit leader from old unit: ${applicantData.departmentUnit}`);
+                    }
+                }
+
+                // STEP 2: Check if NEW position is available
+                if (selectedApplication.positionId.startsWith('talituse_juht_')) {
+                    const unit = await DepartmentUnitService.getUnit(department, targetUnit || '');
+                    if (unit && unit.unitLeader.userId) {
+                        showToast(`Viga: Üksuses on juba talituse juht: ${unit.unitLeader.username}`, 'error');
+
+                        // Restore old position if we removed them
+                        if (applicantData.policePosition?.startsWith('grupijuht_') &&
+                            applicantData.department &&
+                            applicantData.departmentUnit &&
+                            applicantData.username) {  // Add null check for username
+                            await DepartmentUnitService.addGroupLeader(
+                                applicantData.department,
+                                applicantData.departmentUnit,
+                                {
+                                    username: applicantData.username,
+                                    userId: selectedApplication.applicantUserId,
+                                    appointedAt: Timestamp.now()
+                                }
+                            );
+                        }
+
+                        setProcessing(null);
                         return;
                     }
                 }
 
-                // Approve application
+                if (selectedApplication.positionId.startsWith('grupijuht_')) {
+                    const unit = await DepartmentUnitService.getUnit(department, targetUnit || '');
+                    if (unit && unit.groupLeaders.length >= unit.maxGroupLeaders) {
+                        showToast(`Viga: Üksuses on juba maksimaalne arv grupijuhte (${unit.maxGroupLeaders})`, 'error');
+
+                        // Restore old position if we removed them
+                        if (applicantData.policePosition?.startsWith('grupijuht_') &&
+                            applicantData.department &&
+                            applicantData.departmentUnit &&
+                            applicantData.username) {  // Add proper restoration
+                            await DepartmentUnitService.addGroupLeader(
+                                applicantData.department,
+                                applicantData.departmentUnit,
+                                {
+                                    username: applicantData.username,
+                                    userId: selectedApplication.applicantUserId,
+                                    appointedAt: Timestamp.now()
+                                }
+                            );
+                        } else if (applicantData.policePosition?.startsWith('talituse_juht_') &&
+                            applicantData.department &&
+                            applicantData.departmentUnit &&
+                            applicantData.username) {  // Also restore if was unit leader
+                            await DepartmentUnitService.updateUnitLeader(
+                                applicantData.department,
+                                applicantData.departmentUnit,
+                                {
+                                    username: applicantData.username,
+                                    userId: selectedApplication.applicantUserId,
+                                    appointedAt: Timestamp.now()
+                                }
+                            );
+                        }
+
+                        setProcessing(null);
+                        return;
+                    }
+                }
+
+                // STEP 3: Approve application in database
                 const applicationRef = doc(firestore, 'applications', selectedApplication.id);
                 await updateDoc(applicationRef, {
                     status: 'approved',
@@ -182,16 +262,48 @@ export const AdminApplicationsTab: React.FC = () => {
                     adminDecision: 'approved'
                 });
 
-                // FIXED: Use applicantUserId instead of applicantId
-                const playerRef = doc(firestore, 'playerStats', selectedApplication.applicantUserId);
-                await updateDoc(playerRef, {
+                // STEP 4: Update playerStats
+                await updateDoc(applicantRef, {
                     policePosition: selectedApplication.positionId,
-                    departmentUnit: targetUnit
+                    departmentUnit: targetUnit,
+                    department: department // Ensure department is also updated if switching
                 });
 
+                // STEP 5: Add to NEW departmentUnit
+                if (selectedApplication.positionId.startsWith('talituse_juht_')) {
+                    await DepartmentUnitService.updateUnitLeader(
+                        department,
+                        targetUnit || '',
+                        {
+                            username: selectedApplication.applicantId,
+                            userId: selectedApplication.applicantUserId,
+                            appointedAt: Timestamp.now()
+                        }
+                    );
+                    console.log(`Set as unit leader in departmentUnits: ${targetUnit}`);
+
+                } else if (selectedApplication.positionId.startsWith('grupijuht_')) {
+                    const added = await DepartmentUnitService.addGroupLeader(
+                        department,
+                        targetUnit || '',
+                        {
+                            username: selectedApplication.applicantId,
+                            userId: selectedApplication.applicantUserId,
+                            appointedAt: Timestamp.now()
+                        }
+                    );
+
+                    if (!added) {
+                        showToast('Hoiatus: Grupijuht lisati playerStats, aga departmentUnit uuendamine ebaõnnestus', 'warning');
+                    } else {
+                        console.log(`Added as group leader in departmentUnits: ${targetUnit}`);
+                    }
+                }
+
                 showToast('Avaldus heaks kiidetud ja mängija ametisse määratud', 'success');
+
             } else {
-                // Reject application
+                // Rejection logic (no changes needed)
                 const applicationRef = doc(firestore, 'applications', selectedApplication.id);
                 await updateDoc(applicationRef, {
                     status: 'rejected',
