@@ -29,7 +29,7 @@ export const GarageTab: React.FC = () => {
     const { playerEstate } = useEstate();
     const { currentUser } = useAuth();
     const { showToast } = useToast();
-    const { playerStats } = usePlayerStats();
+    const { playerStats, pollid } = usePlayerStats();
     const navigate = useNavigate();
 
     const [userCars, setUserCars] = useState<PlayerCar[]>([]);
@@ -381,7 +381,7 @@ export const GarageTab: React.FC = () => {
                                 </div>
                                 <div className="garage-estate-purchase-balance">
                                     <span className="garage-estate-balance-label">Sinu pollid:</span>
-                                    <span className="garage-estate-balance-value">{playerStats?.pollid || 0}</span>
+                                    <span className="garage-estate-balance-value">{pollid}</span>
                                 </div>
                             </div>
 
@@ -390,13 +390,13 @@ export const GarageTab: React.FC = () => {
                                 onClick={handlePurchaseGarageSlot}
                                 disabled={
                                     isPurchasingSlot ||
-                                    (playerStats?.pollid || 0) < GARAGE_SLOT_CONSTANTS.COST_PER_SLOT ||
+                                    pollid < GARAGE_SLOT_CONSTANTS.COST_PER_SLOT ||
                                     extraGarageSlots >= GARAGE_SLOT_CONSTANTS.MAX_EXTRA_SLOTS
                                 }
                             >
                                 {isPurchasingSlot ? 'Ostmine...' :
                                     extraGarageSlots >= GARAGE_SLOT_CONSTANTS.MAX_EXTRA_SLOTS ? 'Maksimum saavutatud' :
-                                        (playerStats?.pollid || 0) < GARAGE_SLOT_CONSTANTS.COST_PER_SLOT ? 'Pole piisavalt pollide' :
+                                        pollid < GARAGE_SLOT_CONSTANTS.COST_PER_SLOT ? 'Pole piisavalt pollide' :
                                             'Osta lisa garaaž koht'}
                             </button>
 

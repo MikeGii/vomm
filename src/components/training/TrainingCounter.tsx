@@ -21,11 +21,10 @@ export const TrainingCounter: React.FC<TrainingCounterProps> = ({
                                                                     trainingType = 'sports'
                                                                 }) => {
     const [timeUntilReset, setTimeUntilReset] = useState<string>('');
-    const { playerStats } = usePlayerStats();
+    const { playerStats, isVip } = usePlayerStats();
 
     // Calculate remaining daily clicks
     const getRemainingDailyClicks = (): { remaining: number; limit: number } => {
-        const isVip = playerStats?.isVip || false;
         const dailyLimit = isVip ? 50000 : 10000;
 
         if (!playerStats?.dailyTrainingClicks) {

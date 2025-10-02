@@ -8,12 +8,10 @@ import '../../styles/components/Tasks.css';
 
 export const Tasks: React.FC = () => {
     const { currentUser } = useAuth();
-    const { playerStats } = usePlayerStats();
+    const { isVip } = usePlayerStats();
     const [tasks, setTasks] = useState<PlayerTasks | null>(null);
     const [loading, setLoading] = useState(true);
     const [claiming, setClaiming] = useState<string | null>(null);
-
-    const isVip = playerStats?.isVip || false;
 
     const loadTasks = useCallback(async () => {
         if (!currentUser) return;

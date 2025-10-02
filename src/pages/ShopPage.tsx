@@ -28,8 +28,7 @@ const ShopPage: React.FC = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     const { showToast } = useToast();
-    const { playerStats, loading: statsLoading, refreshStats } = usePlayerStats();
-
+    const { playerStats, loading: statsLoading, refreshStats, pollid } = usePlayerStats();
     // Updated state structure for hybrid system
     const [itemsWithStock, setItemsWithStock] = useState<Array<{
         item: any;
@@ -50,7 +49,7 @@ const ShopPage: React.FC = () => {
 
     // Get money values from playerStats
     const playerMoney = playerStats?.money || 0;
-    const playerPollid = playerStats?.pollid || 0;
+    const playerPollid = pollid;
 
     // Create tabs from SHOP_CATEGORIES
     const tabs = [

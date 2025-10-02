@@ -11,6 +11,7 @@ interface FuelPurchaseModalProps {
     onPurchase: (purchaseType: 'money' | 'pollid', quantity: number) => void;
     purchaseOptions: FuelPurchaseOption[];
     playerStats: PlayerStats;
+    playerPollid: number;
 }
 
 export const FuelPurchaseModal: React.FC<FuelPurchaseModalProps> = ({
@@ -18,7 +19,8 @@ export const FuelPurchaseModal: React.FC<FuelPurchaseModalProps> = ({
                                                                         onClose,
                                                                         onPurchase,
                                                                         purchaseOptions,
-                                                                        playerStats
+                                                                        playerStats,
+                                                                        playerPollid
                                                                     }) => {
     const [selectedQuantity, setSelectedQuantity] = useState(1);
 
@@ -33,7 +35,7 @@ export const FuelPurchaseModal: React.FC<FuelPurchaseModalProps> = ({
 
     // Check if player can afford the selected quantity
     const canAffordMoney = moneyOption && playerStats.money >= moneyTotalCost;
-    const canAffordPollid = pollidOption && (playerStats.pollid || 0) >= pollidTotalCost;
+    const canAffordPollid = pollidOption && playerPollid >= pollidTotalCost;
 
     // Check remaining money purchases availability
     const moneyPurchasesLeft = moneyOption?.remaining || 0;
@@ -64,7 +66,7 @@ export const FuelPurchaseModal: React.FC<FuelPurchaseModalProps> = ({
                             </div>
                             <div className="dr-currency-item">
                                 <span className="dr-currency-icon">🔹</span>
-                                <span className="dr-currency-amount">{formatPollid(playerStats.pollid || 0)}</span>
+                                <span className="dr-currency-amount">{formatPollid(playerPollid)}</span>
                             </div>
                         </div>
                     </div>

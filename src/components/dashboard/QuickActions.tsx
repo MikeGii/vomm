@@ -22,10 +22,7 @@ interface ActionItem {
 
 export const QuickActions: React.FC<QuickActionsProps> = ({ stats, onShowInstructions }) => {
     const navigate = useNavigate();
-    const { playerStats } = usePlayerStats();
-
-    // Use context for VIP status, but keep using passed stats for other data
-    const isVip = playerStats?.isVip || stats.isVip || false;
+    const { isVip } = usePlayerStats();
 
     const hasCompletedBasicTraining = stats.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
     const hasGraduated = stats.completedCourses?.includes('lopueksam') || false;

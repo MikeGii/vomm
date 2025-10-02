@@ -24,7 +24,7 @@ interface MarketplaceData {
 }
 
 const NewCarsTab: React.FC = () => {
-    const { playerStats, refreshStats } = usePlayerStats();
+    const { playerStats, refreshStats, pollid } = usePlayerStats();
     const { currentUser } = useAuth();
     const { showToast } = useToast();
 
@@ -145,7 +145,7 @@ const NewCarsTab: React.FC = () => {
             : model.basePrice;
 
         const playerCurrency = model.currency === 'pollid'
-            ? (playerStats.pollid || 0)
+            ? pollid
             : playerStats.money;
 
         if (playerCurrency < carPrice) {
@@ -331,7 +331,7 @@ const NewCarsTab: React.FC = () => {
                             engines={engines}
                             onPurchase={handlePurchase}
                             playerMoney={playerStats?.money || 0}
-                            playerPollid={playerStats?.pollid || 0}
+                            playerPollid={pollid}
                             isPurchasing={isPurchasing}
                         />
                     ))}
