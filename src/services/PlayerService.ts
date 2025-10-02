@@ -116,11 +116,6 @@ export const initializePlayerStats = async (
             await updateDoc(statsRef, { money: 0 });
         }
 
-        if (stats.pollid === undefined) {
-            stats.pollid = 0;
-            await updateDoc(statsRef, { pollid: 0 });
-        }
-
         // Calculate health if not present
         if (!stats.health && stats.attributes) {
             stats.health = calculatePlayerHealth(
@@ -160,8 +155,7 @@ export const initializePlayerStats = async (
         activeWork: null,
         workHistory: [],
         health: calculatePlayerHealth(0, 0),
-        inventory: createInitialVipItems(),
-        isVip: false
+        inventory: createInitialVipItems()
     };
 
     await setDoc(statsRef, initialStats);

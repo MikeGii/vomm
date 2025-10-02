@@ -22,6 +22,8 @@ import {
     applyKitchenBonus,
     KitchenBonusResult
 } from './KitchenBonusService';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
+import { GlobalUserService } from './GlobalUserService';
 
 // Daily training click limits
 const DAILY_TRAINING_LIMITS = {
@@ -316,7 +318,7 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
         throw new Error('Invalid user ID');
     }
 
-    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
     const statsDoc = await getDoc(statsRef);
 
     if (!statsDoc.exists()) {
@@ -333,8 +335,12 @@ export const checkAndResetTrainingClicks = async (userId: string): Promise<Train
         isWorking: trainingData.isWorking ?? false
     };
 
+    const globalData = await GlobalUserService.getGlobalUserData(userId);
+    const isVip = globalData.isVip;
+
+    // Then use isVip instead of stats.isVip
     let maxClicks: number;
-    if (stats.isVip) {
+    if (isVip) {
         maxClicks = stats.activeWork ? 30 : 100;
     } else {
         maxClicks = stats.activeWork ? 10 : 50;
@@ -388,7 +394,7 @@ export const checkAndResetKitchenLabTrainingClicks = async (userId: string): Pro
         throw new Error('Invalid user ID');
     }
 
-    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
     const statsDoc = await getDoc(statsRef);
 
     if (!statsDoc.exists()) {
@@ -404,8 +410,12 @@ export const checkAndResetKitchenLabTrainingClicks = async (userId: string): Pro
         totalTrainingsDone: Math.max(0, Math.floor(kitchenLabTrainingData.totalTrainingsDone ?? 0))
     };
 
+    const globalData = await GlobalUserService.getGlobalUserData(userId);
+    const isVip = globalData.isVip;
+
+    // Then use isVip instead of stats.isVip
     let maxClicks: number;
-    if (stats.isVip) {
+    if (isVip) {
         maxClicks = stats.activeWork ? 30 : 100;
     } else {
         maxClicks = stats.activeWork ? 10 : 50;
@@ -457,7 +467,7 @@ export const checkAndResetHandicraftTrainingClicks = async (userId: string): Pro
         throw new Error('Invalid user ID');
     }
 
-    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
     const statsDoc = await getDoc(statsRef);
 
     if (!statsDoc.exists()) {
@@ -473,8 +483,12 @@ export const checkAndResetHandicraftTrainingClicks = async (userId: string): Pro
         totalTrainingsDone: Math.max(0, Math.floor(handicraftTrainingData.totalTrainingsDone ?? 0))
     };
 
+    const globalData = await GlobalUserService.getGlobalUserData(userId);
+    const isVip = globalData.isVip;
+
+    // Then use isVip instead of stats.isVip
     let maxClicks: number;
-    if (stats.isVip) {
+    if (isVip) {
         maxClicks = stats.activeWork ? 30 : 100;
     } else {
         maxClicks = stats.activeWork ? 10 : 50;
@@ -561,7 +575,7 @@ export const performTraining = async (
         throw new Error('Invalid rewards data');
     }
 
-    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
     const statsDoc = await getDoc(statsRef);
 
     if (!statsDoc.exists()) {
@@ -600,7 +614,8 @@ export const performTraining = async (
     const clickCategory = trainingType === 'kitchen-lab' ? 'food' :
         trainingType === 'handicraft' ? 'handicraft' : 'sports';
 
-    const dailyLimit = getDailyClickLimit(stats.isVip || false, clickCategory);
+    const globalData = await GlobalUserService.getGlobalUserData(userId);
+    const dailyLimit = getDailyClickLimit(globalData.isVip, clickCategory);
 
     if (dailyClicks[clickCategory] >= dailyLimit) {
         throw new Error(`Oled jõudnud päevase ${dailyLimit.toLocaleString('et-EE')} kliki limiidini ${
@@ -1088,7 +1103,7 @@ export const performTraining5x = async (
     kitchenBonusResults?: (KitchenBonusResult & { activityName?: string })[];
 }> => {
     // Pre-check: ensure we have enough clicks and materials
-    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
     const statsDoc = await getDoc(statsRef);
 
     if (!statsDoc.exists()) {
@@ -1136,7 +1151,8 @@ export const performTraining5x = async (
 
     const clickCategory = trainingType === 'kitchen-lab' ? 'food' :
         trainingType === 'handicraft' ? 'handicraft' : 'sports';
-    const dailyLimit = getDailyClickLimit(stats.isVip || false, clickCategory);
+    const globalData = await GlobalUserService.getGlobalUserData(userId);
+    const dailyLimit = getDailyClickLimit(globalData.isVip, clickCategory);
     const remainingDailyClicks = dailyLimit - dailyClicks[clickCategory];
 
     if (remainingDailyClicks < 5) {
