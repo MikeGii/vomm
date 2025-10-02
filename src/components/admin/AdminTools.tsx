@@ -1,8 +1,6 @@
 // src/components/admin/AdminTools.tsx
 import React from 'react';
 import { CheatDetector } from './tools/CheatDetector';
-import { LevelRecalculator } from './tools/LevelRecalculator';
-import { WorkManager } from './tools/WorkManager';
 import { CrimeInitializer } from './tools/CrimeInitializer';
 import { DatabaseMetrics } from './tools/DatabaseMetrics';
 import '../../styles/components/admin/AdminTools.css';
@@ -20,18 +18,6 @@ export const AdminTools: React.FC = () => {
                 <div className="tool-category">
                     <h3 className="category-title">Andmebaasi Monitooring</h3>
                     <DatabaseMetrics />
-                </div>
-
-                {/* Work Management */}
-                <div className="tool-category">
-                    <h3 className="category-title">Tööde Haldus</h3>
-                    <WorkManager />
-                </div>
-
-                {/* Player Management */}
-                <div className="tool-category">
-                    <h3 className="category-title">Mängijate Haldus</h3>
-                    <LevelRecalculator />
                 </div>
 
                 {/* Crime System */}

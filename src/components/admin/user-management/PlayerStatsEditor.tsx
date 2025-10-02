@@ -5,9 +5,10 @@ import { useSmartSave } from './hooks/useSmartSave';
 import { BasicInfoEditor } from './editors/BasicInfoEditor';
 import { PoliceInfoEditor } from './editors/PoliceInfoEditor';
 import { GameStatsEditor } from './editors/GameStatsEditor';
-import { TrainingEditor } from './editors/TrainingEditor';
 import { CoursesHistoryEditor } from './editors/CoursesHistoryEditor';
 import { AdminPermissionsEditor } from './editors/AdminPermissionsEditor';
+import { doc, getDoc } from 'firebase/firestore';
+import { firestore } from '../../../config/firebase';
 
 interface PlayerStatsEditorProps {
     user: PlayerStats;
@@ -21,14 +22,29 @@ export const PlayerStatsEditor: React.FC<PlayerStatsEditorProps> = ({
                                                                         onUserUpdated
                                                                     }) => {
     const [editedUser, setEditedUser] = useState<PlayerStats>(user);
+    const [globalData, setGlobalData] = useState({ pollid: 0, isVip: false });
     const [openSections, setOpenSections] = useState<Record<string, boolean>>({
         basic: true,
         police: false,
         game: false,
-        training: false,
         courses: false,
         adminPermissions: false
     });
+
+    // Fetch global data
+    useEffect(() => {
+        const fetchGlobalData = async () => {
+            const userDoc = await getDoc(doc(firestore, 'users', userId));
+            if (userDoc.exists()) {
+                const data = userDoc.data();
+                setGlobalData({
+                    pollid: data.pollid || 0,
+                    isVip: data.isVip || false
+                });
+            }
+        };
+        fetchGlobalData();
+    }, [userId]);
 
     // Reset edited data when user changes
     useEffect(() => {
@@ -37,7 +53,8 @@ export const PlayerStatsEditor: React.FC<PlayerStatsEditorProps> = ({
 
     const { saveChanges, isSaving } = useSmartSave({
         userId,
-        onSuccess: onUserUpdated
+        onSuccess: onUserUpdated,
+        globalData
     });
 
     const toggleSection = (sectionId: string) => {
@@ -63,8 +80,16 @@ export const PlayerStatsEditor: React.FC<PlayerStatsEditorProps> = ({
         });
     };
 
+    // Handler for global fields
+    const updateGlobalField = (field: 'pollid' | 'isVip', value: any) => {
+        setGlobalData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
     const handleSave = async () => {
-        await saveChanges(user, editedUser);
+        await saveChanges(user, editedUser, globalData);
     };
 
     const resetChanges = () => {
@@ -101,9 +126,11 @@ export const PlayerStatsEditor: React.FC<PlayerStatsEditorProps> = ({
                 {/* Basic Information */}
                 <BasicInfoEditor
                     user={editedUser}
+                    globalData={globalData}  // ADD
                     isOpen={openSections.basic}
                     onToggle={() => toggleSection('basic')}
                     onFieldUpdate={updateField}
+                    onGlobalFieldUpdate={updateGlobalField}
                 />
 
                 {/* Police Information */}
@@ -119,14 +146,6 @@ export const PlayerStatsEditor: React.FC<PlayerStatsEditorProps> = ({
                     user={editedUser}
                     isOpen={openSections.game}
                     onToggle={() => toggleSection('game')}
-                    onFieldUpdate={updateField}
-                />
-
-                {/* Training & Attributes */}
-                <TrainingEditor
-                    user={editedUser}
-                    isOpen={openSections.training}
-                    onToggle={() => toggleSection('training')}
                     onFieldUpdate={updateField}
                 />
 

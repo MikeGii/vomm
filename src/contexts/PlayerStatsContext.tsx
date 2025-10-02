@@ -1,4 +1,4 @@
-// src/contexts/PlayerStatsContext.tsx - UPDATED
+// src/contexts/PlayerStatsContext.tsx - FULLY UPDATED
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { doc, onSnapshot, updateDoc, getDoc } from '../services/TrackedFirestore';
 import { firestore } from '../config/firebase';
@@ -9,21 +9,30 @@ import { checkRankUpdate } from '../utils/rankUtils';
 import { updateLastSeenIfNeeded } from '../services/LastSeenService';
 import { getPlayerEstate } from '../services/EstateService';
 import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
+import { GlobalUserService } from '../services/GlobalUserService';
 
 interface PlayerStatsContextType {
     playerStats: PlayerStats | null;
+    pollid: number;
+    isVip: boolean;
     loading: boolean;
     error: string | null;
     currentServer: string;
     refreshStats: () => Promise<void>;
+    updatePollid: (amount: number) => Promise<number>;
+    setPollidAmount: (amount: number) => Promise<void>;
 }
 
 const PlayerStatsContext = createContext<PlayerStatsContextType>({
     playerStats: null,
+    pollid: 0,
+    isVip: false,
     loading: true,
     error: null,
     currentServer: 'beta',
-    refreshStats: async () => {}
+    refreshStats: async () => {},
+    updatePollid: async () => 0,
+    setPollidAmount: async () => {}
 });
 
 export const usePlayerStats = () => useContext(PlayerStatsContext);
@@ -31,14 +40,31 @@ export const usePlayerStats = () => useContext(PlayerStatsContext);
 export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { currentUser } = useAuth();
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
+    const [pollid, setPollid] = useState<number>(0);
+    const [isVip, setIsVip] = useState<boolean>(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [currentServer, setCurrentServer] = useState<string>(getCurrentServer());
 
-    // Track last level to only check rank when level changes
     const lastLevelRef = useRef<number | null>(null);
     const isUpdatingRankRef = useRef<boolean>(false);
     const unsubscribeRef = useRef<(() => void) | null>(null);
+    const globalUnsubscribeRef = useRef<(() => void) | null>(null);
+
+    const updatePollid = useCallback(async (amount: number): Promise<number> => {
+        if (!currentUser) return 0;
+
+        const newPollid = await GlobalUserService.updatePollid(currentUser.uid, amount);
+        setPollid(newPollid);  // This calls the setState function
+        return newPollid;
+    }, [currentUser]);
+
+    const setPollidAmount = useCallback(async (amount: number): Promise<void> => {  // RENAMED
+        if (!currentUser) return;
+
+        await GlobalUserService.setPollid(currentUser.uid, amount);
+        setPollid(amount);  // This calls the setState function
+    }, [currentUser]);
 
     // Manual refresh function - simplified to avoid loops
     const refreshStats = useCallback(async () => {
@@ -50,21 +76,17 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
             const statsRef = doc(firestore, 'playerStats', statsDocId);
             const statsDoc = await getDoc(statsRef);
 
+            // ADD - Refresh global data too
+            const globalData = await GlobalUserService.getGlobalUserData(currentUser.uid);
+            setPollid(globalData.pollid);
+            setIsVip(globalData.isVip);
+
             if (statsDoc.exists()) {
                 const stats = statsDoc.data() as PlayerStats;
 
                 // Load estate with server-specific ID
                 try {
                     const estate = await getPlayerEstate(statsDocId);
-
-                    if (estate && estate.currentEstate) {
-                        // Estate exists with current property
-                    } else if (estate) {
-                        console.log('🏠 ESTATE EXISTS BUT NO CURRENT ESTATE');
-                    } else {
-                        console.log('🏠 NO ESTATE DATA FOUND');
-                    }
-
                     stats.estate = estate;
                 } catch (error) {
                     console.warn('Estate loading failed, continuing without estate data:', error);
@@ -104,6 +126,40 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return () => clearInterval(activityInterval);
     }, [currentUser, playerStats, currentServer]);
 
+    // ADD - Set up listener for global user data
+    useEffect(() => {
+        if (!currentUser) {
+            setPollid(0);
+            setIsVip(false);
+            return;
+        }
+
+        // Listen to global user document for pollid/VIP changes
+        const userRef = doc(firestore, 'users', currentUser.uid);
+        const unsubscribe = onSnapshot(
+            userRef,
+            (docSnapshot) => {
+                if (docSnapshot.exists()) {
+                    const userData = docSnapshot.data();
+                    setPollid(userData.pollid || 0);
+                    setIsVip(userData.isVip || false);
+                }
+            },
+            (error) => {
+                console.error('Global user listener error:', error);
+            }
+        );
+
+        globalUnsubscribeRef.current = unsubscribe;
+
+        return () => {
+            if (globalUnsubscribeRef.current) {
+                globalUnsubscribeRef.current();
+                globalUnsubscribeRef.current = null;
+            }
+        };
+    }, [currentUser]);
+
     useEffect(() => {
         if (!currentUser) {
             setPlayerStats(null);
@@ -115,6 +171,11 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
             try {
                 const userDoc = await getDoc(doc(firestore, 'users', currentUser.uid));
                 const username = userDoc.exists() ? userDoc.data().username : 'Tundmatu';
+
+                // ADD - Load global data immediately
+                const globalData = await GlobalUserService.getGlobalUserData(currentUser.uid);
+                setPollid(globalData.pollid);
+                setIsVip(globalData.isVip);
 
                 // Get server-specific document ID
                 const statsDocId = getServerSpecificId(currentUser.uid, currentServer);
@@ -214,7 +275,17 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }, [currentServer]);
 
     return (
-        <PlayerStatsContext.Provider value={{ playerStats, loading, error, currentServer, refreshStats }}>
+        <PlayerStatsContext.Provider value={{
+            playerStats,
+            pollid,
+            isVip,
+            loading,
+            error,
+            currentServer,
+            refreshStats,
+            updatePollid,
+            setPollidAmount
+        }}>
             {children}
         </PlayerStatsContext.Provider>
     );

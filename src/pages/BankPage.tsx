@@ -15,7 +15,7 @@ import '../styles/pages/Bank.css';
 const BankPage: React.FC = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
-    const { playerStats, loading } = usePlayerStats(); // CHANGED: Using context
+    const { playerStats, loading, pollid } = usePlayerStats();
     const [transactions, setTransactions] = useState<BankTransaction[]>([]);
     const [transactionsLoading, setTransactionsLoading] = useState(true);
 
@@ -90,7 +90,7 @@ const BankPage: React.FC = () => {
                         </div>
                         <div className="balance-info polls">
                             <span className="balance-label">Pollid:</span>
-                            <span className="balance-amount">{playerStats.pollid || 0}</span>
+                            <span className="balance-amount">{pollid  || 0}</span>
                         </div>
                     </div>
                 </div>
@@ -99,7 +99,7 @@ const BankPage: React.FC = () => {
                     <>
                         <PollConverter
                             currentUserId={currentUser.uid}
-                            playerPollid={playerStats.pollid || 0}
+                            playerPollid={pollid  || 0}
                             playerMoney={playerStats.money || 0}
                             onConversionComplete={() => {
                             loadTransactions();

@@ -13,6 +13,8 @@ export interface User {
     username: string;
     usernameLower: string;
     createdAt: Date | Timestamp | FirestoreTimestamp;
+    pollid?: number;
+    isVip?: boolean;
 }
 
 export interface AttributeData {
@@ -96,7 +98,6 @@ export interface PlayerStats {
     experience: number;
     reputation: number;
     money: number,
-    pollid?: number;
     rank: string | null;
     departmentUnit: string | null;
     department: string | null;
@@ -144,7 +145,6 @@ export interface PlayerStats {
     equipment?: CharacterEquipment;
     fightClubStats?: FightClubStats;
     fightClubData?: FightClubData;
-    isVip?: boolean;
     completedTests?: string[];
     activeTest?: ActiveTest | null;
     casinoData?: {

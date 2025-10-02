@@ -10,6 +10,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { purchaseItem } from '../../services/ShopService';
 import { getAllItemsWithStock } from '../../services/ShopStockService';
+import { usePlayerStats } from '../../contexts/PlayerStatsContext';
 import { ALL_SHOP_ITEMS } from '../../data/shop';
 
 interface ActivitySelectorProps {
@@ -42,6 +43,7 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
 
     const { currentUser } = useAuth();
     const { showToast } = useToast();
+    const { isVip } = usePlayerStats();
 
     const playerLevel = playerStats?.level || 1;
     const { canUse3DPrinter, canUseLaserCutter } = useEstate();
@@ -713,14 +715,14 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                                     <span className="crown-icon">👑</span>
                                     <span className="vip-text">VIP Treening</span>
                                 </div>
-                                {!playerStats?.isVip && (
+                                {!isVip && (
                                     <div className="vip-unlock-hint">
                                         Vali suvaline arv treeninguid
                                     </div>
                                 )}
                             </div>
 
-                            <div className={`vip-controls ${!playerStats?.isVip ? 'locked' : ''}`}>
+                            <div className={`vip-controls ${!isVip ? 'locked' : ''}`}>
                                 <div className="amount-input-container">
                                     <label className="input-label">Kogus:</label>
                                     <div className="input-wrapper">
@@ -731,8 +733,8 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                                             value={customAmount}
                                             onChange={(e) => handleCustomAmountChange(e.target.value)}
                                             className="vip-amount-input"
-                                            disabled={!playerStats?.isVip || isTraining}
-                                            placeholder={playerStats?.isVip ? "Sisesta" : "VIP"}
+                                            disabled={!isVip || isTraining}
+                                            placeholder={isVip ? "Sisesta" : "VIP"}
                                         />
                                         <div className="input-suffix">x</div>
                                     </div>
@@ -741,11 +743,11 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
 
                                 <button
                                     className={`vip-train-button ${
-                                        !playerStats?.isVip ? 'vip-locked' :
+                                        !isVip ? 'vip-locked' :
                                             (!selectedActivityData || isTraining || remainingClicks === 0) ? 'disabled' : ''
                                     }`}
                                     onClick={() => {
-                                        if (!playerStats?.isVip) return;
+                                        if (!isVip) return;
 
                                         // Parse the amount
                                         const amount = parseInt(customAmount) || 0;
@@ -768,25 +770,25 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
                                         setCustomAmountError('');
                                         onTrainCustom?.(amount);
                                     }}
-                                    disabled={!playerStats?.isVip || !selectedActivityData || isTraining || remainingClicks === 0}
+                                    disabled={!isVip || !selectedActivityData || isTraining || remainingClicks === 0}
                                     title={
-                                        !playerStats?.isVip ? 'VIP funktsioon - Vali suvaline arv treeninguid' :
+                                        !isVip ? 'VIP funktsioon - Vali suvaline arv treeninguid' :
                                             !canTrainCustom().canTrain ? canTrainCustom().reason :
                                                 `Treeni ${customAmount} korda`
                                     }
                                 >
                                     <div className="button-content">
                                         <span className="button-text">
-                                            {!playerStats?.isVip ? 'Ava VIP-ga' :
+                                            {!isVip ? 'Ava VIP-ga' :
                                                 isTraining ? 'Treenid...' :
                                                     !canTrainCustom().canTrain ? 'Pole võimalik' :
                                                         trainingType === 'sports' ? 'Treeni' : 'Valmista'}
                                         </span>
-                                        {playerStats?.isVip && canTrainCustom().canTrain && !isTraining && (
+                                        {isVip && canTrainCustom().canTrain && !isTraining && (
                                             <span className="clicks-remaining">{remainingClicks} klikki</span>
                                         )}
                                     </div>
-                                    {!playerStats?.isVip && (
+                                    {!isVip && (
                                         <div className="vip-overlay">
                                             <span className="lock-icon">🔒</span>
                                         </div>

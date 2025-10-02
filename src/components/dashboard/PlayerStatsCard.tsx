@@ -8,6 +8,7 @@ import { getRankImagePath } from "../../utils/rankUtils";
 import { getPositionName } from '../../data/policePositions';
 import { isPoliceOfficer } from "../../utils/playerStatus";
 import { formatMoney, formatPollid } from '../../utils/currencyUtils';
+import { usePlayerStats } from '../../contexts/PlayerStatsContext';
 import '../../styles/components/PlayerStatsCard.css';
 
 interface PlayerStatsCardProps {
@@ -23,6 +24,7 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({
                                                                     onHealthUpdate,
                                                                     onHealthModalOpen
                                                                 }) => {
+    const { pollid, isVip } = usePlayerStats();
     const expProgress = getExpProgress(stats.experience);
     const expPercentage = expProgress.percentage;
     const [healthRecoveryTime, setHealthRecoveryTime] = useState<string>('');
@@ -105,7 +107,7 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({
     const healthStatus = getHealthStatus();
 
     return (
-        <div className={`player-stats-card ${stats.isVip ? 'vip-player' : ''}`}>
+        <div className={`player-stats-card ${isVip ? 'vip-player' : ''}`}>
             {/* Header Section */}
             <div className="stats-header">
                 <div className="player-identity">
@@ -122,7 +124,7 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({
                             <div className="player-badges">
                                 <span className="badge-number">#{stats.badgeNumber || 'N/A'}</span>
                                 <span className="police-rank">{getPositionName(stats.policePosition)}</span>
-                                {stats.isVip && <span className="vip-badge-playerstats">VIP</span>}
+                                {isVip && <span className="vip-badge-playerstats">VIP</span>}
                             </div>
                         </div>
                     </div>
@@ -143,7 +145,7 @@ export const PlayerStatsCard: React.FC<PlayerStatsCardProps> = ({
                     </div>
                     <div className="currency-item">
                         <span className="currency-icon">💎</span>
-                        <span className="currency-value">{formatPollid(stats.pollid || 0, false)}</span>
+                        <span className="currency-value">{formatPollid(pollid, false)}</span>
                     </div>
                 </div>
             </div>

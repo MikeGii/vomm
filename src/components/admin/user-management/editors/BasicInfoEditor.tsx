@@ -4,16 +4,23 @@ import { PlayerStats } from '../../../../types';
 
 interface BasicInfoEditorProps {
     user: PlayerStats;
+    globalData: {
+        pollid: number;
+        isVip: boolean;
+    };
     isOpen: boolean;
     onToggle: () => void;
     onFieldUpdate: (path: string, value: any) => void;
+    onGlobalFieldUpdate: (field: 'pollid' | 'isVip', value: any) => void;
 }
 
 export const BasicInfoEditor: React.FC<BasicInfoEditorProps> = ({
                                                                     user,
+                                                                    globalData,
                                                                     isOpen,
                                                                     onToggle,
-                                                                    onFieldUpdate
+                                                                    onFieldUpdate,
+                                                                    onGlobalFieldUpdate
                                                                 }) => {
     return (
         <div className="editor-section">
@@ -68,8 +75,8 @@ export const BasicInfoEditor: React.FC<BasicInfoEditorProps> = ({
                         <label>Pollid:</label>
                         <input
                             type="number"
-                            value={user.pollid || 0}
-                            onChange={(e) => onFieldUpdate('pollid', parseInt(e.target.value) || 0)}
+                            value={globalData.pollid}
+                            onChange={(e) => onGlobalFieldUpdate('pollid', parseInt(e.target.value) || 0)}
                             min="0"
                         />
                     </div>
@@ -88,8 +95,8 @@ export const BasicInfoEditor: React.FC<BasicInfoEditorProps> = ({
                         <label>VIP staatus:</label>
                         <input
                             type="checkbox"
-                            checked={user.isVip || false}
-                            onChange={(e) => onFieldUpdate('isVip', e.target.checked)}
+                            checked={globalData.isVip}
+                            onChange={(e) => onGlobalFieldUpdate('isVip', e.target.checked)}
                         />
                     </div>
 

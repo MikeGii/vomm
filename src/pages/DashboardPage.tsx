@@ -26,13 +26,14 @@ import { usePageTracking } from '../hooks/usePageTracking';
 import '../styles/pages/Dashboard.css';
 import {getCourseById} from "../data/courses";
 import {CacheNotification} from "../components/dashboard/CacheNotification";
+import { getServerSpecificId, getCurrentServer } from '../utils/serverUtils';
 
 function DashboardPage() {
     usePageTracking('DashboardPage');
     const { currentUser, userData } = useAuth();
     const navigate = useNavigate();
     const { showToast } = useToast();
-    const { playerStats, loading, refreshStats } = usePlayerStats();
+    const { playerStats, loading, refreshStats, isVip } = usePlayerStats();
     const [showPrefectureSelection, setShowPrefectureSelection] = useState(false);
     const [showDepartmentSelection, setShowDepartmentSelection] = useState(false);
     const [showInstructionsModal, setShowInstructionsModal] = useState(false);
@@ -59,7 +60,7 @@ function DashboardPage() {
                 const activeCoursesRef = collection(firestore, 'activeCourses');
                 const q = query(
                     activeCoursesRef,
-                    where('userId', '==', currentUser.uid),
+                    where('userId', '==', getServerSpecificId(currentUser.uid, getCurrentServer())),
                     where('status', '==', 'completed')
                 );
                 const querySnapshot = await getDocs(q);
@@ -96,7 +97,7 @@ function DashboardPage() {
                         // Original timer-based completion check
                         const timerBasedCompletion = await checkCourseCompletion(currentUser.uid);
                         if (timerBasedCompletion) {
-                            const tempStats = await getPlayerStats(currentUser.uid);
+                            const tempStats = await getPlayerStats(currentUser.uid, getServerSpecificId(currentUser.uid, getCurrentServer()));
                             if (tempStats?.completedCourses) {
                                 const lastCompletedCourse = tempStats.completedCourses[tempStats.completedCourses.length - 1];
                                 if (lastCompletedCourse === 'lopueksam') {
@@ -141,7 +142,7 @@ function DashboardPage() {
             // CASE 1: Kadett should always have Sisekaitseakadeemia
             if (position === 'kadett' && prefecture !== 'Sisekaitseakadeemia') {
                 try {
-                    const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+                    const statsRef = doc(firestore, 'playerStats', getServerSpecificId(currentUser.uid, getCurrentServer()));
                     await updateDoc(statsRef, {
                         prefecture: 'Sisekaitseakadeemia'
                     });
@@ -228,7 +229,7 @@ function DashboardPage() {
         <div className="page">
             <HealthRecoveryManager />
             <AuthenticatedHeader />
-            <main className={`dashboard-container ${playerStats?.isVip ? 'vip-dashboard' : ''}`}>
+            <main className={`dashboard-container ${isVip ? 'vip-dashboard' : ''}`}>
 
                 <CacheNotification />
 
@@ -254,7 +255,7 @@ function DashboardPage() {
 
                         <Leaderboard
                             currentUserId={currentUser?.uid}
-                            currentUserIsVip={playerStats?.isVip === true}
+                            currentUserIsVip={isVip}
                         />
 
                         {showPrefectureSelection && currentUser && (
@@ -299,3 +300,8 @@ function DashboardPage() {
 }
 
 export default DashboardPage;
+
+
+
+
+
