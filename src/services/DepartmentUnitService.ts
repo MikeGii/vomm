@@ -17,8 +17,9 @@ import {
     DonationData,
     UpgradeType,
     calculateUpgradeCost,
-    getUpgradeInfo,
+    getUpgradeInfo, getBonusForLevel,
 } from '../types/departmentUnit';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 const COLLECTION_NAME = 'departmentUnits';
 const MAX_RECENT_TRANSACTIONS = 50;
@@ -26,10 +27,26 @@ const MAX_RECENT_TRANSACTIONS = 50;
 export class DepartmentUnitService {
 
     /**
+     * Get server-specific document ID for department unit
+     */
+    private static getDocumentId(department: string, unitId: string): string {
+        const baseId = `${department}_${unitId}`;
+        const currentServer = getCurrentServer();
+
+        // Beta server uses original IDs (no suffix)
+        if (currentServer === 'beta') {
+            return baseId;
+        }
+
+        // Other servers use suffix
+        return `${baseId}_${currentServer}`;
+    }
+
+    /**
      * Get department unit by ID
      */
     static async getUnit(department: string, unitId: string): Promise<DepartmentUnitData | null> {
-        const docId = `${department}_${unitId}`;
+        const docId = this.getDocumentId(department, unitId);
         const docRef = doc(firestore, COLLECTION_NAME, docId);
         const docSnap = await getDoc(docRef);
 
@@ -46,7 +63,7 @@ export class DepartmentUnitService {
         unitId: string,
         leader: UnitLeader
     ): Promise<void> {
-        const docId = `${department}_${unitId}`;
+        const docId = this.getDocumentId(department, unitId);
         const docRef = doc(firestore, COLLECTION_NAME, docId);
 
         await updateDoc(docRef, {
@@ -67,14 +84,14 @@ export class DepartmentUnitService {
         if (!unit) throw new Error('Üksust ei leitud');
 
         if (unit.groupLeaders.length >= unit.maxGroupLeaders) {
-            return false; // Max group leaders reached
+            return false; // Max leaders reached
         }
 
-        const docId = `${department}_${unitId}`;
+        const docId = this.getDocumentId(department, unitId);
         const docRef = doc(firestore, COLLECTION_NAME, docId);
 
         await updateDoc(docRef, {
-            groupLeaders: arrayUnion(leader),
+            groupLeaders: [...unit.groupLeaders, leader],
             lastUpdated: Timestamp.now()
         });
 
@@ -92,12 +109,12 @@ export class DepartmentUnitService {
         const unit = await this.getUnit(department, unitId);
         if (!unit) throw new Error('Üksust ei leitud');
 
+        const docId = this.getDocumentId(department, unitId);
+        const docRef = doc(firestore, COLLECTION_NAME, docId);
+
         const updatedLeaders = unit.groupLeaders.filter(
             leader => leader.userId !== userId
         );
-
-        const docId = `${department}_${unitId}`;
-        const docRef = doc(firestore, COLLECTION_NAME, docId);
 
         await updateDoc(docRef, {
             groupLeaders: updatedLeaders,
@@ -106,38 +123,39 @@ export class DepartmentUnitService {
     }
 
     /**
-     * Process donation to unit wallet
+     * Process donation to unit wallet with server-specific player stats
      */
     static async processDonation(
         department: string,
         unitId: string,
         donation: DonationData
     ): Promise<void> {
-        const docId = `${department}_${unitId}`;
+        const docId = this.getDocumentId(department, unitId);
         const docRef = doc(firestore, COLLECTION_NAME, docId);
 
-        await runTransaction(firestore, async (transaction) => {
-            const docSnap = await transaction.get(docRef);
-            if (!docSnap.exists()) {
-                throw new Error('Üksust ei leitud');
-            }
+        // Get server-specific player document
+        const playerDocId = getServerSpecificId(donation.donorId, getCurrentServer());
+        const playerRef = doc(firestore, 'playerStats', playerDocId);
 
-            const unit = docSnap.data() as DepartmentUnitData;
-
-            // Get and update the player's money
-            const playerRef = doc(firestore, 'playerStats', donation.donorId);
+        return await runTransaction(firestore, async (transaction) => {
+            // Check player has enough money
             const playerDoc = await transaction.get(playerRef);
-
             if (!playerDoc.exists()) {
-                throw new Error('Mängija andmed puuduvad');
+                throw new Error('Mängija andmed ei ole saadaval');
             }
 
             const playerData = playerDoc.data();
-            const currentMoney = playerData.money || 0;
-
-            if (currentMoney < donation.amount) {
-                throw new Error('Ebapiisav saldo');
+            if (!playerData.money || playerData.money < donation.amount) {
+                throw new Error('Ebapiisav raha');
             }
+
+            // Get unit document
+            const unitDoc = await transaction.get(docRef);
+            if (!unitDoc.exists()) {
+                throw new Error('Üksust ei leitud');
+            }
+
+            const unitData = unitDoc.data() as DepartmentUnitData;
 
             // Create transaction record
             const walletTransaction: WalletTransaction = {
@@ -145,28 +163,29 @@ export class DepartmentUnitService {
                 amount: donation.amount,
                 userId: donation.donorId,
                 username: donation.donorUsername,
-                description: `Annetus ${donation.donorPosition} poolt`,
+                description: `Annetus üksusele ${unitData.unitName}`,
                 timestamp: Timestamp.now()
             };
 
-            // Update recent transactions (keep only last 50)
+            // Update recent transactions
             const recentTransactions = [
                 walletTransaction,
-                ...(unit.wallet.recentTransactions || [])
+                ...(unitData.wallet.recentTransactions || [])
             ].slice(0, MAX_RECENT_TRANSACTIONS);
 
-            // Update wallet
+            // Update player money
+            transaction.update(playerRef, {
+                money: increment(-donation.amount),
+                lastModified: Timestamp.now()
+            });
+
+            // Update unit wallet
             transaction.update(docRef, {
                 'wallet.balance': increment(donation.amount),
                 'wallet.totalDeposited': increment(donation.amount),
                 'wallet.lastUpdated': Timestamp.now(),
                 'wallet.recentTransactions': recentTransactions,
                 lastUpdated: Timestamp.now()
-            });
-
-            // DEDUCT money from player
-            transaction.update(playerRef, {
-                money: increment(-donation.amount)
             });
         });
     }
@@ -181,7 +200,7 @@ export class DepartmentUnitService {
         purchasedBy: string,
         purchasedById: string
     ): Promise<boolean> {
-        const docId = `${department}_${unitId}`;
+        const docId = this.getDocumentId(department, unitId);
         const docRef = doc(firestore, COLLECTION_NAME, docId);
 
         return await runTransaction(firestore, async (transaction) => {
@@ -268,13 +287,13 @@ export class DepartmentUnitService {
             u => u.type === 'region_salary_bonus'
         );
 
-        // Get bonus percentages based on level
+        // Get bonus percentages based on level using the configuration
         const workXpBonus = workXpUpgrade?.level
-            ? [5, 10, 15, 20][workXpUpgrade.level - 1] || 0
+            ? getBonusForLevel('work_xp_bonus', workXpUpgrade.level)
             : 0;
 
         const salaryBonus = salaryUpgrade?.level
-            ? [5, 10, 15, 20][salaryUpgrade.level - 1] || 0
+            ? getBonusForLevel('region_salary_bonus', salaryUpgrade.level)
             : 0;
 
         return { workXpBonus, salaryBonus };
@@ -297,7 +316,7 @@ export class DepartmentUnitService {
 
         for (const unitId of units) {
             try {
-                const docId = `${department}_${unitId}`;
+                const docId = this.getDocumentId(department, unitId);
                 const docRef = doc(firestore, COLLECTION_NAME, docId);
                 const docSnap = await getDoc(docRef);
 
@@ -341,7 +360,8 @@ export class DepartmentUnitService {
         }
 
         // Now update the player's position in playerStats
-        const playerRef = doc(firestore, 'playerStats', userId);
+        const playerDocId = getServerSpecificId(userId, getCurrentServer());
+        const playerRef = doc(firestore, 'playerStats', playerDocId);
         await updateDoc(playerRef, {
             policePosition: newPosition,
             departmentUnit: newDepartmentUnit
@@ -370,7 +390,8 @@ export class DepartmentUnitService {
         );
 
         // Also add demotion tracking
-        const playerRef = doc(firestore, 'playerStats', userId);
+        const playerDocId = getServerSpecificId(userId, getCurrentServer());
+        const playerRef = doc(firestore, 'playerStats', playerDocId);
         await updateDoc(playerRef, {
             demotedAt: Timestamp.now(),
             demotionReason: 'Vabatahtlik/Käsitsi maha võetud'

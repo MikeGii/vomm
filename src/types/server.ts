@@ -8,12 +8,12 @@ export interface ServerConfig {
 export const GAME_SERVERS: Record<string, ServerConfig> = {
     beta: {
         id: 'beta',
-        name: 'Beta Server',
+        name: 'Beta Maailm',
         description: 'Algne server'
     },
-    white: {
+    /*white: {
         id: 'white',
         name: 'Valge Server',
         description: 'Uus maailm'
-    }
+    }*/
 };

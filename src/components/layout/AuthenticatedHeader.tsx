@@ -3,14 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth, firestore } from '../../config/firebase';
-import { doc, onSnapshot, collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatMoney, formatPollid } from '../../utils/currencyUtils';
-import { PlayerStats } from '../../types';
 import { getPlayerDisplayStatus } from '../../utils/playerStatus';
-import { getCurrentServer, getServerSpecificId } from '../../utils/serverUtils';
+import { getCurrentServer } from '../../utils/serverUtils';
 import '../../styles/layout/Header.css';
 import {usePlayerStats} from "../../contexts/PlayerStatsContext";
+import { GAME_SERVERS } from '../../types/server';
 
 export const AuthenticatedHeader: React.FC = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -141,7 +141,9 @@ export const AuthenticatedHeader: React.FC = () => {
                     </div>
                 </div>
                 <div className="header-right">
-
+                        <span className={`server-indicator ${getCurrentServer()}-server`}>
+                            {GAME_SERVERS[getCurrentServer()]?.name || 'Beta Server'}
+                        </span>
                     <div className="header-stat-item header-online-count">
                         <span className="header-stat-label">Aktiivsed 24h</span>
                         <span className="header-stat-value">
