@@ -23,6 +23,7 @@ export const PlayerStatsEditor: React.FC<PlayerStatsEditorProps> = ({
                                                                     }) => {
     const [editedUser, setEditedUser] = useState<PlayerStats>(user);
     const [globalData, setGlobalData] = useState({ pollid: 0, isVip: false });
+    const [initialGlobalData, setInitialGlobalData] = useState({ pollid: 0, isVip: false }); // ADD THIS
     const [openSections, setOpenSections] = useState<Record<string, boolean>>({
         basic: true,
         police: false,
@@ -37,10 +38,12 @@ export const PlayerStatsEditor: React.FC<PlayerStatsEditorProps> = ({
             const userDoc = await getDoc(doc(firestore, 'users', userId));
             if (userDoc.exists()) {
                 const data = userDoc.data();
-                setGlobalData({
+                const globalValues = {
                     pollid: data.pollid || 0,
                     isVip: data.isVip || false
-                });
+                };
+                setGlobalData(globalValues);
+                setInitialGlobalData(globalValues); // Store initial values
             }
         };
         fetchGlobalData();
@@ -53,8 +56,12 @@ export const PlayerStatsEditor: React.FC<PlayerStatsEditorProps> = ({
 
     const { saveChanges, isSaving } = useSmartSave({
         userId,
-        onSuccess: onUserUpdated,
-        globalData
+        onSuccess: (updatedData) => {
+            onUserUpdated(updatedData);
+            // Also update initial values after successful save
+            setInitialGlobalData({ ...globalData });
+        },
+        globalData: initialGlobalData // Pass initial global data for comparison
     });
 
     const toggleSection = (sectionId: string) => {
@@ -94,9 +101,13 @@ export const PlayerStatsEditor: React.FC<PlayerStatsEditorProps> = ({
 
     const resetChanges = () => {
         setEditedUser(user);
+        setGlobalData(initialGlobalData); // Reset global data too
     };
 
-    const hasChanges = JSON.stringify(editedUser) !== JSON.stringify(user);
+    // Check for changes in BOTH player stats and global data
+    const hasPlayerChanges = JSON.stringify(editedUser) !== JSON.stringify(user);
+    const hasGlobalChanges = JSON.stringify(globalData) !== JSON.stringify(initialGlobalData);
+    const hasChanges = hasPlayerChanges || hasGlobalChanges;
 
     return (
         <div className="player-stats-editor">
@@ -126,7 +137,7 @@ export const PlayerStatsEditor: React.FC<PlayerStatsEditorProps> = ({
                 {/* Basic Information */}
                 <BasicInfoEditor
                     user={editedUser}
-                    globalData={globalData}  // ADD
+                    globalData={globalData}
                     isOpen={openSections.basic}
                     onToggle={() => toggleSection('basic')}
                     onFieldUpdate={updateField}

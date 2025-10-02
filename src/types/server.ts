@@ -9,7 +9,7 @@ export const GAME_SERVERS: Record<string, ServerConfig> = {
     beta: {
         id: 'beta',
         name: 'Beta Maailm',
-        description: 'Algne server'
+        description: 'Esimene demo server'
     },
     /*white: {
         id: 'white',

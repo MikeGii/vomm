@@ -4,7 +4,6 @@ import {
     getDoc,
     updateDoc,
     increment,
-    arrayUnion,
     Timestamp,
     runTransaction,
 } from 'firebase/firestore';

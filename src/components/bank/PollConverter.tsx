@@ -4,7 +4,6 @@ import { firestore } from '../../config/firebase';
 import { useToast } from '../../contexts/ToastContext';
 import { formatMoney } from '../../utils/currencyUtils';
 import '../../styles/components/bank/PollConverter.css';
-import { GlobalUserService } from '../../services/GlobalUserService';
 import {getCurrentServer, getServerSpecificId} from "../../utils/serverUtils";
 
 interface PollConverterProps {
