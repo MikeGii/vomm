@@ -19,6 +19,7 @@ import {
     getUpgradeInfo, getBonusForLevel,
 } from '../types/departmentUnit';
 import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
+import {PlayerStats} from "../types";
 
 const COLLECTION_NAME = 'departmentUnits';
 const MAX_RECENT_TRANSACTIONS = 50;
@@ -365,6 +366,76 @@ export class DepartmentUnitService {
             policePosition: newPosition,
             departmentUnit: newDepartmentUnit
         });
+    }
+
+    /**
+     * Transfer player to a new prefecture with selected department
+     */
+    static async transferPrefectureWithDepartment(
+        userId: string,
+        username: string,
+        currentPrefecture: string,
+        newPrefecture: string,
+        newDepartment: string,
+        currentDepartment: string | null
+    ): Promise<void> {
+        const playerDocId = getServerSpecificId(userId, getCurrentServer());
+        const playerRef = doc(firestore, 'playerStats', playerDocId);
+
+        // First clean up any leadership positions in current prefecture
+        if (currentDepartment) {
+            await this.handlePositionChange(
+                userId,
+                'patrullpolitseinik',
+                'patrol',
+                currentDepartment,
+                username
+            );
+        }
+
+        // Update player to new prefecture with selected department
+        await updateDoc(playerRef, {
+            prefecture: newPrefecture,
+            department: newDepartment,
+            departmentUnit: 'patrol',
+            policePosition: 'patrullpolitseinik',
+            lastPrefectureChange: Timestamp.now(),
+            lastModified: Timestamp.now()
+        });
+    }
+
+    /**
+     * Check if player can transfer prefecture (7 day cooldown, level 60+)
+     */
+    static canTransferPrefecture(playerStats: PlayerStats): {
+        canTransfer: boolean;
+        reason?: string;
+        daysRemaining?: number;
+    } {
+        // Check level requirement
+        if (playerStats.level < 60) {
+            return {
+                canTransfer: false,
+                reason: 'Pead olema vähemalt tase 60'
+            };
+        }
+
+        // Check cooldown
+        if (playerStats.lastPrefectureChange) {
+            const lastChange = playerStats.lastPrefectureChange as Timestamp;
+            const daysSinceLastChange =
+                (Date.now() - lastChange.toDate().getTime()) / (1000 * 60 * 60 * 24);
+
+            if (daysSinceLastChange < 7) {
+                return {
+                    canTransfer: false,
+                    reason: 'Saad prefektuuri vahetada 7 päeva pärast',
+                    daysRemaining: Math.ceil(7 - daysSinceLastChange)
+                };
+            }
+        }
+
+        return { canTransfer: true };
     }
 
     /**

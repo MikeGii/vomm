@@ -1,0 +1,347 @@
+/* src/styles/components/department/PrefectureTransfer.css */
+
+.prefecture-transfer-container {
+    background: rgba(26, 26, 26, 0.95);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.prefecture-transfer-container:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-color: #444;
+}
+
+/* Header Section */
+.transfer-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #333;
+}
+
+.transfer-header h3 {
+    color: #f0f0f0;
+    font-size: 1.3rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.current-location {
+    color: #999;
+    font-size: 0.95rem;
+    margin: 0.5rem 0 0 0;
+}
+
+.current-location span {
+    margin-right: 0.5rem;
+}
+
+.current-location strong,
+.current-prefecture strong {
+    color: #4a90e2;
+    font-weight: 600;
+}
+
+/* Restriction Message */
+.transfer-restricted {
+    background: rgba(255, 152, 0, 0.1);
+    border: 1px solid rgba(255, 152, 0, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.restriction-message {
+    color: #ff9800;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.days-remaining {
+    color: #ffa726;
+    font-size: 0.9rem;
+    margin: 0.5rem 0 0 0;
+    font-weight: 600;
+}
+
+/* Transfer Button */
+.open-transfer-btn {
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.open-transfer-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+.transfer-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1a1a1a;
+    border: 2px solid #333;
+    border-radius: 16px;
+    padding: 2rem;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    z-index: 1001;
+    animation: slideIn 0.3s ease;
+}
+
+.transfer-modal h3 {
+    color: #f0f0f0;
+    font-size: 1.4rem;
+    margin: 0 0 1.5rem 0;
+    text-align: center;
+}
+
+/* Warning Box */
+.transfer-warning {
+    background: rgba(239, 83, 80, 0.1);
+    border: 1px solid rgba(239, 83, 80, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.transfer-warning h4 {
+    color: #ef5350;
+    font-size: 1.1rem;
+    margin: 0 0 0.75rem 0;
+}
+
+.transfer-warning ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    list-style-type: none;
+}
+
+.transfer-warning li {
+    color: #ff8a80;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    position: relative;
+    padding-left: 1.25rem;
+}
+
+.transfer-warning li:before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    font-size: 1.2rem;
+}
+
+.transfer-warning li strong {
+    color: #ff6659;
+    font-weight: 600;
+}
+
+/* Selection Container */
+.selection-container {
+    margin-bottom: 1.5rem;
+}
+
+/* Shared styles for both selection dropdowns */
+.prefecture-selection,
+.department-selection {
+    margin-bottom: 1rem;
+}
+
+.department-selection {
+    animation: slideDown 0.3s ease;
+}
+
+.prefecture-selection label,
+.department-selection label {
+    display: block;
+    color: #999;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.prefecture-selection select,
+.department-selection select {
+    width: 100%;
+    padding: 0.75rem;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #f0f0f0;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.prefecture-selection select:hover:not(:disabled),
+.department-selection select:hover:not(:disabled) {
+    border-color: #4a90e2;
+}
+
+.prefecture-selection select:focus,
+.department-selection select:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.prefecture-selection select:disabled,
+.department-selection select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Modal Actions */
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.confirm-transfer-btn,
+.cancel-btn {
+    flex: 1;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.confirm-transfer-btn {
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: white;
+}
+
+.cancel-btn {
+    background: transparent;
+    color: #999;
+    border: 1px solid #444;
+}
+
+.confirm-transfer-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+.cancel-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #666;
+    color: #f0f0f0;
+}
+
+.confirm-transfer-btn:disabled,
+.cancel-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.confirm-transfer-btn:disabled {
+    background: #333;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -45%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 100px;
+    }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .transfer-modal {
+        width: 95%;
+        padding: 1.5rem;
+    }
+
+    .transfer-modal h3 {
+        font-size: 1.2rem;
+    }
+
+    .transfer-warning {
+        padding: 0.75rem;
+    }
+
+    .transfer-warning h4 {
+        font-size: 1rem;
+    }
+
+    .transfer-warning li {
+        font-size: 0.9rem;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+
+    .confirm-transfer-btn,
+    .cancel-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .prefecture-transfer-container {
+        padding: 1rem;
+    }
+
+    .transfer-header h3 {
+        font-size: 1.1rem;
+    }
+
+    .open-transfer-btn {
+        width: 100%;
+        padding: 0.75rem 1rem;
+    }
+
+    .transfer-modal {
+        padding: 1.25rem;
+    }
+}

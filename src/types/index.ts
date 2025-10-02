@@ -147,6 +147,7 @@ export interface PlayerStats {
     fightClubData?: FightClubData;
     completedTests?: string[];
     activeTest?: ActiveTest | null;
+    lastPrefectureChange?: Timestamp;
     casinoData?: {
         playsUsed: number;
         lastPlayTime: number;
