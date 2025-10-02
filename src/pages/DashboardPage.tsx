@@ -1,7 +1,7 @@
 // src/pages/DashboardPage.tsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {collection, query, where, getDocs, deleteDoc, updateDoc, doc} from '../services/TrackedFirestore';
+import {collection, query, where, getDocs, deleteDoc, updateDoc, doc} from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { PlayerStatsCard } from '../components/dashboard/PlayerStatsCard';
@@ -22,14 +22,12 @@ import { getActiveEvent } from "../services/EventService";
 import { Tasks } from '../components/dashboard/Tasks';
 import Footer from "../components/layout/footer";
 import { HealthModal } from '../components/health/HealthModal';
-import { usePageTracking } from '../hooks/usePageTracking';
 import '../styles/pages/Dashboard.css';
 import {getCourseById} from "../data/courses";
 import {CacheNotification} from "../components/dashboard/CacheNotification";
 import { getServerSpecificId, getCurrentServer } from '../utils/serverUtils';
 
 function DashboardPage() {
-    usePageTracking('DashboardPage');
     const { currentUser, userData } = useAuth();
     const navigate = useNavigate();
     const { showToast } = useToast();

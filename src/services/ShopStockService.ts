@@ -7,7 +7,7 @@ import {
     updateDoc,
     collection,
     getDocs
-} from './TrackedFirestore';
+} from 'firebase/firestore';
 import {
     Timestamp,
     writeBatch

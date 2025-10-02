@@ -2,7 +2,6 @@
 import React from 'react';
 import { CheatDetector } from './tools/CheatDetector';
 import { CrimeInitializer } from './tools/CrimeInitializer';
-import { DatabaseMetrics } from './tools/DatabaseMetrics';
 import '../../styles/components/admin/AdminTools.css';
 
 export const AdminTools: React.FC = () => {
@@ -14,11 +13,6 @@ export const AdminTools: React.FC = () => {
             </div>
 
             <div className="tools-grid">
-
-                <div className="tool-category">
-                    <h3 className="category-title">Andmebaasi Monitooring</h3>
-                    <DatabaseMetrics />
-                </div>
 
                 {/* Crime System */}
                 <div className="tool-category">

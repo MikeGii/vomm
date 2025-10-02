@@ -1,6 +1,6 @@
 // src/contexts/PlayerStatsContext.tsx - FULLY UPDATED
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { doc, onSnapshot, updateDoc, getDoc } from '../services/TrackedFirestore';
+import { doc, onSnapshot, updateDoc, getDoc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats } from '../types';
 import { useAuth } from './AuthContext';

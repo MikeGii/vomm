@@ -11,12 +11,10 @@ import { DepartmentLeaderboard } from '../components/department/DepartmentLeader
 import '../styles/pages/Department.css';
 import { isPoliceOfficer, canDonateToUnitWallet } from "../utils/playerStatus";
 import {DepartmentInstructions} from "../components/department/DepartmentInstructions";
-import { usePageTracking } from '../hooks/usePageTracking';
 
 const DepartmentPage: React.FC = () => {
     const navigate = useNavigate();
     const { playerStats, loading, refreshStats } = usePlayerStats();
-    usePageTracking('DepartmentPage');
 
     if (loading) {
         return (

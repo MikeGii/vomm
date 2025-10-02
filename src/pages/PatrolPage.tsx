@@ -15,7 +15,6 @@ import { checkAndApplyHealthRecovery } from '../services/HealthService';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
-import { usePageTracking } from '../hooks/usePageTracking';
 import { WorkEvent, EventChoice } from '../types';
 import {
     startWork,
@@ -31,7 +30,6 @@ import {isAbipolitseinik, isKadett, isPoliceOfficer} from "../utils/playerStatus
 
 const PatrolPage: React.FC = () => {
     const navigate = useNavigate();
-    usePageTracking('PatrolPage');
     const { currentUser } = useAuth();
     const { showToast } = useToast();
     const { playerStats, loading, refreshStats } = usePlayerStats();

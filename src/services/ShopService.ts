@@ -2,7 +2,7 @@
 import {
     doc,
     runTransaction
-} from './TrackedFirestore';
+} from 'firebase/firestore';
 import { Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { ShopItem, PurchaseResult } from '../types/shop';
@@ -118,7 +118,7 @@ export const purchaseItem = async (
         const isPlayerCraftable = isPlayerCraftableItem(shopItem);
 
         // Use atomic transaction to prevent race conditions
-        return await runTransaction(async (transaction: any) => {
+        return await runTransaction(firestore, async (transaction: any) => {
             // Get references
             const playerRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
             let stockRef = null;
