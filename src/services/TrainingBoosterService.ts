@@ -4,6 +4,8 @@ import { firestore } from '../config/firebase';
 import { InventoryItem } from '../types';
 import { PlayerStats } from '../types';
 import {initializeHandicraftTrainingData, initializeKitchenLabTrainingData} from "./TrainingService";
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
+import { GlobalUserService } from './GlobalUserService';
 
 export interface UseBoosterResult {
     success: boolean;
@@ -49,7 +51,7 @@ export const consumeTrainingBooster = async (
     quantity: number = 1
 ): Promise<UseBoosterResult> => {
     try {
-        const playerRef = doc(firestore, 'playerStats', userId);
+        const playerRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
         const playerDoc = await getDoc(playerRef);
 
         if (!playerDoc.exists()) {
@@ -71,8 +73,9 @@ export const consumeTrainingBooster = async (
         }
 
         // VIP LOGIC: Determine max clicks based on VIP status and work status
+        const globalData = await GlobalUserService.getGlobalUserData(userId);
         let maxClicks: number;
-        if (playerData.isVip) {
+        if (globalData.isVip) {
             maxClicks = playerData.activeWork ? 30 : 100;
         } else {
             maxClicks = playerData.activeWork ? 10 : 50;
@@ -180,7 +183,7 @@ export const consumeKitchenBooster = async (
     quantity: number = 1
 ): Promise<UseBoosterResult> => {
     try {
-        const playerRef = doc(firestore, 'playerStats', userId);
+        const playerRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
         const playerDoc = await getDoc(playerRef);
 
         if (!playerDoc.exists()) {
@@ -222,8 +225,9 @@ export const consumeKitchenBooster = async (
         }
 
         // VIP LOGIC: Determine max clicks based on VIP status and work status
+        const globalData = await GlobalUserService.getGlobalUserData(userId);
         let maxClicks: number;
-        if (playerData.isVip) {
+        if (globalData.isVip) {
             maxClicks = playerData.activeWork ? 30 : 100;
         } else {
             maxClicks = playerData.activeWork ? 10 : 50;
@@ -296,7 +300,7 @@ export const consumeHandicraftBooster = async (
     quantity: number = 1
 ): Promise<UseBoosterResult> => {
     try {
-        const playerRef = doc(firestore, 'playerStats', userId);
+        const playerRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
         const playerDoc = await getDoc(playerRef);
 
         if (!playerDoc.exists()) {
@@ -338,8 +342,9 @@ export const consumeHandicraftBooster = async (
         }
 
         // VIP LOGIC: Determine max clicks based on VIP status and work status
+        const globalData = await GlobalUserService.getGlobalUserData(userId);
         let maxClicks: number;
-        if (playerData.isVip) {
+        if (globalData.isVip) {
             maxClicks = playerData.activeWork ? 30 : 100;
         } else {
             maxClicks = playerData.activeWork ? 10 : 50;
