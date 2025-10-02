@@ -1,4 +1,4 @@
-// src/services/PlayerService.ts
+// src/services/PlayerService.ts - UPDATED
 import {doc, setDoc, getDoc, updateDoc} from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import {PlayerStats, PlayerHealth, InventoryItem} from '../types';
@@ -96,8 +96,15 @@ const createInitialVipItems = (): InventoryItem[] => {
     ];
 };
 
-export const initializePlayerStats = async (userId: string, username: string): Promise<PlayerStats> => {
-    const statsRef = doc(firestore, 'playerStats', userId);
+// UPDATED: Now accepts optional documentId for server-specific storage
+export const initializePlayerStats = async (
+    userId: string,
+    username: string,
+    documentId?: string
+): Promise<PlayerStats> => {
+    // Use provided documentId or default to userId (for backwards compatibility)
+    const docId = documentId || userId;
+    const statsRef = doc(firestore, 'playerStats', docId);
     const statsDoc = await getDoc(statsRef);
 
     if (statsDoc.exists()) {
@@ -111,7 +118,6 @@ export const initializePlayerStats = async (userId: string, username: string): P
 
         if (stats.pollid === undefined) {
             stats.pollid = 0;
-
             await updateDoc(statsRef, { pollid: 0 });
         }
 
@@ -162,8 +168,10 @@ export const initializePlayerStats = async (userId: string, username: string): P
     return initialStats;
 };
 
-export const getPlayerStats = async (userId: string): Promise<PlayerStats | null> => {
-    const statsRef = doc(firestore, 'playerStats', userId);
+// UPDATED: Now accepts optional documentId for server-specific retrieval
+export const getPlayerStats = async (userId: string, documentId?: string): Promise<PlayerStats | null> => {
+    const docId = documentId || userId;
+    const statsRef = doc(firestore, 'playerStats', docId);
     const statsDoc = await getDoc(statsRef);
 
     if (statsDoc.exists()) {

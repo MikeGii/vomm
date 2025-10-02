@@ -5,6 +5,9 @@ import { doc, setDoc } from 'firebase/firestore';
 import { auth, firestore } from '../../config/firebase';
 import { User } from '../../types';
 import { validateUsername } from '../../services/UserValidationService';
+import { GAME_SERVERS } from '../../types/server';
+import { setCurrentServer, getServerSpecificId } from '../../utils/serverUtils';
+import { initializePlayerStats } from '../../services/PlayerService';
 import '../../styles/layout/Modal.css';
 
 interface RegisterModalProps {
@@ -34,6 +37,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [passwordStrength, setPasswordStrength] = useState(0);
+    const [selectedServer, setSelectedServer] = useState('beta');
 
     // New states for username validation
     const [usernameValidation, setUsernameValidation] = useState<{
@@ -163,6 +167,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
         try {
             const { user } = await createUserWithEmailAndPassword(auth, email, password);
 
+            // Create user profile (same for all servers)
             const userProfile: User = {
                 uid: user.uid,
                 email: user.email!,
@@ -172,6 +177,14 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
             };
 
             await setDoc(doc(firestore, 'users', user.uid), userProfile);
+
+            // Set the selected server
+            setCurrentServer(selectedServer);
+
+            // Initialize player stats for the selected server
+            const statsDocId = getServerSpecificId(user.uid, selectedServer);
+            await initializePlayerStats(user.uid, username, statsDocId);
+
             onSuccess();
             onClose();
         } catch (error: any) {
@@ -225,8 +238,22 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
         <div className="modal-backdrop">
             <div className="modal-content">
                 <button className="modal-close" onClick={onClose}>×</button>
-                <h2 className="modal-title">Alusta karjääri</h2>
+                <h2 className="modal-title">Loo konto</h2>
                 <form onSubmit={handleRegister} className="modal-form">
+                    {/* Add server selection dropdown */}
+                    <select
+                        value={selectedServer}
+                        onChange={(e) => setSelectedServer(e.target.value)}
+                        className="modal-input"
+                        disabled={loading}
+                    >
+                        {Object.values(GAME_SERVERS).map(server => (
+                            <option key={server.id} value={server.id}>
+                                {server.name} - {server.description}
+                            </option>
+                        ))}
+                    </select>
+
                     <div className="username-input-container">
                         <input
                             type="text"

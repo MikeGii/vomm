@@ -1,4 +1,4 @@
-// src/contexts/PlayerStatsContext.tsx
+// src/contexts/PlayerStatsContext.tsx - UPDATED
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { doc, onSnapshot, updateDoc, getDoc } from '../services/TrackedFirestore';
 import { firestore } from '../config/firebase';
@@ -8,11 +8,13 @@ import { initializePlayerStats } from '../services/PlayerService';
 import { checkRankUpdate } from '../utils/rankUtils';
 import { updateLastSeenIfNeeded } from '../services/LastSeenService';
 import { getPlayerEstate } from '../services/EstateService';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 interface PlayerStatsContextType {
     playerStats: PlayerStats | null;
     loading: boolean;
     error: string | null;
+    currentServer: string;
     refreshStats: () => Promise<void>;
 }
 
@@ -20,6 +22,7 @@ const PlayerStatsContext = createContext<PlayerStatsContextType>({
     playerStats: null,
     loading: true,
     error: null,
+    currentServer: 'beta',
     refreshStats: async () => {}
 });
 
@@ -30,6 +33,7 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [currentServer, setCurrentServer] = useState<string>(getCurrentServer());
 
     // Track last level to only check rank when level changes
     const lastLevelRef = useRef<number | null>(null);
@@ -41,18 +45,20 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
         if (!currentUser) return;
 
         try {
-            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+            // Use server-specific document ID
+            const statsDocId = getServerSpecificId(currentUser.uid, currentServer);
+            const statsRef = doc(firestore, 'playerStats', statsDocId);
             const statsDoc = await getDoc(statsRef);
 
             if (statsDoc.exists()) {
                 const stats = statsDoc.data() as PlayerStats;
 
-                // Lisa estate laadimine ka siin
+                // Load estate with server-specific ID
                 try {
-                    const estate = await getPlayerEstate(currentUser.uid);
+                    const estate = await getPlayerEstate(statsDocId);
 
                     if (estate && estate.currentEstate) {
-
+                        // Estate exists with current property
                     } else if (estate) {
                         console.log('🏠 ESTATE EXISTS BUT NO CURRENT ESTATE');
                     } else {
@@ -73,29 +79,30 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
         } catch (err) {
             console.error('Error refreshing stats:', err);
         }
-    }, [currentUser]);
+    }, [currentUser, currentServer]);
 
     // Update lastSeen when user is active
     useEffect(() => {
         if (!currentUser) return;
 
-        // Uuenda lastSeen iga 5 minuti tagant aktiivsuse ajal
+        const serverSpecificId = getServerSpecificId(currentUser.uid, currentServer);
+
+        // Update lastSeen every 5 minutes during activity
         const activityInterval = setInterval(() => {
             if (playerStats?.lastSeen !== undefined) {
-                updateLastSeenIfNeeded(currentUser.uid, playerStats.lastSeen);
+                updateLastSeenIfNeeded(serverSpecificId, playerStats.lastSeen);
             } else {
-                updateLastSeenIfNeeded(currentUser.uid);
+                updateLastSeenIfNeeded(serverSpecificId);
             }
-        }, 5 * 60 * 1000); // 5 minutit
+        }, 5 * 60 * 1000); // 5 minutes
 
-        // Uuenda lastSeen kohe kui kontekst laadib
+        // Update lastSeen immediately when context loads
         if (playerStats) {
-            updateLastSeenIfNeeded(currentUser.uid, playerStats.lastSeen);
+            updateLastSeenIfNeeded(serverSpecificId, playerStats.lastSeen);
         }
 
         return () => clearInterval(activityInterval);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentUser, playerStats]);
+    }, [currentUser, playerStats, currentServer]);
 
     useEffect(() => {
         if (!currentUser) {
@@ -109,11 +116,19 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
                 const userDoc = await getDoc(doc(firestore, 'users', currentUser.uid));
                 const username = userDoc.exists() ? userDoc.data().username : 'Tundmatu';
 
-                // Initialize stats first (creates document if needed for new users)
-                await initializePlayerStats(currentUser.uid, username);
+                // Get server-specific document ID
+                const statsDocId = getServerSpecificId(currentUser.uid, currentServer);
 
-                // Set up the real-time listener
-                const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+                // Check if player has progress on this server
+                const existingStats = await getDoc(doc(firestore, 'playerStats', statsDocId));
+
+                if (!existingStats.exists()) {
+                    // New player on this server - initialize stats
+                    await initializePlayerStats(currentUser.uid, username, statsDocId);
+                }
+
+                // Set up the real-time listener with server-specific ID
+                const statsRef = doc(firestore, 'playerStats', statsDocId);
 
                 const unsubscribe = onSnapshot(
                     statsRef,
@@ -122,7 +137,8 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
                             const stats = docSnapshot.data() as PlayerStats;
 
                             try {
-                                const estate = await getPlayerEstate(currentUser.uid);
+                                // Load estate with server-specific ID
+                                const estate = await getPlayerEstate(statsDocId);
                                 stats.estate = estate;
                             } catch (error) {
                                 console.warn('Estate loading failed, continuing without estate data:', error);
@@ -180,10 +196,25 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
                 unsubscribeRef.current = null;
             }
         };
-    }, [currentUser]);
+    }, [currentUser, currentServer]); // Re-run when server changes
+
+    // Listen for server changes from localStorage
+    useEffect(() => {
+        const handleStorageChange = () => {
+            const newServer = getCurrentServer();
+            if (newServer !== currentServer) {
+                setCurrentServer(newServer);
+                setLoading(true);
+                // The main useEffect will handle reloading data
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, [currentServer]);
 
     return (
-        <PlayerStatsContext.Provider value={{ playerStats, loading, error, refreshStats }}>
+        <PlayerStatsContext.Provider value={{ playerStats, loading, error, currentServer, refreshStats }}>
             {children}
         </PlayerStatsContext.Provider>
     );
