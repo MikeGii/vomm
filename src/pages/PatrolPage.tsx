@@ -346,22 +346,31 @@ const PatrolPage: React.FC = () => {
                 const expGained = result.rewards.experience;
                 const moneyGained = result.rewards.money;
 
-                let message = `Töö katkestatud! Saite: +${expGained} XP`;
+                let message = `Töö katkestatud!\nTeenitud: +${expGained} XP`;
                 if (moneyGained > 0) {
-                    message += `, +${moneyGained}€`;
+                    message += ` ja +${moneyGained}€`;
                 }
 
-                showToast(message, 'info', 4000);
-                await refreshStats();
+                // Extract remaining cancellations from the result message if available
+                if (result.message && result.message.includes('alles')) {
+                    const match = result.message.match(/\((\d+) katkestust alles/);
+                    if (match) {
+                        message += `\n⚠️ Katkestamisi alles tänaseks: ${match[1]}/3`;
+                    }
+                }
+
+                showToast(message, 'warning', 4000);
+                await Promise.all([refreshStats(), loadWorkHistory()]);
             } else {
                 showToast(result.message || 'Töö katkestamine ebaõnnestus', 'error');
             }
-        } catch (error: any) {
-            showToast(error.message || 'Töö katkestamine ebaõnnestus', 'error');
+        } catch (error) {
+            console.error('Error cancelling work:', error);
+            showToast('Töö katkestamine ebaõnnestus', 'error');
         } finally {
             setIsCancellingWork(false);
         }
-    }, [currentUser, playerStats?.activeWork, isCancellingWork, showToast, refreshStats]);
+    }, [currentUser, playerStats, isCancellingWork, showToast, refreshStats, loadWorkHistory]);
 
     if (loading) {
         return (

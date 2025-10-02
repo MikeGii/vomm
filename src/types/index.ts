@@ -156,6 +156,10 @@ export interface PlayerStats {
     adminPermissions?: AdminPermissions;
     activeCarId?: string;
     estate?: PlayerEstate | null;
+    dailyWorkCancellations?: {
+        count: number;
+        lastResetDate: Date | Timestamp;
+    };
 }
 
 // Course definition
