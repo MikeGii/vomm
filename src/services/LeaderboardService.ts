@@ -9,6 +9,7 @@ import {
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { LeaderboardEntry } from '../types';
+import { getCurrentServer } from '../utils/serverUtils';
 import { cacheManager } from './CacheManager';
 
 const EXCLUDED_USERNAMES = ['Lääne13'];
@@ -22,7 +23,8 @@ export const getLeaderboard = async (
     limitCount: number = 300,
     forceRefresh: boolean = false
 ): Promise<LeaderboardEntry[]> => {
-    const cacheKey = `leaderboard_${limitCount}`;
+    const currentServer = getCurrentServer();
+    const cacheKey = `leaderboard_${limitCount}_${currentServer}`;
 
     // Step 1: Check cache first (unless force refresh)
     if (!forceRefresh) {
@@ -54,6 +56,12 @@ export const getLeaderboard = async (
 
         // Step 4: Process each player
         querySnapshot.docs.forEach((statsDoc) => {
+            const docId = statsDoc.id;
+
+            // Filter by current server
+            if (currentServer === 'beta' && docId.includes('_')) return;
+            if (currentServer !== 'beta' && !docId.endsWith(`_${currentServer}`)) return;
+
             const playerData = statsDoc.data();
 
             // Skip excluded usernames
@@ -121,6 +129,12 @@ export const getLeaderboard = async (
                 const leaderboard: LeaderboardEntry[] = [];
 
                 snapshot.docs.forEach((doc) => {
+                    const docId = doc.id;
+
+                    // ADD THIS SERVER FILTERING
+                    if (currentServer === 'beta' && docId.includes('_')) return;
+                    if (currentServer !== 'beta' && !docId.endsWith(`_${currentServer}`)) return;
+
                     const data = doc.data();
 
                     // Apply filters client-side
@@ -183,19 +197,3 @@ export const getLeaderboard = async (
         return [];
     }
 };
-
-/**
- * Clear leaderboard cache (useful after updates)
- */
-export const clearLeaderboardCache = (): void => {
-    cacheManager.clearByPattern('leaderboard');
-    console.log('Leaderboard cache cleared');
-};
-
-/**
- * Get current cache status for debugging
- */
-export const getLeaderboardCacheStatus = (): boolean => {
-    return cacheManager.has('leaderboard_200');
-};
-

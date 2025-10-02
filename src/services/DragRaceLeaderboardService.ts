@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { LeaderboardData, LeaderboardEntry, DragRaceDistance, RACING_CONSTANTS } from '../types/dragRace';
+import { getCurrentServer } from '../utils/serverUtils';
 
 export class DragRaceLeaderboardService {
     private static cache: Map<string, { data: LeaderboardData; timestamp: number }> = new Map();
@@ -24,7 +25,8 @@ export class DragRaceLeaderboardService {
         page: number = 1,
         currentUserId?: string
     ): Promise<LeaderboardData> {
-        const cacheKey = `${trackId}_${page}`;
+        const currentServer = getCurrentServer();
+        const cacheKey = `${trackId}_${page}_${currentServer}`;
         const now = Date.now();
 
         // Check cache
@@ -55,6 +57,7 @@ export class DragRaceLeaderboardService {
         page: number,
         currentUserId?: string
     ): Promise<LeaderboardData> {
+        const currentServer = getCurrentServer();
         const pageSize = RACING_CONSTANTS.LEADERBOARD_PAGE_SIZE;
         const offset = (page - 1) * pageSize;
 
@@ -67,7 +70,14 @@ export class DragRaceLeaderboardService {
         );
 
         const querySnapshot = await getDocs(leaderboardQuery);
-        const allResults = querySnapshot.docs.map(doc => doc.data());
+        const allResults = querySnapshot.docs
+            .filter(doc => {
+                const docId = doc.id;
+                if (currentServer === 'beta' && docId.includes('_server')) return false;
+                if (currentServer !== 'beta' && !docId.endsWith(`_${currentServer}`)) return false;
+                return true;
+            })
+            .map(doc => doc.data());
 
         const pageResults = allResults.slice(offset, offset + pageSize);
 
@@ -103,7 +113,11 @@ export class DragRaceLeaderboardService {
     }
 
     private static async getPlayerRank(trackId: string, userId: string): Promise<number | undefined> {
-        const playerTimeRef = doc(firestore, 'dragRaceTimes', `${userId}_${trackId}`);
+        const currentServer = getCurrentServer();
+        const docId = currentServer === 'beta'
+            ? `${userId}_${trackId}`
+            : `${userId}_${trackId}_${currentServer}`;
+        const playerTimeRef = doc(firestore, 'dragRaceTimes', docId);
         const playerTimeDoc = await getDoc(playerTimeRef);
 
         if (!playerTimeDoc.exists()) {
@@ -124,16 +138,13 @@ export class DragRaceLeaderboardService {
     }
 
     static clearTrackCache(trackId: string): void {
+        const currentServer = getCurrentServer();
         const keysToDelete: string[] = [];
         this.cache.forEach((_, key) => {
-            if (key.startsWith(`${trackId}_`)) {
+            if (key.startsWith(`${trackId}_`) && key.includes(currentServer)) {
                 keysToDelete.push(key);
             }
         });
         keysToDelete.forEach(key => this.cache.delete(key));
-    }
-
-    static clearAllCache(): void {
-        this.cache.clear();
     }
 }

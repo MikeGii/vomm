@@ -1,10 +1,11 @@
 // src/services/EstateService.ts (CLEANED - Database only)
 import { doc, getDoc, setDoc, Timestamp, runTransaction } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
-import { PlayerEstate, EstateProperty, EstateTransaction, GarageSlot } from '../types/estate';
+import { PlayerEstate, EstateProperty, EstateTransaction } from '../types/estate';
 import { InventoryItem } from '../types';
 import { getBaseIdFromInventoryId } from '../utils/inventoryUtils';
 import { getUserCars } from './VehicleService';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 // Import database service functions
 import { getEstateById } from './EstateDatabaseService';
@@ -16,7 +17,8 @@ export const purchaseExtraGarageSlot = async (userId: string): Promise<{ success
     try {
         return await runTransaction(firestore, async (transaction) => {
             // Get player stats for pollid balance
-            const playerRef = doc(firestore, 'playerStats', userId);
+            const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+            const playerRef = doc(firestore, 'playerStats', serverSpecificId);
             const playerDoc = await transaction.get(playerRef);
 
             if (!playerDoc.exists()) {
@@ -35,7 +37,7 @@ export const purchaseExtraGarageSlot = async (userId: string): Promise<{ success
             }
 
             // Get player estate
-            const estateRef = doc(firestore, 'playerEstates', userId);
+            const estateRef = doc(firestore, 'playerEstates', serverSpecificId);
             const estateDoc = await transaction.get(estateRef);
 
             if (!estateDoc.exists()) {
@@ -87,7 +89,8 @@ export const purchaseExtraGarageSlot = async (userId: string): Promise<{ success
 
 export const getPlayerEstate = async (userId: string): Promise<PlayerEstate | null> => {
     try {
-        const estateDoc = await getDoc(doc(firestore, 'playerEstates', userId));
+        const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+        const estateDoc = await getDoc(doc(firestore, 'playerEstates', serverSpecificId));
 
         if (estateDoc.exists()) {
             const data = estateDoc.data();
@@ -126,7 +129,8 @@ export const ensurePlayerEstate = async (userId: string): Promise<PlayerEstate> 
         updatedAt: new Date()
     };
 
-    await setDoc(doc(firestore, 'playerEstates', userId), {
+    const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+    await setDoc(doc(firestore, 'playerEstates', serverSpecificId), {
         ...newEstate,
         createdAt: Timestamp.fromDate(newEstate.createdAt),
         updatedAt: Timestamp.fromDate(newEstate.updatedAt)
@@ -135,16 +139,6 @@ export const ensurePlayerEstate = async (userId: string): Promise<PlayerEstate> 
     return newEstate;
 };
 
-const createEmptyGarageSlots = (capacity: number): GarageSlot[] => {
-    const slots: GarageSlot[] = [];
-    for (let i = 1; i <= capacity; i++) {
-        slots.push({
-            slotId: i,
-            isEmpty: true
-        });
-    }
-    return slots;
-};
 
 export const initializePlayerEstate = ensurePlayerEstate;
 
@@ -179,20 +173,18 @@ export const purchaseEstate = async (
         }
 
         return await runTransaction(firestore, async (transaction) => {
-            const estateRef = doc(firestore, 'playerEstates', userId);
-            const playerRef = doc(firestore, 'playerStats', userId);
-            const userRef = doc(firestore, 'users', userId);
+            const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+            const playerRef = doc(firestore, 'playerStats', serverSpecificId);
+            const estateRef = doc(firestore, 'playerEstates', serverSpecificId);
 
             const estateDoc = await transaction.get(estateRef);
             const playerDoc = await transaction.get(playerRef);
-            const userDoc = await transaction.get(userRef);
 
             if (!playerDoc.exists()) {
                 throw new Error('Mängija andmed ei leitud');
             }
 
             const playerStats = playerDoc.data();
-            const userData = userDoc.exists() ? userDoc.data() : {};
             const currentEstate = estateDoc.exists() ? estateDoc.data() : null;
 
             const estateTransaction = calculateEstateTransaction(
@@ -241,34 +233,6 @@ export const purchaseEstate = async (
             const newBalance = playerStats.money - estateTransaction.finalPrice;
 
             transaction.update(playerRef, { money: newBalance });
-
-            // Handle garage slots
-            let garageSlots = userData.estateData?.garageSlots || [];
-
-            if (newEstate.hasGarage && newEstate.garageCapacity > 0) {
-                if (!currentEstate?.currentEstate?.hasGarage ||
-                    newEstate.garageCapacity !== (currentEstate?.currentEstate?.garageCapacity || 0)) {
-
-                    const existingCars = garageSlots.filter((slot: GarageSlot) => !slot.isEmpty);
-                    garageSlots = createEmptyGarageSlots(newEstate.garageCapacity);
-
-                    existingCars.forEach((carSlot: GarageSlot, index: number) => {
-                        if (index < garageSlots.length) {
-                            garageSlots[index] = {
-                                slotId: garageSlots[index].slotId,
-                                isEmpty: false,
-                                carId: carSlot.carId
-                            };
-                        }
-                    });
-                }
-            } else {
-                garageSlots = [];
-            }
-
-            transaction.update(userRef, {
-                'estateData.garageSlots': garageSlots
-            });
 
             const estateData = {
                 userId,
@@ -345,8 +309,9 @@ export const equipWorkshopDevice = async (
 ): Promise<void> => {
     try {
         return await runTransaction(firestore, async (transaction) => {
-            const estateRef = doc(firestore, 'playerEstates', userId);
-            const playerRef = doc(firestore, 'playerStats', userId);
+            const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+            const playerRef = doc(firestore, 'playerStats', serverSpecificId);
+            const estateRef = doc(firestore, 'playerEstates', serverSpecificId);
 
             const estateDoc = await transaction.get(estateRef);
             const playerDoc = await transaction.get(playerRef);
@@ -449,8 +414,9 @@ export const unequipWorkshopDevice = async (
 ): Promise<void> => {
     try {
         return await runTransaction(firestore, async (transaction) => {
-            const estateRef = doc(firestore, 'playerEstates', userId);
-            const playerRef = doc(firestore, 'playerStats', userId);
+            const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+            const playerRef = doc(firestore, 'playerStats', serverSpecificId);
+            const estateRef = doc(firestore, 'playerEstates', serverSpecificId);
 
             const estateDoc = await transaction.get(estateRef);
             const playerDoc = await transaction.get(playerRef);

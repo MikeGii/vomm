@@ -14,6 +14,7 @@ import {calculateLevelFromExp} from "./PlayerService";
 import { ABILITIES} from "../data/abilities";
 import { ABIPOLITSEINIK_UNIFORM, POLITSEI_UNIFORM, RIOT_POLICE_EQUIPMENT } from '../data/equipment';
 import {getShopItemById} from "./ShopService";
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 // Get courses available for player
 export const getAvailableCourses = (playerStats: PlayerStats): Course[] => {
@@ -46,7 +47,8 @@ export const enrollInCourse = async (userId: string, courseId: string): Promise<
     }
 
     // Check if player already has an active course
-    const playerStatsRef = doc(firestore, 'playerStats', userId);
+    const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+    const playerStatsRef = doc(firestore, 'playerStats', serverSpecificId);
     const playerStatsDoc = await getDoc(playerStatsRef);
     const playerStats = playerStatsDoc.data() as PlayerStats;
 
@@ -80,7 +82,7 @@ export const enrollInCourse = async (userId: string, courseId: string): Promise<
     });
 
     // Also store in activeCourses collection
-    await setDoc(doc(firestore, 'activeCourses', `${userId}_${courseId}`), {
+    await setDoc(doc(firestore, 'activeCourses', `${serverSpecificId}_${courseId}`), {
         courseId: course.id,
         userId: userId,
         startedAt: now,
@@ -93,7 +95,8 @@ export const enrollInCourse = async (userId: string, courseId: string): Promise<
 
 // Check and complete course if time is up
 export const checkCourseCompletion = async (userId: string): Promise<boolean> => {
-    const playerStatsRef = doc(firestore, 'playerStats', userId);
+    const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+    const playerStatsRef = doc(firestore, 'playerStats', serverSpecificId);
     const playerStatsDoc = await getDoc(playerStatsRef);
     const playerStats = playerStatsDoc.data() as PlayerStats;
 
@@ -315,7 +318,8 @@ export const checkCourseCompletion = async (userId: string): Promise<boolean> =>
         await updateDoc(playerStatsRef, updates);
 
         // Update active course record
-        const activeCourseRef = doc(firestore, 'activeCourses', `${userId}_${course.id}`);
+        const activeCourseRef = doc(firestore, 'activeCourses', `${serverSpecificId}_${course.id}`);
+
         await updateDoc(activeCourseRef, {
             status: 'completed',
             completedAt: serverTimestamp()
@@ -339,7 +343,8 @@ export const answerCourseQuestion = async (
     bonusMoney?: number;
     bonusReputation?: number;
 }> => {
-    const playerStatsRef = doc(firestore, 'playerStats', userId);
+    const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+    const playerStatsRef = doc(firestore, 'playerStats', serverSpecificId);
     const playerStatsDoc = await getDoc(playerStatsRef);
     const playerStats = playerStatsDoc.data() as PlayerStats;
 

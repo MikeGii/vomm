@@ -12,6 +12,7 @@ import { firestore } from '../config/firebase';
 import { DepartmentCrimeStats, CrimeReductionResult } from '../types/crimeActivity';
 import { getAllGraduatedPlayers } from './DepartmentService';
 import { PREFECTURES } from '../data/prefectures';
+import { getCurrentServer } from '../utils/serverUtils';
 
 const CRIME_COLLECTION = 'departmentCrimeStats';
 const DAILY_CRIME_INCREASE = 5; // 5% per day
@@ -39,7 +40,9 @@ export const initializeAllDepartmentCrimeStats = async (): Promise<void> => {
                 }
 
                 // Check if document already exists
-                const docRef = doc(firestore, CRIME_COLLECTION, department);
+                const currentServer = getCurrentServer();
+                const docId = currentServer === 'beta' ? department : `${department}_${currentServer}`;
+                const docRef = doc(firestore, CRIME_COLLECTION, docId);
                 const docSnap = await getDoc(docRef);
 
                 if (!docSnap.exists()) {
@@ -101,7 +104,9 @@ export const getMissingDepartmentStats = async (): Promise<Array<{departmentId: 
         const missing: Array<{departmentId: string, prefecture: string}> = [];
 
         for (const dept of expectedDepartments) {
-            const docRef = doc(firestore, CRIME_COLLECTION, dept.departmentId);
+            const currentServer = getCurrentServer();
+            const docId = currentServer === 'beta' ? dept.departmentId : `${dept.departmentId}_${currentServer}`;
+            const docRef = doc(firestore, CRIME_COLLECTION, docId);
             const docSnap = await getDoc(docRef);
 
             if (!docSnap.exists()) {
@@ -176,7 +181,9 @@ const initializeDepartmentCrime = async (
     };
 
     // Create document with department name as ID for easy lookup
-    const docRef = doc(firestore, CRIME_COLLECTION, departmentId);
+    const currentServer = getCurrentServer();
+    const docId = currentServer === 'beta' ? departmentId : `${departmentId}_${currentServer}`;
+    const docRef = doc(firestore, CRIME_COLLECTION, docId);
     await setDoc(docRef, crimeStats);
 
     return crimeStats;
@@ -190,7 +197,9 @@ export const getDepartmentCrimeStats = async (
     prefecture: string
 ): Promise<DepartmentCrimeStats> => {
     try {
-        const docRef = doc(firestore, CRIME_COLLECTION, departmentId);
+        const currentServer = getCurrentServer();
+        const docId = currentServer === 'beta' ? departmentId : `${departmentId}_${currentServer}`;
+        const docRef = doc(firestore, CRIME_COLLECTION, docId);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
@@ -239,7 +248,9 @@ export const updateCrimeLevelAfterWork = async (
         const newLevel = Math.max(0, previousLevel - reductionAmount); // Can't go below 0%
 
         // Update in database
-        const docRef = doc(firestore, CRIME_COLLECTION, departmentId);
+        const currentServer = getCurrentServer();
+        const docId = currentServer === 'beta' ? departmentId : `${departmentId}_${currentServer}`;
+        const docRef = doc(firestore, CRIME_COLLECTION, docId);
         await updateDoc(docRef, {
             currentCrimeLevel: newLevel,
             totalWorkHoursThisMonth: (crimeStats.totalWorkHoursThisMonth || 0) + workHours,
@@ -273,6 +284,7 @@ export const updateCrimeLevelAfterWork = async (
  */
 export const increaseDailyCrime = async (): Promise<void> => {
     try {
+        const currentServer = getCurrentServer();
         const crimeCollection = collection(firestore, CRIME_COLLECTION);
         const querySnapshot = await getDocs(crimeCollection);
 
@@ -280,6 +292,9 @@ export const increaseDailyCrime = async (): Promise<void> => {
         const now = Timestamp.now();
 
         for (const docSnap of querySnapshot.docs) {
+            const docId = docSnap.id;
+            if (currentServer === 'beta' && docId.includes('_')) continue;
+            if (currentServer !== 'beta' && !docId.endsWith(`_${currentServer}`)) continue;
             const data = docSnap.data() as DepartmentCrimeStats;
             const newLevel = Math.min(MAX_CRIME_LEVEL, data.currentCrimeLevel + DAILY_CRIME_INCREASE);
 
@@ -306,6 +321,7 @@ export const increaseDailyCrime = async (): Promise<void> => {
  */
 export const monthlyResetCrime = async (): Promise<void> => {
     try {
+        const currentServer = getCurrentServer();
         const crimeCollection = collection(firestore, CRIME_COLLECTION);
         const querySnapshot = await getDocs(crimeCollection);
 
@@ -313,6 +329,10 @@ export const monthlyResetCrime = async (): Promise<void> => {
         const now = Timestamp.now();
 
         for (const docSnap of querySnapshot.docs) {
+            const docId = docSnap.id;
+            if (currentServer === 'beta' && docId.includes('_')) continue;
+            if (currentServer !== 'beta' && !docId.endsWith(`_${currentServer}`)) continue;
+
             batch.push(
                 updateDoc(doc(firestore, CRIME_COLLECTION, docSnap.id), {
                     currentCrimeLevel: 50, // Reset to 50%

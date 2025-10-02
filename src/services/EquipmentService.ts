@@ -3,6 +3,7 @@ import { doc, updateDoc, getDoc, deleteField } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { EquipmentSlot, EquipmentItem } from '../types';
 import { InventoryItem } from '../types';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 export const equipItem = async (
     userId: string,
@@ -10,7 +11,8 @@ export const equipItem = async (
     item: InventoryItem
 ): Promise<void> => {
     try {
-        const playerStatsRef = doc(firestore, 'playerStats', userId);
+        const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+        const playerStatsRef = doc(firestore, 'playerStats', serverSpecificId);
 
         // Get current player stats
         const playerDoc = await getDoc(playerStatsRef);
@@ -101,7 +103,8 @@ export const unequipItem = async (
     item: EquipmentItem
 ): Promise<void> => {
     try {
-        const playerStatsRef = doc(firestore, 'playerStats', userId);
+        const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+        const playerStatsRef = doc(firestore, 'playerStats', serverSpecificId);
 
         // Get current player stats
         const playerDoc = await getDoc(playerStatsRef);

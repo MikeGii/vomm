@@ -17,6 +17,7 @@ import { firestore } from '../config/firebase';
 import { ActiveWork, WorkEvent, EventChoice, PlayerStats } from '../types';
 import { selectRandomEvent } from '../data/events';
 import { completeWork } from './WorkService';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 // Trigger event for completed work (70% chance)
 export const triggerWorkEvent = async (
@@ -26,7 +27,8 @@ export const triggerWorkEvent = async (
     // 70% chance for event
     if (Math.random() > 0.7) return false;
 
-    const statsDoc = await getDoc(doc(firestore, 'playerStats', userId));
+    const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+    const statsDoc = await getDoc(doc(firestore, 'playerStats', serverSpecificId));
     if (!statsDoc.exists()) return false;
 
     const stats = statsDoc.data() as PlayerStats;
@@ -35,7 +37,10 @@ export const triggerWorkEvent = async (
     if (!selectedEvent) return false;
 
     // Store active event
-    const eventId = `${userId}_${activeWork.workSessionId}`;
+    const currentServer = getCurrentServer();
+    const eventId = currentServer === 'beta'
+        ? `${userId}_${activeWork.workSessionId}`
+        : `${userId}_${activeWork.workSessionId}_${currentServer}`;
     const eventRef = doc(firestore, 'activeEvents', eventId);
 
     await setDoc(eventRef, {
@@ -56,14 +61,27 @@ export const getActiveEvent = async (userId: string): Promise<{
     const eventsQuery = query(
         collection(firestore, 'activeEvents'),
         where('userId', '==', userId),
-        limit(1)
+        limit(10)
     );
 
     const snapshot = await getDocs(eventsQuery);
     if (snapshot.empty) return null;
 
-    const doc = snapshot.docs[0];
-    const activeEvent = doc.data();
+    const currentServer = getCurrentServer();
+
+    // Filter for current server's event
+    const serverEvent = snapshot.docs.find(doc => {
+        const docId = doc.id;
+        if (currentServer === 'beta') {
+            return !docId.includes('_server');
+        } else {
+            return docId.endsWith(`_${currentServer}`);
+        }
+    });
+
+    if (!serverEvent) return null;
+
+    const activeEvent = serverEvent.data();
 
     // Get event data
     const { ALL_EVENTS } = await import('../data/events');
@@ -73,7 +91,7 @@ export const getActiveEvent = async (userId: string): Promise<{
 
     return {
         event: eventData,
-        documentId: doc.id
+        documentId: serverEvent.id
     };
 };
 
@@ -84,7 +102,8 @@ export const processEventChoice = async (
     choice: EventChoice
 ): Promise<boolean> => {
     try {
-        const statsRef = doc(firestore, 'playerStats', userId);
+        const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+        const statsRef = doc(firestore, 'playerStats', serverSpecificId);
         const statsDoc = await getDoc(statsRef);
 
         if (!statsDoc.exists()) return false;

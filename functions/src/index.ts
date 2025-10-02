@@ -33,7 +33,8 @@ const increaseDailyCrime = async (): Promise<void> => {
         });
 
         await batch.commit();
-        logger.info("Daily crime increase completed for all departments");
+        logger.info(`Daily crime increase completed for all departments across all servers`);
+
     } catch (error) {
         logger.error("Error increasing daily crime:", error);
         throw error;
@@ -72,6 +73,7 @@ const monthlyResetCrime = async (): Promise<void> => {
 /**
  * Scheduled function - runs every day at 00:01 Estonian time
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const dailyCrimeIncrease = onSchedule(
     {
         schedule: "1 0 * * *",
@@ -88,6 +90,7 @@ export const dailyCrimeIncrease = onSchedule(
 /**
  * Monthly reset - runs on 1st day of month at 00:01
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const monthlyCrimeReset = onSchedule(
     {
         schedule: "1 0 1 * *",
@@ -101,6 +104,7 @@ export const monthlyCrimeReset = onSchedule(
     }
 );
 
+
 const cleanOldChatMessages = async (): Promise<void> => {
     try {
         const now = Date.now();
@@ -111,23 +115,23 @@ const cleanOldChatMessages = async (): Promise<void> => {
 
         const firestore = admin.firestore();
 
-        // Direct approach: check known prefecture names from your ChatService
-        const knownPrefectures = ['Ida prefektuur', 'Lääne prefektuur', 'Põhja prefektuur'];
+        // Get ALL prefecture chat documents dynamically
+        const prefectureChatCollection = firestore.collection('prefectureChat');
+        const prefectureDocs = await prefectureChatCollection.listDocuments();
+
+        logger.info(`Found ${prefectureDocs.length} prefecture chat documents`);
 
         let totalDeleted = 0;
         let totalChecked = 0;
         let batch = firestore.batch();
         let batchCount = 0;
 
-        for (const prefecture of knownPrefectures) {
+        for (const prefectureDoc of prefectureDocs) {
             try {
-                logger.info(`Processing prefecture: ${prefecture}`);
+                logger.info(`Processing prefecture: ${prefectureDoc.id}`);
 
                 // Direct access to messages subcollection
-                const messagesRef = firestore
-                    .collection('prefectureChat')
-                    .doc(prefecture)
-                    .collection('messages');
+                const messagesRef = prefectureDoc.collection('messages');
 
                 // Get all messages (older first for deletion)
                 const messagesQuery = messagesRef
@@ -137,7 +141,7 @@ const cleanOldChatMessages = async (): Promise<void> => {
                 const messagesSnapshot = await messagesQuery.get();
                 totalChecked += messagesSnapshot.size;
 
-                logger.info(`Prefecture ${prefecture}: found ${messagesSnapshot.size} messages`);
+                logger.info(`Prefecture ${prefectureDoc.id}: found ${messagesSnapshot.size} messages`);
 
                 let deletedFromThisPrefecture = 0;
 
@@ -173,10 +177,10 @@ const cleanOldChatMessages = async (): Promise<void> => {
                     }
                 }
 
-                logger.info(`Prefecture ${prefecture}: deleted ${deletedFromThisPrefecture} old messages`);
+                logger.info(`Prefecture ${prefectureDoc.id}: deleted ${deletedFromThisPrefecture} old messages`);
 
             } catch (prefectureError) {
-                logger.error(`Error processing ${prefecture}:`, prefectureError);
+                logger.error(`Error processing ${prefectureDoc.id}:`, prefectureError);
             }
         }
 
@@ -195,6 +199,7 @@ const cleanOldChatMessages = async (): Promise<void> => {
 /**
  * Chat puhastamine - käivitub iga 6 tunni tagant
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const cleanOldMessages = onSchedule(
     {
         schedule: "0 */6 * * *", // Iga 6 tunni tagant

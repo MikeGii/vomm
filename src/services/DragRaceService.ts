@@ -76,7 +76,9 @@ export class DragRaceService {
             throw new Error('Missing required parameters for fuel system');
         }
 
-        const fuelRef = doc(firestore, 'dragRaceFuel', userId);
+        const currentServer = getCurrentServer();
+        const fuelDocId = currentServer === 'beta' ? userId : `${userId}_${currentServer}`;
+        const fuelRef = doc(firestore, 'dragRaceFuel', fuelDocId);
         const fuelDoc = await getDoc(fuelRef);
 
         // Use passed playerStats for VIP check
@@ -143,7 +145,9 @@ export class DragRaceService {
             const maxFuel = isVip ? FUEL_CONSTANTS.MAX_FREE_FUEL_VIP : FUEL_CONSTANTS.MAX_FREE_FUEL;
 
             const nextReset = this.getNextHourlyReset(now);
-            const fuelRef = doc(firestore, 'dragRaceFuel', userId);
+            const currentServer = getCurrentServer();
+            const fuelDocId = currentServer === 'beta' ? userId : `${userId}_${currentServer}`;
+            const fuelRef = doc(firestore, 'dragRaceFuel', fuelDocId);
 
             await updateDoc(fuelRef, {
                 currentFuel: maxFuel,
@@ -292,7 +296,9 @@ export class DragRaceService {
         }
 
         // Update fuel
-        const fuelRef = doc(firestore, 'dragRaceFuel', userId);
+        const currentServer = getCurrentServer();
+        const fuelDocId = currentServer === 'beta' ? userId : `${userId}_${currentServer}`;
+        const fuelRef = doc(firestore, 'dragRaceFuel', fuelDocId);
         batch.update(fuelRef, {
             currentFuel: increment(-1)
         });
@@ -405,7 +411,9 @@ export class DragRaceService {
             });
 
             // Update fuel and paid attempts
-            const fuelRef = doc(firestore, 'dragRaceFuel', userId);
+            const currentServer = getCurrentServer();
+            const fuelDocId = currentServer === 'beta' ? userId : `${userId}_${currentServer}`;
+            const fuelRef = doc(firestore, 'dragRaceFuel', fuelDocId);
             batch.update(fuelRef, {
                 currentFuel: increment(actualQuantity),
                 paidAttemptsUsed: increment(actualQuantity)
@@ -418,7 +426,9 @@ export class DragRaceService {
             await GlobalUserService.updatePollid(userId, -totalCost);
 
             // Update fuel separately
-            const fuelRef = doc(firestore, 'dragRaceFuel', userId);
+            const currentServer = getCurrentServer();
+            const fuelDocId = currentServer === 'beta' ? userId : `${userId}_${currentServer}`;
+            const fuelRef = doc(firestore, 'dragRaceFuel', fuelDocId);
             await updateDoc(fuelRef, {
                 currentFuel: increment(actualQuantity)
             });
@@ -508,7 +518,7 @@ export class DragRaceService {
      */
     static async getPlayerTime(userId: string, trackId: string): Promise<any> {
         const currentServer = getCurrentServer();
-        const timeRef = doc(firestore, 'dragRaceTimes', `${userId}_${trackId}_${currentServer}`);
+        const timeRef = doc(firestore, 'dragRaceTimes', currentServer === 'beta' ? `${userId}_${trackId}` : `${userId}_${trackId}_${currentServer}`);
         const timeDoc = await getDoc(timeRef);
 
         if (!timeDoc.exists()) {
@@ -533,7 +543,7 @@ export class DragRaceService {
         playerStats: PlayerStats
     ): Promise<void> {
         const currentServer = getCurrentServer();
-        const timeRef = doc(firestore, 'dragRaceTimes', `${userId}_${trackId}_${currentServer}`);
+        const timeRef = doc(firestore, 'dragRaceTimes', currentServer === 'beta' ? `${userId}_${trackId}` : `${userId}_${trackId}_${currentServer}`);
 
         const carModel = {
             id: activeCar.model.id,
@@ -578,7 +588,9 @@ export class DragRaceService {
         const batch = writeBatch(firestore);
 
         // Update fuel
-        const fuelRef = doc(firestore, 'dragRaceFuel', userId);
+        const currentServer = getCurrentServer();
+        const fuelDocId = currentServer === 'beta' ? userId : `${userId}_${currentServer}`;
+        const fuelRef = doc(firestore, 'dragRaceFuel', fuelDocId);
         batch.update(fuelRef, {
             currentFuel: increment(-1)
         });
