@@ -721,6 +721,7 @@ const TrainingPage: React.FC = () => {
                             remainingClicks={remainingClicks}
                             maxClicks={maxClicks}
                             lastResetTime={playerStats.trainingData?.lastResetTime}
+                            trainingType="sports"
                         />
 
                         {/* Static notification - always visible */}
@@ -774,6 +775,7 @@ const TrainingPage: React.FC = () => {
                             maxClicks={maxClicks}
                             label="Köök & Labor klikke jäänud"
                             lastResetTime={playerStats.kitchenLabTrainingData?.lastResetTime}
+                            trainingType="kitchen"
                         />
 
                         {/* Static notification - always visible */}
@@ -833,6 +835,7 @@ const TrainingPage: React.FC = () => {
                             maxClicks={maxClicks}
                             label="Käsitöö klikke jäänud"
                             lastResetTime={playerStats.handicraftTrainingData?.lastResetTime}
+                            trainingType="handicraft"
                         />
 
                         {/* Static notification - always visible */}

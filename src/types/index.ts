@@ -160,6 +160,12 @@ export interface PlayerStats {
         count: number;
         lastResetDate: Date | Timestamp;
     };
+    dailyTrainingClicks?: {
+        sports: number;
+        food: number;
+        handicraft: number;
+        lastResetDate: Date | Timestamp;
+    };
 }
 
 // Course definition

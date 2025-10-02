@@ -23,6 +23,24 @@ import {
     KitchenBonusResult
 } from './KitchenBonusService';
 
+// Daily training click limits
+const DAILY_TRAINING_LIMITS = {
+    STANDARD: {
+        sports: 10000,
+        food: 10000,
+        handicraft: 10000
+    },
+    VIP: {
+        sports: 50000,
+        food: 50000,
+        handicraft: 50000
+    }
+};
+
+const getDailyClickLimit = (isVip: boolean, category: 'sports' | 'food' | 'handicraft'): number => {
+    return isVip ? DAILY_TRAINING_LIMITS.VIP[category] : DAILY_TRAINING_LIMITS.STANDARD[category];
+};
+
 // Calculate experience needed for next attribute level
 export const calculateExpForNextLevel = (currentLevel: number): number => {
     if (currentLevel === 0) return 100;
@@ -552,6 +570,45 @@ export const performTraining = async (
 
     const stats = statsDoc.data() as PlayerStats;
 
+    // ADD: Check and reset daily click limits
+    const now = new Date();
+    const today = new Date(now.setHours(0, 0, 0, 0));
+
+    let dailyClicks = stats.dailyTrainingClicks || {
+        sports: 0,
+        food: 0,
+        handicraft: 0,
+        lastResetDate: today
+    };
+
+    // Reset if it's a new day
+    const lastReset = dailyClicks.lastResetDate instanceof Timestamp
+        ? dailyClicks.lastResetDate.toDate()
+        : new Date(dailyClicks.lastResetDate);
+    const lastResetDay = new Date(lastReset.setHours(0, 0, 0, 0));
+
+    if (today.getTime() > lastResetDay.getTime()) {
+        dailyClicks = {
+            sports: 0,
+            food: 0,
+            handicraft: 0,
+            lastResetDate: today
+        };
+    }
+
+    // Map training type to category and check daily limit
+    const clickCategory = trainingType === 'kitchen-lab' ? 'food' :
+        trainingType === 'handicraft' ? 'handicraft' : 'sports';
+
+    const dailyLimit = getDailyClickLimit(stats.isVip || false, clickCategory);
+
+    if (dailyClicks[clickCategory] >= dailyLimit) {
+        throw new Error(`Oled jõudnud päevase ${dailyLimit.toLocaleString('et-EE')} kliki limiidini ${
+            clickCategory === 'sports' ? 'spordis' :
+                clickCategory === 'food' ? 'köögis/laboris' : 'käsitöös'
+        }! Proovi homme uuesti.`);
+    }
+
     // Check training clicks
     if (trainingType === 'sports') {
         const trainingData = await checkAndResetTrainingClicks(userId);
@@ -740,6 +797,7 @@ export const performTraining = async (
         experience: Math.max(0, newPlayerExp),
         level: Math.max(1, newPlayerLevel),
         health: updatedHealth,
+        dailyTrainingClicks: dailyClicks,
         ...healthUpdates
     };
 
@@ -929,6 +987,9 @@ export const performTraining = async (
     // Update training data
     if (trainingType === 'sports') {
         const trainingData = await checkAndResetTrainingClicks(userId);
+
+        dailyClicks[clickCategory] += 1;
+
         updates.trainingData = {
             remainingClicks: Math.max(0, Number(trainingData.remainingClicks - 1) || 0),
             lastResetTime: trainingData.lastResetTime,
@@ -937,6 +998,9 @@ export const performTraining = async (
         };
     } else if (trainingType === 'kitchen-lab') {
         const kitchenLabData = await checkAndResetKitchenLabTrainingClicks(userId);
+
+        dailyClicks[clickCategory] += 1;
+
         updates.kitchenLabTrainingData = {
             remainingClicks: Math.max(0, Number(kitchenLabData.remainingClicks - 1) || 0),
             lastResetTime: kitchenLabData.lastResetTime,
@@ -944,6 +1008,9 @@ export const performTraining = async (
         };
     } else if (trainingType === 'handicraft') {
         const handicraftData = await checkAndResetHandicraftTrainingClicks(userId);
+
+        dailyClicks[clickCategory] += 1;
+
         updates.handicraftTrainingData = {
             remainingClicks: Math.max(0, Number(handicraftData.remainingClicks - 1) || 0),
             lastResetTime: handicraftData.lastResetTime,
@@ -1039,6 +1106,45 @@ export const performTraining5x = async (
 
     if (currentClicks < 5) {
         throw new Error(`Vajad vähemalt 5 treeningut, sul on ${currentClicks}`);
+    }
+
+    // ADD: Check daily limit for 5x training
+    const now = new Date();
+    const today = new Date(now.setHours(0, 0, 0, 0));
+
+    let dailyClicks = stats.dailyTrainingClicks || {
+        sports: 0,
+        food: 0,
+        handicraft: 0,
+        lastResetDate: today
+    };
+
+    // Reset if it's a new day
+    const lastReset = dailyClicks.lastResetDate instanceof Timestamp
+        ? dailyClicks.lastResetDate.toDate()
+        : new Date(dailyClicks.lastResetDate);
+    const lastResetDay = new Date(lastReset.setHours(0, 0, 0, 0));
+
+    if (today.getTime() > lastResetDay.getTime()) {
+        dailyClicks = {
+            sports: 0,
+            food: 0,
+            handicraft: 0,
+            lastResetDate: today
+        };
+    }
+
+    const clickCategory = trainingType === 'kitchen-lab' ? 'food' :
+        trainingType === 'handicraft' ? 'handicraft' : 'sports';
+    const dailyLimit = getDailyClickLimit(stats.isVip || false, clickCategory);
+    const remainingDailyClicks = dailyLimit - dailyClicks[clickCategory];
+
+    if (remainingDailyClicks < 5) {
+        throw new Error(
+            `Sul on tänaseks alles ${remainingDailyClicks} treeningut ` +
+            `(päevane limiit: ${dailyLimit.toLocaleString('et-EE')}). ` +
+            `Vajad vähemalt 5 treeningut!`
+        );
     }
 
     // For crafting activities, check materials for 5x
