@@ -1,6 +1,7 @@
 // src/services/FightService.ts
 import {doc, getDoc, Timestamp, updateDoc} from "firebase/firestore";
 import {firestore} from "../config/firebase";
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 export interface FightRound {
     roundNumber: number;
@@ -57,20 +58,20 @@ export const calculateFight = (
     const minRounds = 3; // Minimum 3 rounds
 
     // NEW PROGRESSIVE MONEY REWARD SYSTEM
-    const baseReward = 500; // Base reward amount
+    const baseReward = 1500; // Base reward amount
     const levelDifference = player2.level - player1.level; // Negative if opponent is lower level
 
     let moneyWon: number;
 
     if (levelDifference < 0) {
         // Fighting lower level opponent - decrease reward by 10% per level
-        const decreasePercentage = Math.abs(levelDifference) * 0.10;
+        const decreasePercentage = Math.abs(levelDifference) * 0.30;
         // Minimum 5% of base reward (never go to absolute 0)
         const multiplier = Math.max(0.05, 1 - decreasePercentage);
         moneyWon = Math.floor(baseReward * multiplier);
     } else if (levelDifference > 0) {
         // Fighting higher level opponent - increase reward by 10% per level
-        const increasePercentage = levelDifference * 0.10;
+        const increasePercentage = levelDifference * 0.30;
         // Cap at 200% increase (3x base reward)
         const multiplier = Math.min(3, 1 + increasePercentage);
         moneyWon = Math.floor(baseReward * multiplier);
@@ -117,19 +118,19 @@ export const calculatePotentialReward = (
     playerLevel: number,
     opponentLevel: number
 ): { reward: number; percentage: string } => {
-    const baseReward = 500;
+    const baseReward = 1500;
     const levelDifference = opponentLevel - playerLevel;
 
     let reward: number;
     let percentage: string;
 
     if (levelDifference < 0) {
-        const decreasePercentage = Math.abs(levelDifference) * 0.10;
+        const decreasePercentage = Math.abs(levelDifference) * 0.30;
         const multiplier = Math.max(0.05, 1 - decreasePercentage);
         reward = Math.floor(baseReward * multiplier);
         percentage = `${Math.floor(multiplier * 100)}%`;
     } else if (levelDifference > 0) {
-        const increasePercentage = levelDifference * 0.10;
+        const increasePercentage = levelDifference * 0.30;
         const multiplier = Math.min(3, 1 + increasePercentage);
         reward = Math.floor(baseReward * multiplier);
         percentage = `${Math.floor(multiplier * 100)}%`;
@@ -337,37 +338,9 @@ const calculateRoundScore = (player: FightParticipant, roundNumber: number) => {
     return { total: Math.floor(total) };
 };
 
-// Helper function to determine fight style based on attributes
-export const getFightStyle = (attributes: FightParticipant['attributes']): string => {
-    const { strength, agility, dexterity, endurance, intelligence } = attributes;
-
-    if (strength >= 15 && endurance >= 15) return 'Tanki stiil';
-    if (agility >= 15 && dexterity >= 15) return 'Tehniline stiil';
-    if (strength >= 15 && agility >= 12) return 'Jõuline stiil';
-    if (intelligence >= 15) return 'Taktiline stiil';
-    if (endurance >= 15) return 'Vastupidav stiil';
-
-    return 'Tasakaalustatud stiil';
-};
-
-// Calculate win probability before fight (for display purposes)
-export const calculateWinProbability = (
-    player1: FightParticipant,
-    player2: FightParticipant
-): { player1WinChance: number; player2WinChance: number } => {
-    // Simple calculation based on attribute totals and level
-    const player1Total = Object.values(player1.attributes).reduce((sum, val) => sum + val, 0) + player1.level;
-    const player2Total = Object.values(player2.attributes).reduce((sum, val) => sum + val, 0) + player2.level;
-
-    const totalPower = player1Total + player2Total;
-    const player1WinChance = Math.round((player1Total / totalPower) * 100);
-    const player2WinChance = 100 - player1WinChance;
-
-    return { player1WinChance, player2WinChance };
-};
-
 export const checkAndUpdateFightLimit = async (userId: string): Promise<boolean> => {
-    const statsRef = doc(firestore, 'playerStats', userId);
+    const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+    const statsRef = doc(firestore, 'playerStats', serverSpecificId);
     const statsDoc = await getDoc(statsRef);
 
     if (!statsDoc.exists()) return false;
