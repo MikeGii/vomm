@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { ALL_SHOP_ITEMS } from '../data/shop';
+import { getCurrentServer } from '../utils/serverUtils';
 
 // Enhanced ShopStock interface to track stock source
 interface EnhancedShopStock {
@@ -23,6 +24,19 @@ interface EnhancedShopStock {
     stockSource?: 'auto' | 'player_sold';
     playerSoldStock?: number;
 }
+
+/**
+ * Get server-specific stock document ID
+ */
+const getStockDocumentId = (itemId: string): string => {
+    const currentServer = getCurrentServer();
+    // Beta server uses original ID (backwards compatibility)
+    if (currentServer === 'beta') {
+        return itemId;
+    }
+    // Other servers use suffix
+    return `${itemId}_${currentServer}`;
+};
 
 /**
  * Check if item is player-craftable (has unlimited stock from players)
@@ -57,7 +71,7 @@ export const initializeShopStock = async (): Promise<void> => {
     const batch = writeBatch(firestore);
 
     for (const item of playerCraftableItems) {
-        const stockRef = doc(firestore, 'shopStock', item.id);
+        const stockRef = doc(firestore, 'shopStock', getStockDocumentId(item.id));
         const stockData: EnhancedShopStock = {
             itemId: item.id,
             currentStock: 0, // Start with 0 stock for player-crafted items
@@ -72,10 +86,6 @@ export const initializeShopStock = async (): Promise<void> => {
 
     await batch.commit();
 };
-
-/**
- * REMOVED: calculateRestockAmount - no longer needed for basic ingredients
- */
 
 /**
  * Calculate static price - no more dynamic pricing
@@ -109,7 +119,7 @@ export const updateStockAfterSell = async (itemId: string, quantity: number = 1)
         throw new Error('Ainult valmistatud tooteid saab tagasi müüa');
     }
 
-    const stockRef = doc(firestore, 'shopStock', itemId);
+    const stockRef = doc(firestore, 'shopStock', getStockDocumentId(itemId));
     const stockDoc = await getDoc(stockRef);
 
     if (!stockDoc.exists()) {
@@ -166,10 +176,15 @@ export const getAllItemsWithStock = async (): Promise<Array<{
         const stockSnapshot = await getDocs(stockCollection);
         const stockMap = new Map<string, EnhancedShopStock>();
 
+        const currentServer = getCurrentServer();
         stockSnapshot.forEach(doc => {
+            const docId = doc.id;
+            // Filter by current server
+            if (currentServer === 'beta' && docId.includes('_')) return;
+            if (currentServer !== 'beta' && !docId.endsWith(`_${currentServer}`)) return;
+
             const data = doc.data() as EnhancedShopStock;
             stockMap.set(data.itemId, data);
-            cacheManager.set(`shop_stock_${data.itemId}`, data);
         });
 
         const itemsWithStock = ALL_SHOP_ITEMS.map(item => {
@@ -214,22 +229,4 @@ export const getAllItemsWithStock = async (): Promise<Array<{
 export const clearAllStockCaches = () => {
     cacheManager.clearByPattern('shop');
     console.log('Shop caches cleared');
-};
-
-/**
- * DEPRECATED FUNCTIONS - keeping for backward compatibility during migration
- */
-export const calculateDynamicPrice = (basePrice: number, currentStock: number, maxStock: number): number => {
-    console.warn('calculateDynamicPrice is deprecated - use calculateStaticPrice instead');
-    return basePrice;
-};
-
-export const calculateRestockAmount = (
-    currentStock: number,
-    lastRestockTime: Timestamp | Date | any,
-    maxStock: number,
-    isProducedItem: boolean = false
-): number => {
-    console.warn('calculateRestockAmount is deprecated - no longer used in hybrid system');
-    return currentStock;
 };

@@ -5,8 +5,7 @@ import {
     where,
     getDocs,
     doc,
-    setDoc,
-    addDoc
+    setDoc
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { CasinoWin, CasinoLeaderboardEntry } from '../types/casino.types';

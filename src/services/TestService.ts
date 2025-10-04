@@ -9,6 +9,8 @@ import {
 import { firestore } from '../config/firebase';
 import { Test, ActiveTest, CompletedTest, PlayerStats } from '../types';
 import { ALL_TESTS, getTestById } from '../data/tests';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
+import { GlobalUserService } from './GlobalUserService';
 
 // Get available tests for player (unlocked by completed courses)
 export const getAvailableTests = (playerStats: PlayerStats): Test[] => {
@@ -54,7 +56,8 @@ export const startTest = async (userId: string, testId: string): Promise<ActiveT
     }
 
     // Check if player already has an active test
-    const playerStatsRef = doc(firestore, 'playerStats', userId);
+    const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+    const playerStatsRef = doc(firestore, 'playerStats', serverSpecificId);
     const playerStatsDoc = await getDoc(playerStatsRef);
     const playerStats = playerStatsDoc.data() as PlayerStats;
 
@@ -100,7 +103,8 @@ export const submitAnswer = async (
     questionIndex: number,
     answerIndex: number
 ): Promise<void> => {
-    const playerStatsRef = doc(firestore, 'playerStats', userId);
+    const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+    const playerStatsRef = doc(firestore, 'playerStats', serverSpecificId);
     const playerStatsDoc = await getDoc(playerStatsRef);
     const playerStats = playerStatsDoc.data() as PlayerStats;
 
@@ -172,7 +176,8 @@ export const getRemainingTime = (activeTest: ActiveTest): number => {
 
 // Finish test and calculate results
 export const finishTest = async (userId: string): Promise<CompletedTest> => {
-    const playerStatsRef = doc(firestore, 'playerStats', userId);
+    const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+    const playerStatsRef = doc(firestore, 'playerStats', serverSpecificId);
     const playerStatsDoc = await getDoc(playerStatsRef);
     const playerStats = playerStatsDoc.data() as PlayerStats;
 
@@ -241,22 +246,23 @@ export const finishTest = async (userId: string): Promise<CompletedTest> => {
         experience: increment(baseExp),
         reputation: increment(baseRep),
         completedTests: updatedCompletedTests,
-        activeTest: null // Remove active test
+        activeTest: null
     };
 
-    // Add pollid if earned (assuming pollid is stored in money field based on your context)
-    if (pollid > 0) {
-        updateData.pollid = increment(pollid);
-    }
-
     await updateDoc(playerStatsRef, updateData);
+
+    // Update pollid via GlobalUserService (outside transaction)
+    if (pollid > 0) {
+        await GlobalUserService.updatePollid(userId, pollid);
+    }
 
     return completedTest;
 };
 
 // Force finish test if time expires (can be called by timer)
 export const forceFinishExpiredTest = async (userId: string): Promise<CompletedTest | null> => {
-    const playerStatsRef = doc(firestore, 'playerStats', userId);
+    const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+    const playerStatsRef = doc(firestore, 'playerStats', serverSpecificId);
     const playerStatsDoc = await getDoc(playerStatsRef);
     const playerStats = playerStatsDoc.data() as PlayerStats;
 

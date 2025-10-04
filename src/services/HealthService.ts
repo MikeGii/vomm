@@ -2,6 +2,7 @@
 import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats } from '../types';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 const HEALTH_RECOVERY_RATE = 5; // HP per hour
 const RECOVERY_INTERVAL_MS = 60 * 60 * 1000; // 1 hour in milliseconds
@@ -11,7 +12,8 @@ export const checkAndApplyHealthRecovery = async (userId: string): Promise<{
     recovered: boolean;
     amountRecovered: number;
 }> => {
-    const statsRef = doc(firestore, 'playerStats', userId);
+    const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+    const statsRef = doc(firestore, 'playerStats', serverSpecificId);
     const statsDoc = await getDoc(statsRef);
 
     if (!statsDoc.exists()) return { recovered: false, amountRecovered: 0 };
@@ -73,51 +75,4 @@ export const checkAndApplyHealthRecovery = async (userId: string): Promise<{
     }
 
     return { recovered: false, amountRecovered: 0 };
-};
-
-// Apply damage to player and start recovery timer
-export const applyDamage = async (userId: string, damage: number): Promise<void> => {
-    const statsRef = doc(firestore, 'playerStats', userId);
-    const statsDoc = await getDoc(statsRef);
-
-    if (!statsDoc.exists()) return;
-
-    const stats = statsDoc.data() as PlayerStats;
-    if (!stats.health) return;
-
-    const newHealth = Math.max(0, stats.health.current - damage);
-    const wasAtMax = stats.health.current >= stats.health.max;
-    const nowBelowMax = newHealth < stats.health.max;
-
-    // Start recovery timer if health dropped below max
-    const updates: any = {
-        'health.current': newHealth
-    };
-
-    // Only set lastHealthUpdate if we just dropped below max health
-    if (wasAtMax && nowBelowMax) {
-        updates.lastHealthUpdate = Timestamp.now();
-    }
-
-    await updateDoc(statsRef, updates);
-};
-
-// Get time until next recovery
-export const getTimeUntilNextRecovery = (lastHealthUpdate: any): number => {
-    if (!lastHealthUpdate) return 0;
-
-    let lastUpdateDate: Date;
-    if (lastHealthUpdate instanceof Timestamp) {
-        lastUpdateDate = lastHealthUpdate.toDate();
-    } else if (lastHealthUpdate && typeof lastHealthUpdate === 'object' && 'seconds' in lastHealthUpdate) {
-        lastUpdateDate = new Date(lastHealthUpdate.seconds * 1000);
-    } else {
-        lastUpdateDate = new Date(lastHealthUpdate);
-    }
-
-    const now = new Date();
-    const timeSinceLastUpdate = now.getTime() - lastUpdateDate.getTime();
-    const timeToNextRecovery = RECOVERY_INTERVAL_MS - (timeSinceLastUpdate % RECOVERY_INTERVAL_MS);
-
-    return timeToNextRecovery;
 };

@@ -2,13 +2,15 @@
 import { doc, getDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerProfileModalData, User, PlayerStats, FirestoreTimestamp } from '../types';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 export const getPlayerProfileData = async (userId: string): Promise<PlayerProfileModalData | null> => {
     try {
         // Fetch both user data and player stats
+        const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
         const [userDoc, statsDoc] = await Promise.all([
-            getDoc(doc(firestore, 'users', userId)),
-            getDoc(doc(firestore, 'playerStats', userId))
+            getDoc(doc(firestore, 'users', userId)), // users collection is global
+            getDoc(doc(firestore, 'playerStats', serverSpecificId)) // playerStats is server-specific
         ]);
 
         if (!userDoc.exists() || !statsDoc.exists()) {

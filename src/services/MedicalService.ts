@@ -2,6 +2,7 @@
 import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { InventoryItem, PlayerStats } from '../types';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 export interface UseMedicalResult {
     success: boolean;
@@ -29,7 +30,8 @@ export const consumeMedicalItem = async (
     quantity: number = 1
 ): Promise<UseMedicalResult> => {
     try {
-        const playerRef = doc(firestore, 'playerStats', userId);
+        const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+        const playerRef = doc(firestore, 'playerStats', serverSpecificId);
         const playerDoc = await getDoc(playerRef);
 
         if (!playerDoc.exists()) {
@@ -146,26 +148,6 @@ export const consumeMedicalItem = async (
             message: 'Viga meditsiinivarustuse kasutamisel'
         };
     }
-};
-
-/**
- * Calculate how many items needed for full heal
- */
-export const calculateItemsNeededForFullHeal = (
-    currentHealth: number,
-    maxHealth: number,
-    healPerItem: number
-): number => {
-    if (healPerItem >= 9999) return 1; // Full heal items
-    const healthNeeded = maxHealth - currentHealth;
-    return Math.ceil(healthNeeded / healPerItem);
-};
-
-/**
- * Check if player needs healing
- */
-export const needsHealing = (health: { current: number; max: number }): boolean => {
-    return health.current < health.max;
 };
 
 /**

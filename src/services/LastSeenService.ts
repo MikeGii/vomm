@@ -1,6 +1,7 @@
 // src/services/LastSeenService.ts
 import { doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 /**
  * Uuenda mängija viimast nägemist
@@ -8,7 +9,8 @@ import { firestore } from '../config/firebase';
  */
 export const updateLastSeen = async (userId: string): Promise<void> => {
     try {
-        const statsRef = doc(firestore, 'playerStats', userId);
+        const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+        const statsRef = doc(firestore, 'playerStats', serverSpecificId);
         await updateDoc(statsRef, {
             lastSeen: Timestamp.now()
         });
