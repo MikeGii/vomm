@@ -6,6 +6,7 @@ import {
     getDocs,
     doc,
     setDoc,
+    addDoc
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { CasinoWin, CasinoLeaderboardEntry } from '../types/casino.types';
@@ -90,11 +91,16 @@ export const getUniversalLeaderboard = async (
         console.log('Fetching universal casino leaderboard from Firebase...');
 
         // Filter wins by server
-        const winsQuery = query(
-            collection(firestore, 'casinoWins'),
-            where('server', '==', currentServer),
-            where('winAmount', '>', 0)
-        );
+        const winsQuery = currentServer === 'beta'
+            ? query(
+                collection(firestore, 'casinoWins'),
+                where('winAmount', '>', 0)
+            )
+            : query(
+                collection(firestore, 'casinoWins'),
+                where('server', '==', currentServer),
+                where('winAmount', '>', 0)
+            );
 
         const snapshot = await getDocs(winsQuery);
 

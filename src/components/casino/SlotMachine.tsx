@@ -64,9 +64,9 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
     const fruitThreeChance = (4 / (totalSymbols * totalSymbols)) * 100; // ~8.16% (4 fruit symbols)
 
 // Two of a kind
-    const twoOfAKindChance = 60; // 60% when you get two matching (4x original!)
-    const twoOfAKindBaseChance = ((3 * (totalSymbols - 1)) / (totalSymbols * totalSymbols)) * 100; // ~12.24%
-    const actualTwoOfAKindWinChance = (twoOfAKindBaseChance * twoOfAKindChance) / 100; // ~7.35%
+    const twoOfAKindChance = 90; // 90% when you get two matching (4x original!)
+    const twoOfAKindBaseChance = ((3 * (totalSymbols - 1)) / (totalSymbols * totalSymbols)) * 100;
+    const actualTwoOfAKindWinChance = (twoOfAKindBaseChance * twoOfAKindChance) / 100;
 
 // Total winning chance
     const totalThreeOfAKindChance = diamondJackpotChance + luckySevenChance + bellThreeChance + fruitThreeChance;
@@ -189,7 +189,7 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
                         </div>
                         <div className="payout-item bonus">
                             <span className="combination">Kaks ühesugust</span>
-                            <span className="multiplier">x1.5</span>
+                            <span className="multiplier">x1.2</span>
                             <span className="probability">{actualTwoOfAKindWinChance.toFixed(2)}%</span>
                         </div>
                     </div>
@@ -198,12 +198,6 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
                         <strong>
                             Kogu võitmise tõenäosus: ~{totalWinChance.toFixed(1)}%
                         </strong>
-                    </div>
-
-                    <div className="house-edge">
-                        <small>
-                            💡 Maja eelis: ~45% - palju parem kui teistes kasiinodes!
-                        </small>
                     </div>
                 </div>
             </div>

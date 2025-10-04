@@ -171,10 +171,9 @@ export const generateSlotResult = (betAmount: number): SlotResult => {
     }
     // Two of a kind - DOUBLED from 15% to 30%
     else if (result[0] === result[1] || result[1] === result[2] || result[0] === result[2]) {
-        // 60% chance to win something on two of a kind (4x original)
-        if (Math.random() < 0.60) {
+        if (Math.random() < 0.90) {
             isWin = true;
-            multiplier = 1.5;
+            multiplier = 1.2;
         }
     }
 

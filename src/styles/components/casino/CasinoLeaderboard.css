@@ -116,12 +116,13 @@
 
 .casino-leaderboard-table-header {
     display: grid;
-    grid-template-columns: 60px 1fr 120px 100px 100px 80px;
+    grid-template-columns: 60px 1fr 160px 160px 140px 90px;
     padding: 0.75rem;
     background: #2a2a2a;
     border-bottom: 2px solid #444;
     font-weight: bold;
     color: #888;
+    gap: 0.75rem;
 }
 
 .casino-leaderboard-table-body {
@@ -149,11 +150,12 @@
 
 .casino-leaderboard-table-row {
     display: grid;
-    grid-template-columns: 60px 1fr 120px 100px 100px 80px;
+    grid-template-columns: 60px 1fr 160px 160px 140px 90px;
     padding: 0.75rem;
     border-bottom: 1px solid #222;
     color: #f0f0f0;
     transition: background 0.3s ease;
+    gap: 0.75rem;
 }
 
 .casino-leaderboard-table-row:hover {
