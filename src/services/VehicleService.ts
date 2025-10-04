@@ -223,7 +223,6 @@ export async function purchaseUsedCar(
             });
 
             // Count buyer's current cars to validate against total capacity
-            const buyerServerSpecificId = getServerSpecificId(buyerId, getCurrentServer());
             const buyerCarsQuery = query(collection(db, 'cars'), where('ownerId', '==', buyerServerSpecificId));
             const buyerCarsSnapshot = await getDocs(buyerCarsQuery);
 
@@ -428,6 +427,7 @@ export async function getUserCars(userId: string): Promise<PlayerCar[]> {
 
 export async function getCarsForSale(): Promise<Array<PlayerCar & { sellerName?: string }>> {
     try {
+        const currentServer = getCurrentServer();
         const carsQuery = query(
             collection(db, 'cars'),
             where('isForSale', '==', true)
@@ -441,20 +441,32 @@ export async function getCarsForSale(): Promise<Array<PlayerCar & { sellerName?:
 
         snapshot.forEach((doc) => {
             const data = doc.data();
-            ownerIds.add(data.ownerId);
+            const ownerId = data.ownerId;
+
+            // Filter by current server
+            if (currentServer === 'beta' && ownerId.includes('_')) return;
+            if (currentServer !== 'beta' && !ownerId.endsWith(`_${currentServer}`)) return;
+
+            ownerIds.add(ownerId);
             carDocs.push({ id: doc.id, ...data });
         });
 
-        const userPromises = Array.from(ownerIds).map(async (userId) => {
-            const userDoc = await getDoc(doc(db, 'users', userId));
+        // Extract base userIds for getting usernames
+        const userPromises = Array.from(ownerIds).map(async (serverSpecificId) => {
+            // Remove server suffix to get base userId
+            const baseUserId = currentServer === 'beta'
+                ? serverSpecificId
+                : serverSpecificId.replace(`_${currentServer}`, '');
+
+            const userDoc = await getDoc(doc(db, 'users', baseUserId));
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 return {
-                    userId,
+                    userId: serverSpecificId, // Keep server-specific ID as key
                     username: userData.username || userData.displayName || 'Kasutaja'
                 };
             }
-            return { userId, username: 'Kasutaja' };
+            return { userId: serverSpecificId, username: 'Kasutaja' };
         });
 
         const users = await Promise.all(userPromises);
