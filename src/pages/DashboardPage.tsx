@@ -259,7 +259,7 @@ function DashboardPage() {
                         {showPrefectureSelection && currentUser && (
                             <PrefectureSelectionModal
                                 isOpen={showPrefectureSelection}
-                                userId={currentUser.uid}
+                                userId={getServerSpecificId(currentUser.uid, getCurrentServer())}
                                 onComplete={handlePrefectureComplete}
                             />
                         )}

@@ -102,14 +102,23 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
     };
 
     const proceedWithLogin = (serverId: string) => {
-        // Set the current server
         setCurrentServer(serverId);
 
-        // Clear cache to ensure fresh data
+        // Clear cache but preserve server selection
+        const keysToPreserve = ['currentServer'];
+        const preserved: { [key: string]: string | null } = {};
+        keysToPreserve.forEach(key => {
+            preserved[key] = localStorage.getItem(key);
+        });
+
         localStorage.clear();
+
+        // Restore preserved keys
         localStorage.setItem('currentServer', serverId);
 
-        // Success callback will navigate to dashboard
+        // Dispatch custom event for same-tab detection
+        window.dispatchEvent(new CustomEvent('serverChanged', { detail: { server: serverId } }));
+
         onSuccess();
         onClose();
     };

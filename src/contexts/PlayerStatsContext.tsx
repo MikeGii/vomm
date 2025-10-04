@@ -107,24 +107,21 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     useEffect(() => {
         if (!currentUser) return;
 
-        const serverSpecificId = getServerSpecificId(currentUser.uid, currentServer);
-
-        // Update lastSeen every 5 minutes during activity
+        // Use BASE userId - LastSeenService adds server suffix itself
         const activityInterval = setInterval(() => {
             if (playerStats?.lastSeen !== undefined) {
-                updateLastSeenIfNeeded(serverSpecificId, playerStats.lastSeen);
+                updateLastSeenIfNeeded(currentUser.uid, playerStats.lastSeen);
             } else {
-                updateLastSeenIfNeeded(serverSpecificId);
+                updateLastSeenIfNeeded(currentUser.uid);
             }
-        }, 5 * 60 * 1000); // 5 minutes
+        }, 5 * 60 * 1000);
 
-        // Update lastSeen immediately when context loads
         if (playerStats) {
-            updateLastSeenIfNeeded(serverSpecificId, playerStats.lastSeen);
+            updateLastSeenIfNeeded(currentUser.uid, playerStats.lastSeen);
         }
 
         return () => clearInterval(activityInterval);
-    }, [currentUser, playerStats, currentServer]);
+    }, [currentUser, playerStats]);
 
     // ADD - Set up listener for global user data
     useEffect(() => {
@@ -161,6 +158,16 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }, [currentUser]);
 
     useEffect(() => {
+        // CRITICAL: Always get fresh server value from localStorage
+        const freshServer = getCurrentServer();
+
+        // Update state if it doesn't match
+        if (freshServer !== currentServer) {
+            console.log('Detected server mismatch. Updating from', currentServer, 'to', freshServer);
+            setCurrentServer(freshServer);
+            return; // Exit and let the next effect run with correct server
+        }
+
         if (!currentUser) {
             setPlayerStats(null);
             setLoading(false);
@@ -168,24 +175,33 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
 
         const setupListener = async () => {
+            console.log('=== SETTING UP LISTENER ===');
+            console.log('Current Server:', freshServer); // Use fresh value
+            console.log('User ID:', currentUser.uid);
+
             try {
                 const userDoc = await getDoc(doc(firestore, 'users', currentUser.uid));
                 const username = userDoc.exists() ? userDoc.data().username : 'Tundmatu';
+
+                console.log('Username:', username);
+
+                // Get server-specific document ID using FRESH server value
+                const statsDocId = getServerSpecificId(currentUser.uid, freshServer);
+                console.log('Stats Doc ID:', statsDocId);
 
                 // ADD - Load global data immediately
                 const globalData = await GlobalUserService.getGlobalUserData(currentUser.uid);
                 setPollid(globalData.pollid);
                 setIsVip(globalData.isVip);
 
-                // Get server-specific document ID
-                const statsDocId = getServerSpecificId(currentUser.uid, currentServer);
-
                 // Check if player has progress on this server
                 const existingStats = await getDoc(doc(firestore, 'playerStats', statsDocId));
+                console.log('Stats exist?', existingStats.exists());
 
                 if (!existingStats.exists()) {
-                    // New player on this server - initialize stats
+                    console.log('INITIALIZING NEW STATS FOR SERVER:', freshServer);
                     await initializePlayerStats(currentUser.uid, username, statsDocId);
+                    console.log('Stats initialized successfully');
                 }
 
                 // Set up the real-time listener with server-specific ID
@@ -257,21 +273,47 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
                 unsubscribeRef.current = null;
             }
         };
-    }, [currentUser, currentServer]); // Re-run when server changes
+    }, [currentUser]); // Re-run when server changes
 
     // Listen for server changes from localStorage
     useEffect(() => {
         const handleStorageChange = () => {
             const newServer = getCurrentServer();
+            console.log('Storage change detected. New server:', newServer);
             if (newServer !== currentServer) {
+                console.log('Server changed from', currentServer, 'to', newServer);
                 setCurrentServer(newServer);
                 setLoading(true);
-                // The main useEffect will handle reloading data
             }
         };
 
+        // CRITICAL: Check immediately on mount
+        const initialServer = getCurrentServer();
+        console.log('Initial server check:', initialServer, 'current state:', currentServer);
+        if (initialServer !== currentServer) {
+            console.log('Correcting server mismatch on mount');
+            setCurrentServer(initialServer);
+            setLoading(true);
+        }
+
         window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
+
+        // CRITICAL: Also listen to custom event for same-tab changes
+        const handleCustomServerChange = (e: CustomEvent) => {
+            console.log('Custom server change event:', e.detail.server);
+            const newServer = e.detail.server;
+            if (newServer !== currentServer) {
+                setCurrentServer(newServer);
+                setLoading(true);
+            }
+        };
+
+        window.addEventListener('serverChanged', handleCustomServerChange as EventListener);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('serverChanged', handleCustomServerChange as EventListener);
+        };
     }, [currentServer]);
 
     return (
