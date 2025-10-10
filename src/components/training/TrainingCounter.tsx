@@ -1,6 +1,8 @@
 // src/components/training/TrainingCounter.tsx
 import React, { useState, useEffect } from 'react';
 import { getTimeUntilReset } from '../../services/TrainingService';
+import { usePlayerStats } from '../../contexts/PlayerStatsContext';
+import { Timestamp } from 'firebase/firestore';
 import '../../styles/components/training/TrainingCounter.css';
 
 interface TrainingCounterProps {
@@ -8,23 +10,58 @@ interface TrainingCounterProps {
     maxClicks?: number;
     label?: string;
     lastResetTime?: any;
+    trainingType?: 'sports' | 'kitchen' | 'handicraft';
 }
 
 export const TrainingCounter: React.FC<TrainingCounterProps> = ({
                                                                     remainingClicks,
                                                                     maxClicks = 50,
                                                                     label = 'Treeningkordi jäänud',
-                                                                    lastResetTime
+                                                                    lastResetTime,
+                                                                    trainingType = 'sports'
                                                                 }) => {
     const [timeUntilReset, setTimeUntilReset] = useState<string>('');
+    const { playerStats, isVip } = usePlayerStats();
+
+    // Calculate remaining daily clicks
+    const getRemainingDailyClicks = (): { remaining: number; limit: number } => {
+        const dailyLimit = isVip ? 50000 : 10000;
+
+        if (!playerStats?.dailyTrainingClicks) {
+            return { remaining: dailyLimit, limit: dailyLimit };
+        }
+
+        const now = new Date();
+        const today = new Date(now.setHours(0, 0, 0, 0));
+
+        const lastReset = playerStats.dailyTrainingClicks.lastResetDate instanceof Timestamp
+            ? playerStats.dailyTrainingClicks.lastResetDate.toDate()
+            : new Date(playerStats.dailyTrainingClicks.lastResetDate);
+        const lastResetDay = new Date(lastReset.setHours(0, 0, 0, 0));
+
+        // If it's a new day, return full limit
+        if (today.getTime() > lastResetDay.getTime()) {
+            return { remaining: dailyLimit, limit: dailyLimit };
+        }
+
+        // Map training type to category
+        const clickCategory = trainingType === 'kitchen' ? 'food' :
+            trainingType === 'handicraft' ? 'handicraft' : 'sports';
+
+        const used = playerStats.dailyTrainingClicks[clickCategory] || 0;
+        return {
+            remaining: Math.max(0, dailyLimit - used),
+            limit: dailyLimit
+        };
+    };
+
+    const dailyClickInfo = getRemainingDailyClicks();
 
     useEffect(() => {
         const updateTimer = () => {
             if (lastResetTime) {
-                // Calculate time until reset based on provided lastResetTime
                 setTimeUntilReset(calculateTimeUntilReset(lastResetTime));
             } else {
-                // Fallback to original function (for sports)
                 setTimeUntilReset(getTimeUntilReset());
             }
         };
@@ -35,7 +72,6 @@ export const TrainingCounter: React.FC<TrainingCounterProps> = ({
         return () => clearInterval(interval);
     }, [lastResetTime]);
 
-    // Helper function to calculate time until next reset
     const calculateTimeUntilReset = (lastReset: any): string => {
         const now = new Date();
         const nextHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1);
@@ -67,6 +103,13 @@ export const TrainingCounter: React.FC<TrainingCounterProps> = ({
                             className="counter-progress-bar"
                             style={{ width: `${clicksPercentage}%` }}
                         />
+                    </div>
+
+                    {/* New daily limit display */}
+                    <div className="daily-limit-info">
+                        <span className="daily-limit-text">
+                            Päevane limiit: {dailyClickInfo.remaining.toLocaleString('et-EE')} / {dailyClickInfo.limit.toLocaleString('et-EE')}
+                        </span>
                     </div>
                 </div>
                 <div className="counter-timer">

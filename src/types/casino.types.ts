@@ -7,6 +7,7 @@ export interface CasinoWin {
     multiplier: number;
     timestamp: number;
     month: string;
+    server: string;
 }
 
 export interface CasinoLeaderboardEntry {

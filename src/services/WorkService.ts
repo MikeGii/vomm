@@ -22,6 +22,8 @@ import { calculateLevelFromExp } from "./PlayerService";
 import { triggerWorkEvent } from "./EventService";
 import { updateCrimeLevelAfterWork } from "./CrimeService";
 import { updateProgress } from "./TaskService";
+import {getCurrentServer, getServerSpecificId} from "../utils/serverUtils";
+import {GlobalUserService} from "./GlobalUserService";
 
 // Start work
 export const startWork = async (
@@ -31,7 +33,7 @@ export const startWork = async (
     department: string,
     hours: number
 ): Promise<ActiveWork> => {
-    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
     const statsDoc = await getDoc(statsRef);
 
     if (!statsDoc.exists()) {
@@ -82,7 +84,8 @@ export const startWork = async (
     };
 
     // VIP LOGIC: Determine working clicks based on VIP status
-    const workingClicks = stats.isVip ? 30 : 10;
+    const globalData = await GlobalUserService.getGlobalUserData(userId);
+    const workingClicks = globalData.isVip ? 30 : 10;
 
     // Update player stats
     await updateDoc(statsRef, {
@@ -101,7 +104,7 @@ export const checkAndCompleteWork = async (userId: string): Promise<{
     completed: boolean;
     hasEvent: boolean;
 }> => {
-    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
     const statsDoc = await getDoc(statsRef);
 
     if (!statsDoc.exists()) {
@@ -152,7 +155,7 @@ export const completeWork = async (userId: string): Promise<{
     wasAlreadyCompleted?: boolean;
     rewards?: any;
 }> => {
-    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
 
     try {
         // Use runTransaction to prevent race conditions
@@ -184,7 +187,8 @@ export const completeWork = async (userId: string): Promise<{
             const newTotalWorkedHours = (stats.totalWorkedHours || 0) + stats.activeWork.totalHours;
 
             // VIP LOGIC: Keep your original VIP logic
-            const nonWorkingClicks = stats.isVip ? 100 : 50;
+            const globalData = await GlobalUserService.getGlobalUserData(userId);
+            const nonWorkingClicks = globalData.isVip ? 100 : 50;
 
             // Prepare update data
             const updateData: any = {
@@ -208,7 +212,7 @@ export const completeWork = async (userId: string): Promise<{
 
             // Create work history entry (same as your original)
             const historyEntry: WorkHistoryEntry = {
-                userId,
+                userId: getServerSpecificId(userId, getCurrentServer()),
                 workId: stats.activeWork.workId,
                 workName: workActivity.name,
                 prefecture: stats.activeWork.prefecture,
@@ -294,9 +298,12 @@ export const getWorkHistory = async (
     hasMore: boolean;
 }> => {
     // Get total count efficiently
+    const currentServer = getCurrentServer();
+    const serverUserId = getServerSpecificId(userId, currentServer);
+
     const countQuery = query(
         collection(firestore, 'workHistory'),
-        where('userId', '==', userId)
+        where('userId', '==', serverUserId)
     );
     const countSnapshot = await getCountFromServer(countQuery);
     const totalCount = countSnapshot.data().count;
@@ -317,7 +324,7 @@ export const getWorkHistory = async (
         // First page - simple query
         historyQuery = query(
             collection(firestore, 'workHistory'),
-            where('userId', '==', userId),
+            where('userId', '==', serverUserId),
             orderBy('completedAt', 'desc'),
             limit(itemsPerPage)
         );
@@ -326,7 +333,7 @@ export const getWorkHistory = async (
         const skipCount = (page - 1) * itemsPerPage;
         const skipQuery = query(
             collection(firestore, 'workHistory'),
-            where('userId', '==', userId),
+            where('userId', '==', serverUserId),
             orderBy('completedAt', 'desc'),
             limit(skipCount)
         );
@@ -336,7 +343,7 @@ export const getWorkHistory = async (
             const lastDoc = skipSnapshot.docs[skipSnapshot.docs.length - 1];
             historyQuery = query(
                 collection(firestore, 'workHistory'),
-                where('userId', '==', userId),
+                where('userId', '==', serverUserId),
                 orderBy('completedAt', 'desc'),
                 startAfter(lastDoc),
                 limit(itemsPerPage)
@@ -365,12 +372,14 @@ export const getWorkHistory = async (
 };
 
 // Cancel active work with 50% reward penalty
+// In src/services/WorkService.ts, update the cancelWork function:
+
 export const cancelWork = async (userId: string): Promise<{
     success: boolean;
-    message?: string;
+    message: string;
     rewards?: { experience: number; money: number };
 }> => {
-    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
 
     try {
         const result = await runTransaction(firestore, async (transaction) => {
@@ -386,21 +395,50 @@ export const cancelWork = async (userId: string): Promise<{
                 return { success: false, message: 'Sul pole aktiivset tööd' };
             }
 
+            // Check daily cancellation limit
+            const now = Timestamp.now();
+            const today = new Date(now.toDate().setHours(0, 0, 0, 0));
+
+            let cancellationData = stats.dailyWorkCancellations || {
+                count: 0,
+                lastResetDate: today
+            };
+
+            // Reset counter if it's a new day
+            const lastReset = cancellationData.lastResetDate instanceof Timestamp
+                ? cancellationData.lastResetDate.toDate()
+                : new Date(cancellationData.lastResetDate);
+            const lastResetDay = new Date(lastReset.setHours(0, 0, 0, 0));
+
+            if (today.getTime() > lastResetDay.getTime()) {
+                cancellationData = {
+                    count: 0,
+                    lastResetDate: today
+                };
+            }
+
+            // Check if limit reached
+            if (cancellationData.count >= 3) {
+                return {
+                    success: false,
+                    message: 'Oled juba tänaseks 3 korda tööd katkestanud. Proovi homme uuesti!'
+                };
+            }
+
             const workActivity = getWorkActivityById(stats.activeWork.workId);
             if (!workActivity) {
                 return { success: false, message: 'Töötegevus ei ole saadaval' };
             }
 
             // Calculate how much time has passed
-            const now = Timestamp.now();
             const startTime = stats.activeWork.startedAt as Timestamp;
-            const timeWorked = now.toMillis() - startTime.toMillis(); // Time actually worked in milliseconds
+            const timeWorked = now.toMillis() - startTime.toMillis();
 
             // Calculate hours and minutes worked
             const hoursWorked = Math.max(0.1, timeWorked / (1000 * 3600));
             const minutesWorked = timeWorked / (1000 * 60);
 
-            // UPDATED: Calculate rewards with department bonuses (await added)
+            // Calculate rewards with department bonuses
             const workedRewards = await calculateWorkRewards(workActivity, hoursWorked, stats.rank, stats);
 
             // Apply 50% penalty
@@ -414,8 +452,9 @@ export const cancelWork = async (userId: string): Promise<{
             const newLevel = calculateLevelFromExp(newExp);
             const newTotalWorkedHours = (stats.totalWorkedHours || 0) + hoursWorked;
 
-            // FIXED: Training clicks logic with minimum work duration check
-            const nonWorkingClicks = stats.isVip ? 100 : 50;
+            // Training clicks logic
+            const globalData = await GlobalUserService.getGlobalUserData(userId);
+            const nonWorkingClicks = globalData.isVip ? 100 : 50;
             let newTrainingClicks = stats.trainingData?.remainingClicks || 0;
             let newKitchenClicks = stats.kitchenLabTrainingData?.remainingClicks || 0;
             let newHandicraftClicks = stats.handicraftTrainingData?.remainingClicks || 0;
@@ -426,7 +465,9 @@ export const cancelWork = async (userId: string): Promise<{
                 newKitchenClicks = nonWorkingClicks;
                 newHandicraftClicks = nonWorkingClicks;
             }
-            // If worked less than 59 minutes, keep current click amounts (no bonus)
+
+            // Increment cancellation counter
+            cancellationData.count += 1;
 
             // Update player stats
             const updateData: any = {
@@ -434,6 +475,7 @@ export const cancelWork = async (userId: string): Promise<{
                 experience: newExp,
                 level: newLevel,
                 totalWorkedHours: newTotalWorkedHours,
+                dailyWorkCancellations: cancellationData,
                 'trainingData.isWorking': false,
                 'trainingData.remainingClicks': newTrainingClicks,
                 'kitchenLabTrainingData.remainingClicks': newKitchenClicks,
@@ -449,7 +491,7 @@ export const cancelWork = async (userId: string): Promise<{
 
             // Create work history entry for cancelled work
             const historyEntry: WorkHistoryEntry = {
-                userId,
+                userId: getServerSpecificId(userId, getCurrentServer()),
                 workId: stats.activeWork.workId,
                 workName: `${workActivity.name} (Katkestatud)`,
                 prefecture: stats.activeWork.prefecture,
@@ -467,7 +509,7 @@ export const cancelWork = async (userId: string): Promise<{
             return {
                 success: true,
                 rewards: penalizedRewards,
-                message: 'Töö edukalt katkestatud'
+                message: `Töö edukalt katkestatud! (${3 - cancellationData.count} katkestust alles tänaseks)`
             };
         });
 

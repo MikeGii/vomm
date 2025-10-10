@@ -1,10 +1,11 @@
-// src/contexts/EstateContext.tsx
+// src/contexts/EstateContext.tsx - UPDATED
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerEstate } from '../types/estate';
 import { useAuth } from './AuthContext';
 import { getPlayerEstate, initializePlayerEstate } from '../services/EstateService';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 interface EstateContextType {
     playerEstate: PlayerEstate | null;
@@ -33,6 +34,7 @@ export const EstateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [playerEstate, setPlayerEstate] = useState<PlayerEstate | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [currentServer, setCurrentServer] = useState<string>(getCurrentServer());
 
     // Use useRef instead of state to avoid re-renders
     const initializedUsersRef = useRef<Set<string>>(new Set());
@@ -41,13 +43,15 @@ export const EstateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (!currentUser) return;
 
         try {
-            const estate = await getPlayerEstate(currentUser.uid);
+            // Use server-specific ID
+            const estateDocId = getServerSpecificId(currentUser.uid, currentServer);
+            const estate = await getPlayerEstate(estateDocId);
             setPlayerEstate(estate);
         } catch (err) {
             console.error('Error refreshing estate:', err);
             setError(err instanceof Error ? err.message : 'Unknown error');
         }
-    }, [currentUser]);
+    }, [currentUser, currentServer]);
 
     // Helper functions
     const hasWorkshop = useCallback((): boolean => {
@@ -61,6 +65,22 @@ export const EstateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const canUseLaserCutter = useCallback((): boolean => {
         return hasWorkshop() && (playerEstate?.ownedDevices.hasLaserCutter || false);
     }, [playerEstate, hasWorkshop]);
+
+    // Listen for server changes from localStorage
+    useEffect(() => {
+        const handleStorageChange = () => {
+            const newServer = getCurrentServer();
+            if (newServer !== currentServer) {
+                setCurrentServer(newServer);
+                setLoading(true);
+                // Clear initialization tracking for server switch
+                initializedUsersRef.current = new Set();
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, [currentServer]);
 
     useEffect(() => {
         if (!currentUser) {
@@ -76,8 +96,11 @@ export const EstateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         const setupListener = async () => {
             try {
+                // Get server-specific document ID
+                const estateDocId = getServerSpecificId(currentUser.uid, currentServer);
+
                 unsubscribe = onSnapshot(
-                    doc(firestore, 'playerEstates', currentUser.uid),
+                    doc(firestore, 'playerEstates', estateDocId),
                     async (doc) => {
                         if (doc.exists()) {
                             const data = doc.data();
@@ -90,13 +113,15 @@ export const EstateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                             setError(null);
                         } else {
                             // Document doesn't exist - initialize for existing player
-                            // Check if we've already tried to initialize
-                            if (!initializedUsersRef.current.has(currentUser.uid)) {
+                            // Check if we've already tried to initialize for this server
+                            const initKey = `${currentUser.uid}_${currentServer}`;
+                            if (!initializedUsersRef.current.has(initKey)) {
                                 try {
                                     setLoading(true);
-                                    console.log('Initializing estate for existing user:', currentUser.uid);
-                                    initializedUsersRef.current.add(currentUser.uid);
-                                    await initializePlayerEstate(currentUser.uid);
+                                    console.log(`Initializing estate for user on ${currentServer} server:`, currentUser.uid);
+                                    initializedUsersRef.current.add(initKey);
+                                    // Pass the server-specific document ID to initialization
+                                    await initializePlayerEstate(estateDocId);
                                     // The onSnapshot will fire again with the new document
                                 } catch (error) {
                                     console.error('Failed to initialize estate:', error);
@@ -130,7 +155,7 @@ export const EstateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 unsubscribe();
             }
         };
-    }, [currentUser]); // Only depend on currentUser
+    }, [currentUser, currentServer]); // Re-run when server changes
 
     return (
         <EstateContext.Provider value={{

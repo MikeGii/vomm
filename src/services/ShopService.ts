@@ -2,7 +2,7 @@
 import {
     doc,
     runTransaction
-} from './TrackedFirestore';
+} from 'firebase/firestore';
 import { Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { ShopItem, PurchaseResult } from '../types/shop';
@@ -12,6 +12,8 @@ import { ALL_SHOP_ITEMS } from '../data/shop';
 import { createTimestampedId } from '../utils/inventoryUtils';
 import { calculateStaticPrice } from "./ShopStockService";
 import { validatePurchaseQuantity, validateTotalCost } from '../utils/purchaseValidation';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
+import { GlobalUserService } from './GlobalUserService';
 import { cacheManager } from "./CacheManager";
 
 /**
@@ -116,9 +118,9 @@ export const purchaseItem = async (
         const isPlayerCraftable = isPlayerCraftableItem(shopItem);
 
         // Use atomic transaction to prevent race conditions
-        return await runTransaction(async (transaction: any) => {
+        return await runTransaction(firestore, async (transaction: any) => {
             // Get references
-            const playerRef = doc(firestore, 'playerStats', userId);
+            const playerRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
             let stockRef = null;
 
             // Only check stock for player-craftable items
@@ -159,9 +161,11 @@ export const purchaseItem = async (
             let totalCost: number;
             let currentBalance: number;
 
+            const globalData = await GlobalUserService.getGlobalUserData(userId);
+
             if (isPollidPurchase) {
                 totalCost = (shopItem.basePollidPrice || shopItem.pollidPrice || 0) * quantity;
-                currentBalance = playerStats.pollid || 0;
+                currentBalance = globalData.pollid;
             } else {
                 totalCost = shopItem.basePrice * quantity;
                 currentBalance = playerStats.money || 0;
@@ -225,19 +229,23 @@ export const purchaseItem = async (
                 updatedInventory.push(newItem);
             }
 
-            // Update player stats
+            // Update player stats data (money only, not pollid)
             const updateData: any = {
                 inventory: updatedInventory,
                 lastModified: Timestamp.now()
             };
 
-            if (isPollidPurchase) {
-                updateData.pollid = currentBalance - totalCost;
-            } else {
+            if (!isPollidPurchase) {
                 updateData.money = currentBalance - totalCost;
             }
 
+            // Complete the transaction first
             transaction.update(playerRef, updateData);
+
+            // Handle pollid update AFTER transaction (outside transaction)
+            if (isPollidPurchase) {
+                await GlobalUserService.updatePollid(userId, -totalCost);
+            }
 
             // Clear caches after successful transaction
             if (isPlayerCraftable) {
@@ -252,7 +260,7 @@ export const purchaseItem = async (
             };
 
             if (isPollidPurchase) {
-                result.newPollidBalance = currentBalance - totalCost;
+                result.newPollidBalance = globalData.pollid - totalCost;
             } else {
                 result.newBalance = currentBalance - totalCost;
             }

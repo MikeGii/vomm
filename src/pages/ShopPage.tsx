@@ -11,7 +11,6 @@ import { ShopPurchaseModal } from '../components/shop/ShopPurchaseModal';
 import { ShopItem } from '../types/shop';
 import { purchaseItem } from '../services/ShopService';
 import { TabNavigation } from '../components/ui/TabNavigation';
-import { usePageTracking } from '../hooks/usePageTracking';
 import { SHOP_CATEGORIES } from '../types/shop';
 import {
     initializeShopStock,
@@ -24,12 +23,10 @@ const ITEMS_PER_PAGE = 20;
 const REFRESH_INTERVAL = 300000; // 5 minutes - longer since most items are unlimited now
 
 const ShopPage: React.FC = () => {
-    usePageTracking('ShopPage');
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     const { showToast } = useToast();
-    const { playerStats, loading: statsLoading, refreshStats } = usePlayerStats();
-
+    const { playerStats, loading: statsLoading, refreshStats, pollid } = usePlayerStats();
     // Updated state structure for hybrid system
     const [itemsWithStock, setItemsWithStock] = useState<Array<{
         item: any;
@@ -50,7 +47,7 @@ const ShopPage: React.FC = () => {
 
     // Get money values from playerStats
     const playerMoney = playerStats?.money || 0;
-    const playerPollid = playerStats?.pollid || 0;
+    const playerPollid = pollid;
 
     // Create tabs from SHOP_CATEGORIES
     const tabs = [

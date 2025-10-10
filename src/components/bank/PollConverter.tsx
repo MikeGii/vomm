@@ -4,6 +4,7 @@ import { firestore } from '../../config/firebase';
 import { useToast } from '../../contexts/ToastContext';
 import { formatMoney } from '../../utils/currencyUtils';
 import '../../styles/components/bank/PollConverter.css';
+import {getCurrentServer, getServerSpecificId} from "../../utils/serverUtils";
 
 interface PollConverterProps {
     currentUserId: string;
@@ -57,34 +58,47 @@ export const PollConverter: React.FC<PollConverterProps> = ({
 
             // Use a transaction to ensure atomic updates
             await runTransaction(firestore, async (transaction) => {
-                const playerRef = doc(firestore, 'playerStats', currentUserId);
+                // Get player stats for money (server-specific)
+                const serverSpecificId = getServerSpecificId(currentUserId, getCurrentServer());
+                const playerRef = doc(firestore, 'playerStats', serverSpecificId);
                 const playerDoc = await transaction.get(playerRef);
 
                 if (!playerDoc.exists()) {
                     throw new Error('Mängija andmeid ei leitud');
                 }
 
-                const currentData = playerDoc.data();
-                const currentPollid = currentData.pollid || 0;
-                const currentMoney = currentData.money || 0;
+                // Get global user data for pollid
+                const userRef = doc(firestore, 'users', currentUserId);
+                const userDoc = await transaction.get(userRef);
+
+                if (!userDoc.exists()) {
+                    throw new Error('Kasutaja andmeid ei leitud');
+                }
+
+                const currentMoney = playerDoc.data().money || 0;
+                const currentPollid = userDoc.data().pollid || 0;
 
                 // Double-check we have enough polls
                 if (currentPollid < pollsToConvert) {
                     throw new Error('Ebapiisav pollide arv');
                 }
 
-                // Update player stats
+                // Update pollid in users collection (global)
+                transaction.update(userRef, {
+                    pollid: currentPollid - pollsToConvert
+                });
+
+                // Update money in playerStats (server-specific)
                 transaction.update(playerRef, {
-                    pollid: currentPollid - pollsToConvert,
                     money: currentMoney + moneyToAdd,
                     lastModified: Timestamp.now()
                 });
 
-                // Create transaction log
+                // Create transaction log (use server-specific IDs)
                 const logRef = doc(collection(firestore, 'bankTransactions'));
                 transaction.set(logRef, {
-                    fromUserId: currentUserId,
-                    toUserId: currentUserId,
+                    fromUserId: serverSpecificId,
+                    toUserId: serverSpecificId,
                     type: 'poll_conversion',
                     pollsConverted: pollsToConvert,
                     amount: moneyToAdd,

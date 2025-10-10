@@ -11,12 +11,11 @@ import { DepartmentLeaderboard } from '../components/department/DepartmentLeader
 import '../styles/pages/Department.css';
 import { isPoliceOfficer, canDonateToUnitWallet } from "../utils/playerStatus";
 import {DepartmentInstructions} from "../components/department/DepartmentInstructions";
-import { usePageTracking } from '../hooks/usePageTracking';
+import {PrefectureTransfer} from "../components/department/PrefectureTransfer";
 
 const DepartmentPage: React.FC = () => {
     const navigate = useNavigate();
     const { playerStats, loading, refreshStats } = usePlayerStats();
-    usePageTracking('DepartmentPage');
 
     if (loading) {
         return (
@@ -108,6 +107,8 @@ const DepartmentPage: React.FC = () => {
                         onMoneyUpdate={refreshStats}
                     />
                 )}
+
+                <PrefectureTransfer />
 
                 <DepartmentLeaderboard />
             </main>

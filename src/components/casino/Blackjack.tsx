@@ -19,9 +19,8 @@ import '../../styles/components/casino/Blackjack.css';
 
 export const Blackjack: React.FC = () => {
     const { currentUser } = useAuth();
-    const { playerStats, loading } = usePlayerStats();
+    const { playerStats, loading, pollid } = usePlayerStats();
     const { showToast } = useToast();
-
     const [gameState, setGameState] = useState<BlackjackGameState | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [showDealerCards, setShowDealerCards] = useState(false);
@@ -34,12 +33,15 @@ export const Blackjack: React.FC = () => {
     const [blockReason, setBlockReason] = useState<string>('');
 
     useEffect(() => {
-        if (playerStats) {
-            const { canPlay: allowed, reason } = canPlayBlackjack(playerStats);
-            setCanPlay(allowed);
-            setBlockReason(reason || '');
-        }
-    }, [playerStats]);
+        const checkCanPlay = async () => {
+            if (currentUser && playerStats) {
+                const { canPlay: allowed, reason } = await canPlayBlackjack(currentUser.uid, playerStats);
+                setCanPlay(allowed);
+                setBlockReason(reason || '');
+            }
+        };
+        checkCanPlay();
+    }, [playerStats, currentUser]);
 
     // Format card display
     const getCardSymbol = (card: Card): string => {
@@ -183,7 +185,7 @@ export const Blackjack: React.FC = () => {
                 <h3>🃏 Blackjack (21)</h3>
                 <div className="blackjack-stats">
                     <span className="blackjack-pollid-display">
-                        Pollid: {playerStats?.pollid || 0}
+                        Pollid: {pollid}
                     </span>
                 </div>
             </div>
@@ -265,8 +267,7 @@ export const Blackjack: React.FC = () => {
                             >
                                 Jää (Stand)
                             </button>
-                            {gameState.playerHand.length === 2 &&
-                                (playerStats?.pollid || 0) >= 10 && (
+                            {gameState.playerHand.length === 2 && pollid >= 10 && (
                                     <button
                                         className="blackjack-control-button blackjack-double"
                                         onClick={handleDoubleDown}

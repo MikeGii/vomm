@@ -6,6 +6,7 @@ import { DEPARTMENT_UNITS } from '../data/departmentUnits';
 import { PREFECTURES } from '../data/prefectures';
 import { DepartmentCrimeStats, DepartmentCrimeDisplay } from '../types/crimeActivity';
 import { cacheManager } from './CacheManager';
+import { getCurrentServer } from '../utils/serverUtils';
 
 // 30-minutiline cache
 const DEPARTMENT_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
@@ -86,13 +87,19 @@ const getAllDepartmentUnitCombinations = (): Array<{id: string, department: stri
  */
 const calculateCrimeStatsFromPlayers = async (players: any[]): Promise<DepartmentCrimeDisplay[]> => {
     try {
-        // Laadi kuritegevuse dokumendid
+        const currentServer = getCurrentServer();
         const crimeCollection = collection(firestore, CRIME_COLLECTION);
         const querySnapshot = await getDocs(crimeCollection);
 
         const results: DepartmentCrimeDisplay[] = [];
 
         for (const docSnap of querySnapshot.docs) {
+            const docId = docSnap.id;
+
+            // Filter by server
+            if (currentServer === 'beta' && docId.includes('_')) continue;
+            if (currentServer !== 'beta' && !docId.endsWith(`_${currentServer}`)) continue;
+
             const crimeData = docSnap.data() as DepartmentCrimeStats;
 
             // Arvuta osakonna mängijate arv juba laetud mängijate listist
@@ -130,7 +137,8 @@ const calculateCrimeStatsFromPlayers = async (players: any[]): Promise<Departmen
  * PEAMINE MEETOD: laadib kõik osakonna andmed korraga cache'iga
  */
 export const getAllDepartmentData = async (forceRefresh: boolean = false): Promise<DepartmentLeaderboardData> => {
-    const cacheKey = 'department_leaderboard_data';
+    const currentServer = getCurrentServer();
+    const cacheKey = `department_leaderboard_data_${currentServer}`;
 
     if (!forceRefresh) {
         const cached = cacheManager.get<DepartmentLeaderboardData>(cacheKey, DEPARTMENT_CACHE_DURATION);
@@ -268,23 +276,4 @@ const calculatePrefectureScores = (players: any[]): DepartmentScore[] => {
 
     return Object.values(prefectureScores)
         .sort((a, b) => b.score - a.score);
-};
-
-// Tagasiühilduvuse meetodid
-export const getDepartmentUnitScores = async (): Promise<DepartmentScore[]> => {
-    const data = await getAllDepartmentData();
-    return data.unitScores;
-};
-
-export const getPrefectureScores = async (): Promise<DepartmentScore[]> => {
-    const data = await getAllDepartmentData();
-    return data.prefectureScores;
-};
-
-/**
- * Cache'i tühjendamine
- */
-export const clearDepartmentCache = (): void => {
-    cacheManager.clearByPattern('department_leaderboard');
-    console.log('Department leaderboard cache cleared');
 };

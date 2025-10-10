@@ -27,7 +27,7 @@ import {calculateAcceleration} from "../utils/vehicleCalculations";
 const DragRacePage: React.FC = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
-    const { playerStats, loading: statsLoading } = usePlayerStats();
+    const { playerStats, loading: statsLoading, pollid } = usePlayerStats();
     const { showToast } = useToast();
 
     // Tab state
@@ -392,6 +392,7 @@ const DragRacePage: React.FC = () => {
                     onPurchase={handleFuelPurchaseConfirm}
                     purchaseOptions={fuelPurchaseOptions}
                     playerStats={playerStats}
+                    playerPollid={pollid}
                 />
             )}
 

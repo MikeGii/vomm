@@ -4,11 +4,15 @@ import { firestore } from '../config/firebase';
 import { PlayerCar } from '../types/vehicles';
 import { VehicleModel } from '../types/vehicleDatabase';
 import { getVehicleModelById } from './VehicleDatabaseService';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 export class ActiveCarService {
 
     // Set active car for drag racing
     static async setActiveCar(userId: string, carId: string): Promise<void> {
+        // Get server-specific owner ID
+        const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+
         // Verify user owns this car
         const carRef = doc(firestore, 'cars', carId);
         const carDoc = await getDoc(carRef);
@@ -18,12 +22,12 @@ export class ActiveCarService {
         }
 
         const carData = carDoc.data() as PlayerCar;
-        if (carData.ownerId !== userId) {
+        if (carData.ownerId !== serverSpecificId) {
             throw new Error('See auto ei kuulu sulle');
         }
 
-        // Update player stats with active car
-        const userRef = doc(firestore, 'playerStats', userId);
+        // Update player stats with active car (using server-specific document)
+        const userRef = doc(firestore, 'playerStats', serverSpecificId);
         await updateDoc(userRef, {
             activeCarId: carId
         });
@@ -35,6 +39,9 @@ export class ActiveCarService {
             return null;
         }
 
+        // Get server-specific owner ID
+        const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+
         const carRef = doc(firestore, 'cars', activeCarId);
         const carDoc = await getDoc(carRef);
 
@@ -43,7 +50,7 @@ export class ActiveCarService {
         }
 
         const carData = carDoc.data() as PlayerCar;
-        if (carData.ownerId !== userId) {
+        if (carData.ownerId !== serverSpecificId) {
             return null;
         }
 
@@ -59,9 +66,12 @@ export class ActiveCarService {
 
     // Get all player's cars for selection
     static async getPlayerCars(userId: string): Promise<Array<{ car: PlayerCar; model: VehicleModel }>> {
+        // Get server-specific owner ID
+        const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+
         const carsQuery = query(
             collection(firestore, 'cars'),
-            where('ownerId', '==', userId),
+            where('ownerId', '==', serverSpecificId),
             where('isForSale', '==', false)
         );
 

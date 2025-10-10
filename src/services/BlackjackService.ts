@@ -5,6 +5,8 @@ import { PlayerStats} from "../types";
 import { doc, updateDoc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { getRemainingCasinoPlays } from './CasinoService';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
+import { GlobalUserService } from './GlobalUserService';
 
 // Constants
 const ENTRY_FEE = 10; // pollid
@@ -81,20 +83,20 @@ export const isBlackjack = (hand: Card[]): boolean => {
 /**
  * Check if player can play Blackjack
  */
-export const canPlayBlackjack = (stats: PlayerStats): { canPlay: boolean; reason?: string } => {
+export const canPlayBlackjack = async (userId: string, stats: PlayerStats): Promise<{ canPlay: boolean; reason?: string }> => {
     // Check casino play limit
     const remaining = getRemainingCasinoPlays(stats);
     if (remaining <= 0) {
         return { canPlay: false, reason: 'Kasiino mängude limiit on täis! Oota järgmist tundi.' };
     }
 
-    // Check pollid balance - handle optional pollid
-    const playerPollid = stats.pollid || 0;
-    if (playerPollid < ENTRY_FEE) {
+    // Get global pollid
+    const globalData = await GlobalUserService.getGlobalUserData(userId);
+    if (globalData.pollid < ENTRY_FEE) {
         return { canPlay: false, reason: `Sul pole piisavalt pollisid! Vaja ${ENTRY_FEE} pollid.` };
     }
 
-    // Check reputation (optional - same as slots)
+    // Check reputation
     if (stats.reputation < 0) {
         return { canPlay: false, reason: 'Negatiivse mainega ei saa kasiinos mängida!' };
     }
@@ -112,16 +114,13 @@ export const startBlackjackGame = async (
 ): Promise<{
     gameState: BlackjackGameState;
     updatedStats: PlayerStats;
-    deck: Card[]; // Return the deck after dealing
+    deck: Card[];
 }> => {
-    // Validate player can play
-    const { canPlay, reason } = canPlayBlackjack(stats);
+    // Validate player can play - ADD await and pass userId
+    const { canPlay, reason } = await canPlayBlackjack(userId, stats);
     if (!canPlay) {
         throw new Error(reason);
     }
-
-    // Get current pollid (handle optional)
-    const currentPollid = stats.pollid || 0;
 
     // Deal initial cards from provided deck
     const gameDeck = [...deck]; // Copy deck
@@ -130,7 +129,7 @@ export const startBlackjackGame = async (
 
     // Calculate scores
     const playerScore = calculateHandValue(playerHand);
-    const dealerScore = calculateHandValue([dealerHand[0]]); // Only show first card score
+    const dealerScore = calculateHandValue([dealerHand[0]]);
 
     // Check for immediate blackjack
     const playerHasBlackjack = isBlackjack(playerHand);
@@ -156,7 +155,8 @@ export const startBlackjackGame = async (
     }
 
     // Update database
-    const statsRef = doc(firestore, 'playerStats', userId);
+    const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+    const statsRef = doc(firestore, 'playerStats', serverSpecificId);
     const now = Date.now();
     const currentHour = new Date().getHours();
     const lastPlayHour = stats.casinoData ? new Date(stats.casinoData.lastPlayTime).getHours() : -1;
@@ -164,8 +164,9 @@ export const startBlackjackGame = async (
     // Reset plays if new hour
     const playsUsed = currentHour !== lastPlayHour ? 1 : (stats.casinoData?.playsUsed || 0) + 1;
 
+    await GlobalUserService.updatePollid(userId, -ENTRY_FEE + winAmount);
+
     const updates = {
-        pollid: currentPollid - ENTRY_FEE + winAmount,
         'casinoData.playsUsed': playsUsed,
         'casinoData.lastPlayTime': now,
         'casinoData.hourlyReset': now
@@ -188,7 +189,6 @@ export const startBlackjackGame = async (
         gameState,
         updatedStats: {
             ...stats,
-            pollid: currentPollid - ENTRY_FEE + winAmount,
             casinoData: {
                 playsUsed,
                 lastPlayTime: now,
@@ -321,9 +321,9 @@ export const playerDoubleDown = async (
         throw new Error('Kahekordistada saab ainult esimese kahe kaardiga!');
     }
 
-    // Handle optional pollid
-    const currentPollid = stats.pollid || 0;
-    if (currentPollid < ENTRY_FEE) {
+    // Get global pollid
+    const globalData = await GlobalUserService.getGlobalUserData(userId);
+    if (globalData.pollid < ENTRY_FEE) {
         throw new Error('Sul pole piisavalt pollisid kahekordistamiseks!');
     }
 
@@ -354,8 +354,8 @@ export const playerDoubleDown = async (
             winAmount: 0
         };
     } else {
-        // Proceed with dealer's turn - FIX: Pass deck parameter
-        finalGameState = playerStand(finalGameState, deck); // ADD DECK PARAMETER HERE
+        // Proceed with dealer's turn
+        finalGameState = playerStand(finalGameState, deck);
         // Adjust winnings for doubled bet
         if (finalGameState.result === 'win') {
             finalGameState.winAmount = doubleBet * WIN_MULTIPLIER;
@@ -364,19 +364,13 @@ export const playerDoubleDown = async (
         }
     }
 
-    // Update database with additional pollid deduction
-    const statsRef = doc(firestore, 'playerStats', userId);
-    const updates = {
-        pollid: currentPollid - ENTRY_FEE + finalGameState.winAmount
-    };
-
-    await updateDoc(statsRef, updates);
+    // Update global pollid (deduct extra fee, add any winnings)
+    await GlobalUserService.updatePollid(userId, -ENTRY_FEE + finalGameState.winAmount);
 
     return {
         gameState: finalGameState,
         updatedStats: {
             ...stats,
-            pollid: currentPollid - ENTRY_FEE + finalGameState.winAmount
         }
     };
 };
@@ -393,19 +387,9 @@ export const completeBlackjackGame = async (
         throw new Error('Mäng pole veel lõppenud!');
     }
 
-    // Handle optional pollid
-    const currentPollid = stats.pollid || 0;
+    // Update global pollid with winnings
+    await GlobalUserService.updatePollid(userId, gameState.winAmount);
 
-    // Update pollid based on result
-    const statsRef = doc(firestore, 'playerStats', userId);
-    const updates = {
-        pollid: currentPollid + gameState.winAmount
-    };
-
-    await updateDoc(statsRef, updates);
-
-    return {
-        ...stats,
-        pollid: currentPollid + gameState.winAmount
-    };
+    // Return stats unchanged (pollid is no longer part of PlayerStats)
+    return stats;
 };

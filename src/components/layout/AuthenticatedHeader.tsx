@@ -3,35 +3,23 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth, firestore } from '../../config/firebase';
-import { doc, onSnapshot, collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatMoney, formatPollid } from '../../utils/currencyUtils';
-import { PlayerStats } from '../../types';
 import { getPlayerDisplayStatus } from '../../utils/playerStatus';
+import { getCurrentServer } from '../../utils/serverUtils';
 import '../../styles/layout/Header.css';
+import {usePlayerStats} from "../../contexts/PlayerStatsContext";
+import { GAME_SERVERS } from '../../types/server';
 
 export const AuthenticatedHeader: React.FC = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
+    const { playerStats, pollid } = usePlayerStats();
     const [onlineCount, setOnlineCount] = useState<number>(0);
     const [loadingOnlineCount, setLoadingOnlineCount] = useState(true);
     const navigate = useNavigate();
     const menuRef = useRef<HTMLDivElement>(null);
     const { currentUser } = useAuth();
-
-    // Listen to player stats to determine what menu items to show
-    useEffect(() => {
-        if (!currentUser) return;
-
-        const statsRef = doc(firestore, 'playerStats', currentUser.uid);
-        const unsubscribe = onSnapshot(statsRef, (doc) => {
-            if (doc.exists()) {
-                setPlayerStats(doc.data() as PlayerStats);
-            }
-        });
-
-        return () => unsubscribe();
-    }, [currentUser]);
 
     // Fetch online players count
     useEffect(() => {
@@ -46,7 +34,16 @@ export const AuthenticatedHeader: React.FC = () => {
                 );
 
                 const snapshot = await getDocs(playersQuery);
-                setOnlineCount(snapshot.size);
+                const currentServer = getCurrentServer();
+                const serverSpecificDocs = snapshot.docs.filter(doc => {
+                    const docId = doc.id;
+                    if (currentServer === 'beta') {
+                        return !docId.includes('_');
+                    } else {
+                        return docId.endsWith(`_${currentServer}`);
+                    }
+                });
+                setOnlineCount(serverSpecificDocs.length);
             } catch (error) {
                 console.error('Viga aktiivsete mängijate lugemisel:', error);
                 setOnlineCount(0);
@@ -128,7 +125,7 @@ export const AuthenticatedHeader: React.FC = () => {
 
                             <div className="header-stat-item header-pollid">
                                 <span className="header-stat-label">Pollid</span>
-                                <span className="header-stat-value pollid">{formatPollid(playerStats.pollid || 0)}</span>
+                                <span className="header-stat-value pollid">{formatPollid(pollid)}</span>
                             </div>
                         </div>
                     )}
@@ -144,7 +141,9 @@ export const AuthenticatedHeader: React.FC = () => {
                     </div>
                 </div>
                 <div className="header-right">
-
+                        <span className={`server-indicator ${getCurrentServer()}-server`}>
+                            {GAME_SERVERS[getCurrentServer()]?.name || 'Beta Server'}
+                        </span>
                     <div className="header-stat-item header-online-count">
                         <span className="header-stat-label">Aktiivsed 24h</span>
                         <span className="header-stat-value">

@@ -192,3 +192,25 @@
         opacity: 0.6;
     }
 }
+
+.daily-limit-info {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.daily-limit-text {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    font-weight: 400;
+    display: block;
+}
+
+/* Optional: Add warning color when getting low on daily clicks */
+.daily-limit-text.low-daily {
+    color: #f59e0b;
+}
+
+.daily-limit-text.very-low-daily {
+    color: #ef4444;
+}

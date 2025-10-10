@@ -40,7 +40,7 @@ export const MonthlyTopPlayers: React.FC = () => {
                                     <span className="player-medal">
                                         {medalEmojis[winner.position]}
                                     </span>
-                                    <span className="player-name">{winner.username}</span>
+                                    <span className="monthly-player-name">{winner.username}</span>
                                 </div>
                             ))}
                         </div>

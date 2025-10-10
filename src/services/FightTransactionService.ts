@@ -3,6 +3,7 @@ import { doc, runTransaction, Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { FightResult } from './FightService';
 import { PlayerStats } from "../types";
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 export const processFightResult = async (
     player1Id: string,
@@ -11,7 +12,8 @@ export const processFightResult = async (
 ): Promise<{ success: boolean; message: string }> => {
     try {
         const result = await runTransaction(firestore, async (transaction) => {
-            const player1Ref = doc(firestore, 'playerStats', player1Id);
+            const serverSpecificId = getServerSpecificId(player1Id, getCurrentServer());
+            const player1Ref = doc(firestore, 'playerStats', serverSpecificId);;
             const player1Doc = await transaction.get(player1Ref);
 
             if (!player1Doc.exists()) {

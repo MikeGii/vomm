@@ -28,6 +28,8 @@ import {
     getVehicleModelById,
 } from './VehicleDatabaseService';
 import {calculateTotalGarageSlots} from "../utils/garageUtils";
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
+import { GlobalUserService } from './GlobalUserService';
 
 // Create stock engine from database engine
 function createEngineFromDatabase(dbEngine: VehicleEngine) {
@@ -45,7 +47,8 @@ export async function purchaseNewCar(
 ): Promise<{ success: boolean; message: string; carId?: string }> {
     try {
         return await runTransaction(db, async (transaction) => {
-            const userRef = doc(db, 'playerStats', userId);
+            const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+            const userRef = doc(db, 'playerStats', serverSpecificId);
             const userDoc = await transaction.get(userRef);
 
             if (!userDoc.exists()) {
@@ -69,7 +72,7 @@ export async function purchaseNewCar(
             }
 
             // Get estate data for garage capacity
-            const estateRef = doc(db, 'playerEstates', userId);
+            const estateRef = doc(db, 'playerEstates', serverSpecificId);
             const estateDoc = await transaction.get(estateRef);
 
             if (!estateDoc.exists()) {
@@ -87,7 +90,7 @@ export async function purchaseNewCar(
             // Count actual cars
             const carsQuery = query(
                 collection(db, 'cars'),
-                where('ownerId', '==', userId)
+                where('ownerId', '==', serverSpecificId)
             );
             const carsSnapshot = await getDocs(carsQuery);
             const currentCarCount = carsSnapshot.size;
@@ -118,7 +121,7 @@ export async function purchaseNewCar(
             // Create new car with cleaned structure
             const newCar: PlayerCar = {
                 id: `car_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                ownerId: userId,
+                ownerId: serverSpecificId,
                 carModelId: carModel.id,
                 mileage: 0,
                 purchaseDate: new Date(),
@@ -138,10 +141,14 @@ export async function purchaseNewCar(
             });
 
             // Update user money
-            const updateField = carModel.currency === 'pollid' ? 'pollid' : 'money';
-            transaction.update(userRef, {
-                [updateField]: playerCurrency - carPrice
-            });
+            if (carModel.currency === 'pollid') {
+                // Update pollid globally (outside transaction)
+                await GlobalUserService.updatePollid(userId, -carPrice);
+            } else {
+                transaction.update(userRef, {
+                    money: playerCurrency - carPrice
+                });
+            }
 
             return {
                 success: true,
@@ -175,12 +182,13 @@ export async function purchaseUsedCar(
             }
 
             const carData = carDoc.data() as PlayerCar;
+            const buyerServerSpecificId = getServerSpecificId(buyerId, getCurrentServer());
 
             if (!carData.isForSale) {
                 throw new Error('Auto ei ole enam müügis');
             }
 
-            if (carData.ownerId === buyerId) {
+            if (carData.ownerId === buyerServerSpecificId) {
                 throw new Error('Ei saa osta enda autot');
             }
 
@@ -196,7 +204,7 @@ export async function purchaseUsedCar(
             }
 
             // Check buyer's garage capacity including extra slots
-            const buyerEstateRef = doc(db, 'playerEstates', buyerId);
+            const buyerEstateRef = doc(db, 'playerEstates', buyerServerSpecificId);
             const buyerEstateDoc = await transaction.get(buyerEstateRef);
 
             if (!buyerEstateDoc.exists()) {
@@ -215,7 +223,7 @@ export async function purchaseUsedCar(
             });
 
             // Count buyer's current cars to validate against total capacity
-            const buyerCarsQuery = query(collection(db, 'cars'), where('ownerId', '==', buyerId));
+            const buyerCarsQuery = query(collection(db, 'cars'), where('ownerId', '==', buyerServerSpecificId));
             const buyerCarsSnapshot = await getDocs(buyerCarsQuery);
 
             if (buyerCarsSnapshot.size >= totalSlots) {
@@ -247,7 +255,7 @@ export async function purchaseUsedCar(
 
             // Update car ownership
             transaction.update(carRef, {
-                ownerId: buyerId,
+                ownerId: buyerServerSpecificId,
                 isForSale: false,
                 salePrice: null,
                 listedAt: null,
@@ -302,6 +310,7 @@ export async function listCarForSale(
         return await runTransaction(db, async (transaction) => {
             const carRef = doc(db, 'cars', carId);
             const carDoc = await transaction.get(carRef);
+            const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
 
             if (!carDoc.exists()) {
                 throw new Error('Autot ei leitud');
@@ -309,7 +318,7 @@ export async function listCarForSale(
 
             const carData = carDoc.data() as PlayerCar;
 
-            if (carData.ownerId !== userId) {
+            if (carData.ownerId !== serverSpecificId) {
                 throw new Error('See ei ole sinu auto');
             }
 
@@ -353,6 +362,7 @@ export async function unlistCarFromSale(
         return await runTransaction(db, async (transaction) => {
             const carRef = doc(db, 'cars', carId);
             const carDoc = await transaction.get(carRef);
+            const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
 
             if (!carDoc.exists()) {
                 throw new Error('Autot ei leitud');
@@ -360,7 +370,7 @@ export async function unlistCarFromSale(
 
             const carData = carDoc.data() as PlayerCar;
 
-            if (carData.ownerId !== userId) {
+            if (carData.ownerId !== serverSpecificId) {
                 throw new Error('See ei ole sinu auto');
             }
 
@@ -390,9 +400,10 @@ export async function unlistCarFromSale(
 
 export async function getUserCars(userId: string): Promise<PlayerCar[]> {
     try {
+        const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
         const carsQuery = query(
             collection(db, 'cars'),
-            where('ownerId', '==', userId)
+            where('ownerId', '==', serverSpecificId)
         );
 
         const snapshot = await getDocs(carsQuery);
@@ -416,6 +427,7 @@ export async function getUserCars(userId: string): Promise<PlayerCar[]> {
 
 export async function getCarsForSale(): Promise<Array<PlayerCar & { sellerName?: string }>> {
     try {
+        const currentServer = getCurrentServer();
         const carsQuery = query(
             collection(db, 'cars'),
             where('isForSale', '==', true)
@@ -429,20 +441,32 @@ export async function getCarsForSale(): Promise<Array<PlayerCar & { sellerName?:
 
         snapshot.forEach((doc) => {
             const data = doc.data();
-            ownerIds.add(data.ownerId);
+            const ownerId = data.ownerId;
+
+            // Filter by current server
+            if (currentServer === 'beta' && ownerId.includes('_')) return;
+            if (currentServer !== 'beta' && !ownerId.endsWith(`_${currentServer}`)) return;
+
+            ownerIds.add(ownerId);
             carDocs.push({ id: doc.id, ...data });
         });
 
-        const userPromises = Array.from(ownerIds).map(async (userId) => {
-            const userDoc = await getDoc(doc(db, 'users', userId));
+        // Extract base userIds for getting usernames
+        const userPromises = Array.from(ownerIds).map(async (serverSpecificId) => {
+            // Remove server suffix to get base userId
+            const baseUserId = currentServer === 'beta'
+                ? serverSpecificId
+                : serverSpecificId.replace(`_${currentServer}`, '');
+
+            const userDoc = await getDoc(doc(db, 'users', baseUserId));
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 return {
-                    userId,
+                    userId: serverSpecificId, // Keep server-specific ID as key
                     username: userData.username || userData.displayName || 'Kasutaja'
                 };
             }
-            return { userId, username: 'Kasutaja' };
+            return { userId: serverSpecificId, username: 'Kasutaja' };
         });
 
         const users = await Promise.all(userPromises);
@@ -480,6 +504,7 @@ export const updateCarUniversalTuning = async (
     try {
         const carRef = doc(db, 'cars', carId);
         const carSnap = await getDoc(carRef);
+        const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
 
         if (!carSnap.exists()) {
             return { success: false, message: 'Auto ei leitud' };
@@ -487,7 +512,7 @@ export const updateCarUniversalTuning = async (
 
         const carData = carSnap.data() as PlayerCar;
 
-        if (carData.ownerId !== userId) {
+        if (carData.ownerId !== serverSpecificId) {
             return { success: false, message: 'See ei ole sinu auto' };
         }
 
@@ -503,7 +528,8 @@ export const updateCarUniversalTuning = async (
         // Validate that we're not upgrading without meeting requirements
         if (newLevel > currentLevel) {
             // Get player stats to check requirements
-            const userRef = doc(db, 'playerStats', userId);
+            const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+            const userRef = doc(db, 'playerStats', serverSpecificId);
             const userSnap = await getDoc(userRef);
 
             if (!userSnap.exists()) {
@@ -588,23 +614,3 @@ export const updateCarUniversalTuning = async (
         return { success: false, message: 'Viga tuuningu uuendamisel' };
     }
 };
-
-// Helper function to get car model with database lookup (replaces hardcoded getCarModelById)
-export async function getCarModelFromDatabase(carModelId: string): Promise<VehicleModel | null> {
-    try {
-        return await getVehicleModelById(carModelId);
-    } catch (error) {
-        console.error('Error fetching car model:', error);
-        return null;
-    }
-}
-
-// Helper function to get engine by code from database (replaces hardcoded getEngineByCode)
-export async function getEngineFromDatabase(engineId: string): Promise<VehicleEngine | null> {
-    try {
-        return await getVehicleEngineById(engineId);
-    } catch (error) {
-        console.error('Error fetching engine:', error);
-        return null;
-    }
-}

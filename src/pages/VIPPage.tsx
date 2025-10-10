@@ -8,7 +8,7 @@ import {MonthlyTopPlayers} from "../components/vip/MonthlyTopPlayers";
 
 const VIPPage: React.FC = () => {
     const navigate = useNavigate();
-    const { playerStats, loading } = usePlayerStats();
+    const { loading, pollid, isVip } = usePlayerStats();
     const [activeTab, setActiveTab] = useState<'pollid' | 'vip' | 'donate'>('pollid');
 
     if (loading) {
@@ -36,7 +36,7 @@ const VIPPage: React.FC = () => {
                 <div className="vip-header">
                     <h1 className="vip-title">VIP & Pollid</h1>
                     <div className="vip-status">
-                        {playerStats?.isVip ? (
+                        {isVip ? (
                             <div className="vip-active">
                                 <span className="vip-badge-large">VIP</span>
                                 <span className="vip-status-text">Oled VIP kasutaja</span>
@@ -53,7 +53,7 @@ const VIPPage: React.FC = () => {
                     <div className="pollid-balance">
                         <h2>Sinu pollid</h2>
                         <div className="pollid-amount">
-                            {playerStats?.pollid || 0} pollid
+                            {pollid || 0} pollid
                         </div>
                     </div>
                 </div>
@@ -166,12 +166,11 @@ const VIPPage: React.FC = () => {
                             <div className="vip-duration">
                                 <div className="duration-card">
                                     <h3>Kehtivus: 30 päeva</h3>
-                                    <p>VIP staatus aktiveerub kohe pärast annetuse kinnitamist</p>
+                                    <p>VIP staatus aktiveeritakse kuni 12 tunni jooksul</p>
                                 </div>
                             </div>
 
                             <div className="vip-benefits">
-                                <h3>VIP eelised</h3>
                                 <div className="benefits-grid">
                                     <div className="benefit-card">
                                         <div className="benefit-icon">💪</div>
@@ -184,9 +183,19 @@ const VIPPage: React.FC = () => {
                                         <p>30 klikki tunnis töötamise ajal (tavaliselt 10)</p>
                                     </div>
                                     <div className="benefit-card">
-                                        <div className="benefit-icon">💎</div>
+                                        <div className="benefit-icon">🖱️</div>
+                                        <h4>Päevane klikkide arv</h4>
+                                        <p>Kuni 50 000 klikki päevas igas kategoorias eraldi</p>
+                                    </div>
+                                    <div className="benefit-card">
+                                        <div className="benefit-icon">🎁</div>
                                         <h4>Boonus pollid</h4>
                                         <p>200 polli VIP staatuse aktiveerimisega</p>
+                                    </div>
+                                    <div className="benefit-card">
+                                        <div className="benefit-icon">💰</div>
+                                        <h4>Paremad tasud</h4>
+                                        <p>+50% paremad tasud päeva ja nädala ülesannetele</p>
                                     </div>
                                     <div className="benefit-card">
                                         <div className="benefit-icon">🏆</div>
@@ -199,7 +208,12 @@ const VIPPage: React.FC = () => {
                                         <p>Juurdepääs VIP Discord kanalile</p>
                                     </div>
                                     <div className="benefit-card">
-                                        <div className="benefit-icon">🎮</div>
+                                        <div className="benefit-icon">🌍</div>
+                                        <h4>Universaalne</h4>
+                                        <p>VIP staatus kehtib kõikides maailmades</p>
+                                    </div>
+                                    <div className="benefit-card">
+                                        <div className="benefit-icon">🗳️</div>
                                         <h4>Mängu areng</h4>
                                         <p>Osalus mängu arendusotsustes</p>
                                     </div>

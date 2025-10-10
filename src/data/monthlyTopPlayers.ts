@@ -26,9 +26,9 @@ export const MONTHLY_TOP_PLAYERS: MonthlyRecord[] = [
         year: 2025,
         month: 'September',
         winners: [
-            { position: 1, username: ' '},
-            { position: 2, username: ' '},
-            { position: 3, username: ' '}
+            { position: 1, username: 'Olgu123'},
+            { position: 2, username: 'IDA14'},
+            { position: 3, username: '5665'}
         ]
     },
     {

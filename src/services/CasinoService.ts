@@ -3,6 +3,7 @@ import { firestore } from '../config/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { PlayerStats } from '../types';
 import { recordCasinoWin } from './CasinoLeaderboardService';
+import {getCurrentServer, getServerSpecificId} from "../utils/serverUtils";
 
 export interface CasinoData {
     playsUsed: number;
@@ -77,7 +78,7 @@ export const checkAndResetCasinoData = async (userId: string, stats: PlayerStats
     if (!stats.casinoData) {
         try {
             console.log('Initializing casino data for first time player');
-            const statsRef = doc(firestore, 'playerStats', userId);
+            const statsRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
             const resetCasinoData: CasinoData = {
                 playsUsed: 0,
                 lastPlayTime: Date.now(),
@@ -107,7 +108,7 @@ export const checkAndResetCasinoData = async (userId: string, stats: PlayerStats
     if (currentHour !== lastPlayHour || currentDate !== lastPlayDate) {
         try {
             console.log('Resetting casino data - new hour or day');
-            const statsRef = doc(firestore, 'playerStats', userId);
+            const statsRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
             const resetCasinoData: CasinoData = {
                 playsUsed: 0,
                 lastPlayTime: Date.now(),
@@ -170,10 +171,9 @@ export const generateSlotResult = (betAmount: number): SlotResult => {
     }
     // Two of a kind - DOUBLED from 15% to 30%
     else if (result[0] === result[1] || result[1] === result[2] || result[0] === result[2]) {
-        // 60% chance to win something on two of a kind (4x original)
-        if (Math.random() < 0.60) {
+        if (Math.random() < 0.90) {
             isWin = true;
-            multiplier = 1.5;
+            multiplier = 1.2;
         }
     }
 
@@ -198,7 +198,7 @@ export const playSlotMachine = async (userId: string, stats: PlayerStats, betAmo
         throw new Error(reason || 'Sa ei saa mängida.');
     }
 
-    const statsRef = doc(firestore, 'playerStats', userId);
+    const statsRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
 
     const remaining = getRemainingCasinoPlays(stats);
     if (remaining <= 0) {

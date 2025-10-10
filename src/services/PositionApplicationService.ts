@@ -1,5 +1,5 @@
 // src/services/PositionApplicationService.ts
-import { collection, addDoc, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats } from '../types';
 
@@ -89,25 +89,5 @@ export class PositionApplicationService {
         };
 
         await addDoc(collection(firestore, 'applications'), applicationData);
-    }
-
-    async switchUnit(currentUserUid: string, positionId: string, unitName: string): Promise<void> {
-        const updatedData: any = {
-            departmentUnit: this.getUnitIdFromName(unitName),
-            policePosition: positionId
-        };
-
-        const playerRef = doc(firestore, 'playerStats', currentUserUid);
-        await updateDoc(playerRef, updatedData);
-    }
-
-    private getUnitIdFromName(unitName: string): string {
-        if (unitName.toLowerCase().includes('patrol')) return 'patrol';
-        if (unitName.toLowerCase().includes('menetlus')) return 'procedural_service';
-        if (unitName.toLowerCase().includes('kiir')) return 'emergency_response';
-        if (unitName.toLowerCase().includes('k9')) return 'k9_unit';
-        if (unitName.toLowerCase().includes('küber')) return 'cyber_crime';
-        if (unitName.toLowerCase().includes('kuritegude')) return 'crime_unit';
-        return 'patrol';
     }
 }

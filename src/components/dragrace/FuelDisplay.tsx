@@ -10,8 +10,7 @@ interface FuelDisplayProps {
 }
 
 export const FuelDisplay: React.FC<FuelDisplayProps> = ({ fuelSystem, onPurchaseFuel }) => {
-    const { playerStats } = usePlayerStats();
-    const isVip = playerStats?.isVip || false;
+    const { isVip } = usePlayerStats();
 
     if (!fuelSystem) {
         return (

@@ -2,6 +2,8 @@
 import { doc, getDoc, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats, Task, PlayerTasks } from '../types';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
+import { GlobalUserService } from './GlobalUserService';
 
 // Calculate reward multiplier based on player level and reputation
 const calculateRewardMultiplier = (level: number, reputation: number, isVip: boolean): number => {
@@ -103,12 +105,12 @@ const createWeeklyTask = (level: number, dailyItemType?: string): Task => {
 
 // Main function to get/create tasks
 export const getPlayerTasks = async (userId: string): Promise<PlayerTasks | null> => {
-    const statsDoc = await getDoc(doc(firestore, 'playerStats', userId));
+    const statsDoc = await getDoc(doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer())));
     if (!statsDoc.exists()) return null;
 
     const stats = statsDoc.data() as PlayerStats;
 
-    const tasksRef = doc(firestore, 'playerTasks', userId);
+    const tasksRef = doc(firestore, 'playerTasks', getServerSpecificId(userId, getCurrentServer()));
     const tasksDoc = await getDoc(tasksRef);
 
     const now = Timestamp.now();
@@ -166,7 +168,7 @@ export const updateProgress = async (
     value: number,
     itemType?: string // Optional item type for production/sold
 ): Promise<void> => {
-    const tasksRef = doc(firestore, 'playerTasks', userId);
+    const tasksRef = doc(firestore, 'playerTasks', getServerSpecificId(userId, getCurrentServer()));
     const tasksDoc = await getDoc(tasksRef);
     if (!tasksDoc.exists()) return;
 
@@ -241,8 +243,8 @@ export const claimRewards = async (userId: string, taskType: 'daily' | 'weekly')
     message: string;
     rewards?: { experience: number; money: number; reputation: number };
 }> => {
-    const tasksRef = doc(firestore, 'playerTasks', userId);
-    const statsRef = doc(firestore, 'playerStats', userId);
+    const tasksRef = doc(firestore, 'playerTasks', getServerSpecificId(userId, getCurrentServer()));
+    const statsRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
 
     const [tasksDoc, statsDoc] = await Promise.all([getDoc(tasksRef), getDoc(statsRef)]);
     if (!tasksDoc.exists() || !statsDoc.exists()) {
@@ -257,7 +259,8 @@ export const claimRewards = async (userId: string, taskType: 'daily' | 'weekly')
         return { success: false, message: 'Ülesanne pole veel lõpetatud' };
     }
 
-    const multiplier = calculateRewardMultiplier(stats.level, stats.reputation, stats.isVip || false);
+    const globalData = await GlobalUserService.getGlobalUserData(userId);
+    const multiplier = calculateRewardMultiplier(stats.level, stats.reputation, globalData.isVip);
 
     const rewards = {
         experience: Math.floor(task.rewards.experience * multiplier),
@@ -278,7 +281,7 @@ export const claimRewards = async (userId: string, taskType: 'daily' | 'weekly')
     const bonusText = [];
     if (stats.level > 0) bonusText.push(`+${(stats.level * 2)}% (tase)`);
     if (stats.reputation > 0) bonusText.push(`+${((stats.reputation * 0.01).toFixed(1))}% (maine)`);
-    if (stats.isVip) bonusText.push('+50% (VIP)');
+    if (globalData.isVip) bonusText.push('+50% (VIP)');
 
     const bonusMessage = bonusText.length > 0 ? ` [${bonusText.join(', ')}]` : '';
 

@@ -3,6 +3,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats } from '../types';
 import { PREFECTURES } from '../data/prefectures';
+import { getCurrentServer } from '../utils/serverUtils';
 
 export interface GraduatedPlayer {
     uid: string;
@@ -51,7 +52,8 @@ let hierarchyStatsCache: HierarchyStatsCache | null = null;
  * This is the main optimization - ONE query for all graduated players
  */
 export const getAllGraduatedPlayers = async (): Promise<GraduatedPlayer[]> => {
-    const cacheKey = 'all-graduated';
+    const currentServer = getCurrentServer();
+    const cacheKey = `all-graduated_${currentServer}`;
 
     // Check cache first
     const cached = playersCache.get(cacheKey);
@@ -70,6 +72,12 @@ export const getAllGraduatedPlayers = async (): Promise<GraduatedPlayer[]> => {
         const players: GraduatedPlayer[] = [];
 
         querySnapshot.forEach((doc) => {
+            const docId = doc.id;
+
+            // Filter by current server
+            if (currentServer === 'beta' && docId.includes('_')) return;
+            if (currentServer !== 'beta' && !docId.endsWith(`_${currentServer}`)) return;
+
             const data = doc.data() as PlayerStats;
 
             // Only include players with all required data
@@ -114,27 +122,6 @@ export const getPlayersByUnit = async (
         player => player.prefecture === prefecture &&
             player.department === department &&
             player.departmentUnit === unit
-    );
-};
-
-/**
- * Get players by prefecture (filtered from cache)
- */
-export const getPlayersByPrefecture = async (prefecture: string): Promise<GraduatedPlayer[]> => {
-    const allPlayers = await getAllGraduatedPlayers();
-    return allPlayers.filter(player => player.prefecture === prefecture);
-};
-
-/**
- * Get players by department (filtered from cache)
- */
-export const getPlayersByDepartment = async (
-    prefecture: string,
-    department: string
-): Promise<GraduatedPlayer[]> => {
-    const allPlayers = await getAllGraduatedPlayers();
-    return allPlayers.filter(
-        player => player.prefecture === prefecture && player.department === department
     );
 };
 
@@ -184,29 +171,4 @@ export const getHierarchyStats = async (): Promise<PrefectureStats[]> => {
         console.error('Error calculating hierarchy stats:', error);
         return [];
     }
-};
-
-/**
- * Clear cache (useful for manual refresh)
- */
-export const clearDepartmentCache = (): void => {
-    playersCache.clear();
-    hierarchyStatsCache = null;
-    console.log('Department cache cleared');
-};
-
-/**
- * Get cache status for debugging
- */
-export const getDepartmentCacheStatus = () => {
-    return {
-        playersCache: {
-            size: playersCache.size,
-            keys: Array.from(playersCache.keys())
-        },
-        hierarchyStatsCache: hierarchyStatsCache ? {
-            timestamp: hierarchyStatsCache.timestamp,
-            age: Date.now() - hierarchyStatsCache.timestamp
-        } : null
-    };
 };

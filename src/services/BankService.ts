@@ -14,6 +14,7 @@ import {
 import { firestore } from '../config/firebase';
 import { PlayerSearchResult, BankTransaction } from '../types';
 import { PlayerStats } from '../types';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 /**
  * Search for a player by badge number
@@ -29,6 +30,7 @@ export const searchPlayerByBadgeNumber = async (badgeNumber: string): Promise<Pl
             };
         }
 
+        const currentServer = getCurrentServer();
         const playersRef = collection(firestore, 'playerStats');
         const q = query(playersRef, where('badgeNumber', '==', badgeNumber.trim()));
         const querySnapshot = await getDocs(q);
@@ -42,15 +44,40 @@ export const searchPlayerByBadgeNumber = async (badgeNumber: string): Promise<Pl
             };
         }
 
-        const playerDoc = querySnapshot.docs[0];
+        // Filter for current server only
+        const serverDocs = querySnapshot.docs.filter(doc => {
+            const docId = doc.id;
+            // Beta server has no suffix, other servers have _serverId suffix
+            if (currentServer === 'beta') {
+                return !docId.includes('_');
+            } else {
+                return docId.endsWith(`_${currentServer}`);
+            }
+        });
+
+        if (serverDocs.length === 0) {
+            return {
+                userId: '',
+                username: '',
+                badgeNumber: '',
+                found: false
+            };
+        }
+
+        const playerDoc = serverDocs[0];
         const playerData = playerDoc.data() as PlayerStats;
 
-        // Get username from users collection
-        const userDoc = await getDoc(doc(firestore, 'users', playerDoc.id));
+        // Extract base userId from the document ID
+        const baseUserId = currentServer === 'beta'
+            ? playerDoc.id
+            : playerDoc.id.replace(`_${currentServer}`, '');
+
+        // Get username from users collection (using base userId)
+        const userDoc = await getDoc(doc(firestore, 'users', baseUserId));
         const userData = userDoc.data();
 
         return {
-            userId: playerDoc.id,
+            userId: playerDoc.id, // Return the server-specific ID
             username: userData?.username || 'Tundmatu kasutaja',
             badgeNumber: playerData.badgeNumber || '',
             found: true
@@ -92,7 +119,10 @@ export const processTransaction = async (
             };
         }
 
-        // Find target player
+        // Get server-specific sender ID
+        const serverSpecificFromId = getServerSpecificId(fromUserId, getCurrentServer());
+
+        // Find target player (searchPlayerByBadgeNumber already returns server-specific ID)
         const targetPlayer = await searchPlayerByBadgeNumber(targetBadgeNumber);
         if (!targetPlayer.found) {
             return {
@@ -102,7 +132,7 @@ export const processTransaction = async (
         }
 
         // Can't send money to yourself
-        if (targetPlayer.userId === fromUserId) {
+        if (targetPlayer.userId === serverSpecificFromId) {
             return {
                 success: false,
                 message: 'Sa ei saa endale raha saata'
@@ -111,8 +141,8 @@ export const processTransaction = async (
 
         // Use Firestore transaction to ensure atomicity
         const result = await runTransaction(firestore, async (transaction) => {
-            // Get sender data
-            const senderRef = doc(firestore, 'playerStats', fromUserId);
+            // Get sender data (using server-specific ID)
+            const senderRef = doc(firestore, 'playerStats', serverSpecificFromId);
             const senderDoc = await transaction.get(senderRef);
 
             if (!senderDoc.exists()) {
@@ -120,7 +150,12 @@ export const processTransaction = async (
             }
 
             const senderData = senderDoc.data() as PlayerStats;
-            const senderUserDoc = await transaction.get(doc(firestore, 'users', fromUserId));
+
+            // Extract base userId for getting username
+            const baseFromUserId = getCurrentServer() === 'beta'
+                ? fromUserId
+                : fromUserId;
+            const senderUserDoc = await transaction.get(doc(firestore, 'users', baseFromUserId));
             const senderUsername = senderUserDoc.data()?.username || 'Tundmatu kasutaja';
 
             // Check if sender has enough money
@@ -150,7 +185,7 @@ export const processTransaction = async (
 
             // Create transaction record
             const transactionData: Omit<BankTransaction, 'id'> = {
-                fromUserId: fromUserId,
+                fromUserId: serverSpecificFromId,
                 fromBadgeNumber: senderData.badgeNumber || '',
                 fromPlayerName: senderUsername,
                 toUserId: targetPlayer.userId,
@@ -191,13 +226,16 @@ export const processTransaction = async (
  */
 export const getPlayerTransactions = async (userId: string): Promise<BankTransaction[]> => {
     try {
+        // Get server-specific ID
+        const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+
         const transactionsRef = collection(firestore, 'bankTransactions');
         const allTransactions: BankTransaction[] = [];
 
         // Query 1: Get sent transactions (regular money transfers)
         const sentQuery = query(
             transactionsRef,
-            where('fromUserId', '==', userId),
+            where('fromUserId', '==', serverSpecificId),
             orderBy('timestamp', 'desc'),
             limit(50)
         );
@@ -205,7 +243,7 @@ export const getPlayerTransactions = async (userId: string): Promise<BankTransac
         // Query 2: Get received transactions
         const receivedQuery = query(
             transactionsRef,
-            where('toUserId', '==', userId),
+            where('toUserId', '==', serverSpecificId),
             orderBy('timestamp', 'desc'),
             limit(50)
         );

@@ -18,6 +18,13 @@ export const CasinoLeaderboard: React.FC<CasinoLeaderboardProps> = ({
     const [loading, setLoading] = useState(true);
     const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
+    const formatMoneyWithSpaces = (amount: number): string => {
+        const formatted = formatMoney(amount, false);
+        const parts = formatted.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        return `€${parts.join('.')}`;
+    };
+
     const loadLeaderboard = async (forceRefresh: boolean = false) => {
         try {
             setLoading(true);
@@ -126,13 +133,13 @@ export const CasinoLeaderboard: React.FC<CasinoLeaderboardProps> = ({
                                 </div>
                                 <div className="casino-leaderboard-col-player">{entry.username}</div>
                                 <div className="casino-leaderboard-col-current-month">
-                                    {formatMoney(entry.currentMonthWins)}
+                                    {formatMoneyWithSpaces(entry.currentMonthWins)}
                                     {entry.currentMonthWinCount > 0 && (
                                         <small> ({entry.currentMonthWinCount})</small>
                                     )}
                                 </div>
-                                <div className="casino-leaderboard-col-total">{formatMoney(entry.totalWins)}</div>
-                                <div className="casino-leaderboard-col-biggest">{formatMoney(entry.biggestWin)}</div>
+                                <div className="casino-leaderboard-col-total">{formatMoneyWithSpaces(entry.totalWins)}</div>
+                                <div className="casino-leaderboard-col-biggest">{formatMoneyWithSpaces(entry.biggestWin)}</div>
                                 <div className="casino-leaderboard-col-count">{entry.winCount}</div>
                             </div>
                         ))}

@@ -13,6 +13,8 @@ export interface User {
     username: string;
     usernameLower: string;
     createdAt: Date | Timestamp | FirestoreTimestamp;
+    pollid?: number;
+    isVip?: boolean;
 }
 
 export interface AttributeData {
@@ -96,7 +98,6 @@ export interface PlayerStats {
     experience: number;
     reputation: number;
     money: number,
-    pollid?: number;
     rank: string | null;
     departmentUnit: string | null;
     department: string | null;
@@ -144,9 +145,9 @@ export interface PlayerStats {
     equipment?: CharacterEquipment;
     fightClubStats?: FightClubStats;
     fightClubData?: FightClubData;
-    isVip?: boolean;
     completedTests?: string[];
     activeTest?: ActiveTest | null;
+    lastPrefectureChange?: Timestamp;
     casinoData?: {
         playsUsed: number;
         lastPlayTime: number;
@@ -156,6 +157,16 @@ export interface PlayerStats {
     adminPermissions?: AdminPermissions;
     activeCarId?: string;
     estate?: PlayerEstate | null;
+    dailyWorkCancellations?: {
+        count: number;
+        lastResetDate: Date | Timestamp;
+    };
+    dailyTrainingClicks?: {
+        sports: number;
+        food: number;
+        handicraft: number;
+        lastResetDate: Date | Timestamp;
+    };
 }
 
 // Course definition
@@ -290,6 +301,7 @@ export interface PlayerHealth {
 
 export interface LeaderboardEntry {
     userId: string;
+    baseUserId: string;
     username: string;
     level: number;
     experience: number;
@@ -297,13 +309,13 @@ export interface LeaderboardEntry {
     money: number;
     rank: string | null;
     badgeNumber: string | null;
-    policePosition?: string | null;
-    departmentUnit?: string | null;
-    department?: string | null;
-    prefecture?: string | null;
+    policePosition: string | null;
+    departmentUnit: string | null;
+    department: string | null;
+    prefecture: string | null;
     isEmployed: boolean;
-    completedCourses?: string[];
-    attributes?: PlayerAttributes;
+    completedCourses: string[];
+    attributes?: any;
     casesCompleted: number;
     criminalsArrested: number;
     totalWorkedHours: number;

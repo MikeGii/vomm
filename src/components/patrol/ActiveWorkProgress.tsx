@@ -1,8 +1,11 @@
-// src/components/patrol/ActiveWorkProgress.tsx
+// In src/components/patrol/ActiveWorkProgress.tsx - Enhanced version with cancellation limits
+
 import React, { useState } from 'react';
+import { Timestamp } from 'firebase/firestore';
 import { ActiveWork } from '../../types';
 import { getWorkActivityById } from '../../data/workActivities';
 import { formatCountdownTime } from '../../utils/timeFormatter';
+import { usePlayerStats } from '../../contexts/PlayerStatsContext';
 import '../../styles/components/patrol/ActiveWorkProgress.css';
 
 interface ActiveWorkProgressProps {
@@ -19,6 +22,7 @@ export const ActiveWorkProgress: React.FC<ActiveWorkProgressProps> = ({
                                                                           isCancelling = false
                                                                       }) => {
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+    const { playerStats } = usePlayerStats();
     const workActivity = getWorkActivityById(activeWork.workId);
 
     const remainingTimeInSeconds = Math.floor(remainingTime / 1000);
@@ -30,8 +34,33 @@ export const ActiveWorkProgress: React.FC<ActiveWorkProgressProps> = ({
     const hoursWorked = Math.max(0.1, timeWorkedMs / (1000 * 3600));
     const estimatedCurrentExp = Math.floor((activeWork.expectedExp / activeWork.totalHours) * hoursWorked * 0.5);
 
+    // Calculate remaining cancellations
+    const getRemainingCancellations = (): number => {
+        if (!playerStats?.dailyWorkCancellations) return 3;
+
+        const now = new Date();
+        const today = new Date(now.setHours(0, 0, 0, 0));
+
+        const lastReset = playerStats.dailyWorkCancellations.lastResetDate instanceof Timestamp
+            ? playerStats.dailyWorkCancellations.lastResetDate.toDate()
+            : new Date(playerStats.dailyWorkCancellations.lastResetDate);
+        const lastResetDay = new Date(lastReset.setHours(0, 0, 0, 0));
+
+        // If it's a new day, return 3
+        if (today.getTime() > lastResetDay.getTime()) {
+            return 3;
+        }
+
+        return Math.max(0, 3 - playerStats.dailyWorkCancellations.count);
+    };
+
+    const remainingCancellations = getRemainingCancellations();
+    const canCancel = remainingCancellations > 0;
+
     const handleCancelClick = () => {
-        setShowConfirmDialog(true);
+        if (canCancel) {
+            setShowConfirmDialog(true);
+        }
     };
 
     const handleConfirmCancel = () => {
@@ -85,15 +114,27 @@ export const ActiveWorkProgress: React.FC<ActiveWorkProgressProps> = ({
                 <button
                     className="cancel-work-button"
                     onClick={handleCancelClick}
-                    disabled={isCancelling}
+                    disabled={isCancelling || !canCancel}
                 >
-                    {isCancelling ? 'Katkestan...' : 'Katkesta töö'}
+                    {isCancelling ? 'Katkestan...' :
+                        !canCancel ? 'Katkestamised otsas' : 'Katkesta töö'}
                 </button>
+
+                {/* Updated warning with cancellation limit info */}
                 <div className="cancel-warning">
-                    ⚠️ Katkestamisel saad ainult 50% töötatud aja tasust (~{estimatedCurrentExp} XP)
+                    {canCancel ? (
+                        <>
+                            ⚠️ Katkestamisel saad ainult 50% töötatud aja tasust (~{estimatedCurrentExp} XP)
+                            <br />
+                            <strong>Katkestamisi alles: {remainingCancellations}/3</strong>
+                        </>
+                    ) : (
+                        <div className="cancel-limit-reached">
+                            ❌ Oled tänaseks juba 3 korda tööd katkestanud. Proovi homme uuesti!
+                        </div>
+                    )}
                 </div>
             </div>
-
 
             {/* Confirmation Dialog */}
             {showConfirmDialog && (
@@ -105,6 +146,9 @@ export const ActiveWorkProgress: React.FC<ActiveWorkProgressProps> = ({
                         </p>
                         <p>
                             Saad ainult <strong>50% tasust</strong>: umbes <strong>{estimatedCurrentExp} XP</strong>
+                        </p>
+                        <p className="cancellation-limit-warning">
+                            ⚠️ Pärast katkestamist jääb sul tänaseks <strong>{remainingCancellations - 1}/3</strong> katkestamist alles.
                         </p>
                         <div className="dialog-actions">
                             <button

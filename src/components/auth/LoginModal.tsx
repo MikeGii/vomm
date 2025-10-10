@@ -1,8 +1,11 @@
-// src/components/auth/LoginModal.tsx
+// src/components/auth/LoginModal.tsx - UPDATED
 import React, { useState, useEffect } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../config/firebase';
+import { auth, firestore } from '../../config/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
+import { GAME_SERVERS } from '../../types/server';
+import { setCurrentServer, getServerSpecificId } from '../../utils/serverUtils';
 import '../../styles/layout/Modal.css';
 
 interface LoginModalProps {
@@ -14,14 +17,17 @@ interface LoginModalProps {
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [selectedServer, setSelectedServer] = useState('beta');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showForgotPassword, setShowForgotPassword] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [showNewServerWarning, setShowNewServerWarning] = useState(false);
+    const [pendingLogin, setPendingLogin] = useState<{ userId: string; serverId: string } | null>(null);
 
     useEffect(() => {
         const handleEscKey = (event: KeyboardEvent) => {
-            if (event.key === 'Escape' && isOpen && !showForgotPassword) {
+            if (event.key === 'Escape' && isOpen && !showForgotPassword && !showNewServerWarning) {
                 onClose();
             }
         };
@@ -33,7 +39,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
         return () => {
             document.removeEventListener('keydown', handleEscKey);
         };
-    }, [isOpen, onClose, showForgotPassword]);
+    }, [isOpen, onClose, showForgotPassword, showNewServerWarning]);
 
     // Reset form when modal closes
     useEffect(() => {
@@ -42,10 +48,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
             setPassword('');
             setError('');
             setShowPassword(false);
+            setSelectedServer('beta');
+            setShowNewServerWarning(false);
+            setPendingLogin(null);
         }
     }, [isOpen]);
 
     if (!isOpen) return null;
+
+    const checkPlayerProgress = async (userId: string, serverId: string): Promise<boolean> => {
+        const docId = getServerSpecificId(userId, serverId);
+        const statsDoc = await getDoc(doc(firestore, 'playerStats', docId));
+        return statsDoc.exists();
+    };
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -53,9 +68,23 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
         setLoading(true);
 
         try {
-            await signInWithEmailAndPassword(auth, email, password);
-            onSuccess();
-            onClose();
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const userId = userCredential.user.uid;
+
+            // Check if player has progress on selected server
+            const hasProgress = await checkPlayerProgress(userId, selectedServer);
+
+            if (!hasProgress) {
+                // Player has no progress on this server
+                setPendingLogin({ userId, serverId: selectedServer });
+                setShowNewServerWarning(true);
+                setLoading(false);
+                return;
+            }
+
+            // Player has progress, proceed with login
+            proceedWithLogin(selectedServer);
+
         } catch (error: any) {
             if (error.code === 'auth/user-not-found') {
                 setError('Kasutajat ei leitud');
@@ -68,10 +97,75 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
             } else {
                 setError('Sisselogimine ebaõnnestus');
             }
-        } finally {
             setLoading(false);
         }
     };
+
+    const proceedWithLogin = (serverId: string) => {
+        setCurrentServer(serverId);
+
+        // Clear cache but preserve server selection
+        const keysToPreserve = ['currentServer'];
+        const preserved: { [key: string]: string | null } = {};
+        keysToPreserve.forEach(key => {
+            preserved[key] = localStorage.getItem(key);
+        });
+
+        localStorage.clear();
+
+        // Restore preserved keys
+        localStorage.setItem('currentServer', serverId);
+
+        // Dispatch custom event for same-tab detection
+        window.dispatchEvent(new CustomEvent('serverChanged', { detail: { server: serverId } }));
+
+        onSuccess();
+        onClose();
+    };
+
+    const confirmNewServerLogin = () => {
+        if (pendingLogin) {
+            proceedWithLogin(pendingLogin.serverId);
+        }
+    };
+
+    const cancelNewServerLogin = () => {
+        setShowNewServerWarning(false);
+        setPendingLogin(null);
+        setLoading(false);
+    };
+
+    // Show warning modal if trying to log into new server
+    if (showNewServerWarning) {
+        return (
+            <div className="modal-backdrop">
+                <div className="modal-content">
+                    <h2 className="modal-title">⚠️ Uus server</h2>
+                    <p className="modal-description">
+                        Oled logimas sisse maailma <strong>{GAME_SERVERS[pendingLogin?.serverId || 'beta'].name}</strong>,
+                        kus sinu kasutajal veel ei ole mängijat.
+                    </p>
+                    <p className="modal-description">
+                        Kas soovid jätkata? Alustad selles serveris täiesti nullist.
+                    </p>
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                        <button
+                            className="modal-button-secondary"
+                            onClick={cancelNewServerLogin}
+                        >
+                            Tühista
+                        </button>
+                        <button
+                            className="modal-button"
+                            onClick={confirmNewServerLogin}
+                        >
+                            Jätka
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <>
@@ -80,6 +174,20 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
                     <button className="modal-close" onClick={onClose}>×</button>
                     <h2 className="modal-title">Sisene mängu</h2>
                     <form onSubmit={handleLogin} className="modal-form">
+                        {/* Server selection dropdown */}
+                        <select
+                            value={selectedServer}
+                            onChange={(e) => setSelectedServer(e.target.value)}
+                            className="modal-input"
+                            disabled={loading}
+                        >
+                            {Object.values(GAME_SERVERS).map(server => (
+                                <option key={server.id} value={server.id}>
+                                    {server.name} - {server.description}
+                                </option>
+                            ))}
+                        </select>
+
                         <input
                             type="email"
                             placeholder="E-posti aadress"

@@ -1,30 +1,28 @@
-// src/services/LeaderboardService.ts - COMPLETE FIXED VERSION
+// src/services/LeaderboardService.ts
 import {
     collection,
     query,
     where,
     orderBy,
     limit,
-    getDocs
+    getDocs,
+    getDoc,
+    doc
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { LeaderboardEntry } from '../types';
+import { getCurrentServer } from '../utils/serverUtils';
 import { cacheManager } from './CacheManager';
 
 const EXCLUDED_USERNAMES = ['Lääne13'];
 
-/**
- * Get leaderboard with proper ordering and caching
- * @param limitCount - Number of players to fetch (default 200 for all active players)
- * @param forceRefresh - Force bypass cache and fetch fresh data
- */
 export const getLeaderboard = async (
     limitCount: number = 300,
     forceRefresh: boolean = false
 ): Promise<LeaderboardEntry[]> => {
-    const cacheKey = `leaderboard_${limitCount}`;
+    const currentServer = getCurrentServer();
+    const cacheKey = `leaderboard_${limitCount}_${currentServer}`;
 
-    // Step 1: Check cache first (unless force refresh)
     if (!forceRefresh) {
         const cached = cacheManager.get<LeaderboardEntry[]>(cacheKey);
         if (cached) {
@@ -36,40 +34,48 @@ export const getLeaderboard = async (
     try {
         console.log('Fetching leaderboard from Firebase...');
 
-        // Step 2: Build the query with PROPER ORDERING
-        // CRITICAL FIX: Order BY level and reputation BEFORE limiting
         const statsQuery = query(
             collection(firestore, 'playerStats'),
             where('completedCourses', 'array-contains', 'basic_police_training_abipolitseinik'),
-            orderBy('level', 'desc'),       // Highest level first
-            orderBy('reputation', 'desc'),   // Then by reputation
+            orderBy('level', 'desc'),
+            orderBy('reputation', 'desc'),
             limit(limitCount)
         );
 
-        // Step 3: Execute query
         const querySnapshot = await getDocs(statsQuery);
         console.log(`Firebase returned ${querySnapshot.size} documents`);
 
         const leaderboard: LeaderboardEntry[] = [];
+        const userIds = new Set<string>();
 
-        // Step 4: Process each player
+        // Step 1: Collect player data and base user IDs
         querySnapshot.docs.forEach((statsDoc) => {
+            const docId = statsDoc.id;
+
+            if (currentServer === 'beta' && docId.includes('_')) return;
+            if (currentServer !== 'beta' && !docId.endsWith(`_${currentServer}`)) return;
+
             const playerData = statsDoc.data();
 
-            // Skip excluded usernames
             if (playerData.username && EXCLUDED_USERNAMES.includes(playerData.username)) {
                 console.log(`Excluding player: ${playerData.username}`);
                 return;
             }
 
-            // Skip if explicitly excluded from leaderboard
             if (playerData.excludeFromLeaderboard === true) {
                 return;
             }
 
-            // Add to leaderboard
+            // Extract base userId
+            const baseUserId = currentServer === 'beta'
+                ? docId
+                : docId.replace(`_${currentServer}`, '');
+
+            userIds.add(baseUserId);
+
             leaderboard.push({
                 userId: statsDoc.id,
+                baseUserId: baseUserId,
                 username: playerData.username || 'Tundmatu',
                 level: playerData.level || 1,
                 experience: playerData.experience || 0,
@@ -87,14 +93,28 @@ export const getLeaderboard = async (
                 casesCompleted: playerData.casesCompleted || 0,
                 criminalsArrested: playerData.criminalsArrested || 0,
                 totalWorkedHours: playerData.totalWorkedHours || 0,
-                isVip: playerData.isVip || false
+                isVip: false // Will be updated
             });
         });
 
-        // Step 5: Data is already sorted by Firebase query, no need to sort again!
-        console.log(`Processed ${leaderboard.length} players for leaderboard`);
+        // Step 2: Fetch VIP status from users collection
+        const vipPromises = Array.from(userIds).map(async (baseUserId) => {
+            const userDoc = await getDoc(doc(firestore, 'users', baseUserId));
+            return {
+                userId: baseUserId,
+                isVip: userDoc.exists() ? (userDoc.data().isVip || false) : false
+            };
+        });
 
-        // Step 6: Save to cache
+        const vipData = await Promise.all(vipPromises);
+        const vipMap = new Map(vipData.map(v => [v.userId, v.isVip]));
+
+        // Step 3: Update VIP status
+        leaderboard.forEach(entry => {
+            entry.isVip = vipMap.get(entry.baseUserId) || false;
+        });
+
+        console.log(`Processed ${leaderboard.length} players for leaderboard`);
         cacheManager.set(cacheKey, leaderboard);
         console.log('Leaderboard saved to cache');
 
@@ -103,13 +123,10 @@ export const getLeaderboard = async (
     } catch (error: any) {
         console.error('Error fetching leaderboard:', error);
 
-        // Check if it's an index error
         if (error.code === 'failed-precondition' && error.message.includes('index')) {
             console.error('FIREBASE INDEX NEEDED!');
-            console.error('Click this link to create the index:');
             console.error(error.message);
 
-            // Try fallback query without ordering (temporary fix)
             try {
                 console.log('Attempting fallback query without ordering...');
                 const fallbackQuery = query(
@@ -121,9 +138,13 @@ export const getLeaderboard = async (
                 const leaderboard: LeaderboardEntry[] = [];
 
                 snapshot.docs.forEach((doc) => {
+                    const docId = doc.id;
+
+                    if (currentServer === 'beta' && docId.includes('_')) return;
+                    if (currentServer !== 'beta' && !docId.endsWith(`_${currentServer}`)) return;
+
                     const data = doc.data();
 
-                    // Apply filters client-side
                     const hasBasicTraining = data.completedCourses?.includes('basic_police_training_abipolitseinik');
                     const isExcluded = data.excludeFromLeaderboard === true;
                     const isExcludedUsername = data.username && EXCLUDED_USERNAMES.includes(data.username);
@@ -131,6 +152,7 @@ export const getLeaderboard = async (
                     if (hasBasicTraining && !isExcluded && !isExcludedUsername) {
                         leaderboard.push({
                             userId: doc.id,
+                            baseUserId: currentServer === 'beta' ? doc.id : doc.id.replace(`_${currentServer}`, ''),
                             username: data.username || 'Tundmatu',
                             level: data.level || 1,
                             experience: data.experience || 0,
@@ -147,12 +169,12 @@ export const getLeaderboard = async (
                             attributes: data.attributes,
                             casesCompleted: data.casesCompleted || 0,
                             criminalsArrested: data.criminalsArrested || 0,
-                            totalWorkedHours: data.totalWorkedHours || 0
+                            totalWorkedHours: data.totalWorkedHours || 0,
+                            isVip: false
                         });
                     }
                 });
 
-                // Sort client-side as fallback
                 leaderboard.sort((a, b) => {
                     if (b.level !== a.level) {
                         return b.level - a.level;
@@ -161,8 +183,6 @@ export const getLeaderboard = async (
                 });
 
                 console.warn('Using fallback query - CREATE THE INDEX for better performance!');
-
-                // Don't cache fallback results as long
                 cacheManager.set(cacheKey, leaderboard);
 
                 return leaderboard;
@@ -172,30 +192,12 @@ export const getLeaderboard = async (
             }
         }
 
-        // Try to return cached data even if expired
         const staleCache = cacheManager.get<LeaderboardEntry[]>(cacheKey, Infinity);
         if (staleCache) {
             console.log('Returning stale cache due to error');
             return staleCache;
         }
 
-        // Return empty array as last resort
         return [];
     }
 };
-
-/**
- * Clear leaderboard cache (useful after updates)
- */
-export const clearLeaderboardCache = (): void => {
-    cacheManager.clearByPattern('leaderboard');
-    console.log('Leaderboard cache cleared');
-};
-
-/**
- * Get current cache status for debugging
- */
-export const getLeaderboardCacheStatus = (): boolean => {
-    return cacheManager.has('leaderboard_200');
-};
-

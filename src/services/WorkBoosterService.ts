@@ -2,6 +2,7 @@
 import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PlayerStats, InventoryItem } from '../types';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 export interface WorkBoosterResult {
     success: boolean;
@@ -17,7 +18,8 @@ export const applyWorkTimeBooster = async (
     boosterItemId: string
 ): Promise<WorkBoosterResult> => {
     try {
-        const statsRef = doc(firestore, 'playerStats', userId);
+        const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+        const statsRef = doc(firestore, 'playerStats', serverSpecificId);
         const statsDoc = await getDoc(statsRef);
 
         if (!statsDoc.exists()) {

@@ -24,12 +24,14 @@ import {VehicleModel} from "../types/vehicleDatabase";
 import {PlayerCar} from "../types/vehicles";
 import {DragRacePhysics} from "../utils/dragRacePhysics";
 import {DragRaceLeaderboardService} from "./DragRaceLeaderboardService";
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
+import { GlobalUserService } from './GlobalUserService';
 
 export class DragRaceService {
 
     // Initialize drag race attributes if they don't exist
     static async initializeDragRaceAttributes(userId: string): Promise<void> {
-        const statsRef = doc(firestore, 'playerStats', userId);
+        const statsRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
         const statsDoc = await getDoc(statsRef);
 
         if (!statsDoc.exists()) {
@@ -74,11 +76,14 @@ export class DragRaceService {
             throw new Error('Missing required parameters for fuel system');
         }
 
-        const fuelRef = doc(firestore, 'dragRaceFuel', userId);
+        const currentServer = getCurrentServer();
+        const fuelDocId = currentServer === 'beta' ? userId : `${userId}_${currentServer}`;
+        const fuelRef = doc(firestore, 'dragRaceFuel', fuelDocId);
         const fuelDoc = await getDoc(fuelRef);
 
         // Use passed playerStats for VIP check
-        const isVip = playerStats.isVip || false;
+        const globalData = await GlobalUserService.getGlobalUserData(userId);
+        const isVip = globalData.isVip;
 
         // Determine max fuel based on VIP status
         const maxFuel = isVip ? FUEL_CONSTANTS.MAX_FREE_FUEL_VIP : FUEL_CONSTANTS.MAX_FREE_FUEL;
@@ -135,11 +140,14 @@ export class DragRaceService {
         // Check if we need to reset
         if (now >= fuelSystem.nextResetTime) {
             // Use passed playerStats instead of fetching
-            const isVip = playerStats.isVip || false;
+            const globalData = await GlobalUserService.getGlobalUserData(userId);
+            const isVip = globalData.isVip;
             const maxFuel = isVip ? FUEL_CONSTANTS.MAX_FREE_FUEL_VIP : FUEL_CONSTANTS.MAX_FREE_FUEL;
 
             const nextReset = this.getNextHourlyReset(now);
-            const fuelRef = doc(firestore, 'dragRaceFuel', userId);
+            const currentServer = getCurrentServer();
+            const fuelDocId = currentServer === 'beta' ? userId : `${userId}_${currentServer}`;
+            const fuelRef = doc(firestore, 'dragRaceFuel', fuelDocId);
 
             await updateDoc(fuelRef, {
                 currentFuel: maxFuel,
@@ -232,7 +240,7 @@ export class DragRaceService {
         if (!currentAttributeData) {
             // If attribute doesn't exist, we need to fetch the latest state
             // This only happens on first training of this type
-            const statsRef = doc(firestore, 'playerStats', userId);
+            const statsRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
             const statsDoc = await getDoc(statsRef);
 
             if (statsDoc.exists()) {
@@ -271,7 +279,7 @@ export class DragRaceService {
         const batch = writeBatch(firestore);
 
         // Update player stats
-        const userRef = doc(firestore, 'playerStats', userId);
+        const userRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
 
         if (levelUp) {
             // Update level, experience, and experienceForNextLevel
@@ -288,7 +296,9 @@ export class DragRaceService {
         }
 
         // Update fuel
-        const fuelRef = doc(firestore, 'dragRaceFuel', userId);
+        const currentServer = getCurrentServer();
+        const fuelDocId = currentServer === 'beta' ? userId : `${userId}_${currentServer}`;
+        const fuelRef = doc(firestore, 'dragRaceFuel', fuelDocId);
         batch.update(fuelRef, {
             currentFuel: increment(-1)
         });
@@ -339,12 +349,15 @@ export class DragRaceService {
             remaining: moneyAttemptsRemaining
         });
 
+        // Get global data for pollid check
+        const globalData = await GlobalUserService.getGlobalUserData(userId);
+
         // Pollid purchase option (unlimited after money attempts)
         const pollidAvailable = fuelSystem.paidAttemptsUsed >= FUEL_CONSTANTS.MAX_PAID_ATTEMPTS;
         options.push({
             type: 'pollid',
             cost: FUEL_CONSTANTS.POLLID_COST_PER_ATTEMPT,
-            available: pollidAvailable && ((playerStats.pollid || 0) >= FUEL_CONSTANTS.POLLID_COST_PER_ATTEMPT)
+            available: pollidAvailable && (globalData.pollid >= FUEL_CONSTANTS.POLLID_COST_PER_ATTEMPT)
         });
 
         return options;
@@ -375,38 +388,51 @@ export class DragRaceService {
 
         const totalCost = option.cost * actualQuantity;
 
-        // Check if player can afford it using passed playerStats
-        const playerCurrency = purchaseType === 'money' ? playerStats.money : (playerStats.pollid || 0);
+        // Check if player can afford it
+        const globalData = await GlobalUserService.getGlobalUserData(userId);
+        const playerCurrency = purchaseType === 'money'
+            ? playerStats.money
+            : globalData.pollid;
+
         if (playerCurrency < totalCost) {
             throw new Error(`Pole piisavalt ${purchaseType === 'money' ? 'raha' : 'pollid'}`);
         }
 
-        const batch = writeBatch(firestore);
-
-        // Update the correct collection - use playerStats consistently
-        const userRef = doc(firestore, 'playerStats', userId);
-        const currencyField = purchaseType === 'money' ? 'money' : 'pollid';
-
-        // Use increment to ensure atomic updates
-        batch.update(userRef, {
-            [currencyField]: increment(-totalCost),
-            lastModified: Timestamp.now()
-        });
-
-        // Update fuel and paid attempts
-        const fuelRef = doc(firestore, 'dragRaceFuel', userId);
-        const fuelUpdate: any = {
-            currentFuel: increment(actualQuantity)
-        };
-
-        // Only update paid attempts counter for money purchases
+        // Handle money and pollid purchases differently
         if (purchaseType === 'money') {
-            fuelUpdate.paidAttemptsUsed = increment(actualQuantity);
+            // Money purchase - use batch for atomic update
+            const batch = writeBatch(firestore);
+
+            // Update money in playerStats (server-specific)
+            const userRef = doc(firestore, 'playerStats', getServerSpecificId(userId, getCurrentServer()));
+            batch.update(userRef, {
+                money: increment(-totalCost),
+                lastModified: Timestamp.now()
+            });
+
+            // Update fuel and paid attempts
+            const currentServer = getCurrentServer();
+            const fuelDocId = currentServer === 'beta' ? userId : `${userId}_${currentServer}`;
+            const fuelRef = doc(firestore, 'dragRaceFuel', fuelDocId);
+            batch.update(fuelRef, {
+                currentFuel: increment(actualQuantity),
+                paidAttemptsUsed: increment(actualQuantity)
+            });
+
+            await batch.commit();
+        } else {
+            // Pollid purchase - handle separately since pollid is global
+            // Update pollid globally
+            await GlobalUserService.updatePollid(userId, -totalCost);
+
+            // Update fuel separately
+            const currentServer = getCurrentServer();
+            const fuelDocId = currentServer === 'beta' ? userId : `${userId}_${currentServer}`;
+            const fuelRef = doc(firestore, 'dragRaceFuel', fuelDocId);
+            await updateDoc(fuelRef, {
+                currentFuel: increment(actualQuantity)
+            });
         }
-
-        batch.update(fuelRef, fuelUpdate);
-
-        await batch.commit();
 
         return {
             success: true,
@@ -491,7 +517,8 @@ export class DragRaceService {
      * Get player's best time for a track
      */
     static async getPlayerTime(userId: string, trackId: string): Promise<any> {
-        const timeRef = doc(firestore, 'dragRaceTimes', `${userId}_${trackId}`);
+        const currentServer = getCurrentServer();
+        const timeRef = doc(firestore, 'dragRaceTimes', currentServer === 'beta' ? `${userId}_${trackId}` : `${userId}_${trackId}_${currentServer}`);
         const timeDoc = await getDoc(timeRef);
 
         if (!timeDoc.exists()) {
@@ -515,7 +542,8 @@ export class DragRaceService {
         activeCar: { car: PlayerCar; model: VehicleModel },
         playerStats: PlayerStats
     ): Promise<void> {
-        const timeRef = doc(firestore, 'dragRaceTimes', `${userId}_${trackId}`);
+        const currentServer = getCurrentServer();
+        const timeRef = doc(firestore, 'dragRaceTimes', currentServer === 'beta' ? `${userId}_${trackId}` : `${userId}_${trackId}_${currentServer}`);
 
         const carModel = {
             id: activeCar.model.id,
@@ -532,6 +560,7 @@ export class DragRaceService {
         await setDoc(timeRef, {
             userId,
             trackId,
+            server: currentServer,
             time,
             carId: activeCar.car.id,
             carBrand: activeCar.model.brandName,
@@ -559,7 +588,9 @@ export class DragRaceService {
         const batch = writeBatch(firestore);
 
         // Update fuel
-        const fuelRef = doc(firestore, 'dragRaceFuel', userId);
+        const currentServer = getCurrentServer();
+        const fuelDocId = currentServer === 'beta' ? userId : `${userId}_${currentServer}`;
+        const fuelRef = doc(firestore, 'dragRaceFuel', fuelDocId);
         batch.update(fuelRef, {
             currentFuel: increment(-1)
         });

@@ -1,4 +1,6 @@
 // src/services/CacheManager.ts
+import {getCurrentServer} from "../utils/serverUtils";
+
 interface CacheEntry<T> {
     data: T;
     timestamp: number;
@@ -14,8 +16,14 @@ interface CacheStats {
 
 class CacheManager {
     private static instance: CacheManager;
-    private readonly CACHE_VERSION = '1.1.0';
+    private readonly CACHE_VERSION = '1.2.0';
     private readonly CACHE_PREFIX = 'game_cache_';
+
+    // Generate server-specific cache keys
+    getServerKey(key: string, server?: string): string {
+        const currentServer = server || getCurrentServer();
+        return currentServer === 'beta' ? key : `${key}_${currentServer}`;
+    }
 
     // Cache durations in milliseconds
     private readonly DURATIONS = {
@@ -45,9 +53,11 @@ class CacheManager {
     /**
      * Get data from cache
      */
-    get<T>(key: string, customDuration?: number): T | null {
+    get<T>(key: string, customDuration?: number, serverSpecific: boolean = false): T | null {
         try {
-            const fullKey = `${this.CACHE_PREFIX}${key}`;
+            // Use server-specific key if needed
+            const actualKey = serverSpecific ? this.getServerKey(key) : key;
+            const fullKey = `${this.CACHE_PREFIX}${actualKey}`;
             const stored = localStorage.getItem(fullKey);
 
             if (!stored) {
@@ -58,7 +68,7 @@ class CacheManager {
 
             // Check if cache version matches
             if (entry.version !== this.CACHE_VERSION) {
-                this.remove(key);
+                this.remove(key, serverSpecific);
                 return null;
             }
 
@@ -67,7 +77,7 @@ class CacheManager {
             const maxAge = customDuration || this.getDurationForKey(key);
 
             if (age > maxAge) {
-                this.remove(key);
+                this.remove(key, serverSpecific);
                 return null;
             }
 
@@ -76,7 +86,7 @@ class CacheManager {
 
         } catch (error) {
             console.error(`Cache read error for ${key}:`, error);
-            this.remove(key);
+            this.remove(key, serverSpecific);
             return null;
         }
     }
@@ -84,8 +94,10 @@ class CacheManager {
     /**
      * Save data to cache
      */
-    set<T>(key: string, data: T, customDuration?: number): void {        try {
-            const fullKey = `${this.CACHE_PREFIX}${key}`;
+    set<T>(key: string, data: T, customDuration?: number, serverSpecific: boolean = false): void {
+        try {
+            const actualKey = serverSpecific ? this.getServerKey(key) : key;
+            const fullKey = `${this.CACHE_PREFIX}${actualKey}`;
             const entry: CacheEntry<T> = {
                 data,
                 timestamp: Date.now(),
@@ -112,7 +124,8 @@ class CacheManager {
 
                 // Try one more time
                 try {
-                    const fullKey = `${this.CACHE_PREFIX}${key}`;
+                    const actualKey = serverSpecific ? this.getServerKey(key) : key;
+                    const fullKey = `${this.CACHE_PREFIX}${actualKey}`;
                     localStorage.setItem(fullKey, JSON.stringify({
                         data,
                         timestamp: Date.now(),
@@ -128,10 +141,11 @@ class CacheManager {
     /**
      * Remove specific cache entry
      */
-    remove(key: string): void {
-        const fullKey = `${this.CACHE_PREFIX}${key}`;
+    remove(key: string, serverSpecific: boolean = false): void {
+        const actualKey = serverSpecific ? this.getServerKey(key) : key;
+        const fullKey = `${this.CACHE_PREFIX}${actualKey}`;
         localStorage.removeItem(fullKey);
-        console.log(`Cache removed: ${key}`);
+        console.log(`Cache removed: ${actualKey}`);
     }
 
     /**
@@ -251,8 +265,8 @@ class CacheManager {
     /**
      * Check if cache exists and is valid
      */
-    has(key: string): boolean {
-        return this.get(key) !== null;
+    has(key: string, serverSpecific: boolean = false): boolean {
+        return this.get(key, undefined, serverSpecific) !== null;
     }
 
     /**

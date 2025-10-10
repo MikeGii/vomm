@@ -5,11 +5,12 @@ import {
     where,
     getDocs,
     doc,
-    setDoc,
+    setDoc
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { CasinoWin, CasinoLeaderboardEntry } from '../types/casino.types';
 import { cacheManager } from './CacheManager';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const LEADERBOARD_LIMIT = 10;
@@ -42,25 +43,27 @@ export const recordCasinoWin = async (
     multiplier: number
 ): Promise<void> => {
     try {
+        const currentServer = getCurrentServer();
         const winData: CasinoWin = {
-            userId,
+            userId: getServerSpecificId(userId, currentServer),
             username,
             winAmount,
             betAmount,
             multiplier,
             timestamp: Date.now(),
-            month: getCurrentMonth()
+            month: getCurrentMonth(),
+            server: currentServer
         };
 
         // Store win record with auto-generated ID
         const winsCollection = collection(firestore, 'casinoWins');
         await setDoc(doc(winsCollection), winData);
 
-        // Clear cache to refresh leaderboard
-        cacheManager.remove('casino_leaderboard_universal');
+        // Clear server-specific cache
+        const cacheKey = `casino_leaderboard_universal_${currentServer}`;
+        cacheManager.remove(cacheKey, true);
     } catch (error) {
         console.error('Error recording casino win:', error);
-        // Don't throw - we don't want to break the game if recording fails
     }
 };
 
@@ -70,12 +73,13 @@ export const recordCasinoWin = async (
 export const getUniversalLeaderboard = async (
     forceRefresh: boolean = false
 ): Promise<CasinoLeaderboardEntry[]> => {
-    const cacheKey = 'casino_leaderboard_universal';
+    const currentServer = getCurrentServer();
+    const cacheKey = `casino_leaderboard_universal_${currentServer}`;
     const currentMonth = getCurrentMonth();
 
     // Check cache first
     if (!forceRefresh) {
-        const cached = cacheManager.get<CasinoLeaderboardEntry[]>(cacheKey, CACHE_DURATION);
+        const cached = cacheManager.get<CasinoLeaderboardEntry[]>(cacheKey, CACHE_DURATION, true);
         if (cached) {
             console.log('Casino leaderboard loaded from cache');
             return cached;
@@ -85,11 +89,17 @@ export const getUniversalLeaderboard = async (
     try {
         console.log('Fetching universal casino leaderboard from Firebase...');
 
-        // Get ALL wins (not filtered by month)
-        const winsQuery = query(
-            collection(firestore, 'casinoWins'),
-            where('winAmount', '>', 0)
-        );
+        // Filter wins by server
+        const winsQuery = currentServer === 'beta'
+            ? query(
+                collection(firestore, 'casinoWins'),
+                where('winAmount', '>', 0)
+            )
+            : query(
+                collection(firestore, 'casinoWins'),
+                where('server', '==', currentServer),
+                where('winAmount', '>', 0)
+            );
 
         const snapshot = await getDocs(winsQuery);
 
@@ -159,7 +169,7 @@ export const getUniversalLeaderboard = async (
             }));
 
         // Cache the result
-        cacheManager.set(cacheKey, leaderboard, CACHE_DURATION);
+        cacheManager.set(cacheKey, leaderboard, CACHE_DURATION, true);
         console.log(`Casino leaderboard cached: ${leaderboard.length} entries`);
 
         return leaderboard;
@@ -167,7 +177,7 @@ export const getUniversalLeaderboard = async (
         console.error('Error fetching casino leaderboard:', error);
 
         // Try to return stale cache if available
-        const staleCache = cacheManager.get<CasinoLeaderboardEntry[]>(cacheKey, Infinity);
+        const staleCache = cacheManager.get<CasinoLeaderboardEntry[]>(cacheKey, Infinity, true);
         if (staleCache) {
             console.log('Returning stale cache due to error');
             return staleCache;

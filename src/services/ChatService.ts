@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { PrefectureMessage } from '../types/chat';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 const MESSAGES_PER_PAGE = 20;
 
@@ -37,15 +38,20 @@ export const sendPrefectureMessage = async (
             throw new Error('Sõnum on liiga pikk (max 500 tähemärki)');
         }
 
-        const messagesRef = collection(firestore, 'prefectureChat', prefecture, 'messages');
+        const currentServer = getCurrentServer();
+
+        const messagesRef = currentServer === 'beta'
+            ? collection(firestore, 'prefectureChat', prefecture, 'messages')
+            : collection(firestore, 'prefectureChat', `${prefecture}_${currentServer}`, 'messages');
 
         await addDoc(messagesRef, {
-            userId,
+            userId: getServerSpecificId(userId, currentServer), // Changed this line
             username,
             prefecture,
             message: trimmedMessage,
             timestamp: Timestamp.now(),
-            badgeNumber: badgeNumber || null
+            badgeNumber: badgeNumber || null,
+            server: currentServer // Added this line
         });
     } catch (error) {
         console.error('Viga sõnumi saatmisel:', error);
@@ -60,7 +66,11 @@ export const listenToRecentMessages = (
     prefecture: string,
     callback: (messages: PrefectureMessage[]) => void
 ): (() => void) => {
-    const messagesRef = collection(firestore, 'prefectureChat', prefecture, 'messages');
+    const currentServer = getCurrentServer();
+
+    const messagesRef = currentServer === 'beta'
+        ? collection(firestore, 'prefectureChat', prefecture, 'messages')
+        : collection(firestore, 'prefectureChat', `${prefecture}_${currentServer}`, 'messages');
 
     // Võta ainult viimased 20 sõnumit reaalajas jälgimiseks
     const q = query(
@@ -103,7 +113,11 @@ export const loadOlderMessages = async (
     oldestMessage: PrefectureMessage
 ): Promise<PrefectureMessage[]> => {
     try {
-        const messagesRef = collection(firestore, 'prefectureChat', prefecture, 'messages');
+        const currentServer = getCurrentServer();
+
+        const messagesRef = currentServer === 'beta'
+            ? collection(firestore, 'prefectureChat', prefecture, 'messages')
+            : collection(firestore, 'prefectureChat', `${prefecture}_${currentServer}`, 'messages');
 
         const q = query(
             messagesRef,
@@ -140,7 +154,9 @@ export const loadOlderMessages = async (
  */
 export const canAccessPrefectureChat = async (userId: string, prefecture: string): Promise<boolean> => {
     try {
-        const statsRef = doc(firestore, 'playerStats', userId);
+        // UPDATED: Use server-specific player stats document
+        const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+        const statsRef = doc(firestore, 'playerStats', serverSpecificId);
         const statsDoc = await getDoc(statsRef);
 
         if (!statsDoc.exists()) return false;

@@ -12,6 +12,7 @@ import { ALL_SHOP_ITEMS } from '../data/shop';
 import { updateStockAfterSell } from './ShopStockService';
 import { getBaseIdFromInventoryId } from '../utils/inventoryUtils';
 import { updateProgress } from './TaskService';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
 export interface SellResult {
     success: boolean;
@@ -30,7 +31,8 @@ export const sellCraftedItem = async (
 ): Promise<SellResult> => {
     try {
         // Get player stats
-        const playerRef = doc(firestore, 'playerStats', userId);
+        const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
+        const playerRef = doc(firestore, 'playerStats', serverSpecificId);
         const playerDoc = await getDoc(playerRef);
 
         if (!playerDoc.exists()) {

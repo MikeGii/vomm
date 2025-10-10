@@ -1,6 +1,6 @@
 // src/pages/TrainingPage.tsx - CORRECTED VERSION
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import {updateDoc, doc} from '../services/TrackedFirestore';
+import {updateDoc, doc} from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import { AuthenticatedHeader } from '../components/layout/AuthenticatedHeader';
 import { AttributesDisplay } from '../components/training/AttributesDisplay';
@@ -22,8 +22,7 @@ import { useToast } from '../contexts/ToastContext';
 import { usePlayerStats } from '../contexts/PlayerStatsContext';
 import { useEstate } from '../contexts/EstateContext';
 import { useNavigate } from 'react-router-dom';
-import {PlayerAttributes, PlayerStats, TrainingActivity} from '../types';
-import { usePageTracking } from '../hooks/usePageTracking';
+import {PlayerAttributes, TrainingActivity} from '../types';
 import { InventoryItem } from '../types';
 import {
     checkAndResetTrainingClicks,
@@ -38,23 +37,22 @@ import {
 import { getAvailableActivities, getActivityById } from '../data/trainingActivities';
 import { sellCraftedItem } from '../services/SellService';
 import '../styles/pages/Training.css';
+import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 
-const getVipAwareMaxClicks = (playerStats: PlayerStats | null): number => {
-    if (!playerStats) return 50;
-
-    if (playerStats.isVip) {
-        return playerStats.activeWork ? 30 : 100;
+const getVipAwareMaxClicks = (isVip: boolean, activeWork: any): number => {
+    const hasActiveWork = !!activeWork;
+    if (isVip) {
+        return hasActiveWork ? 30 : 100;
     } else {
-        return playerStats.activeWork ? 10 : 50;
+        return hasActiveWork ? 10 : 50;
     }
 };
 
 const TrainingPage: React.FC = () => {
-    usePageTracking('TrainingPage');
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     const { showToast } = useToast();
-    const { playerStats, loading, refreshStats } = usePlayerStats();
+    const { playerStats, loading, refreshStats, isVip } = usePlayerStats();
     const { canUse3DPrinter, canUseLaserCutter, playerEstate } = useEstate();
 
     // Consolidated training states
@@ -69,7 +67,10 @@ const TrainingPage: React.FC = () => {
     const clicksCheckedRef = useRef(false);
 
     // Fixed memoized calculations with proper dependencies
-    const maxClicks = useMemo(() => getVipAwareMaxClicks(playerStats), [playerStats]);
+    const maxClicks = useMemo(() =>
+            getVipAwareMaxClicks(isVip, playerStats?.activeWork),
+        [isVip, playerStats?.activeWork]
+    );
 
     const remainingClicks = useMemo(() => {
         if (!playerStats) return 0;
@@ -146,7 +147,7 @@ const TrainingPage: React.FC = () => {
         if (!currentUser || !playerStats || initializationDone) return;
 
         const initializeIfNeeded = async () => {
-            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
+            const statsRef = doc(firestore, 'playerStats', getServerSpecificId(currentUser.uid, getCurrentServer()));
             let needsUpdate = false;
             const updates: any = {};
 
@@ -575,68 +576,6 @@ const TrainingPage: React.FC = () => {
         );
     }, [activeTab, canUse3DPrinter, canUseLaserCutter, playerEstate]);
 
-    // One-time initialization effect
-    useEffect(() => {
-        if (!currentUser || !playerStats || initializationDone) return;
-
-        const initializeIfNeeded = async () => {
-            const statsRef = doc(firestore, 'playerStats', currentUser.uid);
-            let needsUpdate = false;
-            const updates: any = {};
-
-            if (!playerStats.attributes) {
-                updates.attributes = initializeAttributes();
-                needsUpdate = true;
-            } else {
-                const defaultAttributes = initializeAttributes();
-                const currentAttributes = { ...playerStats.attributes };
-                let attributesUpdated = false;
-
-                Object.keys(defaultAttributes).forEach(key => {
-                    if (!currentAttributes[key as keyof PlayerAttributes]) {
-                        currentAttributes[key as keyof PlayerAttributes] =
-                            defaultAttributes[key as keyof PlayerAttributes];
-                        attributesUpdated = true;
-                    }
-                });
-
-                if (attributesUpdated) {
-                    updates.attributes = currentAttributes;
-                    needsUpdate = true;
-                }
-            }
-
-            if (!playerStats.trainingData) {
-                updates.trainingData = initializeTrainingData();
-                needsUpdate = true;
-            }
-
-            if (!playerStats.kitchenLabTrainingData) {
-                updates.kitchenLabTrainingData = initializeKitchenLabTrainingData();
-                needsUpdate = true;
-            }
-
-            if (!playerStats.handicraftTrainingData) {
-                updates.handicraftTrainingData = initializeHandicraftTrainingData();
-                needsUpdate = true;
-            }
-
-            if (needsUpdate) {
-                try {
-                    await updateDoc(statsRef, updates);
-                    await refreshStats();
-                } catch (error) {
-                    console.error('Error initializing training data:', error);
-                    showToast('Viga treeningandmete initsialiseerimisel', 'error');
-                }
-            }
-
-            setInitializationDone(true);
-        };
-
-        initializeIfNeeded();
-    }, [currentUser, playerStats, initializationDone, refreshStats, showToast]);
-
     // Update clicks when needed
     useEffect(() => {
         if (!playerStats || !currentUser) return;
@@ -721,6 +660,7 @@ const TrainingPage: React.FC = () => {
                             remainingClicks={remainingClicks}
                             maxClicks={maxClicks}
                             lastResetTime={playerStats.trainingData?.lastResetTime}
+                            trainingType="sports"
                         />
 
                         {/* Static notification - always visible */}
@@ -774,6 +714,7 @@ const TrainingPage: React.FC = () => {
                             maxClicks={maxClicks}
                             label="Köök & Labor klikke jäänud"
                             lastResetTime={playerStats.kitchenLabTrainingData?.lastResetTime}
+                            trainingType="kitchen"
                         />
 
                         {/* Static notification - always visible */}
@@ -833,6 +774,7 @@ const TrainingPage: React.FC = () => {
                             maxClicks={maxClicks}
                             label="Käsitöö klikke jäänud"
                             lastResetTime={playerStats.handicraftTrainingData?.lastResetTime}
+                            trainingType="handicraft"
                         />
 
                         {/* Static notification - always visible */}

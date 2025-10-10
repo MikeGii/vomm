@@ -10,10 +10,7 @@ interface PlayerAbilitiesProps {
 }
 
 export const PlayerAbilities: React.FC<PlayerAbilitiesProps> = ({ stats }) => {
-    const { playerStats } = usePlayerStats();
-
-    // Use context for VIP status, but keep using passed stats for other data
-    const isVip = playerStats?.isVip || stats.isVip || false;
+    const { isVip } = usePlayerStats();
 
     const abilities = getActiveAbilities(stats.completedCourses || []);
     const hasCompletedBasicTraining = stats.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
