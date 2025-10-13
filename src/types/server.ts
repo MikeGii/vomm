@@ -11,9 +11,9 @@ export const GAME_SERVERS: Record<string, ServerConfig> = {
         name: 'Beta Maailm',
         description: 'Esimene demo server'
     },
-    /*white: {
+    white: {
         id: 'white',
         name: 'Valge Server',
         description: 'Uus maailm'
-    }*/
+    }
 };

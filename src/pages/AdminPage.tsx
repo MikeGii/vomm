@@ -43,13 +43,10 @@ const AdminPage: React.FC = () => {
         return [];
     })();
 
-    // Super admin kontroll (backup)
     const isSuperAdmin = currentUser?.uid === 'WUucfDi2DAat9sgDY75mDZ8ct1k2';
 
-    // Lõplik admin ligipääsu kontroll
     const isAdmin = isSuperAdmin || hasAdminAccess;
 
-    // Filtreeri tabad vastavalt õigustele
     const allTabs = [
         { id: 'tools', label: 'Admin tööriistad' },
         { id: 'applications', label: 'Kandideerimised' },
@@ -59,7 +56,6 @@ const AdminPage: React.FC = () => {
         { id: 'updates', label: 'Uuendused' },
     ];
 
-    // Super admin näeb kõiki tabbe, teised ainult lubatuid
     const availableTabs = isSuperAdmin
         ? allTabs
         : allTabs.filter(tab => allowedTabs.includes(tab.id as any));
