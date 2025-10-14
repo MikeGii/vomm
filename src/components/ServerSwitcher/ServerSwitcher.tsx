@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { GAME_SERVERS } from '../../types/server';
 import { getCurrentServer, setCurrentServer } from '../../utils/serverUtils';
+import { cacheManager } from '../../services/CacheManager';
 import './ServerSwitcher.css';
 
 export const ServerSwitcher: React.FC = () => {
@@ -33,6 +34,9 @@ export const ServerSwitcher: React.FC = () => {
         if (!selectedServer) return;
 
         setIsChanging(true);
+
+        console.log(`🔄 Switching server - clearing cache for ${selectedServer}`);
+        cacheManager.clearAll();
 
         // Save selected server
         setCurrentServer(selectedServer);

@@ -273,7 +273,7 @@ export const PlayerStatsProvider: React.FC<{ children: React.ReactNode }> = ({ c
                 unsubscribeRef.current = null;
             }
         };
-    }, [currentUser]); // Re-run when server changes
+    }, [currentUser, currentServer]); // Re-run when server changes
 
     // Listen for server changes from localStorage
     useEffect(() => {

@@ -10,6 +10,7 @@ import { getPlayerDisplayStatus } from '../../utils/playerStatus';
 import { getCurrentServer } from '../../utils/serverUtils';
 import '../../styles/layout/Header.css';
 import {usePlayerStats} from "../../contexts/PlayerStatsContext";
+import { cacheManager } from '../../services/CacheManager';
 import { GAME_SERVERS } from '../../types/server';
 
 export const AuthenticatedHeader: React.FC = () => {
@@ -77,14 +78,20 @@ export const AuthenticatedHeader: React.FC = () => {
 
     const handleLogout = async () => {
         try {
+            console.log('🚪 Logging out - clearing all cache and resetting server...');
+            cacheManager.clearAll();
+
+            // Reset server to beta (default) when logging out
+            localStorage.setItem('currentServer', 'beta');
+
             await signOut(auth);
             setIsMenuOpen(false);
             navigate('/', { replace: true });
         } catch (error) {
-            console.error('Väljumine ebaõnnestus:', error);
+            console.error('Logout error:', error);
         }
     };
-
+    
     // Determine if training should be shown based on actual progress (no tutorial)
     const showTraining = playerStats?.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
 

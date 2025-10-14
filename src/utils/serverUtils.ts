@@ -1,11 +1,19 @@
 // src/utils/serverUtils.ts
 export const getCurrentServer = (): string => {
-    // Just get what's stored, no validation needed
     return localStorage.getItem('currentServer') || 'beta';
 };
 
 export const setCurrentServer = (serverId: string): void => {
+    const oldServer = getCurrentServer();
     localStorage.setItem('currentServer', serverId);
+
+    // Dispatch custom event for same-tab detection
+    if (oldServer !== serverId) {
+        console.log(`🔄 Server changed: ${oldServer} → ${serverId}`);
+        window.dispatchEvent(new CustomEvent('serverChanged', {
+            detail: { server: serverId }
+        }));
+    }
 };
 
 export const getServerSpecificId = (userId: string, serverId?: string): string => {
