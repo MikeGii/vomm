@@ -91,7 +91,7 @@ export const AuthenticatedHeader: React.FC = () => {
             console.error('Logout error:', error);
         }
     };
-    
+
     // Determine if training should be shown based on actual progress (no tutorial)
     const showTraining = playerStats?.completedCourses?.includes('basic_police_training_abipolitseinik') || false;
 

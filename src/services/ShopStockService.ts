@@ -28,7 +28,7 @@ interface EnhancedShopStock {
 /**
  * Get server-specific stock document ID
  */
-const getStockDocumentId = (itemId: string): string => {
+export const getStockDocumentId = (itemId: string): string => {
     const currentServer = getCurrentServer();
     // Beta server uses original ID (backwards compatibility)
     if (currentServer === 'beta') {

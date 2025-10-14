@@ -10,7 +10,7 @@ import { InventoryItem } from '../types';
 import { PlayerStats } from '../types';
 import { ALL_SHOP_ITEMS } from '../data/shop';
 import { createTimestampedId } from '../utils/inventoryUtils';
-import { calculateStaticPrice } from "./ShopStockService";
+import {calculateStaticPrice, getStockDocumentId} from "./ShopStockService";
 import { validatePurchaseQuantity, validateTotalCost } from '../utils/purchaseValidation';
 import { getCurrentServer, getServerSpecificId } from '../utils/serverUtils';
 import { GlobalUserService } from './GlobalUserService';
@@ -125,7 +125,7 @@ export const purchaseItem = async (
 
             // Only check stock for player-craftable items
             if (isPlayerCraftable) {
-                stockRef = doc(firestore, 'shopStock', itemId);
+                stockRef = doc(firestore, 'shopStock', getStockDocumentId(itemId))
             }
 
             // Read documents within transaction
