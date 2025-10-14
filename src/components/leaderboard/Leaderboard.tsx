@@ -17,6 +17,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                                                             currentUserIsVip = false
                                                         }) => {
     const [allEntries, setAllEntries] = useState<LeaderboardEntry[]>([]);
+    const [dataVersion, setDataVersion] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -57,6 +58,9 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
         try {
             const data = await getLeaderboard(300, forceRefresh);
             setAllEntries(data);
+            if (forceRefresh) {
+                setDataVersion(prev => prev + 1);
+            }
         } catch (err) {
             console.error('Error loading leaderboard:', err);
             setError('Edetabeli laadimine ebaõnnestus');
@@ -77,9 +81,12 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     const handlePlayerClick = async (playerData: PlayerProfileModalData) => {
         setIsLoadingProfile(true);
 
+        console.log('🔍 Clicked player data:', playerData.username, 'Hours:', playerData.totalWorkedHours);
+
         try {
             const completeProfile = await getPlayerProfileData(playerData.userId);
             if (completeProfile) {
+                console.log('📊 Complete profile hours:', completeProfile.totalWorkedHours);
                 // Preserve the isVip status from the original playerData
                 setSelectedPlayer({
                     ...completeProfile,
@@ -170,6 +177,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 {!loading && !error && (
                     <>
                         <LeaderboardTable
+                            key={dataVersion}
                             entries={currentEntries}
                             currentUserId={currentUserId}
                             onPlayerClick={handlePlayerClick}

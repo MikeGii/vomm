@@ -73,6 +73,11 @@ export const getLeaderboard = async (
 
             userIds.add(baseUserId);
 
+            // DEBUG: Log worked hours for White server
+            if (currentServer === 'white' && playerData.totalWorkedHours > 0) {
+                console.log(`✅ WHITE SERVER - Player ${playerData.username}: ${playerData.totalWorkedHours} hours`);
+            }
+
             leaderboard.push({
                 userId: statsDoc.id,
                 baseUserId: baseUserId,
@@ -92,7 +97,7 @@ export const getLeaderboard = async (
                 attributes: playerData.attributes,
                 casesCompleted: playerData.casesCompleted || 0,
                 criminalsArrested: playerData.criminalsArrested || 0,
-                totalWorkedHours: playerData.totalWorkedHours || 0,
+                totalWorkedHours: playerData.totalWorkedHours || 0, // ✅ See loeb õigesti
                 isVip: false // Will be updated
             });
         });

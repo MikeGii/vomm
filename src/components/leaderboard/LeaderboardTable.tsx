@@ -50,6 +50,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             attributes: entry.attributes,
             createdAt: undefined,
             completedCourses: entry.completedCourses,
+            totalWorkedHours: entry.totalWorkedHours,
             isVip: entry.isVip
         };
         onPlayerClick(playerData);
