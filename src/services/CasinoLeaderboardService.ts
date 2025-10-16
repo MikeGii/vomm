@@ -89,17 +89,11 @@ export const getUniversalLeaderboard = async (
     try {
         console.log('Fetching universal casino leaderboard from Firebase...');
 
-        // Filter wins by server
-        const winsQuery = currentServer === 'beta'
-            ? query(
-                collection(firestore, 'casinoWins'),
-                where('winAmount', '>', 0)
-            )
-            : query(
-                collection(firestore, 'casinoWins'),
-                where('server', '==', currentServer),
-                where('winAmount', '>', 0)
-            );
+        // Fetch all wins (we'll filter in code for better compatibility)
+        const winsQuery = query(
+            collection(firestore, 'casinoWins'),
+            where('winAmount', '>', 0)
+        );
 
         const snapshot = await getDocs(winsQuery);
 
@@ -115,6 +109,13 @@ export const getUniversalLeaderboard = async (
 
         snapshot.docs.forEach((doc) => {
             const win = doc.data() as CasinoWin;
+
+            // Filter by server in code (for backwards compatibility with old docs without server field)
+            const winServer = win.server || 'beta'; // If no server field, assume beta
+            if (winServer !== currentServer) {
+                return; // Skip wins from other servers
+            }
+
             const existing = userWinsMap.get(win.userId);
             const isCurrentMonth = win.month === currentMonth;
 

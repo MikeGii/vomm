@@ -87,10 +87,15 @@ export const purchaseExtraGarageSlot = async (userId: string): Promise<{ success
 // PLAYER ESTATE FUNCTIONS
 // ============================================
 
-export const getPlayerEstate = async (userId: string): Promise<PlayerEstate | null> => {
+export const getPlayerEstate = async (userIdOrDocId: string): Promise<PlayerEstate | null> => {
     try {
-        const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
-        const estateDoc = await getDoc(doc(firestore, 'playerEstates', serverSpecificId));
+        // Accept both base userId OR already server-specific docId
+        // If it contains underscore and current server is not beta, assume it's already converted
+        const currentServer = getCurrentServer();
+        const isAlreadyConverted = currentServer !== 'beta' && userIdOrDocId.includes('_');
+
+        const docId = isAlreadyConverted ? userIdOrDocId : getServerSpecificId(userIdOrDocId, currentServer);
+        const estateDoc = await getDoc(doc(firestore, 'playerEstates', docId));
 
         if (estateDoc.exists()) {
             const data = estateDoc.data();
@@ -108,14 +113,20 @@ export const getPlayerEstate = async (userId: string): Promise<PlayerEstate | nu
     }
 };
 
-export const ensurePlayerEstate = async (userId: string): Promise<PlayerEstate> => {
-    const existingEstate = await getPlayerEstate(userId);
+export const ensurePlayerEstate = async (userIdOrDocId: string): Promise<PlayerEstate> => {
+    const existingEstate = await getPlayerEstate(userIdOrDocId);
     if (existingEstate) {
         return existingEstate;
     }
 
+    // Extract base userId from potentially server-specific ID
+    const currentServer = getCurrentServer();
+    const baseUserId = currentServer === 'beta'
+        ? userIdOrDocId
+        : userIdOrDocId.replace(`_${currentServer}`, '');
+
     const newEstate: PlayerEstate = {
-        userId,
+        userId: baseUserId,
         currentEstate: null,
         ownedDevices: {
             has3DPrinter: false,
@@ -129,8 +140,11 @@ export const ensurePlayerEstate = async (userId: string): Promise<PlayerEstate> 
         updatedAt: new Date()
     };
 
-    const serverSpecificId = getServerSpecificId(userId, getCurrentServer());
-    await setDoc(doc(firestore, 'playerEstates', serverSpecificId), {
+    // Use the docId directly (it's already server-specific from context)
+    const isAlreadyConverted = currentServer !== 'beta' && userIdOrDocId.includes('_');
+    const docId = isAlreadyConverted ? userIdOrDocId : getServerSpecificId(baseUserId, currentServer);
+
+    await setDoc(doc(firestore, 'playerEstates', docId), {
         ...newEstate,
         createdAt: Timestamp.fromDate(newEstate.createdAt),
         updatedAt: Timestamp.fromDate(newEstate.updatedAt)
